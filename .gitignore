@@ -396,3 +396,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+SandboxApps/P/
+ZFramework/platforms/p/
+SandboxApps/ImageSandbox.vcxproj.filters

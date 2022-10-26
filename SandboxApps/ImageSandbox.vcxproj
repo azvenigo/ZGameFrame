@@ -1,0 +1,280 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{5c98bd13-7c27-4e1f-a8c9-6ec346f71050}</ProjectGuid>
+    <RootNamespace>ImageSandbox</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\ZFramework</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\ZFramework</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\ZFramework\zlib-1.2.11;..\ZFramework</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\ZFramework\zlib-1.2.11;..\ZFramework</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>gdiplus.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ZFramework\Resources.cpp" />
+    <ClCompile Include="..\ZFramework\ZAnimator.cpp" />
+    <ClCompile Include="..\ZFramework\ZAnimObjects.cpp" />
+    <ClCompile Include="..\ZFramework\ZBitBuffer.cpp" />
+    <ClCompile Include="..\ZFramework\ZBuffer.cpp" />
+    <ClCompile Include="..\ZFramework\ZFont.cpp" />
+    <ClCompile Include="..\ZFramework\ZFormattedTextWin.cpp" />
+    <ClCompile Include="..\ZFramework\ZCompression.cpp" />
+    <ClCompile Include="..\ZFramework\ZImageWin.cpp" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\adler32.c" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\compress.c" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\crc32.c" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\deflate.c" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\infback.c" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\inffast.c" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\inflate.c" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\inftrees.c" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\trees.c" />
+    <ClCompile Include="..\ZFramework\zlib-1.2.11\zutil.c" />
+    <ClCompile Include="..\ZFramework\zlibAPI.cpp" />
+    <ClCompile Include="..\ZFramework\ZMemBuffer.cpp" />
+    <ClCompile Include="..\ZFramework\ZMessageSystem.cpp" />
+    <ClCompile Include="..\ZFramework\ZPreferences.cpp" />
+    <ClCompile Include="..\ZFramework\ZRasterizer.cpp" />
+    <ClCompile Include="..\ZFramework\ZScriptedDialogWin.cpp" />
+    <ClCompile Include="..\ZFramework\ZSliderWin.cpp" />
+    <ClCompile Include="..\ZFramework\ZStringHelpers.cpp" />
+    <ClCompile Include="..\ZFramework\ZTickManager.cpp" />
+    <ClCompile Include="..\ZFramework\ZTimer.cpp" />
+    <ClCompile Include="..\ZFramework\ZTransformable.cpp" />
+    <ClCompile Include="..\ZFramework\ZWin.CPP" />
+    <ClCompile Include="..\ZFramework\ZWinBtn.CPP" />
+    <ClCompile Include="..\ZFramework\ZWinControlPanel.cpp" />
+    <ClCompile Include="..\ZFramework\ZWinWatchPanel.cpp" />
+    <ClCompile Include="..\ZFramework\ZXMLNode.cpp" />
+    <ClCompile Include="..\ZFramework\ZGraphicSystem.cpp" />
+    <ClCompile Include="..\ZFramework\ZMainWin.cpp" />
+    <ClCompile Include="..\ZFramework\ZScreenBuffer.cpp" />
+    <ClCompile Include="..\ZFramework\ZZipAPI.cpp" />
+    <ClCompile Include="FloatLinesWin.cpp" />
+    <ClCompile Include="ImageTestWin.cpp" />
+    <ClCompile Include="LifeWin.cpp" />
+    <ClCompile Include="Main_Sandbox.cpp" />
+    <ClCompile Include="Main_Win64.cpp" />
+    <ClCompile Include="Marquee.cpp" />
+    <ClCompile Include="ProcessImageWin.cpp" />
+    <ClCompile Include="SimpleColorWin.cpp" />
+    <ClCompile Include="TextTestWin.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ZFramework\Resources.h" />
+    <ClInclude Include="..\ZFramework\ZAnimator.h" />
+    <ClInclude Include="..\ZFramework\ZAnimObjects.h" />
+    <ClInclude Include="..\ZFramework\ZAssert.h" />
+    <ClInclude Include="..\ZFramework\ZBitBuffer.h" />
+    <ClInclude Include="..\ZFramework\ZBuffer.h" />
+    <ClInclude Include="..\ZFramework\ZFont.h" />
+    <ClInclude Include="..\ZFramework\ZFormattedTextWin.h" />
+    <ClInclude Include="..\ZFramework\ZCompression.h" />
+    <ClInclude Include="..\ZFramework\ZImageWin.h" />
+    <ClInclude Include="..\ZFramework\zlib-1.2.11\crc32.h" />
+    <ClInclude Include="..\ZFramework\zlib-1.2.11\deflate.h" />
+    <ClInclude Include="..\ZFramework\zlib-1.2.11\inffast.h" />
+    <ClInclude Include="..\ZFramework\zlib-1.2.11\inffixed.h" />
+    <ClInclude Include="..\ZFramework\zlib-1.2.11\inflate.h" />
+    <ClInclude Include="..\ZFramework\zlib-1.2.11\inftrees.h" />
+    <ClInclude Include="..\ZFramework\zlib-1.2.11\trees.h" />
+    <ClInclude Include="..\ZFramework\zlib-1.2.11\zconf.h" />
+    <ClInclude Include="..\ZFramework\zlib-1.2.11\zutil.h" />
+    <ClInclude Include="..\ZFramework\zlibAPI.h" />
+    <ClInclude Include="..\ZFramework\ZMemBuffer.h" />
+    <ClInclude Include="..\ZFramework\ZMessageSystem.h" />
+    <ClInclude Include="..\ZFramework\ZPreferences.h" />
+    <ClInclude Include="..\ZFramework\ZRandom.h" />
+    <ClInclude Include="..\ZFramework\ZRasterizer.h" />
+    <ClInclude Include="..\ZFramework\ZScriptedDialogWin.h" />
+    <ClInclude Include="..\ZFramework\ZSliderWin.h" />
+    <ClInclude Include="..\ZFramework\ZStdDebug.h" />
+    <ClInclude Include="..\ZFramework\ZStdTypes.h" />
+    <ClInclude Include="..\ZFramework\ZStringHelpers.h" />
+    <ClInclude Include="..\ZFramework\ZTickManager.h" />
+    <ClInclude Include="..\ZFramework\ZTimer.h" />
+    <ClInclude Include="..\ZFramework\ZTransformable.h" />
+    <ClInclude Include="..\ZFramework\ZWin.H" />
+    <ClInclude Include="..\ZFramework\ZWinBtn.H" />
+    <ClInclude Include="..\ZFramework\ZWinControlPanel.h" />
+    <ClInclude Include="..\ZFramework\ZWinWatchPanel.h" />
+    <ClInclude Include="..\ZFramework\ZXMLNode.h" />
+    <ClInclude Include="..\ZFramework\ZGraphicSystem.h" />
+    <ClInclude Include="..\ZFramework\ZMainWin.h" />
+    <ClInclude Include="..\ZFramework\ZScreenBuffer.h" />
+    <ClInclude Include="..\ZFramework\ZZipAPI.h" />
+    <ClInclude Include="FloatLinesWin.h" />
+    <ClInclude Include="ImageTestWin.h" />
+    <ClInclude Include="LifeWin.h" />
+    <ClInclude Include="Main_Sandbox.h" />
+    <ClInclude Include="Marquee.h" />
+    <ClInclude Include="ProcessImageWin.h" />
+    <ClInclude Include="SimpleColorWin.h" />
+    <ClInclude Include="TextTestWin.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
