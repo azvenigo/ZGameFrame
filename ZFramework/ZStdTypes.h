@@ -6,15 +6,6 @@
 #include <limits>
 #include <vector>
 
-#define kKiB (1024)
-#define kMiB (1024*1024)
-#define kGiB (1024*1024*1024)
-
-#define kKB (1000)
-#define kMB (1000*1000)
-#define kGB (1000*1000*1000)
-
-
 template <class T>
 T limit(T val, T min, T max)
 {

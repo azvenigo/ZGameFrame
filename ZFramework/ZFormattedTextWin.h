@@ -10,13 +10,13 @@ class ZFont;
 
 struct sTextEntry
 {
-	string              sText;
+    std::string         sText;
 	int64_t             nFontID;
 	uint32_t            nColor;
 	uint32_t            nColor2;
 	ZFont::ePosition    position;
 	ZFont::eStyle       style;
-	string              sLink;
+    std::string         sLink;
 };
 
 typedef std::list<sTextEntry>	tTextLine;
@@ -35,7 +35,7 @@ public:
 	virtual void		SetScrollable(bool bScrollable = true) { mbScrollable = bScrollable; }
 	virtual void		Clear();
     virtual void        SetFill(uint32_t nCol, bool bEnable = true) { mnFillColor = nCol; mbFillBackground = bEnable; }
-	virtual void		AddTextLine(string sLine, int64_t nFontID, uint32_t nCol1, uint32_t nCol2, ZFont::eStyle style = ZFont::kNormal, ZFont::ePosition = ZFont::kBottomLeft, bool bWrap = true, const string& sLink = "");
+	virtual void		AddTextLine(std::string sLine, int64_t nFontID, uint32_t nCol1, uint32_t nCol2, ZFont::eStyle style = ZFont::kNormal, ZFont::ePosition = ZFont::kBottomLeft, bool bWrap = true, const std::string& sLink = "");
 	int64_t   			GetFullDocumentHeight() { return mnFullDocumentHeight; }
 
 	void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
@@ -78,7 +78,7 @@ private:
 	ZFont::ePosition	mCurrentTextPosition;
 	ZFont::eStyle		mCurrentStyle;
 	bool				mbScrollable;
-	string              msLink;
+    std::string         msLink;
 
 	int64_t				mnMouseDownSliderVal;
 	double				mfMouseMomentum;

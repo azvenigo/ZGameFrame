@@ -49,15 +49,15 @@ public:
    virtual bool		Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
 
    // cCEAnimObject_TextMover
-   void           	SetText(const string& sText, uint32_t nColor, uint32_t nColor2, bool bShadow = false);
+   void           	SetText(const std::string& sText, uint32_t nColor, uint32_t nColor2, bool bShadow = false);
    void           	SetLocation(int64_t nX, int64_t nY);
    void           	SetPixelsPerSecond(double fDX, double fDY);
    void           	SetAlphaFade(int64_t nStartAlpha, int64_t nEndAlpha, int64_t nMilliseconds);
 
 protected:
-   string	     	msText;
+    std::string     msText;
    ZFont*       	mpFont;
-   uint32_t         	mnColor;
+   uint32_t         mnColor;
    uint32_t			mnColor2;
    int64_t			mnStartAlpha;
    int64_t			mnEndAlpha;
@@ -125,18 +125,18 @@ public:
    virtual bool   Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
 
    // cCEAnimObject_TextPulser
-   void			SetText(const string& sText, uint32_t nColor, uint32_t nFontID, bool bShadow = false);
+   void			SetText(const std::string& sText, uint32_t nColor, uint32_t nFontID, bool bShadow = false);
    void			SetPulse(int64_t nMinAlpha, int64_t nMaxAlpha, double fPeriod);
 
 protected:
-    std::shared_ptr<ZFont>		mpFont;
-    string		msText;
-   uint32_t		mnColor;
-   bool			mbShadow;
+    std::shared_ptr<ZFont>  mpFont;
+    std::string             msText;
+    uint32_t		        mnColor;
+    bool			        mbShadow;
 
-   double		mfPeriod;
-   int64_t		mnMinAlpha;
-   int64_t		mnMaxAlpha;
+    double		            mfPeriod;
+    int64_t		            mnMinAlpha;
+    int64_t		            mnMaxAlpha;
 };
 
 // Transformer
@@ -166,7 +166,7 @@ public:
 class ZAnimObject_TransformingText : public ZAnimObject, public ZTransformable
 {
 public:
-	ZAnimObject_TransformingText(const string& sText, const ZRect& rArea, ZFont* pFont, uint32_t nColor, uint32_t nColor2, ZFont::ePosition nPosition, ZFont::eStyle nStyle);		
+	ZAnimObject_TransformingText(const std::string& sText, const ZRect& rArea, ZFont* pFont, uint32_t nColor, uint32_t nColor2, ZFont::ePosition nPosition, ZFont::eStyle nStyle);
 	virtual ~ZAnimObject_TransformingText();
 
 	virtual bool  Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);

@@ -1,12 +1,15 @@
 #include "ZBuffer.h"
 #include <algorithm>
 #include "ZStringHelpers.h"
+#include "helpers/StringHelpers.h"
 #include <math.h>
 
 #ifdef _WIN64
 #include <GdiPlus.h>
 using namespace Gdiplus;
 #endif
+
+using namespace std;
 
 #include "ZGraphicSystem.h"
 
@@ -24,7 +27,7 @@ ZBuffer::ZBuffer()
 	mSurfaceArea.SetRect(0,0,0,0);
 }
 
-ZBuffer::ZBuffer(const ZBuffer* pSrc)
+ZBuffer::ZBuffer(const ZBuffer* pSrc) : ZBuffer()
 {
     ZRect rArea(pSrc->mSurfaceArea);
     Init(rArea.Width(), rArea.Height());
@@ -69,7 +72,7 @@ bool ZBuffer::Shutdown()
 bool ZBuffer::LoadBuffer(const string& sFilename)
 {
 #ifdef _WIN64
-	Bitmap bitmap(AsciiToWide(sFilename).c_str());
+	Bitmap bitmap(StringHelpers::string2wstring(sFilename).c_str());
 
     uint32_t nPropertySize = 0;
     uint32_t nPropertyCount = 0;

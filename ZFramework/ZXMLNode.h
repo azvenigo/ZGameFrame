@@ -37,6 +37,10 @@ public:
 
     std::string			ToString(int64_t nDepth = 0);
 
+    static int64_t      FindSubstring(const std::string& sStringToSearch, const std::string& sSubstring, int64_t nStartOffset = 0, bool bIgnoreQuotedPortions = false);
+    static bool         GetField(const std::string& sText, const std::string& sKey, std::string& sOutput);
+
+
 protected:
 	bool				Parse(const std::string& sRaw);
 	void				ParseStartTag(const std::string& sStartTag);

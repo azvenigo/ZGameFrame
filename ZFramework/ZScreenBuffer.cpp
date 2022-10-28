@@ -27,9 +27,11 @@ static char THIS_FILE[] = __FILE__;
 #ifdef _WIN64
 using namespace Gdiplus;
 #endif
+using namespace std;
 
 ZScreenBuffer::ZScreenBuffer()
 {
+    mbRenderingEnabled = true;
 #ifdef USE_D3D
 	ZeroMemory((void*)&mLockedRect, sizeof(mLockedRect));
 	ZeroMemory((void*)&mSurfaceDesc, sizeof(mSurfaceDesc));
@@ -56,6 +58,15 @@ bool ZScreenBuffer::Shutdown()
 	return ZBuffer::Shutdown();
 }
 
+void ZScreenBuffer::EnableRendering(bool bEnable)
+{
+    if (bEnable)
+        mbVisibilityNeedsComputing = true;
+    else
+        RenderVisibleRects();   // flush
+    mbRenderingEnabled = bEnable;
+};
+
 void ZScreenBuffer::BeginRender()
 {
 #ifdef _WIN64
@@ -74,6 +85,9 @@ void ZScreenBuffer::EndRender()
 
 void ZScreenBuffer::Render(ZBuffer* pTexture, ZRect& rAreaToDrawTo)
 {
+    if (!mbRenderingEnabled)
+        return;
+
 #ifdef _DEBUG
 	string sTemp;
 	ZRect rArea(2,2,66,32);
@@ -174,6 +188,8 @@ void ZScreenBuffer::Render(ZBuffer* pTexture, ZRect& rAreaToDrawTo)
 
 int32_t ZScreenBuffer::RenderVisibleRects()
 {
+    if (!mbRenderingEnabled)
+        return 0;
 
 //    TIME_SECTION_START(RenderVisibleRects);
 
@@ -263,6 +279,8 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 
 bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenRect)
 {
+    if (!mbRenderingEnabled)
+        return false;
 
 	// The requirement here is that the newly added rect is on top of all previous rects (i.e. painters alg)
 

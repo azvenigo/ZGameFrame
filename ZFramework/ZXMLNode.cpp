@@ -7,6 +7,7 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+using namespace std;
 
 
 ZXMLNode::ZXMLNode()
@@ -422,4 +423,67 @@ string ZXMLNode::ToString(int64_t nDepth)
 	}
 
 	return sReturned;
+}
+
+int64_t ZXMLNode::FindSubstring(const string& sStringToSearch, const string& sSubstring, int64_t nStartOffset, bool bIgnoreQuotedPortions)
+{
+    const char* pSearch = sStringToSearch.data() + nStartOffset;
+    const char* pSub = sSubstring.data();
+
+    int64_t nLengthToSearch = sStringToSearch.length() - nStartOffset;
+    int64_t nSubstringLength = sSubstring.length();
+
+    const char* pEnd = pSearch + nLengthToSearch - nSubstringLength + 1;
+
+    if (bIgnoreQuotedPortions)
+    {
+        while (pSearch < pEnd)
+        {
+            if (*pSearch == '\"')
+            {
+                pSearch++;		// skip the opening quote
+                while (*pSearch != '\"' && pSearch < pEnd)		// find the ending quote
+                    pSearch++;
+            }
+            else
+            {
+                if (memcmp(pSearch, pSub, nSubstringLength) == 0)
+                    return pSearch - sStringToSearch.data();
+            }
+
+            pSearch++;
+        }
+    }
+    else
+    {
+        while (pSearch < pEnd)
+        {
+            if (memcmp(pSearch, pSub, nSubstringLength) == 0)
+                return pSearch - sStringToSearch.data();
+
+            pSearch++;
+        }
+    }
+
+    return -1;
+}
+
+bool ZXMLNode::GetField(const string& sText, const string& sKey, string& sOutput)
+{
+    string sStartKey("<" + sKey + ">");
+    string sEndKey("</" + sKey + ">");
+
+    int64_t nStartOffset = FindSubstring(sText, sStartKey);
+    if (nStartOffset == -1)
+        return false;
+
+    nStartOffset += sStartKey.length();		// skip the start key
+
+    int64_t nEndOffset = FindSubstring(sText, sEndKey, nStartOffset);
+    ZASSERT(nEndOffset != -1);		// start key without an end key
+    if (nEndOffset == -1)
+        return false;
+
+    sOutput.assign(sText.data() + nStartOffset, nEndOffset - nStartOffset);
+    return true;
 }

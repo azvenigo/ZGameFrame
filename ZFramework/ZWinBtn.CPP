@@ -4,6 +4,7 @@
 #include "ZGraphicSystem.h"
 #include "ZFont.h"
 #include "ZXMLNode.h"
+#include "helpers/StringHelpers.h"
 #include "ZStringHelpers.h"
 
 
@@ -12,6 +13,7 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+using namespace std;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -375,7 +377,7 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 	msCaption = pNode->GetText();
 	msWinName = pNode->GetAttribute("winname");
 
-	mnFontID = StringToInt(pNode->GetAttribute("size"));
+	mnFontID = StringHelpers::ToInt(pNode->GetAttribute("size"));
 
 	string sStyle = pNode->GetAttribute("style");
 	if (sStyle == "shadowed")
@@ -385,11 +387,11 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 
 	string sColor = pNode->GetAttribute("color");
 	if (!sColor.empty())
-		mnTextColor = StringToHex(sColor);
+		mnTextColor = StringHelpers::ToInt(sColor);
 
 	string sColor2 = pNode->GetAttribute("color2");
 	if (!sColor2.empty())
-		mnTextColor2 = StringToHex(sColor2);
+		mnTextColor2 = StringHelpers::ToInt(sColor2);
 
 	msButtonMessage = pNode->GetAttribute("message");
 

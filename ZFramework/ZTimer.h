@@ -71,7 +71,7 @@ public:
 
     inline void Clear() { nSamples = 0; nBytes = 0; fUSSpent = 0.0; }
 
-    friend ostream& operator<<(ostream& os, const ZSpeedRecord& sr);
+    friend std::ostream& operator<<(std::ostream& os, const ZSpeedRecord& sr);
     ZSpeedRecord& operator+=(const ZSpeedRecord& sr)
     {
         nBytes += sr.nBytes;
@@ -92,12 +92,12 @@ public:
     double GetMBPerSecond()     { return (1000000.0*(double)nBytes/(1024.0*1024.0))           / fUSSpent; }    // times 1000.0 to scale up and then divide by us to get rate in seconds
     double GetGBPerSecond()     { return (1000000.0*(double)nBytes/(1024.0*1024.0*1024.0))    / fUSSpent; }    // times 1000.0 to scale up and then divide by us to get rate in seconds
 
-    atomic<int64_t> nSamples;
-    atomic<int64_t> nBytes;
-    atomic<double>  fUSSpent;    
+    std::atomic<int64_t> nSamples;
+    std::atomic<int64_t> nBytes;
+    std::atomic<double>  fUSSpent;
 };
 
-inline ostream& operator<<(ostream& os, const ZSpeedRecord& sr)
+inline std::ostream& operator<<(std::ostream& os, const ZSpeedRecord& sr)
 {
     os << "samples: " << sr.nSamples << " bytes: " << sr.nBytes << " timeUS:" << sr.fUSSpent;
     return os;
@@ -112,21 +112,21 @@ inline ostream& operator<<(ostream& os, const ZSpeedRecord& sr)
 class cDebugTimer
 {
 public:
-	cDebugTimer(string sName);
+	cDebugTimer(std::string sName);
 	~cDebugTimer();
 
 	void Enter();
 	void Exit();
 
 protected:
-	ZTimer	mTimer;
+	ZTimer	    mTimer;
 	int64_t		mnCount;
 	int64_t		mnTotalTime;
-	string	msName;
+    std::string	msName;
 };
 
 inline
-cDebugTimer::cDebugTimer(string sName)
+cDebugTimer::cDebugTimer(std::string sName)
 {
 	msName = sName;
 	mnCount = 0;
@@ -136,7 +136,7 @@ cDebugTimer::cDebugTimer(string sName)
 inline
 cDebugTimer::~cDebugTimer()
 {
-	string sTemp;
+    std::string sTemp;
 	if (mnCount > 0)
 		Sprintf(sTemp, "%s: Times called:%ld  Total time:%ld  us per call:%ld\n", msName.c_str(), mnCount, mnTotalTime, mnTotalTime/mnCount);
 	else

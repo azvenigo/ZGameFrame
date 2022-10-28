@@ -4,6 +4,7 @@
 #include "ZMessageSystem.h"
 #include "ZAnimObjects.h"
 #include "ZGraphicSystem.h"
+#include "ZScreenBuffer.h"
 #include "Resources.h"
 #include "ZStringHelpers.h"
 #include "ZScriptedDialogWin.h"
@@ -13,12 +14,14 @@
 #include "ZWinControlPanel.h"
 #include "ZWinWatchPanel.h"
 #include "ZTimer.h"
+#include "helpers/StringHelpers.h"
 
 #ifdef _WIN64        // for open file dialong
 #include <windows.h>
 #include <shobjidl.h> 
 #endif
 
+using namespace std;
 
 extern ZMessageSystem gMessageSystem;
 
@@ -75,6 +78,10 @@ cProcessImageWin::~cProcessImageWin()
 
 bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 {
+    ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
+    pScreenBuffer->EnableRendering(false);
+
+
     const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
     mImagesToProcess.clear();
 
@@ -157,6 +164,8 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
     mrResultImageDest.SetRect(0,rOriginalImage.bottom, (int64_t) (nResultAreaHeight * fResultAreaAspect), mAreaToDrawTo.bottom);
     ResetResultsBuffer();
 
+    pScreenBuffer->EnableRendering(true);
+
     InvalidateChildren();
 
 	return true;
@@ -165,7 +174,6 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 void cProcessImageWin::Process_LoadImages()
 {
     std::list<string> filenames;
-
 
 #ifdef _WIN64
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
@@ -216,7 +224,7 @@ void cProcessImageWin::Process_LoadImages()
                         pItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath);
 
                         wstring wideFilename(pszFilePath);
-                        filenames.push_back(WideToAscii(wideFilename));
+                        filenames.push_back(StringHelpers::wstring2string(wideFilename));
                         pItem->Release();
                     }
                 }
@@ -240,7 +248,7 @@ void cProcessImageWin::Process_SelectImage(int32_t nIndex)
     {
         mnSelectedImageIndex = nIndex;
         ZRect r(mpResultBuffer.get()->GetArea());
-        mpResultBuffer.get()->Blt(mImagesToProcess[nIndex].get(), r, r);
+        mpResultBuffer.get()->Blt(mImagesToProcess[nIndex].get(), r, r, &r);
 
         mnSelectedImageW = mImagesToProcess[nIndex]->GetArea().Width();
         mnSelectedImageH = mImagesToProcess[nIndex]->GetArea().Height();
@@ -351,10 +359,16 @@ void cProcessImageWin::Process_ComputeGradient()
 
 bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
 {
+//    ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
+//    pScreenBuffer->EnableRendering(false);
+
     ZBuffer sourceImg(mpResultBuffer.get());
     ResetResultsBuffer();
     if (mImagesToProcess.empty())
+    {
+//        pScreenBuffer->EnableRendering(true);
         return false;
+    }
 
     int64_t nStartTime = gTimer.GetMSSinceEpoch();
 
@@ -393,6 +407,7 @@ bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
     }
 
     InvalidateChildren();
+//    pScreenBuffer->EnableRendering(true);
     return true;
 }
 
@@ -751,29 +766,37 @@ bool cProcessImageWin::Init()
 
 void cProcessImageWin::ResetResultsBuffer()
 {
-	mpResultBuffer.reset();
 	if (mImagesToProcess.empty())
 	{
 		mpResultBuffer = nullptr;
 		return;
 	}
+
+//    ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
+//    pScreenBuffer->EnableRendering(false);
+
+
 	ZASSERT(mrOriginalImagesArea.Width() > 0 && mrOriginalImagesArea.Height() > 0);
-	mpResultBuffer.reset(new ZBuffer());
-	mpResultBuffer->Init(mrOriginalImagesArea.Width(), mrOriginalImagesArea.Height());
-    if (mpResultWin)
-        ChildDelete(mpResultWin);
+    // if there is a result buffer and the dimenstions already match, no need to do anything with it
+    if (!mpResultBuffer || mpResultBuffer->GetArea().Width() != mrOriginalImagesArea.Width() || mpResultBuffer->GetArea().Height() != mrOriginalImagesArea.Height())
+    {
+        mpResultBuffer.reset(new ZBuffer());
+        mpResultBuffer->Init(mrOriginalImagesArea.Width(), mrOriginalImagesArea.Height());
 
-    mpResultWin = new ZImageWin();
-    mpResultWin->SetArea(mrResultImageDest);
-    mpResultWin->SetImage(mpResultBuffer.get());
-    mpResultWin->SetShowZoom(4, 0x44ffffff, ZFont::kBottomRight, true);
-    mpResultWin->SetImage(mpResultBuffer.get());
-    mpResultWin->SetFill(0xff222222);
-    mpResultWin->SetArea(mrResultImageDest);
-    mpResultWin->SetZoomable(true, 0.05, 100.0);
-    ChildAdd(mpResultWin);
+        if (mpResultWin)
+            ChildDelete(mpResultWin);
 
+        mpResultWin = new ZImageWin();
+        mpResultWin->SetArea(mrResultImageDest);
+        mpResultWin->SetImage(mpResultBuffer.get());
+        mpResultWin->SetShowZoom(4, 0x44ffffff, ZFont::kBottomRight, true);
+        mpResultWin->SetImage(mpResultBuffer.get());
+        mpResultWin->SetFill(0xff222222);
+        mpResultWin->SetArea(mrResultImageDest);
+        mpResultWin->SetZoomable(true, 0.05, 100.0);
+        ChildAdd(mpResultWin);
 
+    }
 
 
     if (mpContrastFloatBuffer)
@@ -781,6 +804,8 @@ void cProcessImageWin::ResetResultsBuffer()
 
     mpContrastFloatBuffer = new double[mrOriginalImagesArea.Width() * mrOriginalImagesArea.Height()];
     memset(mpContrastFloatBuffer, 0, mrOriginalImagesArea.Width() * mrOriginalImagesArea.Height() * sizeof(double));
+
+//    pScreenBuffer->EnableRendering(true);
 }
 
 
@@ -796,7 +821,7 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
 	}
     else if (sType == "selectimg")
     {
-        Process_SelectImage((int32_t) StringToInt(message.GetParam("index")));
+        Process_SelectImage((int32_t) StringHelpers::ToInt(message.GetParam("index")));
         return true;
     }
     else if (sType == "radiusblur")

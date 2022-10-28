@@ -25,7 +25,7 @@ public:
     bool	OnChar(char c);
 	bool	OnKeyDown(uint32_t key);
 
-	bool	LoadImages(std::list<string>& filenames);
+	bool	LoadImages(std::list<std::string>& filenames);
 
 	bool	HandleMessage(const ZMessage& message);
 
@@ -83,7 +83,7 @@ private:
 
     std::list<ZImageWin*>       mChildImageWins;
     ZImageWin*                  mpResultWin;
-    string                      msResult;
+    std::string                 msResult;
 
     uint32_t                    mThreads;
 

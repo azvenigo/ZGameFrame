@@ -2,7 +2,7 @@
 #include "ZRasterizer.h"
 #include "ZTickManager.h"
 #include "ZMessageSystem.h"
-#include "ZStringHelpers.h"
+#include "helpers/StringHelpers.h"
 #include "ZTimer.h"
 #include <math.h>
 
@@ -15,7 +15,7 @@ extern ZTimer			gTimer;
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
+using namespace std;
 
 ZTransformation::ZTransformation(const ZTransformation& transform)
 {
@@ -55,7 +55,7 @@ bool ZTransformation::operator==(const ZTransformation& trans)
 string ZTransformation::ToString()
 {
 	string sRaw;
-	sRaw = IntToString(mPosition.mX) + "," + IntToString(mPosition.mY) + "," + DoubleToString(mScale) + "," + DoubleToString(mRotation) + "," + IntToString(mnTimestamp) + "," + IntToString(mnAlpha) + ",\"" + msCompletionMessage + "\"";
+    sRaw = StringHelpers::FromInt(mPosition.mX) + "," + StringHelpers::FromInt(mPosition.mY) + "," + StringHelpers::FromDouble(mScale) + "," + StringHelpers::FromDouble(mRotation) + "," + StringHelpers::FromInt(mnTimestamp) + "," + StringHelpers::FromInt(mnAlpha) + ",\"" + msCompletionMessage + "\"";
 
 	return sRaw;
 }
@@ -63,23 +63,23 @@ string ZTransformation::ToString()
 void ZTransformation::FromString(string sRaw)
 {
 	string sTemp;
-	SplitToken(sTemp, sRaw, ",");
-	mPosition.mX = StringToInt(sTemp);
+    StringHelpers::SplitToken(sTemp, sRaw, ",");
+	mPosition.mX = StringHelpers::ToInt(sTemp);
 
-	SplitToken(sTemp, sRaw, ",");
-	mPosition.mY = StringToInt(sTemp);
+    StringHelpers::SplitToken(sTemp, sRaw, ",");
+	mPosition.mY = StringHelpers::ToInt(sTemp);
 
-	SplitToken(sTemp, sRaw, ",");
-	mScale		= StringToDouble(sTemp);
+    StringHelpers::SplitToken(sTemp, sRaw, ",");
+	mScale		= StringHelpers::ToDouble(sTemp);
 
-	SplitToken(sTemp, sRaw, ",");
-	mRotation	= StringToDouble(sTemp);
+    StringHelpers::SplitToken(sTemp, sRaw, ",");
+	mRotation	= StringHelpers::ToDouble(sTemp);
 
-	SplitToken(sTemp, sRaw, ",");
-	mnTimestamp = StringToInt(sTemp);
+    StringHelpers::SplitToken(sTemp, sRaw, ",");
+	mnTimestamp = StringHelpers::ToInt(sTemp);
 
-	SplitToken(sTemp, sRaw, ",");
-	mnAlpha		= (uint32_t) StringToInt(sTemp);
+    StringHelpers::SplitToken(sTemp, sRaw, ",");
+	mnAlpha		= (uint32_t) StringHelpers::ToInt(sTemp);
 
 	ZASSERT(sTemp[0] == '\"');
 	ZASSERT(sTemp[sTemp.length()-1] == '\"');
@@ -432,7 +432,7 @@ void ZTransformable::DoTransformation(const string& sRaw)
 	bool bFirst = true;
 	while (!sTempList.empty() && sTempList[0] == '[')
 	{
-		SplitToken(sTransTemp, sTempList, "]");
+        StringHelpers::SplitToken(sTransTemp, sTempList, "]");
 		sTransTemp = sTransTemp.substr(1);	// remove the '['
 
 		temp.FromString(sTransTemp);

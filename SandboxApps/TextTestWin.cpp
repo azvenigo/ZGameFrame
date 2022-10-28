@@ -7,11 +7,14 @@
 #include "ZScriptedDialogWin.h"
 #include "ZXMLNode.h"
 #include "ZWinControlPanel.h"
+#include "helpers/StringHelpers.h"
 
 #ifdef _WIN64        // for open/save file dialong
 #include <windows.h>
 #include <shobjidl.h> 
 #endif
+
+using namespace std;
 
 extern bool gbApplicationExiting;
 
@@ -342,7 +345,7 @@ bool TextTestWin::HandleMessage(const ZMessage& message)
     {
         if (message.HasParam("fontindex"))
         {
-            int32_t nIndex = (int32_t) StringToInt(message.GetParam("fontindex"));
+            int32_t nIndex = (int32_t) StringHelpers::ToInt(message.GetParam("fontindex"));
 
             if (nIndex >= 0 && nIndex < gWindowsFontFacenames.size())
             {
@@ -363,7 +366,7 @@ bool TextTestWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "togglekerning")
     {
-        mbEnableKerning = StringToBool(message.GetParam("enable"));
+        mbEnableKerning = StringHelpers::ToBool(message.GetParam("enable"));
         mpFont->SetEnableKerning(mbEnableKerning);
         Invalidate();
         return true;
@@ -429,7 +432,7 @@ bool TextTestWin::LoadFont()
                         PWSTR pszFilePath;
                         pItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath);
 
-                        filename = WideToAscii(pszFilePath);
+                        filename = StringHelpers::wstring2string(pszFilePath);
                         //                        wstring wideFilename(pszFilePath);
                         //                        filenames.push_back(WideToAscii(wideFilename));
                         pItem->Release();
@@ -483,7 +486,7 @@ bool TextTestWin::SaveFont()
             string sFilename;
             Sprintf(sFilename, "%s_%d.zfont", mpFont->GetFontParams()->sFacename.c_str(), mpFont->GetFontParams()->nHeight);
 
-            pFileSave->SetFileName(AsciiToWide(sFilename).c_str());
+            pFileSave->SetFileName(StringHelpers::string2wstring(sFilename).c_str());
 
             // Show the Save dialog box.
             hr = pFileSave->Show(NULL);
@@ -498,7 +501,7 @@ bool TextTestWin::SaveFont()
                     PWSTR pszFilePath;
                     pItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath);
 
-                    filename = WideToAscii(pszFilePath);
+                    filename = StringHelpers::wstring2string(pszFilePath);
 //                        wstring wideFilename(pszFilePath);
 //                        filenames.push_back(WideToAscii(wideFilename));
                     pItem->Release();

@@ -10,10 +10,6 @@
 #include <windowsx.h>       // for dynamic font glyph generation
 #endif
 
-
-using namespace std;
-
-
 const int32_t kMaxChars = 128;  // lower ascii 0-127
 
 
@@ -49,7 +45,7 @@ public:
     bool bItalic;
     bool bUnderline;
     bool bStrikeOut;
-    string sFacename;
+    std::string sFacename;
 };
 
 class ZFont
@@ -80,15 +76,15 @@ public:
 	ZFont();
 	~ZFont();
 
-    virtual bool    LoadFont(const string& sFilename);
-    virtual bool    SaveFont(const string& sFilename);
+    virtual bool    LoadFont(const std::string& sFilename);
+    virtual bool    SaveFont(const std::string& sFilename);
 
     ZFontParams*    GetFontParams() { return &mFontParams; }
 
     std::string     GetFilename() { return msFilename; }
 
-    bool            DrawText(ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, eStyle style = kNormal, ZRect* pClip = NULL);
-    bool            DrawTextParagraph(ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, ePosition paragraphPosition = kTopLeft, eStyle style = kNormal, ZRect* pClip = NULL);
+    bool            DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, eStyle style = kNormal, ZRect* pClip = NULL);
+    bool            DrawTextParagraph(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, ePosition paragraphPosition = kTopLeft, eStyle style = kNormal, ZRect* pClip = NULL);
 
 	int64_t         CharWidth(char c);
     void            SetEnableKerning(bool bEnable) { mbEnableKerning = bEnable; }
@@ -97,7 +93,7 @@ public:
     int32_t         GetSpaceBetweenChars(char c1, char c2);
 
 
-	int64_t         StringWidth(const string& sText);
+	int64_t         StringWidth(const std::string& sText);
 	int64_t         CalculateWordsThatFitOnLine(int64_t nLineWidth, const char* pChars, size_t nNumChars);  // returns the number of characters that should be drawn on this line, breaking at words
 	int64_t         CalculateLettersThatFitOnLine(int64_t nLineWidth, const char* pChars, size_t nNumChars);	// returns the number of characters that fit on that line
 	int64_t         CalculateNumberOfLines(int64_t nLineWidth, const char* pChars, size_t nNumChars);	// returns the number of lines required to draw text
@@ -105,8 +101,8 @@ public:
 	ZRect           GetOutputRect(ZRect rArea, const char* pChars, size_t nNumChars, ePosition position, int64_t nPadding = 0);
 
 protected:
-	bool                    DrawText_Helper(ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip);
-	bool                    DrawText_Gradient_Helper(ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, uint32_t nCol2, ZRect* pClip);
+	bool                    DrawText_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip);
+	bool                    DrawText_Gradient_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, uint32_t nCol2, ZRect* pClip);
 
     void                    BuildGradient(uint32_t nColor1, uint32_t nColor2);
    
@@ -130,7 +126,7 @@ protected:
 // Under windows the DynamicFont class can generate glyphs on demand
 #ifdef _WIN64
 
-extern std::vector<string> gWindowsFontFacenames;
+extern std::vector<std::string> gWindowsFontFacenames;
 
 
 inline bool operator==(const ZFontParams& lhs, const ZFontParams& rhs)
@@ -155,7 +151,7 @@ public:
     ~ZDynamicFont();
 
     bool                Init(const ZFontParams& params);
-    bool                SaveFont(const string& sFilename);  // overload to first ensure all glyphs have been generated
+    bool                SaveFont(const std::string& sFilename);  // overload to first ensure all glyphs have been generated
 
 protected:
     // overloads from ZFont that will generate glyphs if needed
@@ -202,29 +198,29 @@ public:
     bool                    Init();        
     void                    Shutdown();
 
-    std::shared_ptr<ZFont>  LoadFont(const string& sFilename);          // returns loaded font index
+    std::shared_ptr<ZFont>  LoadFont(const std::string& sFilename);          // returns loaded font index
 #ifdef _WIN64
     std::shared_ptr<ZFont>  CreateFont(const ZFontParams& params);      // returns created font index
 #endif
 
 
-    std::vector<string>     GetFontNames();
-    std::vector<int32_t>    GetAvailableSizes(const string& sFontName);
+    std::vector<std::string>     GetFontNames();
+    std::vector<int32_t>    GetAvailableSizes(const std::string& sFontName);
 
-    std::shared_ptr<ZFont>  GetDefaultFont(const string& sFontName, int32_t nFontSize);
+    std::shared_ptr<ZFont>  GetDefaultFont(const std::string& sFontName, int32_t nFontSize);
 
-    void                    SetDefaultFontName(const string& sName) { msDefaultFontName = sName; }
+    void                    SetDefaultFontName(const std::string& sName) { msDefaultFontName = sName; }
     int32_t                 GetDefaultFontCount() { return (int32_t) mNameToFontMap[msDefaultFontName].size(); }
     std::shared_ptr<ZFont>  GetDefaultFont(int32_t nIndex);
 
     // convenience functions
-    //std::shared_ptr<ZFont>  GetFontByFilename(const string& sFilename);
+    //std::shared_ptr<ZFont>  GetFontByFilename(const std::string& sFilename);
     //std::shared_ptr<ZFont>  GetFontByParams(const ZFontParams& params);
 
 private:
      
     tNameToFontMap          mNameToFontMap;
-    string                  msDefaultFontName;
+    std::string                  msDefaultFontName;
 };
 
 extern ZFontSystem*     gpFontSystem;

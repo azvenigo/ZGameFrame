@@ -2,7 +2,7 @@
 #include "ZBuffer.h"
 #include "ZStdDebug.h"
 #include "ZGraphicSystem.h"
-#include "ZStringHelpers.h"
+#include "helpers/StringHelpers.h"
 #include "ZAnimObjects.h"
 #include "ZAnimator.h"
 #include "ZXMLNode.h"
@@ -25,7 +25,7 @@ const int64_t kDefaultIdleTime = 32;
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
+using namespace std;
 
 ZWin::ZWin() : mArea(0,0,0,0),
 mAreaToDrawTo(0,0,0,0),
@@ -428,10 +428,10 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 
 	int64_t nX = 0;
 	if (message.HasParam("x"))
-		nX = StringToInt(message.GetParam("x"));
+		nX = StringHelpers::ToInt(message.GetParam("x"));
 	int64_t nY = 0;
 	if (message.HasParam("y"))
-		nY = StringToInt(message.GetParam("y"));
+		nY = StringHelpers::ToInt(message.GetParam("y"));
 
 	string sSubType = message.GetParam("subtype");
 
@@ -485,7 +485,7 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 		}
 		else if (sSubType == "wheel")
 		{
-			int64_t nDelta = StringToInt(message.GetParam("delta"));
+			int64_t nDelta = StringHelpers::ToInt(message.GetParam("delta"));
 			return OnMouseWheel(nX, nY, nDelta);
 		}
 		else if (sSubType == "hover")

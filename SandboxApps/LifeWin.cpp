@@ -5,6 +5,7 @@
 #include "ZRandom.h"
 extern bool gbApplicationExiting;
 
+using namespace std;
 
 cLifeWin::cLifeWin()
 {

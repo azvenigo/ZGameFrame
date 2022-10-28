@@ -28,10 +28,10 @@ public:
 
     void        SetFill(uint32_t nCol) { mFillColor = nCol; Invalidate(); }
     void        SetShowZoom(int32_t nFontID, uint32_t nCol, ZFont::ePosition pos, bool bShow100Also) { mbShowZoom = true; mZoomCaptionFontID = nFontID; mZoomCaptionColor = nCol; mZoomCaptionPos = pos; mbShow100Also = bShow100Also; }
-    void        SetCaption(const string& sCaption, int32_t nFontID, uint32_t nCol, ZFont::ePosition pos) { msCaption = sCaption; mCaptionFontID = nFontID; mnCaptionCol = nCol; mCaptionPos = pos; }
-    void        SetOnClickMessage(const string& sMessage) { msOnClickMessage = sMessage; mbAcceptsCursorMessages = !sMessage.empty(); }
+    void        SetCaption(const std::string& sCaption, int32_t nFontID, uint32_t nCol, ZFont::ePosition pos) { msCaption = sCaption; mCaptionFontID = nFontID; mnCaptionCol = nCol; mCaptionPos = pos; }
+    void        SetOnClickMessage(const std::string& sMessage) { msOnClickMessage = sMessage; mbAcceptsCursorMessages = !sMessage.empty(); }
 
-    void        LoadImage(const string& sName);
+    void        LoadImage(const std::string& sName);
     void        SetImage(ZBuffer* pImage);
 
 private:
@@ -51,11 +51,11 @@ private:
     uint32_t            mZoomCaptionColor;
     ZFont::ePosition    mZoomCaptionPos;
 
-    string              msCaption;
+    std::string         msCaption;
     int32_t             mCaptionFontID;
     ZFont::ePosition    mCaptionPos;
     uint32_t            mnCaptionCol;
-    string              msOnClickMessage;
+    std::string         msOnClickMessage;
 
     uint32_t            mFillColor;
 

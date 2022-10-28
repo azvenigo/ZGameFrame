@@ -5,72 +5,62 @@
 #include <vector>
 #include <ZMemBuffer.h>
 
-using namespace std;
-
 // Conversion functions
-bool            StringToBool(string sVal);
-string          BoolToString(bool bVal);
+/*bool        StringToBool(std::string sVal);
+std::string BoolToString(bool bVal);
 
-int64_t         StringToInt(const string& sVal);
-string          IntToString(int64_t nVal);
+int64_t     StringToInt(const std::string& sVal);
+std::string IntToString(int64_t nVal);
 
-uint32_t        StringToHex(const string& sVal);
-string          HexToString(uint32_t nVal);
+uint32_t    StringToHex(const std::string& sVal);
+std::string HexToString(uint32_t nVal);
 
-double          StringToDouble(const string& sVal);
-string		    DoubleToString(double fVal);
+double      StringToDouble(const std::string& sVal);
+std::string DoubleToString(double fVal);*/
 
-ZPoint          StringToPoint(const string& sVal);
-string          PointToString(const ZPoint& pointValue);
+ZPoint      StringToPoint(const std::string& sVal);
+std::string PointToString(const ZPoint& pointValue);
 
-ZRect           StringToRect(const string& sVal);
-string          RectToString(const ZRect& rectValue);
+ZRect       StringToRect(const std::string& sVal);
+std::string RectToString(const ZRect& rectValue);
 
-void            StringToInt64Array(const string& sVal, std::vector<int64_t>& intArray);
-string          Int64ArrayToString(std::vector<int64_t>& intArray);
+void        StringToInt64Array(const std::string& sVal, std::vector<int64_t>& intArray);
+std::string Int64ArrayToString(std::vector<int64_t>& intArray);
 
-string          StringArrayToString(std::vector<string>& stringArray);
-void            StringToStringArray(const string& sVal, std::vector<string>& stringArray);
+std::string StringArrayToString(std::vector<std::string>& stringArray);
+void        StringToStringArray(const std::string& sVal, std::vector<std::string>& stringArray);
 
-string          StringMapToString(tKeyValueMap& stringMap);
-void            StringToStringMap(string sVal, tKeyValueMap& stringMap);
+std::string StringMapToString(tKeyValueMap& stringMap);
+void        StringToStringMap(std::string sVal, tKeyValueMap& stringMap);
 
-uint64_t        StringToUint64(const string& sVal);
-string          UInt64ToString(uint64_t nVal);
+uint64_t    StringToUint64(const std::string& sVal);
+std::string UInt64ToString(uint64_t nVal);
 
-string          WideToAscii(const std::wstring& sVal);
-std::wstring    AsciiToWide(const string& sVal);
-
-bool            StringToBinary(const string& sString, void* pDest);		// string must be in ascii 2 hex values per byte of destination..... so pDest must point to a buffer of sVal.length()/2
-bool            BinaryToString(void* pSource, int64_t nLength, string& sString);
+bool        StringToBinary(const std::string& sString, void* pDest);		// std::string must be in ascii 2 hex values per byte of destination..... so pDest must point to a buffer of sVal.length()/2
+bool        BinaryToString(void* pSource, int64_t nLength, std::string& sString);
 
 
-void            TrimWhitespace(string& sVal);
+void        TrimWhitespace(std::string& sVal);
 
-bool            WriteStringToFile(const string& sFilename, const string& sString, bool bCompressEncode = false);
-bool            ReadStringFromFile(const string& sFilename, string& sResult);
+bool        WriteStringToFile(const std::string& sFilename, const std::string& sString, bool bCompressEncode = false);
+bool        ReadStringFromFile(const std::string& sFilename, std::string& sResult);
 
-bool            IsAlpha(char c);
-bool            IsWhiteSpace(char c);
-bool            ContainsWhitespace(const string& sVal);
+bool        IsAlpha(char c);
+bool        IsWhiteSpace(char c);
+bool        ContainsWhitespace(const std::string& sVal);
 
-void            MakeLower(string& sVal);        // modifies the string in place
-void            MakeUpper(string& sVal);        // modifies the string in place
+void        MakeLower(std::string& sVal);        // modifies the std::string in place
+void        MakeUpper(std::string& sVal);        // modifies the std::string in place
 
-void            Sprintf(string& sOut, const char* format, ...);
-void            Sprintf(string& sOut, const char* format, va_list args);
+void        Sprintf(std::string& sOut, const char* format, ...);
+void        Sprintf(std::string& sOut, const char* format, va_list args);
 
-void            SplitToken(string& sBefore, string& sAfter, const string& token);
-bool			StartsWith(const string& sConsider, const string& starts);
-bool			EndsWith(const string& sConsider, const string& ends);
+bool		StartsWith(const std::string& sConsider, const std::string& starts);
+bool		EndsWith(const std::string& sConsider, const std::string& ends);
 
-bool            ContainsNonAscii(const string& sString);
-
-string          GetHoursMinutesSecondsString(int64_t nSeconds);		
+std::string GetHoursMinutesSecondsString(int64_t nSeconds);		
 
 // Parsers
-int64_t         FindSubstring(const string& sStringToSearch, const string& sSubstring, int64_t nStartOffset = 0, bool bIgnoreQuotedPortions = false);
-bool            GetField(const string& sText, const string& sKey, string& sOutput);
 
 
 enum

@@ -4,7 +4,7 @@
 #include "ZTimer.h"
 #include "ZFormattedTextWin.h"
 #include "ZScriptedDialogWin.h"
-#include "ZStringHelpers.h"
+#include "helpers/StringHelpers.h"
 #include <iostream>
 
 #include "ZGraphicSystem.h"
@@ -19,6 +19,7 @@ extern bool                 gbApplicationExiting;
 static char THIS_FILE[] = __FILE__;
 #endif
 
+using namespace std;
 
 
 
@@ -82,19 +83,19 @@ bool ZMainWin::HandleMessage(const ZMessage& message)
 	else if (sType == "chardown")
 	{
 		if (GetFocus())
-			GetFocus()->OnChar((char) StringToInt(message.GetParam("code")));
+			GetFocus()->OnChar((char) StringHelpers::ToInt(message.GetParam("code")));
 		return true;
 	}
 	else if (sType == "keydown")
 	{
 		if (GetFocus())
-			GetFocus()->OnKeyDown((uint32_t) StringToInt(message.GetParam("code")));
+			GetFocus()->OnKeyDown((uint32_t) StringHelpers::ToInt(message.GetParam("code")));
 		return true;
 	}
 	else if (sType == "keyup")
 	{
 		if (GetFocus())
-			GetFocus()->OnKeyUp((uint32_t) StringToInt(message.GetParam("code")));
+			GetFocus()->OnKeyUp((uint32_t) StringHelpers::ToInt(message.GetParam("code")));
 		return true;
 	}
 	else if (sType == "quit_app_confirmed")

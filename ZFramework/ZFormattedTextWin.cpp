@@ -1,24 +1,27 @@
 #include "ZFormattedTextWin.h"
 #include "ZStringHelpers.h"
+#include "helpers/StringHelpers.h"
 #include "ZMessageSystem.h"
 #include "ZSliderWin.h"
 #include "ZXMLNode.h"
 #include "ZGraphicSystem.h"
 
-extern std::shared_ptr<ZBuffer>		gSliderThumb;
-extern std::shared_ptr<ZBuffer>		gSliderBackground;
+using namespace std;
+
+extern shared_ptr<ZBuffer>  gSliderThumb;
+extern shared_ptr<ZBuffer>  gSliderBackground;
 extern ZRect            	grSliderBgEdge;
 extern ZRect				grSliderThumbEdge;
-extern std::shared_ptr <ZBuffer> gDimRectBackground;
-extern std::shared_ptr<ZBuffer>		gDimRectBackground;
+extern shared_ptr <ZBuffer> gDimRectBackground;
+extern shared_ptr<ZBuffer>  gDimRectBackground;
 extern ZRect				grDimRectEdge;
 
 const int64_t 				kDefaultColor = 0;
 const int64_t				kSliderWidth = 20;
 const int32_t               kDefaultFontID = 0;
 
-const ZFont::ePosition	kDefaultTextPosition = ZFont::kBottomLeft; // we use bottom left by default in case there are multiple size fonts per text line
-const ZFont::eStyle		kDefaultStyle = ZFont::kNormal;
+const ZFont::ePosition	    kDefaultTextPosition = ZFont::kBottomLeft; // we use bottom left by default in case there are multiple size fonts per text line
+const ZFont::eStyle		    kDefaultStyle = ZFont::kNormal;
 
 
 const string				ksLineTag("line");
@@ -410,27 +413,27 @@ bool ZFormattedTextWin::ParseDocument(ZXMLNode* pNode)
 	string sAttribute;
 	sAttribute = pNode->GetAttribute(ksTextEdgeTag);
 	if (!sAttribute.empty())
-		mbDrawBorder = StringToBool(sAttribute);
+		mbDrawBorder = StringHelpers::ToBool(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksTextFillTag);
 	if (!sAttribute.empty())
-		mbFillBackground = StringToBool(sAttribute);
+		mbFillBackground = StringHelpers::ToBool(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksTextFillColor);
 	if (!sAttribute.empty())
-		mnFillColor = StringToHex(sAttribute);
+		mnFillColor = StringHelpers::ToInt(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksTextScrollToBottom);
 	if (!sAttribute.empty())
-		mnScrollToOnInit = StringToInt(sAttribute);
+		mnScrollToOnInit = StringHelpers::ToInt(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksScrollable);
 	if (!sAttribute.empty())
-		mbScrollable = StringToBool(sAttribute);
+		mbScrollable = StringHelpers::ToBool(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksUnderlineLinksTag);
 	if (!sAttribute.empty())
-		mbUnderlineLinks = StringToBool(sAttribute);
+		mbUnderlineLinks = StringHelpers::ToBool(sAttribute);
 
 
 
@@ -497,7 +500,7 @@ bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
 	tTextLine textLine;
 
 	string sParam;
-	bool bWrapLine = StringToBool(pTextNode->GetAttribute(ksWrapTag));
+	bool bWrapLine = StringHelpers::ToBool(pTextNode->GetAttribute(ksWrapTag));
 
 	tXMLNodeList elementNodeList;
 	pTextNode->GetChildren("text", elementNodeList);
@@ -547,7 +550,7 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 	sParam = pTextNode->GetAttribute(ksSizeTag);
 	if (!sParam.empty())
 	{
-		mnCurrentFontID = StringToInt(sParam);
+		mnCurrentFontID = StringHelpers::ToInt(sParam);
 
 //		CEASSERT(mnCurrentFontID >= 0 && mnCurrentFontID < kMaxFonts);      // make sure it's valid
 	}
@@ -555,13 +558,13 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 	sParam = pTextNode->GetAttribute(ksColorTag);
 	if (!sParam.empty())
 	{
-		mnCurrentColor = StringToHex(sParam);
+		mnCurrentColor = StringHelpers::ToInt(sParam);
 	}
 
 	sParam = pTextNode->GetAttribute(ksColor2Tag);
 	if (!sParam.empty())
 	{
-		mnCurrentColor2 = StringToHex(sParam);
+		mnCurrentColor2 = StringHelpers::ToInt(sParam);
 	}
 	else
 	{
@@ -571,7 +574,7 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 	sParam = pTextNode->GetAttribute(ksPositionTag);
 	if (!sParam.empty())
 	{
-		MakeLower(sParam);
+		StringHelpers::makelower(sParam);
 
 		if (sParam == "topleft")            mCurrentTextPosition = ZFont::kTopLeft;
 		else if (sParam == "topcenter")     mCurrentTextPosition = ZFont::kTopCenter;
@@ -591,7 +594,7 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 	sParam = pTextNode->GetAttribute(ksStyleTag);
 	if (!sParam.empty())
 	{
-		MakeLower(sParam);
+        StringHelpers::makelower(sParam);
 
 		if (sParam == "normal")        mCurrentStyle = ZFont::kNormal;
 		else if (sParam == "shadowed") mCurrentStyle = ZFont::kShadowed;

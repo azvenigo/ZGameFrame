@@ -5,7 +5,7 @@
 #include "Resources.h"
 
 extern ZPoint gLastMouseMove;
-
+using namespace std;
 
 bool ZWinControlPanel::Init()
 {

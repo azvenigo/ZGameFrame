@@ -32,7 +32,7 @@ private:
 
     ZBuffer                 mBackground;
 
-    string                  msText;
+    std::string             msText;
 
 
 };

@@ -7,6 +7,9 @@
 #include "ZMessageSystem.h"
 #include "ZXMLNode.h"
 #include "ZGraphicSystem.h"
+#include "helpers/StringHelpers.h"
+
+using namespace std;
 
 extern std::shared_ptr<ZBuffer>        gDefaultDialogBackground;
 
@@ -211,7 +214,7 @@ bool ZScriptedDialogWin::ExecuteScript(string sDialogScript)
 	// Window Attributes
 	SetWinName(pDialogNode->GetAttribute(ksElementWinName));
 	if (pDialogNode->HasAttribute(ksTransformable))
-		mbTransformable	= StringToBool(pDialogNode->GetAttribute(ksTransformable));
+		mbTransformable	= StringHelpers::ToBool(pDialogNode->GetAttribute(ksTransformable));
 
 	if (pDialogNode->HasAttribute(ksTransformIn))
 	{
@@ -231,7 +234,7 @@ bool ZScriptedDialogWin::ExecuteScript(string sDialogScript)
 	}
 
 	if (pDialogNode->HasAttribute(ksTransformInTime))
-		mnTransformInTime = StringToInt( pDialogNode->GetAttribute(ksTransformInTime));
+		mnTransformInTime = StringHelpers::ToInt( pDialogNode->GetAttribute(ksTransformInTime));
 
 	if (pDialogNode->HasAttribute(ksTransformOut))
 	{
@@ -251,14 +254,14 @@ bool ZScriptedDialogWin::ExecuteScript(string sDialogScript)
 	}
 
 	if (pDialogNode->HasAttribute(ksTransformOutTime))
-		mnTransformOutTime = StringToInt( pDialogNode->GetAttribute(ksTransformOutTime));
+		mnTransformOutTime = StringHelpers::ToInt( pDialogNode->GetAttribute(ksTransformOutTime));
 
 	if (pDialogNode->HasAttribute(ksElementDrawBackground))
-		mbDrawDefaultBackground = StringToBool(pDialogNode->GetAttribute(ksElementDrawBackground));
+		mbDrawDefaultBackground = StringHelpers::ToBool(pDialogNode->GetAttribute(ksElementDrawBackground));
 
 	if (pDialogNode->HasAttribute(ksElementBackgroundColor))
 	{
-		mnBackgroundColor = StringToHex(pDialogNode->GetAttribute(ksElementBackgroundColor));
+		mnBackgroundColor = StringHelpers::ToInt(pDialogNode->GetAttribute(ksElementBackgroundColor));
 		mbFillBackground = true;
 	}
 

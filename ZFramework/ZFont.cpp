@@ -1391,7 +1391,7 @@ void ZDynamicFont::DrawCharGradient(ZBuffer* pBuffer, char c, int64_t nX, int64_
 
 int CALLBACK EnumFontFamProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam)
 {
-    gWindowsFontFacenames.push_back(WideToAscii(lpelfe->lfFaceName) + "\0\0");
+    gWindowsFontFacenames.push_back(string(lpelfe->lfFaceName) + "\0");
     return 1;
 }
 

@@ -23,14 +23,14 @@ public:
         
     }
 
-    string      mCaption;
-    WatchType   mType;
-    void*       pMem;
+    std::string     mCaption;
+    WatchType       mType;
+    void*           pMem;
 
-    uint32_t    nFont;
-    uint32_t    nCaptionCol;
-    uint32_t    nWatchCol;
-    ZRect       mArea;
+    uint32_t        nFont;
+    uint32_t        nCaptionCol;
+    uint32_t        nWatchCol;
+    ZRect           mArea;
     ZFont::eStyle   mStyle;
 };
 
@@ -46,7 +46,7 @@ public:
 
     virtual bool    Init();
 
-    bool            AddItem(WatchType type, const string& sCaption, void* pWatchAddress = nullptr, uint32_t nFont = 1, uint32_t nCaptionCol = 0xffaaaaaa, uint32_t nWatchFont = 0xffffffff, ZFont::eStyle style = ZFont::kNormal);
+    bool            AddItem(WatchType type, const std::string& sCaption, void* pWatchAddress = nullptr, uint32_t nFont = 1, uint32_t nCaptionCol = 0xffaaaaaa, uint32_t nWatchFont = 0xffffffff, ZFont::eStyle style = ZFont::kNormal);
     void            AddSpace(int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
 
     bool            Process();
@@ -56,7 +56,7 @@ public:
 private:
     tWatchList      mWatchList;
 
-    std::vector<string>     mWatchedStrings;
+    std::vector<std::string>     mWatchedStrings;
     std::vector<int64_t>    mWatchedInt64s;
     std::vector<double>     mWatchedDoubles;
     std::vector<bool>       mWatchedBools;

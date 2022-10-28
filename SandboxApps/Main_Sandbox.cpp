@@ -1,4 +1,5 @@
 #include "Main_Sandbox.h"
+#include "helpers/StringHelpers.h"
 
 using namespace std;
 
@@ -26,7 +27,6 @@ ZMessageSystem          gMessageSystem;
 ZTickManager            gTickManager;
 ZAnimator               gAnimator;
 int64_t                 gnCheckerWindowCount = 49;
-int64_t                 gnRandomWindowCount = 10;
 int64_t                 gnLifeGridSize = 500;
 ZWin*                   gpCaptureWin = nullptr;
 ZWin*                   gpMouseOverWin = nullptr;
@@ -60,11 +60,6 @@ void Sandbox::InitControlPanel()
     gpControlPanel->AddSlider(&gnLifeGridSize, 1, 100, 5, "type=initchildwindows;mode=16;target=MainAppMessageTarget", true, false, 1);
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
 
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("Random Windows",     "type=initchildwindows;mode=3;target=MainAppMessageTarget");
-    gpControlPanel->AddSlider(&gnRandomWindowCount, 2, 50, 2, "", true, false, 1);
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-
     gpControlPanel->AddButton("ImageProcessor", "type=initchildwindows;mode=4;target=MainAppMessageTarget");
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight/2);
@@ -76,10 +71,6 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->AddButton("Marquee", "type=initchildwindows;mode=7;target=MainAppMessageTarget");
-
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("ImageTestWin", "type=initchildwindows;mode=8;target=MainAppMessageTarget");
-
 
     gpMainWin->ChildAdd(gpControlPanel);
 }
@@ -159,32 +150,6 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 		pWin->SetGridSize((int64_t) (gnLifeGridSize*(gGraphicSystem.GetAspectRatio())), gnLifeGridSize);
 		gpMainWin->ChildAdd(pWin);
 	}
-
-	else if (mode == eSandboxMode::kRandomWindows)
-	{
-		int64_t nOffset = 80;
-
-        const int64_t kNumChildSimpleWindows = 3;
-
-
-        for (int64_t i = gnRandomWindowCount/ kNumChildSimpleWindows; i > 0; i--)
-        {
-            int64_t nWidth = RANDU64(20, grFullArea.Width() / 2);//2+rand()%grFullArea.Width()/2;
-            int64_t nHeight = RANDU64(20, grFullArea.Height() / 2);//2+rand() % grFullArea.Height()/2;
-
-            int64_t panelW = grFullArea.Width() / 10;
-
-            int64_t nScreenX = RANDU64(0, grFullArea.Width() - panelW) - nWidth;
-            int64_t nScreenY = RANDU64(0, grFullArea.Height()) - nHeight;
-
-            ZRect rSub(nScreenX, nScreenY, nScreenX + nWidth, nScreenY + nHeight);
-
-            SimpleColorWin* pWin = new SimpleColorWin();
-            pWin->SetNumChildrenToSpawn(kNumChildSimpleWindows);
-            pWin->SetArea(rSub);
-            gpMainWin->ChildAdd(pWin);
-        }
-	}
 	else if (mode == eSandboxMode::kImageProcess)
 	{
 #ifdef _WIN64
@@ -248,13 +213,6 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
         gpMainWin->ChildAdd(pWin);
 
     }
-    else if (mode == eSandboxMode::kImageTestWin)
-    {
-        ImageTestWin* pWin = new ImageTestWin();
-        pWin->SetArea(grFullArea);
-
-        gpMainWin->ChildAdd(pWin);
-    }
 
     gpMainWin->ChildAdd(gpControlPanel);
 }
@@ -275,7 +233,7 @@ public:
 		string sType = message.GetType();
 		if (sType == "initchildwindows")
 		{
-            SandboxInitChildWindows((Sandbox::eSandboxMode) StringToInt(message.GetParam("mode")));
+            SandboxInitChildWindows((Sandbox::eSandboxMode) StringHelpers::ToInt(message.GetParam("mode")));
 		}
 
 		return true;

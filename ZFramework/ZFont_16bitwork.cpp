@@ -66,7 +66,7 @@ bool ZFont::LoadFont(const string& sFilename)
     streampos nNumToRead = fontFile.tellg();
     fontFile.seekg(0, ios::beg);
 
-	CEASSERT(nNumToRead < 10000000);	// 10 meg font?  really?
+	ZASSERT(nNumToRead < 10000000);	// 10 meg font?  really?
 
 	uint8_t* pBuf = new uint8_t[nNumToRead];
 //	ReadFile(hFile, pBuf, nNumToRead, &nNumRead, NULL);

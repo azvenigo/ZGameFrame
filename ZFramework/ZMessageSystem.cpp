@@ -1,6 +1,7 @@
 #include "ZMessageSystem.h"
-#include "ZStringHelpers.h"
+#include "helpers/StringHelpers.h"
 #include "ZStdDebug.h"
+#include "ZXMLNode.h"
 #include <algorithm>
 
 
@@ -9,6 +10,8 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+using namespace std;
 
 static int32_t gTotalMessageCount = 0;
 
@@ -65,7 +68,7 @@ void ZMessage::FromString(const string& sMessage)
 	mKeyValueMap.clear();
 
 	// If the message has no 'msg=' then we treat the whole string as a single message
-	if (FindSubstring(sMessage, "type=") == -1)
+	if (ZXMLNode::FindSubstring(sMessage, "type=") == -1)
 	{
 		mKeyValueMap["type"] = sMessage;
 	}
@@ -77,11 +80,11 @@ void ZMessage::FromString(const string& sMessage)
 		while (!bDone)
 		{
 			string sPair;
-			SplitToken(sPair, sParse, ";");
+			StringHelpers::SplitToken(sPair, sParse, ";");
 			if (!sPair.empty())
 			{
 				string sKey;
-				SplitToken(sKey, sPair, "=");
+                StringHelpers::SplitToken(sKey, sPair, "=");
 				ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
 				ZASSERT_MESSAGE(!sPair.empty(), "Value is empty!");
 				mKeyValueMap[sKey] = sPair;	// sPair now contains the value;
@@ -94,7 +97,7 @@ void ZMessage::FromString(const string& sMessage)
 		if (!sParse.empty())
 		{
 			string sKey;
-			SplitToken(sKey, sParse, "=");
+            StringHelpers::SplitToken(sKey, sParse, "=");
 			ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
 			ZASSERT_MESSAGE(!sParse.empty(), "Value is empty!");
 			mKeyValueMap[sKey] = sParse;	// sParse now contains the value;
@@ -237,7 +240,7 @@ void ZMessageSystem::Post(string sRawMessages)
 //	ZDEBUG_OUT("Post - \"%s\"\n", sRawMessages.c_str());
 	// there can be multiple messages surrounded by "<msg>" and "</msg>"
 	string sMessage;
-	while (GetField(sRawMessages, "msg", sMessage))
+	while (ZXMLNode::GetField(sRawMessages, "msg", sMessage))
 	{
 			ZMessage msg(sMessage);
 			mMessageQueue.push_back(msg);
@@ -264,5 +267,5 @@ void ZMessageSystem::Post(ZMessage& message)
 
 string ZMessageSystem::GenerateUniqueTargetName()
 {
-	return "target_" + IntToString(mnUniqueTargetNameCount++);
+	return "target_" + StringHelpers::FromInt(mnUniqueTargetNameCount++);
 }

@@ -28,7 +28,7 @@ public:
 };
 
 
-typedef list<ZScreenRect> tScreenRectList;
+typedef std::list<ZScreenRect> tScreenRectList;
 
 
 
@@ -41,6 +41,8 @@ public:
 	virtual ~ZScreenBuffer();
 	bool	Init(int64_t nWidth, int64_t nHeight, ZGraphicSystem* pGraphicSystem);
 	bool	Shutdown();
+
+    void    EnableRendering(bool bEnable = true);   // for pausing rendering temporarily while creating/destroying surfaces
 
     void    BeginRender();
 
@@ -63,6 +65,7 @@ protected:
 
 	tScreenRectList		mScreenRectList;
 	bool				mbVisibilityNeedsComputing;
+    bool                mbRenderingEnabled; 
 
 
 #ifdef USE_D3D

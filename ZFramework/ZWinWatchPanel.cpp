@@ -3,6 +3,8 @@
 #include "ZStringHelpers.h"
 #include "Resources.h"
 
+using namespace std;
+
 ZWinWatchPanel::ZWinWatchPanel()
 {
     mIdleSleepMS = 250;

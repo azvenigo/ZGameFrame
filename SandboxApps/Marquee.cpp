@@ -2,6 +2,8 @@
 #include "ZRandom.h"
 #include "ZFont.h"
 
+using namespace std;
+
 Marquee::Marquee()
 {
     mFillColor = 0;

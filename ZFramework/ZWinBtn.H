@@ -30,14 +30,14 @@ public:
 	virtual	bool		SetImage( ZBuffer* pImage );
 	virtual void		SetFont(int64_t nFontID) { mnFontID = nFontID; }
 
-	virtual void		SetText( string& text ) { sText = text; }
+	virtual void		SetText( std::string& text ) { sText = text; }
 	virtual bool		SetSrcRect( ZRect rBaseRect );
 	virtual bool		SetBaseRect( ZRect rBaseRect );
 
-	virtual void		SetTriggerMessage(const string& sMessage)	{ msTriggerMessage = sMessage; }
-	virtual void		SetHoverMessage(const string& sMessage)		{ msHoverMessage = sMessage; }
-	virtual void		SetCursorInMessage(const string& sMessage)	{ msCursorInMessage = sMessage; }
-	virtual void		SetCursorOutMessage(const string& sMessage)	{ msCursorOutMessage = sMessage; }
+	virtual void		SetTriggerMessage(const std::string& sMessage)	{ msTriggerMessage = sMessage; }
+	virtual void		SetHoverMessage(const std::string& sMessage)		{ msHoverMessage = sMessage; }
+	virtual void		SetCursorInMessage(const std::string& sMessage)	{ msCursorInMessage = sMessage; }
+	virtual void		SetCursorOutMessage(const std::string& sMessage)	{ msCursorOutMessage = sMessage; }
 
 protected:   
     virtual bool		Paint();
@@ -45,15 +45,15 @@ protected:
 	ZBuffer*			mpButtonImage;
 	ZRect				mrBaseRect;
 	ZRect				mrSrcRect;
-	string			sText;
+	std::string			sText;
 	int64_t				mnFontID;
-	IMessageTarget*	mpMessageTarget;     // if this is NULL, the button posts the message to everyone
+	IMessageTarget*	    mpMessageTarget;     // if this is NULL, the button posts the message to everyone
 
 	// Event specific messages
-	string			msTriggerMessage;
-	string			msHoverMessage;
-	string			msCursorInMessage;
-	string			msCursorOutMessage;
+	std::string			msTriggerMessage;
+	std::string			msHoverMessage;
+	std::string			msCursorInMessage;
+	std::string			msCursorOutMessage;
 
 	bool				mbWeOwnButtonImage;
 };
@@ -119,8 +119,8 @@ public:
 	virtual bool            OnMouseMove(int64_t x, int64_t y);
 
 
-	virtual string          GetCaption() { return msCaption; }
-	virtual void            SetCaption(const string& sCaption);
+	virtual std::string     GetCaption() { return msCaption; }
+	virtual void            SetCaption(const std::string& sCaption);
 
 	uint32_t                GetColor() { return mnTextColor; }
 	void                    SetColor(uint32_t nCol);
@@ -134,17 +134,17 @@ public:
 	void                    SetFontID(int64_t nFontID);
 	int64_t                 GetFontID() { return mnFontID; }
 
-	virtual void            SetMessage(string sMessage) { msButtonMessage = sMessage; }
-	virtual string          GetMessage() { return msButtonMessage; }
+	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
+	virtual std::string     GetMessage() { return msButtonMessage; }
 
 	void                    SetImages(ZBuffer* pUpEdgeImage, ZBuffer* pDownEdgeImage, ZRect rUpEdge );  
 
 protected:
     virtual bool            Paint();
-    string                  FitCaptionInWidth(int64_t nWidth, const string& sCaption, ZFont* pFont);		// Calculates an equal number of starting/ending chars with "..." in the middle
+    std::string             FitCaptionInWidth(int64_t nWidth, const std::string& sCaption, ZFont* pFont);		// Calculates an equal number of starting/ending chars with "..." in the middle
 
 	eSizablePushBtnState	mDrawState;
-	string				    msCaption;
+	std::string             msCaption;
 
 	uint32_t                mnTextColor;
 	uint32_t                mnTextColor2;
@@ -156,7 +156,7 @@ protected:
 
 	int64_t                 mnFontID;
 
-	string                  msButtonMessage;
+	std::string             msButtonMessage;
 };
 
 
@@ -181,13 +181,13 @@ public:  // cCEWinCheck ///////////////////////////////////////////////////////
 
 	bool					GetState() { return *mpbChecked; }
 	void					SetState(bool bChecked, bool bPostNotifications = true);
-	void					SetMessages(const string& sCheckMessage, const string sUncheckMessage) { msButtonMessage = sCheckMessage; msUncheckMessage = sUncheckMessage; }
+	void					SetMessages(const std::string& sCheckMessage, const std::string sUncheckMessage) { msButtonMessage = sCheckMessage; msUncheckMessage = sUncheckMessage; }
 
 protected:
     virtual bool  			Paint();
    
     bool*					mpbChecked;
-	string				msUncheckMessage;
+	std::string				msUncheckMessage;
 };
 
 

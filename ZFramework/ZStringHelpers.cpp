@@ -5,6 +5,7 @@
 #include <fstream>
 #include <stdio.h>
 #include "ZCompression.h"
+#include "ZXMLNode.h"
 #include "ZBuffer.h"
 #include "ZZipAPI.h"
 
@@ -17,79 +18,6 @@ const char* ksEncodedStringTag = "ESbyAZ";
 static char THIS_FILE[] = __FILE__;
 #endif
 
-void MakeLower(string& sVal)
-{
-	char* pChar = (char*)sVal.data();
-
-	for (size_t i = 0; i < sVal.length() && pChar; i++)
-		if (pChar[i] && pChar[i] >= 'A' && pChar[i] <= 'Z')
-			pChar[i] = pChar[i] + 'a' - 'A';
-}
-
-void MakeUpper(string& sVal)
-{
-	char* pChar = (char*)sVal.data();
-
-	for (size_t i = 0; i < sVal.length() && pChar; i++)
-		if (pChar[i] && pChar[i] >= 'a' && pChar[i] <= 'z')
-			pChar[i] = pChar[i] + 'A' - 'a';
-}
-
-
-bool	StringToBool(string sVal)
-{
-	MakeLower(sVal);
-	return sVal == "1" || sVal == "true" || sVal == "on" || sVal == "yes" || sVal == "y";
-}
-
-
-string	BoolToString(bool bVal)
-{
-	if (bVal)
-		return "1";
-
-	return "0";
-}
-
-int64_t		StringToInt(const string& sVal)
-{
-	return atoll(sVal.c_str());
-}
-
-string	IntToString(int64_t nVal)
-{
-	char buf[32];
-	sprintf_s(buf, "%lld", nVal);
-
-	return string(buf);
-}
-
-
-uint32_t StringToHex(const string& sVal)
-{
-	return strtoul(sVal.c_str(), NULL, 16);
-}
-
-string HexToString(uint32_t nVal)
-{
-	char buf[32];
-	sprintf_s(buf, "%x", nVal);
-
-	return string(buf);
-}
-
-double StringToDouble(const string& sVal)
-{
-	return strtod(sVal.c_str(), NULL);
-}
-
-string	DoubleToString(double fVal)
-{
-	char buf[32];
-	sprintf_s(buf, "%f", (float) fVal);
-
-	return string(buf);
-}
 
 ZPoint StringToPoint(const string& sVal)
 {
@@ -309,85 +237,12 @@ bool BinaryToString(void* pSource, int64_t nLength, string& sString)
 
 #pragma warning(disable:4244)
 
-string	WideToAscii(const std::wstring& sVal)
-{
-    return string(  sVal.begin(), sVal.end() );
-}
 
-std::wstring AsciiToWide(const string& sVal)
-{
-    return wstring( sVal.begin(), sVal.end() );
-}
-
-
-
-int64_t FindSubstring(const string& sStringToSearch, const string& sSubstring, int64_t nStartOffset, bool bIgnoreQuotedPortions)
-{
-	const char* pSearch = sStringToSearch.data() + nStartOffset;
-	const char* pSub = sSubstring.data();
-
-	int64_t nLengthToSearch = sStringToSearch.length() - nStartOffset;
-	int64_t nSubstringLength = sSubstring.length();
-
-	const char* pEnd = pSearch + nLengthToSearch - nSubstringLength + 1;
-
-	if (bIgnoreQuotedPortions)
-	{
-		while (pSearch < pEnd)		
-		{
-			if (*pSearch == '\"')
-			{
-				pSearch++;		// skip the opening quote
-				while (*pSearch != '\"' && pSearch < pEnd)		// find the ending quote
-					pSearch++;
-			}
-			else
-			{
-				if (memcmp(pSearch, pSub, nSubstringLength) == 0)
-					return pSearch - sStringToSearch.data();
-			}
-
-			pSearch++;
-		}
-	}
-	else
-	{
-		while (pSearch < pEnd)		
-		{
-			if (memcmp(pSearch, pSub, nSubstringLength) == 0)
-				return pSearch - sStringToSearch.data();
-
-			pSearch++;
-		}
-	}
-
-	return -1;
-}
-
-bool GetField(const string& sText, const string& sKey, string& sOutput)
-{
-	string sStartKey("<" + sKey + ">");
-	string sEndKey("</" + sKey + ">");
-
-	int64_t nStartOffset = FindSubstring(sText, sStartKey);
-	if (nStartOffset == -1)
-		return false;
-
-	nStartOffset += sStartKey.length();		// skip the start key
-
-	int64_t nEndOffset = FindSubstring(sText, sEndKey, nStartOffset);
-	ZASSERT(nEndOffset != -1);		// start key without an end key
-	if (nEndOffset == -1)
-		return false;
-
-	sOutput.assign(sText.data() + nStartOffset, nEndOffset - nStartOffset);
-	return true;
-}
 
 bool WriteStringToFile(const string& sFilename, const string& sString, bool bCompressEncode)
 {
 #ifdef _DEBUG
-	int64_t nSub = FindSubstring(sString, "<<", 0, true);
+	int64_t nSub = ZXMLNode::FindSubstring(sString, "<<", 0, true);
 	ZASSERT(nSub < 0);
 #endif
 
@@ -463,11 +318,6 @@ bool ReadStringFromFile(const string& sFilename, string& sResult)
 	return true;
 }
 
-bool IsAlpha(char c)
-{
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
 
 bool IsWhiteSpace(char c)
 {
@@ -538,29 +388,4 @@ bool StartsWith(const string& sConsider, const string& starts)
 bool EndsWith(const string& sConsider, const string& ends)
 {
 	return sConsider.substr(sConsider.length() - ends.length()) == ends;
-}
-
-
-void SplitToken(string& sBefore, string& sAfter, const string& token)
-{
-	size_t pos = sAfter.find(token);
-	if (pos == string::npos)
-	{
-		sBefore = sAfter;
-		sAfter = "";
-		return;
-	}
-
-	sBefore = sAfter.substr(0, pos).c_str();
-	sAfter = sAfter.substr(pos+token.length()).c_str();
-}
-
-
-bool ContainsNonAscii(const string& sString)
-{
-    for (auto c = sString.begin(); c != sString.end(); c++)
-        if (*c <= 0)
-            return true;
-
-    return false;
 }

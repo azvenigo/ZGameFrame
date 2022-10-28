@@ -6,6 +6,7 @@
 #include "ZGraphicSystem.h"
 
 extern ZAnimator gAnimator;
+using namespace std;
 
 ZImageWin::ZImageWin()
 {
@@ -110,8 +111,8 @@ bool ZImageWin::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 
         ZRect rImage(mpImage->GetArea());
 
-        double fZoomPointX = x-mImageArea.left;
-        double fZoomPointY = y-mImageArea.top;
+        double fZoomPointX = (double)(x-mImageArea.left);
+        double fZoomPointY = (double)(y-mImageArea.top);
 
         double fZoomPointU = fZoomPointX / (double)mImageArea.Width();
         double fZoomPointV = fZoomPointY / (double)mImageArea.Height();
@@ -120,13 +121,13 @@ bool ZImageWin::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
         double fNewHeight = rImage.Height() * fNewZoom;
 
 
-        double fNewLeft = x - (fNewWidth * fZoomPointU);
-        double fNewRight = fNewLeft + fNewWidth;
+        int64_t nNewLeft = (int64_t)(x - (fNewWidth * fZoomPointU));
+        int64_t nNewRight = nNewLeft + (int64_t)fNewWidth;
 
-        double fNewTop = y -(fNewHeight * fZoomPointV);
-        double fNewBottom = fNewTop + fNewHeight;
+        int64_t nNewTop = (int64_t)(y - (fNewHeight * fZoomPointV));
+        int64_t nNewBottom = nNewTop + (int64_t)fNewHeight;
 
-        ZRect rNewArea(fNewLeft, fNewTop, fNewRight, fNewBottom);
+        ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
 
         mImageArea.SetRect(rNewArea);
 	}
@@ -177,14 +178,14 @@ void ZImageWin::FitImageToWindow()
     double fRatio = (double)rImageArea.Height() / (double)rImageArea.Width();
 
     int64_t nImageWidth = mArea.Width();
-    int64_t nImageHeight = nImageWidth * fRatio;
+    int64_t nImageHeight = (int64_t)(nImageWidth * fRatio);
 
     mfPerfectFitZoom = (double)nImageHeight / (double)rImageArea.Height();
 
     if (nImageHeight > mArea.Height())
     {
         nImageHeight = mArea.Height();
-        nImageWidth = nImageHeight / fRatio;
+        nImageWidth = (int64_t) (nImageHeight / fRatio);
         mfPerfectFitZoom = (double)nImageWidth / (double)rImageArea.Width();
     }
 
