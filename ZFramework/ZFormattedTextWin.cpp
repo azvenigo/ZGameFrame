@@ -421,11 +421,11 @@ bool ZFormattedTextWin::ParseDocument(ZXMLNode* pNode)
 
 	sAttribute = pNode->GetAttribute(ksTextFillColor);
 	if (!sAttribute.empty())
-		mnFillColor = StringHelpers::ToInt(sAttribute);
+		mnFillColor = (uint32_t) StringHelpers::ToInt(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksTextScrollToBottom);
 	if (!sAttribute.empty())
-		mnScrollToOnInit = StringHelpers::ToInt(sAttribute);
+		mnScrollToOnInit = (uint32_t)StringHelpers::ToInt(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksScrollable);
 	if (!sAttribute.empty())
@@ -558,13 +558,13 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 	sParam = pTextNode->GetAttribute(ksColorTag);
 	if (!sParam.empty())
 	{
-		mnCurrentColor = StringHelpers::ToInt(sParam);
+		mnCurrentColor = (uint32_t)StringHelpers::ToInt(sParam);
 	}
 
 	sParam = pTextNode->GetAttribute(ksColor2Tag);
 	if (!sParam.empty())
 	{
-		mnCurrentColor2 = StringHelpers::ToInt(sParam);
+		mnCurrentColor2 = (uint32_t)StringHelpers::ToInt(sParam);
 	}
 	else
 	{

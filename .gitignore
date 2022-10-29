@@ -399,3 +399,4 @@ FodyWeavers.xsd
 SandboxApps/P/
 ZFramework/platforms/p/
 SandboxApps/ImageSandbox.vcxproj.filters
+build/

@@ -74,8 +74,8 @@ bool ZImageWin::OnMouseMove(int64_t x, int64_t y)
 
     if (AmCapturing())
     {
-        int32_t dX = (int32_t) x+mMouseDownOffset.mX;
-        int32_t dY = (int32_t) y+mMouseDownOffset.mY;
+        int32_t dX = (int32_t) (x+mMouseDownOffset.mX);
+        int32_t dY = (int32_t) (y+mMouseDownOffset.mY);
         ScrollTo(dX, dY);
     }
 
@@ -135,7 +135,7 @@ bool ZImageWin::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 	return true;
 }
 
-void ZImageWin::ScrollTo(int32_t nX, int32_t nY)
+void ZImageWin::ScrollTo(int64_t nX, int64_t nY)
 {
     const int32_t kSnapDistance = 10;
     if (abs(nX - mAreaToDrawTo.left) < kSnapDistance)

@@ -25,9 +25,6 @@ endif()
 set(SANDBOXAPPS_SOURCES FloatLinesWin.h FloatLinesWin.cpp LifeWin.h LifeWin.cpp Main_Sandbox.h Main_Sandbox.cpp Main_Win64.cpp Marquee.h Marquee.cpp ProcessImageWin.h ProcessImageWin.cpp TextTestWin.h TextTestWin.cpp)
 set(COMMON_FILES 
 
-../ZFramework/Huffman.cpp
-../ZFramework/Huffman.h
-../ZFramework/platforms
 ../ZFramework/Resources.cpp
 ../ZFramework/Resources.h
 ../ZFramework/ZAnimator.cpp
@@ -136,11 +133,12 @@ source_group(Common FILES ${COMMON_FILES})
 
 if(MSVC)
     # ignore pdb not found
-    set(EXTRA_FLAGS "/W2")
+    set(EXTRA_FLAGS "/W3")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    set(TARGET_PROPS  PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:SandboxApps>")
 else()
     set(EXTRA_FLAGS "-Wall -Wextra -Werror -march=x86-64 -pthread")
-    set(EXTRA_CXX_FLAGS "-std=c++17")
     if( SYMBOLS ) 
         set(EXTRA_FLAGS "-g ${EXTRA_FLAGS}")
     endif()
@@ -160,4 +158,8 @@ include_directories(${INCLUDE_DIRS})
 
 add_executable(SandboxApps WIN32 ${SOURCES} ${INCLUDES})
 target_link_libraries(SandboxApps ${LINK_LIBS})
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/res" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/../ZFramework/default_resources" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
+set_target_properties(SandboxApps ${TARGET_PROPS})
     

@@ -112,7 +112,7 @@ bool TextTestWin::Init()
     
 #ifdef _WIN64
 	//mpFont = gGraphicSystem.GetDefaultFont(0);
-    mnSelectedFontIndex = RANDU64( 0, gWindowsFontFacenames.size() );
+    mnSelectedFontIndex = (int32_t) (RANDU64( 0, gWindowsFontFacenames.size() ));
 
     mCustomFontParams.nHeight = 50;
     mCustomFontParams.nWeight = 200;

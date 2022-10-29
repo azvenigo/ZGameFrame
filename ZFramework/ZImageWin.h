@@ -24,7 +24,7 @@ public:
     void        SetZoomable(bool bZoomable, double fMinZoom = 0.01, double fMaxZoom = 1000.0) { mbZoomable = bZoomable; mfMinZoom = fMinZoom; mfMaxZoom = fMaxZoom; }
     void        SetZoom(double fZoom);
     double      GetZoom();
-    void        ScrollTo(int32_t nX, int32_t nY);
+    void        ScrollTo(int64_t nX, int64_t nY);
 
     void        SetFill(uint32_t nCol) { mFillColor = nCol; Invalidate(); }
     void        SetShowZoom(int32_t nFontID, uint32_t nCol, ZFont::ePosition pos, bool bShow100Also) { mbShowZoom = true; mZoomCaptionFontID = nFontID; mZoomCaptionColor = nCol; mZoomCaptionPos = pos; mbShow100Also = bShow100Also; }

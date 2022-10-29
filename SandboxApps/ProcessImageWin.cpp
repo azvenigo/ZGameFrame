@@ -14,6 +14,7 @@
 #include "ZWinControlPanel.h"
 #include "ZWinWatchPanel.h"
 #include "ZTimer.h"
+#include "ZRandom.h"
 #include "helpers/StringHelpers.h"
 
 #ifdef _WIN64        // for open file dialong
@@ -545,29 +546,42 @@ void cProcessImageWin::StackImages(void* pContext)
             double fAccumulatedG = 0.0;
             double fAccumulatedB = 0.0;
 
-            for (int32_t i = 0; i < nImages; i++)
+            if (fContrastRange < 1.0)
             {
-                uint32_t nCol = pJP->pThis->mImagesToProcess[i].get()->GetPixel(x, y);
-                uint32_t nSourceR = ARGB_R(nCol);
-                uint32_t nSourceG = ARGB_G(nCol);
-                uint32_t nSourceB = ARGB_B(nCol);
-
-                double fContrast = imageContrasts[i];
-//                double fWeight = sqrt(fContrast*nImages)/fContrastRange;
-//                double fWeight = sqrt((fContrast - fLowestContrast)*(fContrast - fLowestContrast)) / fContrastRange;
-                double fWeight = 1.0/(1.0-((fContrast-fLowestContrast)/ fContrastRange)*((fContrast-fLowestContrast)/ fContrastRange));
-                fAccumulatedR += ((double)nSourceR) * fWeight;
-                fAccumulatedG += ((double)nSourceG) * fWeight;
-                fAccumulatedB += ((double)nSourceB) * fWeight;
+                // if no contrast, just use.what? image 0?
+                pJP->pDestImage->SetPixel(x, y, pJP->pThis->mImagesToProcess[rand()%nImages].get()->GetPixel(x, y));
+//                pJP->pDestImage->SetPixel(x, y, 0xffff00ff);
             }
+            else
+            {
+                double fAccumulatedWeights = 0.0;
+                for (int32_t i = 0; i < nImages; i++)
+                {
+                    uint32_t nCol = pJP->pThis->mImagesToProcess[i].get()->GetPixel(x, y);
+                    uint32_t nSourceR = ARGB_R(nCol);
+                    uint32_t nSourceG = ARGB_G(nCol);
+                    uint32_t nSourceB = ARGB_B(nCol);
 
-            fAccumulatedR /= (nImages);
-            fAccumulatedG /= (nImages);
-            fAccumulatedB /= (nImages);
+                    double fContrast = imageContrasts[i];
+                    double fWeight = sqrt((fContrast - fLowestContrast)*(fContrast - fLowestContrast)) / fContrastRange;
 
-            uint32_t nFinalCol = ARGB(0xff, (uint8_t)fAccumulatedR, (uint8_t)fAccumulatedG, (uint8_t)fAccumulatedB);
+                    // play with some randomization in weight
+//                    fWeight += RANDDOUBLE(0.0, 2.0);
 
-            pJP->pDestImage->SetPixel(x, y, nFinalCol);
+                    fAccumulatedR += ((double)nSourceR) * fWeight;
+                    fAccumulatedG += ((double)nSourceG) * fWeight;
+                    fAccumulatedB += ((double)nSourceB) * fWeight;
+                    fAccumulatedWeights += fWeight;
+                }
+
+                fAccumulatedR /= (fAccumulatedWeights);
+                fAccumulatedG /= (fAccumulatedWeights);
+                fAccumulatedB /= (fAccumulatedWeights);
+
+                uint32_t nFinalCol = ARGB(0xff, (uint8_t)fAccumulatedR, (uint8_t)fAccumulatedG, (uint8_t)fAccumulatedB);
+
+                pJP->pDestImage->SetPixel(x, y, nFinalCol);
+            }
         }
 
     }

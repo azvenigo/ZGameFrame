@@ -157,7 +157,7 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 		pWin->SetArea(0, 0, grFullArea.Width(), grFullArea.Height());
 
 
-/*        std::list<string> filenames = {
+        std::list<string> filenames = {
         "res/414A2616.jpg",
         "res/414A2617.jpg",
         "res/414A2618.jpg",
@@ -170,12 +170,7 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
     
         
         };
-        pWin->LoadImages(filenames);*/
-
-        std::list<string> filenames = { "D:/OneDrive/Images/Creative/Photography/2022-09-18 Emily Bee/retouched/small/Emily 414A9994.jpg" };
-
         pWin->LoadImages(filenames);
-
 
 
 //		pWin->LoadImages("res/414A2616.jpg");

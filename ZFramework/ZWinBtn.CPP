@@ -387,11 +387,11 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 
 	string sColor = pNode->GetAttribute("color");
 	if (!sColor.empty())
-		mnTextColor = StringHelpers::ToInt(sColor);
+		mnTextColor = (uint32_t) StringHelpers::ToInt(sColor);
 
 	string sColor2 = pNode->GetAttribute("color2");
 	if (!sColor2.empty())
-		mnTextColor2 = StringHelpers::ToInt(sColor2);
+		mnTextColor2 = (uint32_t) StringHelpers::ToInt(sColor2);
 
 	msButtonMessage = pNode->GetAttribute("message");
 

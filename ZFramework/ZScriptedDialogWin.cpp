@@ -261,7 +261,7 @@ bool ZScriptedDialogWin::ExecuteScript(string sDialogScript)
 
 	if (pDialogNode->HasAttribute(ksElementBackgroundColor))
 	{
-		mnBackgroundColor = StringHelpers::ToInt(pDialogNode->GetAttribute(ksElementBackgroundColor));
+		mnBackgroundColor = (uint32_t) StringHelpers::ToInt(pDialogNode->GetAttribute(ksElementBackgroundColor));
 		mbFillBackground = true;
 	}
 
