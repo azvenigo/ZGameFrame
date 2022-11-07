@@ -385,7 +385,7 @@ inline void ZBuffer::ConvertToRGB(uint32_t col, uint8_t& a, uint8_t& r, uint8_t&
 
 
 
-inline bool ZBuffer::Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect)
+bool ZBuffer::Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect)
 {
 	int64_t   nOverhangDistance;  
 	ZRect	rBufferArea(fullDstRect);
