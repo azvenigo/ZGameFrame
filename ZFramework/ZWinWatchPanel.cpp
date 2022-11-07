@@ -143,7 +143,7 @@ bool ZWinWatchPanel::Paint()
     if (!mbInvalid)
         return true;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, 0xff888888);
+    mpTransformTexture->Fill(mAreaToDrawTo, gDefaultDialogFill);
 
     mWatchedStrings.clear();
     mWatchedInt64s.clear();

@@ -9,6 +9,7 @@ class ZBuffer;
 
 
 // Default configuration
+extern uint32_t     gDefaultDialogFill;
 
 
 // Application

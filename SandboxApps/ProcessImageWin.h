@@ -2,9 +2,20 @@
 
 #include "ZWin.h"
 #include "ZAnimator.h"
+#include "ZFloatColorBuffer.h"
 
 class cXMLNode;
 class ZImageWin;
+
+
+class cFloatAreaDescriptor
+{
+public:
+    ZFColor fCol;
+    ZRect rArea;
+};
+
+typedef std::list<cFloatAreaDescriptor> tFloatAreas;
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -39,6 +50,9 @@ private:
 	void	Process_LoadImages();
     void	Process_SelectImage(int32_t nIndex);
     void    Process_ComputeGradient();
+    void    Process_FloatColorSandbox();
+
+    bool    Subdivide_and_Subtract(ZFloatColorBuffer* pBuffer, ZRect rArea, int64_t nMinSize, tFloatAreas& floatAreas);   // Adds subtracted to floatAreas
 
 
     // Spawn threads with jobs to do
@@ -57,9 +71,11 @@ private:
 	void	ResetResultsBuffer();
 
     uint32_t ComputeAverageColor(ZBuffer* pBuffer, ZRect rArea);
+    bool    ComputeAverageColor(ZFloatColorBuffer* pBuffer, ZRect rArea, ZFColor& fCol);
 
 	int64_t	mnProcessPixelRadius;
     int64_t mnGradientLevels;
+    int64_t mnSubdivisionLevels;
 
 
 	std::vector< std::shared_ptr<ZBuffer> > mImagesToProcess;
@@ -75,7 +91,9 @@ private:
     int64_t     mnSelectedImageH;
 
 
-	std::unique_ptr<ZBuffer>	mpResultBuffer;
+    ZFloatColorBuffer           mFloatColorBuffer;
+
+	std::shared_ptr<ZBuffer>	mpResultBuffer;
 
     double*                     mpContrastFloatBuffer;
     double                      mfHighestContrast;

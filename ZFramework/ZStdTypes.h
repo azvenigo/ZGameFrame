@@ -86,6 +86,85 @@ typedef tPoint<double>	ZFPoint;
 
 
 
+template<typename T> class tColor 
+{
+public:
+    tColor()
+    {
+        a = 0.0;
+        r = 0.0;
+        g = 0.0;
+        b = 0.0;
+    }
+
+    tColor(T _a, T _r, T _g, T _b)
+    {
+        a = _a;
+        r = _r;
+        g = _g;
+        b = _b;
+    }
+
+    tColor(const tColor& rhs)
+    {
+        a = rhs.a;
+        r = rhs.r;
+        g = rhs.g;
+        b = rhs.b;
+    }
+
+    tColor operator-() const
+    {
+        return tColor(a, -r, -g, -b);
+    }
+
+    tColor operator+(tColor& c) const
+    {
+        return tColor(a, r + c.r, g + c.g, b + c.b);
+    }
+
+    void operator+=(const tColor& c)
+    {
+        r += c.r;
+        g += c.g;
+        b += c.b;
+    }
+
+
+    tColor operator-(tColor& c) const
+    {
+        return tColor(a, r - c.r, g - c.g, b - c.b);
+    }
+
+    void operator-=(const tColor& c)
+    {
+        r -= c.r;
+        g -= c.g;
+        b -= c.b;
+    }
+
+    tColor operator*(T mult) const
+    {
+        return tColor(a, r * mult, g * mult, b * mult);
+    }
+
+    void operator*=(T mult)
+    {
+        r *= mult;
+        g *= mult;
+        b *= mult;
+    }
+
+
+    T a;
+    T r;
+    T g;
+    T b;
+};
+
+typedef tColor<double> ZFColor;
+
+
 
 
 template<typename T> class tColorVertex : public tPoint<T>

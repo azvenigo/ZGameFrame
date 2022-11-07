@@ -65,6 +65,7 @@ cProcessImageWin::cProcessImageWin()
     mpContrastFloatBuffer = nullptr;
 	mnProcessPixelRadius = 1;
     mnGradientLevels = 1;
+    mnSubdivisionLevels = 4;
     mnSelectedImageIndex = 0;
 
     mThreads = 32;
@@ -133,7 +134,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
         {
             ZImageWin* pOriginalImageWin = new ZImageWin();
             pOriginalImageWin->SetArea(rOriginalImage);
-            pOriginalImageWin->SetImage(mImagesToProcess[i].get());
+            pOriginalImageWin->SetImage(mImagesToProcess[i]);
 
             if (mImagesToProcess.size() > 1)
             {
@@ -283,12 +284,41 @@ uint32_t cProcessImageWin::ComputeAverageColor(ZBuffer* pBuffer, ZRect rArea)
     return ARGB(0xff, nAverageR, nAverageG, nAverageB);
 }
 
+bool cProcessImageWin::ComputeAverageColor(ZFloatColorBuffer* pBuffer, ZRect rArea, ZFColor& fCol)
+{
+    if (rArea.Width() < 1 || rArea.Height() < 1)
+        return false;
+
+    fCol.a = 0.0;
+    fCol.r = 0.0;
+    fCol.g = 0.0;
+    fCol.b = 0.0;
+
+    for (int32_t y = rArea.top; y < rArea.bottom; y++)
+    {
+        for (int32_t x = rArea.left; x < rArea.right; x++)
+        {
+            ZFColor c;
+            pBuffer->GetPixel(x, y, c);
+            fCol += c;
+        }
+    }
+
+    double fPixels = rArea.Width() * rArea.Height();
+
+    fCol *= (1.0 / fPixels);    // divide by total number of pixels
+    fCol.a = 255.0;
+
+    return true;
+}
+
+
 void cProcessImageWin::Process_ComputeGradient()
 {
     int32_t nSubdivisions = /*1 <<*/ mnGradientLevels;
 
-    int32_t nSubW = mpResultBuffer->GetArea().Width() / nSubdivisions;
-    int32_t nSubH = mpResultBuffer->GetArea().Height() / nSubdivisions;
+    double fSubW = (double) mpResultBuffer->GetArea().Width() / (double) nSubdivisions;
+    double fSubH = (double) mpResultBuffer->GetArea().Height() / (double) nSubdivisions;
 
 
     uint32_t* subdivisionColorGrid = new uint32_t[nSubdivisions * nSubdivisions];
@@ -297,37 +327,36 @@ void cProcessImageWin::Process_ComputeGradient()
     {
         for (int32_t nGridX = 0; nGridX < nSubdivisions; nGridX++)
         {
-            ZRect rSubArea(nGridX * nSubW, nGridY * nSubH, (nGridX+1)* nSubW, (nGridY+1)* nSubH);
+            ZRect rSubArea(nGridX * fSubW, nGridY * fSubH, (nGridX+1)* fSubW, (nGridY+1)* fSubH);
 
             int32_t nIndex = (nGridY * nSubdivisions) + nGridX;
             subdivisionColorGrid[nIndex] = ComputeAverageColor(mpResultBuffer.get(), rSubArea);
         }
     }
 
-    for (int32_t nGridY = 0; nGridY < nSubdivisions-1; nGridY++)
+    for (int32_t nGridY = 0; nGridY < nSubdivisions; nGridY++)
     {
-        for (int32_t nGridX = 0; nGridX < nSubdivisions-1; nGridX++)
+        for (int32_t nGridX = 0; nGridX < nSubdivisions; nGridX++)
         {
 //            if (nGridX == 1 && nGridY%2 == 1)
             {
-                ZRect rSubArea(nGridX * nSubW, nGridY * nSubH, (nGridX + 1) * nSubW, (nGridY + 1) * nSubH);
-                tColorVertexArray verts;
-                gRasterizer.RectToVerts(rSubArea, verts);
+                ZRect rSubArea(nGridX * fSubW, nGridY *fSubH, (nGridX + 1) * fSubW, (nGridY + 1) * fSubH);
+//                tColorVertexArray verts;
+//                gRasterizer.RectToVerts(rSubArea, verts);
 
                 int32_t nIndex = (nGridY * nSubdivisions) + nGridX; // TL
-                verts[0].mColor = subdivisionColorGrid[nIndex];
+//                verts[0].mColor = subdivisionColorGrid[nIndex];
+//                verts[1].mColor = subdivisionColorGrid[nIndex];
+//                verts[2].mColor = subdivisionColorGrid[nIndex];
+//                verts[3].mColor = subdivisionColorGrid[nIndex];
+//                gRasterizer.Rasterize(mpResultBuffer.get(), mpResultBuffer.get(), verts);
 
-                nIndex++;   // TR
+                uint32_t nCol = subdivisionColorGrid[nIndex];
 
-                verts[1].mColor = subdivisionColorGrid[nIndex];
+                nCol = 0x80000000 | (nCol & 0x00ffffff); // 50% alpha
 
-                nIndex += nSubW; // BR
-                verts[2].mColor = subdivisionColorGrid[nIndex];
+                mpResultBuffer.get()->FillAlpha(rSubArea, nCol);
 
-                nIndex--;       // BL
-                verts[3].mColor = subdivisionColorGrid[nIndex];
-
-                gRasterizer.Rasterize(mpResultBuffer.get(), mpResultBuffer.get(), verts);
             }
         }
     }
@@ -335,22 +364,115 @@ void cProcessImageWin::Process_ComputeGradient()
     InvalidateChildren();
 }
 
-/*void cProcessImageWin::Process_ComputeGradient()
+bool cProcessImageWin::Subdivide_and_Subtract(ZFloatColorBuffer* pBuffer, ZRect rArea, int64_t nMinSize, tFloatAreas& floatAreas)
 {
-    ZRect rDrawArea(mpResultBuffer->GetArea());
-    rDrawArea.DeflateRect(32, 32);
+    int64_t nSubW = rArea.Width() / 2;
+    int64_t nSubH = rArea.Height() / 2;
 
-    tColorVertexArray verts;
-    gRasterizer.RectToVerts(rDrawArea, verts);
-    verts[0].mColor = ARGB(0xff, 0xff, 0, 0);
-    verts[1].mColor = ARGB(0x00, 0x00, 0xff, 0);
-    verts[2].mColor = ARGB(0x00, 0, 0, 0xff);
-    verts[3].mColor = ARGB(0xff, 0xff, 0, 0xff);
-    gRasterizer.Rasterize(mpResultBuffer.get(), mpResultBuffer.get(), verts);
+    // Too small to sibdivide?
+    if (nSubW < nMinSize || nSubH < nMinSize)
+        return false;
 
-    Invalidate();
-}*/
 
+    cFloatAreaDescriptor tl;
+    cFloatAreaDescriptor tr;
+    cFloatAreaDescriptor bl;
+    cFloatAreaDescriptor br;
+
+    tl.rArea = ZRect(rArea.left, rArea.top, rArea.left + nSubW, rArea.top + nSubH);
+    tr.rArea = ZRect(rArea.left + nSubW, rArea.top, rArea.right, rArea.top + nSubH);
+
+    bl.rArea = ZRect(rArea.left, rArea.top + nSubH, rArea.left + nSubW, rArea.bottom);
+    br.rArea = ZRect(rArea.left + nSubW, rArea.top + nSubH, rArea.right, rArea.bottom);
+
+    ComputeAverageColor(&mFloatColorBuffer, tl.rArea, tl.fCol);
+    ComputeAverageColor(&mFloatColorBuffer, tr.rArea, tr.fCol);
+    ComputeAverageColor(&mFloatColorBuffer, bl.rArea, bl.fCol);
+    ComputeAverageColor(&mFloatColorBuffer, br.rArea, br.fCol);
+
+
+    tl.fCol *= -0.1;
+    tr.fCol *= -0.1;
+    bl.fCol *= -0.1;
+    br.fCol *= -0.1;
+
+    mFloatColorBuffer.AddRect(tl.rArea, tl.fCol);
+    mFloatColorBuffer.AddRect(tr.rArea, tr.fCol);
+    mFloatColorBuffer.AddRect(bl.rArea, bl.fCol);
+    mFloatColorBuffer.AddRect(br.rArea, br.fCol);
+
+    floatAreas.push_back(tl);
+    floatAreas.push_back(tr);
+    floatAreas.push_back(bl);
+    floatAreas.push_back(br);
+
+    Subdivide_and_Subtract(pBuffer, tl.rArea, nMinSize, floatAreas);
+    Subdivide_and_Subtract(pBuffer, tr.rArea, nMinSize, floatAreas);
+    Subdivide_and_Subtract(pBuffer, bl.rArea, nMinSize, floatAreas);
+    Subdivide_and_Subtract(pBuffer, br.rArea, nMinSize, floatAreas);
+
+    return true;
+
+}
+
+void cProcessImageWin::Process_FloatColorSandbox()
+{
+    mFloatColorBuffer.From(mpResultBuffer.get());
+    ZRect rArea(mFloatColorBuffer.GetBuffer().GetArea());
+
+/*    double a = 0.0;
+    double r = 0.0;
+    double g = 0.0;
+    double b = 0.0;
+
+    for (int32_t y = 0; y < rArea.Height(); y++)
+    {
+        for (int32_t x = 0; x < rArea.Width(); x++)
+        {
+            uint32_t nCol = mpResultBuffer.get()->GetPixel(x, y);
+            double da;
+            double dr;
+            double dg;
+            double db;
+            mFloatColorBuffer.ColToFloatCol(nCol, da, dr, dg, db);
+            double dScale = (da + dr + dg + db) / (4.0 * 256.0);
+
+            a += da * dScale;
+            r += dr * dScale;
+            g += dg * dScale;
+            b += db * dScale;
+
+//            mFloatColorBuffer.SetPixel(x, y, a, r, g, b);
+            mFloatColorBuffer.SetPixel(x, y, 255.0, x%256, 255.0*sin((y+x)/314.0), y);
+        }
+    }*/
+
+//    mFloatColorBuffer.MultRect(rArea, 0.75);
+//    mFloatColorBuffer.AddRect(rArea, ZFColor(0xff, -10.0, 0.0, 0.0 ));
+
+    tFloatAreas floatAreas;
+
+    Subdivide_and_Subtract(&mFloatColorBuffer, rArea, rArea.Height() / mnSubdivisionLevels, floatAreas);
+
+#define PRINT_EM
+
+    ZFloatColorBuffer newBuffer;
+    newBuffer.Init(rArea.Width(), rArea.Height());
+    for (auto a : floatAreas)
+    {
+#ifdef PRINT_EM
+        OutputDebugLockless("r[%d,%d,%d,%d] = argb[%f,%f,%f,%f]\n", a.rArea.left, a.rArea.top, a.rArea.right, a.rArea.bottom, a.fCol.a, a.fCol.r, a.fCol.g, a.fCol.b);
+#endif
+        newBuffer.AddRect(a.rArea, -a.fCol);
+    }
+
+    OutputDebugLockless("Rects:%d, Memory:%d\n", floatAreas.size(), floatAreas.size() * sizeof(cFloatAreaDescriptor));
+
+//    mpResultBuffer.get()->Blt(&mFloatColorBuffer.GetBuffer(), rArea, rArea);
+    mpResultBuffer.get()->Blt(&newBuffer.GetBuffer(), rArea, rArea);
+
+    InvalidateChildren();
+}
 
 
 
@@ -758,8 +880,16 @@ bool cProcessImageWin::Init()
     pCP->AddButton("compute contrast", "type=computecontrast;target=imageprocesswin");
     pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, 1);
 
+    pCP->AddSpace(16);
+
     pCP->AddButton("compute gradients", "type=computegradients;target=imageprocesswin");
     pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, 1);
+
+    pCP->AddSpace(16);
+
+    pCP->AddButton("float color sandbox", "type=floatcolorsandbox;target=imageprocesswin");
+    pCP->AddSlider(&mnSubdivisionLevels, 1, 128, 1, "", true, false, 1);
+
 
     ChildAdd(pCP);
 
@@ -802,9 +932,8 @@ void cProcessImageWin::ResetResultsBuffer()
 
         mpResultWin = new ZImageWin();
         mpResultWin->SetArea(mrResultImageDest);
-        mpResultWin->SetImage(mpResultBuffer.get());
         mpResultWin->SetShowZoom(4, 0x44ffffff, ZFont::kBottomRight, true);
-        mpResultWin->SetImage(mpResultBuffer.get());
+        mpResultWin->SetImage(mpResultBuffer);
         mpResultWin->SetFill(0xff222222);
         mpResultWin->SetArea(mrResultImageDest);
         mpResultWin->SetZoomable(true, 0.05, 100.0);
@@ -856,6 +985,11 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
     else if (sType == "computegradients")
     {
         Process_ComputeGradient();
+        return true;
+    }
+    else if (sType == "floatcolorsandbox")
+    {
+        Process_FloatColorSandbox();
         return true;
     }
 

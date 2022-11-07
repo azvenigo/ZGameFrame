@@ -94,7 +94,7 @@ bool ZWinControlPanel::Paint()
     if (!mbVisible)
         return false;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, 0xff888888);
+    mpTransformTexture->Fill(mAreaToDrawTo, gDefaultDialogFill);
 
     return ZWin::Paint();
 }

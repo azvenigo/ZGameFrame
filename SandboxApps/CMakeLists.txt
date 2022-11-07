@@ -36,6 +36,8 @@ set(COMMON_FILES
 ../ZFramework/ZBitBuffer.h
 ../ZFramework/ZBuffer.cpp
 ../ZFramework/ZBuffer.h
+../ZFramework/ZFloatColorBuffer.cpp
+../ZFramework/ZFloatColorBuffer.h
 ../ZFramework/ZCompression.cpp
 ../ZFramework/ZCompression.h
 ../ZFramework/ZFont.cpp
@@ -160,6 +162,6 @@ add_executable(SandboxApps WIN32 ${SOURCES} ${INCLUDES})
 target_link_libraries(SandboxApps ${LINK_LIBS})
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/res" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/../ZFramework/default_resources" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/../ZFramework/default_resources" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res/default_resources)
 set_target_properties(SandboxApps ${TARGET_PROPS})
     

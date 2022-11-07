@@ -419,7 +419,7 @@ bool ZWinSizablePushBtn::Paint()
 
 	ZASSERT(pBufferToUse);
 
-	mpTransformTexture->BltEdge(pBufferToUse, mrEdge, mAreaToDrawTo, true);
+	mpTransformTexture->BltEdge(pBufferToUse, mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch);
 
 
 	// Draw the text

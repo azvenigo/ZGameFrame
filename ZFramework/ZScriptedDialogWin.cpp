@@ -8,6 +8,7 @@
 #include "ZXMLNode.h"
 #include "ZGraphicSystem.h"
 #include "helpers/StringHelpers.h"
+#include "Resources.h"
 
 using namespace std;
 
@@ -192,7 +193,7 @@ bool ZScriptedDialogWin::Paint()
     // Draw the dialog edge
 	if (mbDrawDefaultBackground)
 		//pBufferToDrawTo->Blt(&gDefaultDialogBackground, mAreaToDrawTo, mAreaToDrawTo, pClip);
-		mpTransformTexture->Fill(mArea, 0xff888888);
+		mpTransformTexture->Fill(mArea, gDefaultDialogFill);
 	return ZWin::Paint();
 }
 

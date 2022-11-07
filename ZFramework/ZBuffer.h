@@ -29,6 +29,13 @@ public:
         kRenderFlag_ReadyToRender   = 1
     };
 
+    enum eBltEdgeMiddleType
+    {
+        kEdgeBltMiddle_None         = 0,
+        kEdgeBltMiddle_Tile         = 1,
+        kEdgeBltMiddle_Stretch      = 2
+    };
+
 	ZBuffer();
     ZBuffer(const ZBuffer* pSrc);
 	virtual ~ZBuffer();
@@ -49,19 +56,14 @@ public:
 	virtual bool            BltAlpha(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, uint32_t nAlpha, ZRect* pClip = NULL, eAlphaBlendType type = kAlphaDest);
 
 	virtual bool            BltTiled(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, int64_t nStartX, int64_t nStartY, ZRect* pClip = NULL, eAlphaBlendType type = kAlphaDest);
-	virtual bool            BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, bool bTileBltMiddle = true, ZRect* pClip = NULL, eAlphaBlendType type = kAlphaDest);
+	virtual bool            BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, eBltEdgeMiddleType middleType = kEdgeBltMiddle_Tile, ZRect* pClip = NULL, eAlphaBlendType type = kAlphaDest);
 
 	virtual bool            BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle, double fScale, ZRect* pClip = NULL);
 
 	virtual void            DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRect* pClip = NULL);
 
-	virtual bool            Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect);
-
 	virtual uint32_t        GetPixel(int64_t x, int64_t y);
 	virtual void            SetPixel(int64_t x, int64_t y, uint32_t nCol);
-
-	virtual uint32_t        ConvertRGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b);
-	virtual void            ConvertToRGB(uint32_t col, uint8_t& a, uint8_t& r, uint8_t& g, uint8_t& b);
 
 	virtual ZRect&          GetArea() { return mSurfaceArea; }
 
@@ -77,12 +79,18 @@ public:
     virtual void            SetRenderFlag(eRenderFlags flag) { mRenderFlags = mRenderFlags|flag; }
     virtual void            ClearRenderFlag(eRenderFlags flag) { mRenderFlags = mRenderFlags&~flag; }
 
+
+
 	// Alpha Blending Functions
-	uint32_t                AddColors(uint32_t nCol1, uint32_t nCol2);
-	uint32_t                AlphaBlend_Col1Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend);
-	uint32_t                AlphaBlend_Col2Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend);
-	uint32_t                AlphaBlend_AddAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend);
-	uint32_t                AlphaBlend_BlendAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend);
+	static uint32_t        AddColors(uint32_t nCol1, uint32_t nCol2);
+    static uint32_t        AlphaBlend_Col1Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend);
+    static uint32_t        AlphaBlend_Col2Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend);
+    static uint32_t        AlphaBlend_AddAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend);
+    static uint32_t        AlphaBlend_BlendAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend);
+
+    static bool            Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect);
+    static uint32_t        ConvertRGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b);
+    static void            ConvertToRGB(uint32_t col, uint8_t& a, uint8_t& r, uint8_t& g, uint8_t& b);
 
 protected:
 	bool                    FloatScanLineIntersection(double fScanLine, const ZColorVertex& v1, const ZColorVertex& v2, double& fIntersection, double& fR, double& fG, double& fB, double& fA);

@@ -295,7 +295,7 @@ bool ZFormattedTextWin::Paint()
 	if (mbFillBackground)
 		mpTransformTexture->Fill(rLocalTextBorderArea, mnFillColor);
     else if (mbDrawBorder)
-        mpTransformTexture->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalTextBorderArea, true, &mArea);
+        mpTransformTexture->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalTextBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mArea);
 
 	ZRect rClip(rLocalTextArea);
 

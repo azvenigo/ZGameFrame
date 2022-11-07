@@ -32,7 +32,7 @@ public:
     void        SetOnClickMessage(const std::string& sMessage) { msOnClickMessage = sMessage; mbAcceptsCursorMessages = !sMessage.empty(); }
 
     void        LoadImage(const std::string& sName);
-    void        SetImage(ZBuffer* pImage);
+    void        SetImage(std::shared_ptr<ZBuffer> pImage);
 
 private:
     bool        mbScrollable;
@@ -59,5 +59,5 @@ private:
 
     uint32_t            mFillColor;
 
-	ZBuffer*            mpImage;
+    std::shared_ptr<ZBuffer>    mpImage;
 };

@@ -11,7 +11,7 @@ using namespace std;
 ZImageWin::ZImageWin()
 {
 	mbAcceptsCursorMessages = true;
-    mpImage = nullptr;
+    mpImage.reset();
 	mfZoom = 1.0;
     mfPerfectFitZoom = 1.0;
     mfMinZoom = 0.01;
@@ -109,7 +109,7 @@ bool ZImageWin::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 
         SetZoom(fNewZoom);
 
-        ZRect rImage(mpImage->GetArea());
+        ZRect rImage(mpImage.get()->GetArea());
 
         double fZoomPointX = (double)(x-mImageArea.left);
         double fZoomPointY = (double)(y-mImageArea.top);
@@ -162,8 +162,7 @@ void ZImageWin::ScrollTo(int64_t nX, int64_t nY)
 
 void ZImageWin::LoadImage(const string& sName)
 {
-    delete mpImage;
-    mpImage = new ZBuffer();
+    mpImage.reset(new ZBuffer());
     mpImage->LoadBuffer(sName);
 
     FitImageToWindow();
@@ -218,7 +217,7 @@ double ZImageWin::GetZoom()
 }
 
 
-void ZImageWin::SetImage(ZBuffer* pImage)
+void ZImageWin::SetImage(std::shared_ptr<ZBuffer> pImage)
 {
 //	mpImage.reset(pImage);
     mpImage = pImage;
@@ -238,13 +237,13 @@ bool ZImageWin::Paint()
 
     if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
     {
-        mpTransformTexture->Blt(mpImage, rSource, rDest);
+        mpTransformTexture->Blt(mpImage.get(), rSource, rDest);
     }
     else
     {
         tUVVertexArray verts;
         gRasterizer.RectToVerts(mImageArea, verts);
-        gRasterizer.RasterizeWithAlpha(mpTransformTexture, mpImage, verts, &mAreaToDrawTo);
+        gRasterizer.RasterizeWithAlpha(mpTransformTexture, mpImage.get(), verts, &mAreaToDrawTo);
     }
 
     if (!msCaption.empty())

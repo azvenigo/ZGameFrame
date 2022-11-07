@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "ZStringHelpers.h"
 #include "helpers/StringHelpers.h"
+#include "ZRasterizer.h"
 #include <math.h>
 
 #ifdef _WIN64
@@ -505,7 +506,7 @@ bool ZBuffer::BltTiled(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, int64_t nStartX,
 //   dBL   |  dB   |  dBR   |              
 //         |       |        |               
 //                                        
-bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, bool bTileBltMiddle, ZRect* pClip, eAlphaBlendType type)
+bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, eBltEdgeMiddleType middleType, ZRect* pClip, eAlphaBlendType type)
 {
 	ZASSERT(pSrc);
 
@@ -526,12 +527,8 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, bool bTileBl
 	int64_t b = rEdgeRect.bottom;
 
 	// Adjustments for destinations whos width or height are smaller than the source rect
-	if (rDst.Height() < t+b)
+/*	if (rDst.Height() < t+b)
 	{
-/*		int64_t nPixelsToTrim = t+b-rDst.Height();
-		t -= nPixelsToTrim/2;
-		b += nPixelsToTrim/2;*/
-
 		t = rDst.Height()/2;
 		b = h - t;
 	}
@@ -540,7 +537,7 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, bool bTileBl
 	{
 		l = rDst.Width()/2;
 		r = w - l;
-	}
+	}*/
 
 	ZRect rTL(0, 0, l, t);
 	ZRect rTR(r, 0, w, t);
@@ -602,8 +599,32 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, bool bTileBl
 	if (bBlitBottom)
 		BltTiled(pSrc, rB, rdB, 0, 0, &rClip, type);
 
-	if (bTileBltMiddle && rdM.Width()>0 && rdM.Height()>0)
-		BltTiled(pSrc, rM, rdM, 0, 0, &rClip, type);
+    if (rdM.Width() > 0 && rdM.Height() > 0)
+    {
+        if (middleType == kEdgeBltMiddle_Tile)
+        {
+            BltTiled(pSrc, rM, rdM, 0, 0, &rClip, type);
+        }
+        else if (middleType == kEdgeBltMiddle_Stretch)
+        {
+            tUVVertexArray middleVerts;
+            gRasterizer.RectToVerts(rdM, middleVerts);
+
+            middleVerts[0].mU = (double)rEdgeRect.left / (double) w;
+            middleVerts[0].mV = (double)rEdgeRect.top / (double)h;
+
+            middleVerts[1].mU = (double)rEdgeRect.right / (double)w;
+            middleVerts[1].mV = (double)rEdgeRect.top / (double)h;
+
+            middleVerts[2].mU = (double)rEdgeRect.right / (double)w;
+            middleVerts[2].mV = (double)rEdgeRect.bottom / (double)h;
+
+            middleVerts[3].mU = (double)rEdgeRect.left / (double)w;
+            middleVerts[3].mV = (double)rEdgeRect.bottom / (double)h;
+
+            gRasterizer.Rasterize(this, pSrc, middleVerts, &rClip);
+        }
+    }
 
 	return true;
 }
@@ -920,7 +941,6 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 
 	TransformPoint(dTex, origin, -fAngle, fScale);     // This is the texture walking vector
 
-	//Gotta use parens on this next one or it will always be false.
 	int64_t      strideDiv2    = mSurfaceArea.Width();
 	int64_t      strideSrcDiv2 = pSrc->GetArea().Width();
 	uint32_t*     pDestBits     = (uint32_t*)mpPixels+rDstActual.top*strideDiv2; //Points to left side of destination buffer at the current row.

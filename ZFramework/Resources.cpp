@@ -15,12 +15,13 @@ std::shared_ptr<ZBuffer>		gStandardButtonDownEdgeImage;
 
 
 ZRect			grTextArea;
+uint32_t        gDefaultDialogFill(0xff575757);
 
 ZRect			grSliderBgEdge(16, 16, 48, 48);
-ZRect			grSliderThumbEdge(16, 16, 48, 48);
+ZRect			grSliderThumbEdge(5, 5, 50, 50);
 //ZRect			grDimRectEdge(4, 4, 102, 103);
 ZRect			grDimRectEdge(16, 16, 48, 48);
-ZRect			grStandardButtonEdge(16, 16, 48, 48);
+ZRect			grStandardButtonEdge(5, 5, 50, 50);
 
 ZRect           grControlPanelArea;
 ZRect           grControlPanelTrigger;
@@ -94,7 +95,7 @@ bool cResources::Shutdown()
     gSliderBackground = nullptr;
 
     gSliderThumb = nullptr;
-
+    
     gStandardButtonUpEdgeImage = nullptr;
 
     gStandardButtonDownEdgeImage = nullptr;

@@ -56,8 +56,8 @@ extern ZWin*                gpCaptureWin;
 extern ZWin*                gpMouseOverWin;
 extern ZPoint               gLastMouseMove;
 
-extern list<int32_t>        frameworkFontSizes;
-extern list<string>         frameworkFontNames;
+extern std::list<int32_t>   frameworkFontSizes;
+extern std::list<string>    frameworkFontNames;
 extern string               gsDefaultFontName;
 
 
