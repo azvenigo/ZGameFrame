@@ -44,7 +44,7 @@ class ZAnimObject_TextMover : public ZAnimObject
 {
 public:
    // cCEAnimObject
-   ZAnimObject_TextMover(ZFont* pFont);
+   ZAnimObject_TextMover(tZFontPtr pFont);
 
    virtual bool		Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
 
@@ -56,21 +56,21 @@ public:
 
 protected:
     std::string     msText;
-   ZFont*       	mpFont;
-   uint32_t         mnColor;
-   uint32_t			mnColor2;
-   int64_t			mnStartAlpha;
-   int64_t			mnEndAlpha;
-   int64_t         	mnTotalFadeTime;
-   int64_t         	mnRemainingAlphaFadeTime;
-   bool           	mbAlphaFading;
-   bool           	mbShadow;
+    tZFontPtr       mpFont;
+    uint32_t        mnColor;
+    uint32_t        mnColor2;
+    int64_t			mnStartAlpha;
+    int64_t			mnEndAlpha;
+    int64_t         mnTotalFadeTime;
+    int64_t         mnRemainingAlphaFadeTime;
+    bool           	mbAlphaFading;
+    bool           	mbShadow;
 
-   // we keep our location in floating point values for smooth animating
-   double          	mfX;           
-   double          	mfY;
-   double          	mfDX;
-   double          	mfDY;
+    // we keep our location in floating point values for smooth animating
+    double          mfX;           
+    double          mfY;
+    double          mfDX;
+    double          mfDY;
 };
 
 
@@ -122,21 +122,21 @@ public:
    // cCEAnimObject
    ZAnimObject_TextPulser();
 
-   virtual bool   Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
+   virtual bool Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
 
    // cCEAnimObject_TextPulser
    void			SetText(const std::string& sText, uint32_t nColor, uint32_t nFontID, bool bShadow = false);
    void			SetPulse(int64_t nMinAlpha, int64_t nMaxAlpha, double fPeriod);
 
 protected:
-    std::shared_ptr<ZFont>  mpFont;
-    std::string             msText;
-    uint32_t		        mnColor;
-    bool			        mbShadow;
+    tZFontPtr   mpFont;
+    std::string msText;
+    uint32_t	mnColor;
+    bool		mbShadow;
 
-    double		            mfPeriod;
-    int64_t		            mnMinAlpha;
-    int64_t		            mnMaxAlpha;
+    double		mfPeriod;
+    int64_t		mnMinAlpha;
+    int64_t		mnMaxAlpha;
 };
 
 // Transformer

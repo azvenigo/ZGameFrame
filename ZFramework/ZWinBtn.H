@@ -27,8 +27,8 @@ public:
 	virtual bool		OnMouseOut();
 
 public:
-	virtual	bool		SetImage( ZBuffer* pImage );
-	virtual void		SetFont(int64_t nFontID) { mnFontID = nFontID; }
+	virtual	bool		SetImage(tZBufferPtr pImage );
+	virtual void		SetFont(tZFontPtr pFont) { mpFont = pFont; }
 
 	virtual void		SetText( std::string& text ) { sText = text; }
 	virtual bool		SetSrcRect( ZRect rBaseRect );
@@ -42,20 +42,18 @@ public:
 protected:   
     virtual bool		Paint();
 
-	ZBuffer*			mpButtonImage;
-	ZRect				mrBaseRect;
-	ZRect				mrSrcRect;
-	std::string			sText;
-	int64_t				mnFontID;
-	IMessageTarget*	    mpMessageTarget;     // if this is NULL, the button posts the message to everyone
+    tZBufferPtr     mpButtonImage;
+	ZRect			mrBaseRect;
+	ZRect			mrSrcRect;
+	std::string		sText;
+	tZFontPtr       mpFont;
+	IMessageTarget*	mpMessageTarget;     // if this is NULL, the button posts the message to everyone
 
 	// Event specific messages
-	std::string			msTriggerMessage;
-	std::string			msHoverMessage;
-	std::string			msCursorInMessage;
-	std::string			msCursorOutMessage;
-
-	bool				mbWeOwnButtonImage;
+	std::string		msTriggerMessage;
+	std::string		msHoverMessage;
+	std::string		msCursorInMessage;
+	std::string		msCursorOutMessage;
 };
 
 
@@ -76,16 +74,16 @@ public:
 	~ZWinPushBtn();
 
 public:
-	virtual bool  Init();
-	virtual bool  Shutdown(); 
+	virtual bool    Init();
+	virtual bool    Shutdown(); 
 
-	virtual bool  OnMouseDownL(int64_t x, int64_t y);
-	virtual bool  OnMouseUpL(int64_t x, int64_t y);
-	virtual bool  OnMouseMove(int64_t x, int64_t y);
-	bool	SetImage( ZBuffer* pImage );
+	virtual bool    OnMouseDownL(int64_t x, int64_t y);
+	virtual bool    OnMouseUpL(int64_t x, int64_t y);
+	virtual bool    OnMouseMove(int64_t x, int64_t y);
+	bool            SetImage(tZBufferPtr pImage );
 
 protected:
-    virtual bool  Paint();
+    virtual bool    Paint();
    
     tPushBtnState	mDrawState;
 };
@@ -119,20 +117,13 @@ public:
 	virtual bool            OnMouseMove(int64_t x, int64_t y);
 
 
-	virtual std::string     GetCaption() { return msCaption; }
 	virtual void            SetCaption(const std::string& sCaption);
-
-	uint32_t                GetColor() { return mnTextColor; }
-	void                    SetColor(uint32_t nCol);
-
-	uint32_t                GetColor2() { return mnTextColor2; }
+    std::string             GetCaption() { return msCaption; };
+    void                    SetColor(uint32_t nCol);
 	void                    SetColor2(uint32_t nCol2);
-
-	ZFont::eStyle           GetStyle() { return mCaptionStyle; }
 	void                    SetStyle(ZFont::eStyle style);
-
-	void                    SetFontID(int64_t nFontID);
-	int64_t                 GetFontID() { return mnFontID; }
+    virtual void		    SetFont(tZFontPtr pFont) { mpFont = pFont; }
+    tZFontPtr  GetFont()    { return mpFont; }
 
 	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
 	virtual std::string     GetMessage() { return msButtonMessage; }
@@ -141,7 +132,7 @@ public:
 
 protected:
     virtual bool            Paint();
-    std::string             FitCaptionInWidth(int64_t nWidth, const std::string& sCaption, ZFont* pFont);		// Calculates an equal number of starting/ending chars with "..." in the middle
+    std::string             FitCaptionInWidth(int64_t nWidth, const std::string& sCaption, tZFontPtr pFont);		// Calculates an equal number of starting/ending chars with "..." in the middle
 
 	eSizablePushBtnState	mDrawState;
 	std::string             msCaption;
@@ -154,7 +145,7 @@ protected:
 	ZBuffer*                mpDownEdgeImage;            // not owned by this class
 	ZRect                   mrEdge;
 
-	int64_t                 mnFontID;
+    tZFontPtr               mpFont;
 
 	std::string             msButtonMessage;
 };

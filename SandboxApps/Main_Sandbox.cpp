@@ -6,7 +6,7 @@ using namespace std;
 // Global Variables:
 
 list<int32_t> frameworkFontSizes = { 12, 18, 20, 30, 40, 60, 100, 150/*, 250, 1000*/ };
-list<string> frameworkFontNames = { "Verdana", "Gadugi", "Soft Elegance", "Blackadder ITC", "Vivaldi", "Felix Titling", };
+list<string> frameworkFontNames = { "Verdana", "Gadugi", "Soft Elegance", "Blackadder ITC", "Vivaldi", "Felix Titling", "Wingdings 3" };
 string gsDefaultFontName("Verdana");
 
 ZRect                   grFullArea;

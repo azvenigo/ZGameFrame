@@ -184,8 +184,8 @@ private:
 
 #endif
 
-
-typedef std::map< int32_t, std::shared_ptr<ZFont> > tSizeToFont;
+typedef std::shared_ptr<ZFont>  tZFontPtr;
+typedef std::map< int32_t, tZFontPtr > tSizeToFont;
 typedef std::map< std::string, tSizeToFont >  tNameToFontMap;
 
 
@@ -195,32 +195,28 @@ public:
     ZFontSystem();
     ~ZFontSystem();
 
-    bool                    Init();        
-    void                    Shutdown();
+    bool        Init();        
+    void        Shutdown();
 
-    std::shared_ptr<ZFont>  LoadFont(const std::string& sFilename);          // returns loaded font index
+    tZFontPtr   LoadFont(const std::string& sFilename);          // returns loaded font index
 #ifdef _WIN64
-    std::shared_ptr<ZFont>  CreateFont(const ZFontParams& params);      // returns created font index
+    tZFontPtr   CreateFont(const ZFontParams& params);      // returns created font index
 #endif
 
 
-    std::vector<std::string>     GetFontNames();
-    std::vector<int32_t>    GetAvailableSizes(const std::string& sFontName);
+    std::vector<std::string>    GetFontNames();
+    std::vector<int32_t>        GetAvailableSizes(const std::string& sFontName);
 
-    std::shared_ptr<ZFont>  GetDefaultFont(const std::string& sFontName, int32_t nFontSize);
+    tZFontPtr       GetDefaultFont(const std::string& sFontName, int32_t nFontSize);
 
-    void                    SetDefaultFontName(const std::string& sName) { msDefaultFontName = sName; }
-    int32_t                 GetDefaultFontCount() { return (int32_t) mNameToFontMap[msDefaultFontName].size(); }
-    std::shared_ptr<ZFont>  GetDefaultFont(int32_t nIndex);
-
-    // convenience functions
-    //std::shared_ptr<ZFont>  GetFontByFilename(const std::string& sFilename);
-    //std::shared_ptr<ZFont>  GetFontByParams(const ZFontParams& params);
+    void            SetDefaultFontName(const std::string& sName) { msDefaultFontName = sName; }
+    int32_t         GetDefaultFontCount() { return (int32_t) mNameToFontMap[msDefaultFontName].size(); }
+    tZFontPtr       GetDefaultFont(int32_t nIndex);
 
 private:
      
-    tNameToFontMap          mNameToFontMap;
-    std::string                  msDefaultFontName;
+    tNameToFontMap  mNameToFontMap;
+    std::string     msDefaultFontName;
 };
 
-extern ZFontSystem*     gpFontSystem;
+extern ZFontSystem* gpFontSystem;

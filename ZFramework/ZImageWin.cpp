@@ -217,7 +217,7 @@ double ZImageWin::GetZoom()
 }
 
 
-void ZImageWin::SetImage(std::shared_ptr<ZBuffer> pImage)
+void ZImageWin::SetImage(tZBufferPtr pImage)
 {
 //	mpImage.reset(pImage);
     mpImage = pImage;
@@ -248,7 +248,7 @@ bool ZImageWin::Paint()
 
     if (!msCaption.empty())
     {
-        std::shared_ptr<ZFont> pFont(gpFontSystem->GetDefaultFont(mCaptionFontID));
+        tZFontPtr pFont(gpFontSystem->GetDefaultFont(mCaptionFontID));
         assert(pFont);
 
         ZRect rCaption(pFont->GetOutputRect(mAreaToDrawTo, msCaption.data(), msCaption.length(), mCaptionPos));
@@ -259,7 +259,7 @@ bool ZImageWin::Paint()
     {
         if ((mfZoom == 1.0 && mbShow100Also) || mfZoom != 1.0)
         {
-            std::shared_ptr<ZFont> pFont(gpFontSystem->GetDefaultFont(mZoomCaptionFontID));
+            tZFontPtr pFont(gpFontSystem->GetDefaultFont(mZoomCaptionFontID));
             assert(pFont);
 
             string sZoom;

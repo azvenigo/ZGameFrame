@@ -12,42 +12,42 @@
 
 using namespace std;
 
-extern std::shared_ptr<ZBuffer>        gDefaultDialogBackground;
+extern tZBufferPtr  gDefaultDialogBackground;
 
-extern std::shared_ptr<ZBuffer>        gStandardButtonUpEdgeImage;
-extern std::shared_ptr<ZBuffer>        gStandardButtonDownEdgeImage;
-extern ZRect            grStandardButtonEdge;
+extern tZBufferPtr  gStandardButtonUpEdgeImage;
+extern tZBufferPtr  gStandardButtonDownEdgeImage;
+extern ZRect        grStandardButtonEdge;
 
 
 
-const string			ksScriptedDialog("scripteddialog");
-const string			ksElement("element");
+const string		ksScriptedDialog("scripteddialog");
+const string		ksElement("element");
 
-const string			ksElementDrawBackground("draw_background");
-const string			ksElementBackgroundColor("bgcolor");
-const string			ksTransformable("transformable");
-const string			ksTransformIn("transform_in");
-const string			ksTransformOut("transform_out");
+const string		ksElementDrawBackground("draw_background");
+const string		ksElementBackgroundColor("bgcolor");
+const string		ksTransformable("transformable");
+const string		ksTransformIn("transform_in");
+const string		ksTransformOut("transform_out");
 
-const string			ksTransformInTime("transform_in_time");
-const string			ksTransformOutTime("transform_out_time");
+const string		ksTransformInTime("transform_in_time");
+const string		ksTransformOutTime("transform_out_time");
 
-const string			ksElementWinName("winname");
+const string		ksElementWinName("winname");
 
-const string			ksElementImage("image");
-const string			ksElementTextWin("textwin");
-const string			ksElementTextWinRawFormat("rawformat");
-const string			ksCaption("caption");
+const string		ksElementImage("image");
+const string		ksElementTextWin("textwin");
+const string		ksElementTextWinRawFormat("rawformat");
+const string		ksCaption("caption");
 
-const string			ksElementButton("btn");
+const string		ksElementButton("btn");
 
-const string			ksAreaTag("area");     // format "l,t,r,b"
-const string			ksColorTag("color");      // format "r,g,b"
-const string			ksMessageTag("message");
-const string			ksSizeTag("size");     // Text Size
+const string		ksAreaTag("area");     // format "l,t,r,b"
+const string		ksColorTag("color");      // format "r,g,b"
+const string		ksMessageTag("message");
+const string		ksSizeTag("size");     // Text Size
 
-const int64_t kButtonMeasure = 32;
-const int64_t kPadding = 4;
+const int64_t       kButtonMeasure = 32;
+const int64_t       kPadding = 4;
 
 #ifdef _DEBUG
 #define new new(_NORMAL_BLOCK, THIS_FILE, __LINE__)
@@ -96,14 +96,10 @@ bool ZScriptedDialogWin::Init()
 		{
 			ZWinSizablePushBtn* pBtn = *it;
 
-			int64_t nFontID = pBtn->GetFontID();
-			//CEASSERT(nFontID < kMaxFonts);
-
-			if (nFontID > nLargestFontID)
-				nLargestFontID = nFontID;
+            tZFontPtr pFont = pBtn->GetFont();
 
 			string sCaption = pBtn->GetCaption();
-			int64_t nSize = gpFontSystem->GetDefaultFont((int32_t) nFontID)->StringWidth(sCaption);
+			int64_t nSize = pFont->StringWidth(sCaption);
 			ZASSERT(nSize < mAreaToDrawTo.Width());
 
 			if (nSize > nLargestCaptionSize)
@@ -138,7 +134,8 @@ bool ZScriptedDialogWin::Init()
 		{
 			ZWinSizablePushBtn* pBtn = *it;
 
-			int64_t nFontSize = pBtn->GetFontID();
+            tZFontPtr pFont = pBtn->GetFont();
+			int64_t nFontSize = pFont->FontHeight();
 //			CEASSERT(nFontSize < kMaxFonts);
 
 			ZRect rButtonArea(nXPos, nYPos, nXPos + nLargestCaptionSize + nFontSize*kPadding*2, nYPos + kButtonMeasure);

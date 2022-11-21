@@ -245,7 +245,7 @@ bool ZSliderWin::Paint()
 		{
 			string sLabel;
 			Sprintf(sLabel, "%d", GetSliderValue());
-            std::shared_ptr<ZFont> pFont(gpFontSystem->GetDefaultFont(mnFontID));
+            tZFontPtr pFont(gpFontSystem->GetDefaultFont(mnFontID));
 			ZRect rText(pFont->GetOutputRect(rThumb, sLabel.data(), sLabel.length(), ZFont::kMiddleCenter));
 			pFont->DrawText(mpTransformTexture, sLabel, rText, 0xffffffff, 0xffffffff, ZFont::kShadowed);
 		}	

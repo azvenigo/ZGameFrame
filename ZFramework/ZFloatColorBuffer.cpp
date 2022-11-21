@@ -27,22 +27,21 @@ bool ZFloatColorBuffer::From(ZBuffer* pSrc)
             assert(false);
             return false;
         }
-
-        uint32_t* pSrcCol = pSrc->GetPixels();
-        ZFColor* pDstPixels = mpFloatPixels;
-
-        int64_t nPixels = rSrc.Width() * rSrc.Height();
-
-        for (int64_t i = 0; i < nPixels; i++)
-        {
-            uint32_t nCol = *pSrcCol;
-            *pDstPixels = ZFColor((double)ARGB_A(nCol), (double)ARGB_R(nCol), (double)ARGB_G(nCol), (double)ARGB_B(nCol));
-
-            pSrcCol++;
-            pDstPixels++;
-        }
-
     }
+    uint32_t* pSrcCol = pSrc->GetPixels();
+    ZFColor* pDstPixels = mpFloatPixels;
+
+    int64_t nPixels = rSrc.Width() * rSrc.Height();
+
+    for (int64_t i = 0; i < nPixels; i++)
+    {
+        uint32_t nCol = *pSrcCol;
+        *pDstPixels = ZFColor((double)ARGB_A(nCol), (double)ARGB_R(nCol), (double)ARGB_G(nCol), (double)ARGB_B(nCol));
+
+        pSrcCol++;
+        pDstPixels++;
+    }
+
 
     return true;
 }

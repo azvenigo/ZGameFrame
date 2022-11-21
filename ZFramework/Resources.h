@@ -4,6 +4,7 @@
 
 
 #include <memory>
+#include "ZBuffer.h"
 
 class ZBuffer;
 
@@ -17,15 +18,15 @@ extern ZRect		grFullArea;
 extern bool			gbFullScreen;
 
 // Dialog
-extern std::shared_ptr<ZBuffer>		gDefaultDialogBackground;
-extern std::shared_ptr<ZBuffer>		gDimRectBackground;
+extern tZBufferPtr  gDefaultDialogBackground;
+extern tZBufferPtr  gDimRectBackground;
 extern ZRect		grTextArea;
 
 
 // Buttons
-extern std::shared_ptr<ZBuffer>		gStandardButtonUpEdgeImage;
-extern std::shared_ptr<ZBuffer>		gStandardButtonDownEdgeImage;
-extern ZRect		                grStandardButtonEdge;
+extern tZBufferPtr  gStandardButtonUpEdgeImage;
+extern tZBufferPtr  gStandardButtonDownEdgeImage;
+extern ZRect        grStandardButtonEdge;
 
 
 // Control Panel
@@ -35,13 +36,13 @@ extern int64_t      gnControlPanelButtonHeight;
 extern int64_t      gnControlPanelEdge;
 
 // Slider
-extern std::shared_ptr<ZBuffer>		gSliderThumb;
-extern std::shared_ptr<ZBuffer>		gSliderBackground;
-extern ZRect                        grSliderBgEdge;
-extern ZRect                        grSliderThumbEdge;
+extern tZBufferPtr  gSliderThumb;
+extern tZBufferPtr  gSliderBackground;
+extern ZRect        grSliderBgEdge;
+extern ZRect        grSliderThumbEdge;
 
 
-typedef std::map<std::string, std::shared_ptr<ZBuffer> >	tBufferResourceMap;
+typedef std::map<std::string, tZBufferPtr >	tBufferResourceMap;
 
 class cResources
 {
@@ -49,15 +50,15 @@ public:
 	cResources();
 	~cResources();
 
-	bool		                Init(const std::string& sDefaultResourcePath);
-	bool		                Shutdown();
+	bool                Init(const std::string& sDefaultResourcePath);
+	bool                Shutdown();
 
-    std::shared_ptr<ZBuffer>	GetBuffer(const std::string& sName);
+    tZBufferPtr	        GetBuffer(const std::string& sName);
 
-	tBufferResourceMap		    mBufferResourceMap;
+	tBufferResourceMap  mBufferResourceMap;
 
 protected:
-	bool		                AddResource(const std::string& sName, std::shared_ptr<ZBuffer> buffer);
+	bool                AddResource(const std::string& sName, tZBufferPtr buffer);
 };
 
-extern cResources	gResources;
+extern cResources	    gResources;

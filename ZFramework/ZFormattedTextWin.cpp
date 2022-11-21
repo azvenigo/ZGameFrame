@@ -153,7 +153,7 @@ bool ZFormattedTextWin::OnMouseDownL(int64_t x, int64_t y)
 			{
 				sTextEntry& entry = *lineIt;
 
-                std::shared_ptr<ZFont> pFont(gpFontSystem->GetDefaultFont((int32_t) entry.nFontID));
+                tZFontPtr pFont(gpFontSystem->GetDefaultFont((int32_t) entry.nFontID));
 				ZRect rText = pFont->GetOutputRect(rLine, entry.sText.data(), entry.sText.length(), entry.position);
 				if (rText.PtInRect(nMouseX, nMouseY))
 				{
@@ -327,7 +327,7 @@ bool ZFormattedTextWin::Paint()
 			{
 				sTextEntry& entry = *lineIt;
 
-                std::shared_ptr<ZFont> pFont(gpFontSystem->GetDefaultFont((int32_t) entry.nFontID));
+                tZFontPtr pFont(gpFontSystem->GetDefaultFont((int32_t) entry.nFontID));
 				ZRect rText = pFont->GetOutputRect(rLine, entry.sText.data(), entry.sText.length(), entry.position);
 
 				int64_t nShadowOffset = max((int) pFont->FontHeight()/16, (int) 1);
@@ -371,7 +371,7 @@ int64_t ZFormattedTextWin::GetLineHeight(tTextLine& textLine)
 			nLargestFont = textEntry.nFontID;
 	}
 
-    std::shared_ptr<ZFont> pLargestFont(gpFontSystem->GetDefaultFont((int32_t) nLargestFont));
+    tZFontPtr pLargestFont(gpFontSystem->GetDefaultFont((int32_t) nLargestFont));
     assert(pLargestFont);
 
     if (pLargestFont)
@@ -457,7 +457,7 @@ void ZFormattedTextWin::AddTextLine(string sLine, int64_t nFontID, uint32_t nCol
 		// Insert as much text on each line as will fit
 		while (sLine.length() > 0)
 		{
-            std::shared_ptr<ZFont> pFont(gpFontSystem->GetDefaultFont((int32_t) nFontID));
+            tZFontPtr pFont(gpFontSystem->GetDefaultFont((int32_t) nFontID));
             assert(pFont);
 			int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrTextArea.Width(), sLine.data(), sLine.length());
 

@@ -19,8 +19,6 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 ZWinBtn::ZWinBtn() :
 mpButtonImage(NULL),
-mbWeOwnButtonImage(false),
-mnFontID(0),
 mpMessageTarget(NULL),
 msTriggerMessage("btn_pressed")
 {   
@@ -45,15 +43,7 @@ bool ZWinBtn::Shutdown()
 {   
 	if ( mbInitted ) 
 	{
-		if (mpButtonImage)
-		{
-			if (mbWeOwnButtonImage)		// if this is a privately owned buffer
-			{
-				delete mpButtonImage;	// we delete it
-				mbWeOwnButtonImage = false;
-			}
-			mpButtonImage = NULL;
-		}
+        mpButtonImage.reset();
 		return ZWin::Shutdown();
 	}
 	return true;
@@ -66,22 +56,16 @@ bool ZWinBtn::Paint()
 
 	ZASSERT( mrSrcRect.Width() > 0 && mrSrcRect.Height() > 0 );
 
-	mpTransformTexture->Blt(mpButtonImage, mrSrcRect, mAreaToDrawTo);
+	mpTransformTexture->Blt(mpButtonImage.get(), mrSrcRect, mAreaToDrawTo);
 
 	return ZWin::Paint();
 }
 
-bool ZWinBtn::SetImage( ZBuffer* pImage )
+bool ZWinBtn::SetImage(tZBufferPtr pImage )
 {
 	ZASSERT( pImage );
 
-	if (mbWeOwnButtonImage)
-	{
-		ZASSERT( mpButtonImage );
-		delete mpButtonImage;
-	}
 	mpButtonImage = pImage;
-	mbWeOwnButtonImage = false;
 
 	return true;
 }
@@ -169,30 +153,28 @@ bool  ZWinPushBtn::Paint()
 	if (!ZWinBtn::Paint())
 		return false;
 
-    std::shared_ptr<ZFont> pFont(gpFontSystem->GetDefaultFont((int32_t) mnFontID));
-
 	// Now draw the caption
 	if (sText.length() > 0)
 	{
-		int64_t nHeightOffset = mAreaToDrawTo.top + (mArea.Height() - pFont->FontHeight())/2;
-		int64_t nWidthOffset = mAreaToDrawTo.left + (mAreaToDrawTo.Width() - pFont->StringWidth(sText))/2;
+		int64_t nHeightOffset = mAreaToDrawTo.top + (mArea.Height() - mpFont->FontHeight())/2;
+		int64_t nWidthOffset = mAreaToDrawTo.left + (mAreaToDrawTo.Width() - mpFont->StringWidth(sText))/2;
 
 		ZRect rText(nWidthOffset, nHeightOffset, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
 
 		if (mDrawState == kDown)
 		{
-			int64_t nOffset = max((int) pFont->FontHeight()/16, (int) 1);
+			int64_t nOffset = max((int) mpFont->FontHeight()/16, (int) 1);
 			rText.OffsetRect(nOffset,nOffset);
 		}
 
 		// Draw it here
-		pFont->DrawText(mpTransformTexture, sText, rText, 0xffffffff, 0xffffffff, ZFont::kNormal);
+		mpFont->DrawText(mpTransformTexture, sText, rText, 0xffffffff, 0xffffffff, ZFont::kNormal);
 	}
 
 	return ZWin::Paint();
 }
 
-bool	ZWinPushBtn::SetImage( ZBuffer* pImage )
+bool	ZWinPushBtn::SetImage(tZBufferPtr pImage )
 {
 	if (!ZWinBtn::SetImage(pImage))
 		return false;
@@ -341,7 +323,6 @@ ZWinSizablePushBtn::ZWinSizablePushBtn()
 {
 	mpUpEdgeImage		= NULL;
 	mpDownEdgeImage		= NULL;
-	mnFontID			= 0;
 	mDrawState			= kUp;
 	mCaptionStyle		= ZFont::kNormal;
 	mnTextColor			= 0xff000000;
@@ -377,7 +358,9 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 	msCaption = pNode->GetText();
 	msWinName = pNode->GetAttribute("winname");
 
-	mnFontID = StringHelpers::ToInt(pNode->GetAttribute("size"));
+	int nFontID = StringHelpers::ToInt(pNode->GetAttribute("size"));
+    mpFont = gpFontSystem->GetDefaultFont(nFontID);
+
 
 	string sStyle = pNode->GetAttribute("style");
 	if (sStyle == "shadowed")
@@ -426,18 +409,17 @@ bool ZWinSizablePushBtn::Paint()
 	int64_t nStrlen = msCaption.length();
 	if (nStrlen > 0)
 	{
-        std::shared_ptr<ZFont> pFont(gpFontSystem->GetDefaultFont((int32_t) mnFontID));
-		ZRect rText(pFont->GetOutputRect(mAreaToDrawTo, msCaption.data(), nStrlen, ZFont::kMiddleCenter));
+		ZRect rText(mpFont->GetOutputRect(mAreaToDrawTo, msCaption.data(), nStrlen, ZFont::kMiddleCenter));
 
 		string sCaptionToDraw(msCaption);
 
 
 		// Offset for text and shadow is based on font size.....but at least of 1
-		int64_t nOffset = max((int) pFont->FontHeight()/16, (int) 1);
+		int64_t nOffset = max((int) mpFont->FontHeight()/16, (int) 1);
 		if (mDrawState == kDown)
 			rText.OffsetRect(nOffset,nOffset);
 
-		pFont->DrawText(mpTransformTexture, sCaptionToDraw, rText, mnTextColor, mnTextColor2, mCaptionStyle);
+		mpFont->DrawText(mpTransformTexture, sCaptionToDraw, rText, mnTextColor, mnTextColor2, mCaptionStyle);
 	}
 
 	return ZWin::Paint();
@@ -522,11 +504,6 @@ void ZWinSizablePushBtn::SetStyle(ZFont::eStyle style)
 	mCaptionStyle = style; 
 }
 
-void ZWinSizablePushBtn::SetFontID(int64_t nFontID) 
-{ 
-	mnFontID = nFontID; 
-}
-
 
 void ZWinSizablePushBtn::SetImages( ZBuffer* pUpEdgeImage, ZBuffer* pDownEdgeImage, ZRect rEdge )
 {
@@ -539,7 +516,7 @@ void ZWinSizablePushBtn::SetImages( ZBuffer* pUpEdgeImage, ZBuffer* pDownEdgeIma
 	mrEdge = rEdge;
 }
 
-string ZWinSizablePushBtn::FitCaptionInWidth(int64_t nWidth, const string& sCaption, ZFont* pFont)
+string ZWinSizablePushBtn::FitCaptionInWidth(int64_t nWidth, const string& sCaption, tZFontPtr pFont)
 {
 	int64_t nFrontChars = 0;
 	int64_t nBackChars = 0;

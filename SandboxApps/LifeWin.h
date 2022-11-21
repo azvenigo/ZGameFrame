@@ -32,28 +32,28 @@ public:
 private:
    void		PaintGrid();
    
-   ZBuffer*	                pBufBackground;
-   std::shared_ptr<ZFont>   mpFont;
-   bool		                mbForward;
+   ZBuffer*     pBufBackground;
+   tZFontPtr    mpFont;
+   bool		    mbForward;
 
-   ZBuffer*		            mpGrid;
-   ZBuffer*		            mpGrid2;
+   ZBuffer*		mpGrid;
+   ZBuffer*		mpGrid2;
 
 
-   ZBuffer*	                mpCurGrid;
-   int64_t	                mnIterations;
-   ZTimer	                mTimer;
-   
-   int64_t	                mnWidth;
-   int64_t	                mnHeight;
-   bool		                mbPaused;
-   int64_t	                mnNumCells;
+   ZBuffer*	    mpCurGrid;
+   int64_t	    mnIterations;
+   ZTimer	    mTimer;
 
-   uint32_t                 mnOffPixelCol;
-   uint32_t                 mnOnPixelCol;
-   
-   bool		                mbPainting;
-   bool		                mbDrawing;
+   int64_t	    mnWidth;
+   int64_t	    mnHeight;
+   bool		    mbPaused;
+   int64_t	    mnNumCells;
+
+   uint32_t     mnOffPixelCol;
+   uint32_t     mnOnPixelCol;
+
+   bool		    mbPainting;
+   bool		    mbDrawing;
 };
 
 

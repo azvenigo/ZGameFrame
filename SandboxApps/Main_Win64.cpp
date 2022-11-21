@@ -184,7 +184,7 @@ void GenerateFrameworkFonts()
                     params.nWeight = 600;
                 }
 
-                std::shared_ptr<ZFont> pFont = gpFontSystem->CreateFont(params);
+                tZFontPtr pFont = gpFontSystem->CreateFont(params);
 
                 pFont->SaveFont(sFontFilename);
             }

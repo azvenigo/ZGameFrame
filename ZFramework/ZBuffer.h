@@ -102,6 +102,8 @@ protected:
     uint32_t                mRenderFlags;
 };
 
+typedef std::shared_ptr<ZBuffer> tZBufferPtr;
+
 
 inline uint32_t ZBuffer::AlphaBlend_Col1Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
 {

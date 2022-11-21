@@ -29,7 +29,7 @@ ZAnimObject::~ZAnimObject()
 }
 
 // cCEAnimObject
-ZAnimObject_TextMover::ZAnimObject_TextMover(ZFont* pFont) : ZAnimObject()
+ZAnimObject_TextMover::ZAnimObject_TextMover(tZFontPtr pFont) : ZAnimObject()
 {
 	mpFont = pFont;
 	mfX  = 0;

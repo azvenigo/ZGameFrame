@@ -28,7 +28,7 @@ bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage,
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
     pBtn->SetCaption(sCaption);
-    pBtn->SetFontID(nFont);
+    pBtn->SetFont(gpFontSystem->GetDefaultFont(nFont));
     pBtn->SetColor(nFontCol1);
     pBtn->SetColor2(nFontCol2);
     pBtn->SetStyle(style);
@@ -63,7 +63,7 @@ bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const st
     pCheck->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
     pCheck->SetCaption(sCaption);
     pCheck->SetArea(mrNextControl);
-    pCheck->SetFontID(nFont);
+    pCheck->SetFont(gpFontSystem->GetDefaultFont(nFont));
     pCheck->SetColor(nFontCol);
     pCheck->SetColor2(nFontCol);
     pCheck->SetStyle(style);

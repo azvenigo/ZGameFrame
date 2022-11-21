@@ -1428,7 +1428,7 @@ void ZFontSystem::Shutdown()
     mNameToFontMap.clear();
 }
 
-std::shared_ptr<ZFont> ZFontSystem::LoadFont(const string& sFilename)
+tZFontPtr ZFontSystem::LoadFont(const string& sFilename)
 {
     ZFont* pNewFont = new ZFont();
     if (!pNewFont->LoadFont(sFilename))
@@ -1448,7 +1448,7 @@ std::shared_ptr<ZFont> ZFontSystem::LoadFont(const string& sFilename)
 }
 
 #ifdef _WIN64
-std::shared_ptr<ZFont> ZFontSystem::CreateFont(const ZFontParams& params)
+tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
 {
     ZDynamicFont* pNewFont = new ZDynamicFont();
     pNewFont->Init(params);
@@ -1466,7 +1466,7 @@ std::shared_ptr<ZFont> ZFontSystem::CreateFont(const ZFontParams& params)
 }
 #endif
 
-std::shared_ptr<ZFont> ZFontSystem::GetDefaultFont(int32_t nIndex)
+tZFontPtr ZFontSystem::GetDefaultFont(int32_t nIndex)
 {
     if (nIndex < 0 || nIndex >= mNameToFontMap[msDefaultFontName].size())
     {
@@ -1513,7 +1513,7 @@ std::vector<int32_t> ZFontSystem::GetAvailableSizes(const string& sFontName)
     return sizes;
 }
 
-std::shared_ptr<ZFont> ZFontSystem::GetDefaultFont(const string& sFontName, int32_t nFontSize)
+tZFontPtr ZFontSystem::GetDefaultFont(const string& sFontName, int32_t nFontSize)
 {
     auto it = mNameToFontMap.find(sFontName);
     if (it != mNameToFontMap.end())

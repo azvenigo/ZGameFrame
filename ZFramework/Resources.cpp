@@ -6,12 +6,12 @@ using namespace std;
 
 cResources	gResources;
 
-std::shared_ptr<ZBuffer>		gDefaultDialogBackground;
-std::shared_ptr<ZBuffer>		gSliderThumb;
-std::shared_ptr<ZBuffer>		gSliderBackground;
-std::shared_ptr<ZBuffer>		gDimRectBackground;
-std::shared_ptr<ZBuffer>		gStandardButtonUpEdgeImage;
-std::shared_ptr<ZBuffer>		gStandardButtonDownEdgeImage;
+tZBufferPtr		gDefaultDialogBackground;
+tZBufferPtr		gSliderThumb;
+tZBufferPtr		gSliderBackground;
+tZBufferPtr		gDimRectBackground;
+tZBufferPtr		gStandardButtonUpEdgeImage;
+tZBufferPtr		gStandardButtonDownEdgeImage;
 
 
 ZRect			grTextArea;
@@ -85,7 +85,7 @@ bool cResources::Shutdown()
 {
     for (auto bufferIt : mBufferResourceMap)
 	{
-        std::shared_ptr<ZBuffer> pBuffer = bufferIt.second;
+        tZBufferPtr pBuffer = bufferIt.second;
         pBuffer->Shutdown();
 	}
 
@@ -104,17 +104,17 @@ bool cResources::Shutdown()
 	return true;
 }
 
-bool cResources::AddResource(const string& sName, std::shared_ptr<ZBuffer> buffer)
+bool cResources::AddResource(const string& sName, tZBufferPtr pBuffer)
 {
-	bool bResult = buffer->LoadBuffer(sName);
+	bool bResult = pBuffer->LoadBuffer(sName);
 	ZASSERT(bResult);
 
-    mBufferResourceMap[sName] = buffer;
+    mBufferResourceMap[sName] = pBuffer;
 
 	return bResult;
 }
 
-std::shared_ptr<ZBuffer> cResources::GetBuffer(const string& sName)
+tZBufferPtr cResources::GetBuffer(const string& sName)
 {
 	tBufferResourceMap::iterator it = mBufferResourceMap.find(sName);
 	if (it != mBufferResourceMap.end())

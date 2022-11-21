@@ -97,7 +97,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 
 	for (auto filename : filenames)
 	{
-		std::shared_ptr<ZBuffer> pNewBuffer(new ZBuffer());
+        tZBufferPtr pNewBuffer(new ZBuffer());
 		pNewBuffer->LoadBuffer(filename);
 		mImagesToProcess.push_back(pNewBuffer);
 	}
@@ -391,10 +391,10 @@ bool cProcessImageWin::Subdivide_and_Subtract(ZFloatColorBuffer* pBuffer, ZRect 
     ComputeAverageColor(&mFloatColorBuffer, br.rArea, br.fCol);
 
 
-    tl.fCol *= -0.1;
-    tr.fCol *= -0.1;
-    bl.fCol *= -0.1;
-    br.fCol *= -0.1;
+    tl.fCol *= -0.25;
+    tr.fCol *= -0.25;
+    bl.fCol *= -0.25;
+    br.fCol *= -0.25;
 
     mFloatColorBuffer.AddRect(tl.rArea, tl.fCol);
     mFloatColorBuffer.AddRect(tr.rArea, tr.fCol);
@@ -888,7 +888,7 @@ bool cProcessImageWin::Init()
     pCP->AddSpace(16);
 
     pCP->AddButton("float color sandbox", "type=floatcolorsandbox;target=imageprocesswin");
-    pCP->AddSlider(&mnSubdivisionLevels, 1, 128, 1, "", true, false, 1);
+    pCP->AddSlider(&mnSubdivisionLevels, 1, 512, 1, "", true, false, 1);
 
 
     ChildAdd(pCP);
@@ -1110,7 +1110,7 @@ bool cProcessImageWin::Paint()
 
     mpTransformTexture->Fill(mAreaToDrawTo, 0xff000000);
 
-    std::shared_ptr<ZFont> pFont(gpFontSystem->GetDefaultFont(4));
+    tZFontPtr pFont(gpFontSystem->GetDefaultFont(4));
 	pFont->DrawText(mpTransformTexture, msResult, mrResultImageDest, 0x88ffffff, 0x88888888);
 
 

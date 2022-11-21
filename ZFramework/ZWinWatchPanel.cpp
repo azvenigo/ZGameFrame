@@ -152,7 +152,7 @@ bool ZWinWatchPanel::Paint()
 
     for (auto ws : mWatchList)
     {
-        std::shared_ptr<ZFont> pFont = gpFontSystem->GetDefaultFont(ws.nFont);
+        tZFontPtr pFont = gpFontSystem->GetDefaultFont(ws.nFont);
 
         pFont->DrawTextParagraph(mpTransformTexture, ws.mCaption, ws.mArea, ws.nCaptionCol, ws.nCaptionCol, ZFont::kBottomLeft, ws.mStyle);
 

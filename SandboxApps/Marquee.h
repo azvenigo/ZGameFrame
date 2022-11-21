@@ -24,16 +24,16 @@ public:
 
 
 private:
-    uint32_t                mFillColor;
+    uint32_t        mFillColor;
 
-    double                  mfScrollPixelsPerSecond;
-    double                  mfScrollPos;
-    uint64_t                mnLastMoveTimestamp;
+    double          mfScrollPixelsPerSecond;
+    double          mfScrollPos;
+    uint64_t        mnLastMoveTimestamp;
 
-    std::string             msText;
-    uint32_t                mFontCol1;
-    uint32_t                mFontCol2;
-    ZFont::eStyle           mFontStyle;
-    std::shared_ptr<ZFont>  mpFont;
+    std::string     msText;
+    uint32_t        mFontCol1;
+    uint32_t        mFontCol2;
+    ZFont::eStyle   mFontStyle;
+    tZFontPtr       mpFont;
 };
 

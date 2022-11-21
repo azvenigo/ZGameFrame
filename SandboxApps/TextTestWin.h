@@ -12,27 +12,27 @@ class TextTestWin : public ZWin
 public:
     TextTestWin();
    
-    bool                    Init();
-    bool                    Shutdown();
-    bool                    Paint();
-   
-   virtual bool		        OnChar(char key);
-   virtual bool             HandleMessage(const ZMessage& message);
-   
+    bool        Init();
+    bool        Shutdown();
+    bool        Paint();
+
+   virtual bool	OnChar(char key);
+   virtual bool HandleMessage(const ZMessage& message);
+
 private:
-    void                    UpdateFontByParams();
-    bool                    LoadFont();
-    bool                    SaveFont();
+    void        UpdateFontByParams();
+    bool        LoadFont();
+    bool        SaveFont();
 
 
-    int32_t                 mnSelectedFontIndex;
-    bool                    mbEnableKerning;
-    ZFontParams             mCustomFontParams;
-    std::shared_ptr<ZFont>  mpFont;
+    int32_t     mnSelectedFontIndex;
+    bool        mbEnableKerning;
+    ZFontParams mCustomFontParams;
+    tZFontPtr   mpFont;
 
-    ZBuffer                 mBackground;
+    ZBuffer     mBackground;
 
-    std::string             msText;
+    std::string msText;
 
 
 };

@@ -78,7 +78,7 @@ private:
     int64_t mnSubdivisionLevels;
 
 
-	std::vector< std::shared_ptr<ZBuffer> > mImagesToProcess;
+	std::vector< tZBufferPtr > mImagesToProcess;
 	ZRect mrOriginalImagesArea;
     ZRect mrResultImageDest;
 //	cCEBuffer*	mpBufferToProcess;
@@ -93,7 +93,7 @@ private:
 
     ZFloatColorBuffer           mFloatColorBuffer;
 
-	std::shared_ptr<ZBuffer>	mpResultBuffer;
+    tZBufferPtr	mpResultBuffer;
 
     double*                     mpContrastFloatBuffer;
     double                      mfHighestContrast;
