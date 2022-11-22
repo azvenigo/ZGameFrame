@@ -7,6 +7,15 @@
 class ZImageWin : public ZWin
 {
 public:
+
+    enum eRotation
+    {
+        kNone   = 0,
+        kLeft   = 1,
+        kRight  = 2
+    };
+
+
     ZImageWin();
     ~ZImageWin();
 
@@ -25,24 +34,32 @@ public:
     void        SetZoom(double fZoom);
     double      GetZoom();
     void        ScrollTo(int64_t nX, int64_t nY);
+    void        SetSelectable(const std::string& sMessage) { msSelectMessage = sMessage; }
+
 
     void        SetFill(uint32_t nCol) { mFillColor = nCol; Invalidate(); }
     void        SetShowZoom(int32_t nFontID, uint32_t nCol, ZFont::ePosition pos, bool bShow100Also) { mbShowZoom = true; mZoomCaptionFontID = nFontID; mZoomCaptionColor = nCol; mZoomCaptionPos = pos; mbShow100Also = bShow100Also; }
     void        SetCaption(const std::string& sCaption, int32_t nFontID, uint32_t nCol, ZFont::ePosition pos) { msCaption = sCaption; mCaptionFontID = nFontID; mnCaptionCol = nCol; mCaptionPos = pos; }
-    void        SetOnClickMessage(const std::string& sMessage) { msOnClickMessage = sMessage; mbAcceptsCursorMessages = !sMessage.empty(); }
 
     void        LoadImage(const std::string& sName);
     void        SetImage(tZBufferPtr pImage);
 
-private:
-    bool        mbScrollable;
-    bool        mbZoomable;
+    bool        Rotate(eRotation rotation);
 
-    double      mfZoom;
-    double      mfPerfectFitZoom;
-    double      mfMinZoom;
-    double      mfMaxZoom;
-    ZRect       mImageArea;
+
+protected:
+    bool HandleMessage(const ZMessage& message);
+
+private:
+    bool                mbScrollable;
+    bool                mbZoomable;
+
+    double              mfZoom;
+    double              mfPerfectFitZoom;
+    double              mfMinZoom;
+    double              mfMaxZoom;
+    ZRect               mImageArea;
+    std::string         msSelectMessage;
 
 
     bool                mbShowZoom;
@@ -55,7 +72,6 @@ private:
     int32_t             mCaptionFontID;
     ZFont::ePosition    mCaptionPos;
     uint32_t            mnCaptionCol;
-    std::string         msOnClickMessage;
 
     uint32_t            mFillColor;
 

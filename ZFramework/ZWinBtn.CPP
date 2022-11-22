@@ -358,7 +358,7 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 	msCaption = pNode->GetText();
 	msWinName = pNode->GetAttribute("winname");
 
-	int nFontID = StringHelpers::ToInt(pNode->GetAttribute("size"));
+	int64_t nFontID = StringHelpers::ToInt(pNode->GetAttribute("size"));
     mpFont = gpFontSystem->GetDefaultFont(nFontID);
 
 
@@ -391,6 +391,10 @@ bool ZWinSizablePushBtn::Paint()
 	if (!mbInvalid)
 		return true;
 
+    // experimentally blt parent's buffer to test transparency
+    if (mpParentWin)
+        mpTransformTexture->Blt(mpParentWin->GetTransformTexture(), mAreaToDrawTo, mpTransformTexture->GetArea());
+
 	// Draw the button image
 	ZBuffer* pBufferToUse;
 
@@ -399,7 +403,7 @@ bool ZWinSizablePushBtn::Paint()
 	else
 		pBufferToUse = mpDownEdgeImage;
 
-
+    
 	ZASSERT(pBufferToUse);
 
 	mpTransformTexture->BltEdge(pBufferToUse, mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch);

@@ -250,7 +250,6 @@ void Sandbox::SandboxInitializeFonts()
     {
         for (auto fontName : frameworkFontNames)
         {
-
             string sFontFile;
             Sprintf(sFontFile, "res/default_resources/%s_%d.zfont", fontName.c_str(), fontSize); // todo, move this define elsewhere?
             gpFontSystem->LoadFont(sFontFile);

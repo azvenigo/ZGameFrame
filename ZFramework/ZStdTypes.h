@@ -412,28 +412,19 @@ public:
 
 		return true;
 	}
-    bool UnionRect(const tRect* pRect)
+    bool UnionRect(const tRect& rhs)
 	{
-		if ((right < pRect->left) || (left > pRect->right) || (bottom < pRect->top) || (top > pRect->bottom))
-		{
-			left = 0;
-			right = 0;
-			top = 0;
-			bottom = 0;
-			return false;
-		}
+		if (left > rhs.left)
+			left = rhs.left;
 
-		if (left <= pRect->left)
-			left = pRect->left;
+		if (top > rhs.top)
+			top = rhs.top;
 
-		if (top <= pRect->top)
-			top = pRect->top;
+		if (right < rhs.right)
+			right = rhs.right;
 
-		if (right >= pRect->right)
-			right = pRect->right;
-
-		if (bottom >= pRect->bottom)
-			bottom = pRect->bottom;
+		if (bottom < rhs.bottom)
+			bottom = rhs.bottom;
 
 		return true;
 	}

@@ -113,7 +113,10 @@ bool ZWinControlPanel::Process()
         }
         else
         {
-            if (!mAreaAbsolute.PtInRect(gLastMouseMove))        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
+            ZRect rOverArea(mrTrigger);
+            rOverArea.UnionRect(mAreaAbsolute);
+
+            if (!rOverArea.PtInRect(gLastMouseMove))        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
             {
                 Hide();
                 return true;

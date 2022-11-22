@@ -4,6 +4,9 @@
 #include "ZStringHelpers.h"
 #include "ZRasterizer.h"
 #include "ZGraphicSystem.h"
+#include "ZWinControlPanel.h"
+#include "ZWinBtn.H"
+#include "Resources.h"
 
 extern ZAnimator gAnimator;
 using namespace std;
@@ -32,6 +35,86 @@ ZImageWin::~ZImageWin()
 bool ZImageWin::Init()
 {
     mIdleSleepMS = 10000;
+
+    if (mbZoomable || !msSelectMessage.empty())
+    {
+        ZWinControlPanel* pPanel = new ZWinControlPanel();
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.bottom - 16, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
+        pPanel->SetTriggerRect(mAreaAbsolute);
+        pPanel->SetHideOnMouseExit(true);
+        pPanel->SetArea(rPanelArea);
+        ChildAdd(pPanel);
+
+        if (mbZoomable)
+        {
+            ZRect rButton(0, 0, 16, 16);
+
+            ZWinSizablePushBtn* pBtn;
+
+            pBtn = new ZWinSizablePushBtn();
+            pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+            pBtn->SetCaption(":"); // wingdings rotate left
+            pBtn->SetFont(gpFontSystem->GetDefaultFont("Wingdings 3", 12));
+            pBtn->SetColor(0xffffffff);
+            pBtn->SetColor2(0xffffffff);
+            pBtn->SetStyle(ZFont::kNormal);
+
+            pBtn->SetArea(rButton);
+
+
+            string sMessage;
+            Sprintf(sMessage, "type=rotate_left;target=%s", GetTargetName().c_str());
+            pBtn->SetMessage(sMessage);
+            pPanel->ChildAdd(pBtn);
+
+
+
+            rButton.OffsetRect(16, 0);
+
+            pBtn = new ZWinSizablePushBtn();
+            pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+            pBtn->SetCaption(";"); // wingdings rotate right
+            pBtn->SetFont(gpFontSystem->GetDefaultFont("Wingdings 3", 12));
+            pBtn->SetColor(0xffffffff);
+            pBtn->SetColor2(0xffffffff);
+            pBtn->SetStyle(ZFont::kNormal);
+
+            pBtn->SetArea(rButton);
+
+            Sprintf(sMessage, "type=rotate_right;target=%s", GetTargetName().c_str());
+
+            pBtn->SetMessage(sMessage);
+
+
+            pPanel->ChildAdd(pBtn);
+        }
+
+        if (!msSelectMessage.empty())
+        {
+            ZWinSizablePushBtn* pBtn;
+
+            ZRect rButton(rPanelArea.Width() - 64,0, rPanelArea.Width(), rPanelArea.Height());
+            rButton.left = rPanelArea.right - 64;
+
+            pBtn = new ZWinSizablePushBtn();
+            pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+            pBtn->SetCaption("set"); // wingdings rotate left
+            pBtn->SetFont(gpFontSystem->GetDefaultFont(0));
+            pBtn->SetColor(0xffffffff);
+            pBtn->SetColor2(0xffffffff);
+            pBtn->SetStyle(ZFont::kNormal);
+
+            pBtn->SetArea(rButton);
+
+            pBtn->SetMessage(msSelectMessage);
+            pPanel->ChildAdd(pBtn);
+        }
+
+    }
+
+
+
+
     return ZWin::Init();
 }
 
@@ -43,10 +126,6 @@ bool ZImageWin::OnMouseUpL(int64_t x, int64_t y)
 
 bool ZImageWin::OnMouseDownL(int64_t x, int64_t y)
 {
-    if (!msOnClickMessage.empty())
-        gMessageSystem.Post(msOnClickMessage);
-
-
     if (mbZoomable && mImageArea.PtInRect(x,y))
     {
         if (SetCapture())
@@ -272,6 +351,70 @@ bool ZImageWin::Paint()
 
 	return ZWin::Paint();
 }
+
+bool ZImageWin::Rotate(eRotation rotation)
+{
+    if (rotation == kLeft)
+    {
+        tZBufferPtr pBuf(new ZBuffer());
+
+        ZRect rOldArea(mpImage->GetArea());
+        ZRect rNewArea(0, 0, rOldArea.Height(), rOldArea.Width());
+
+        pBuf->Init(rNewArea.Width(), rNewArea.Height());
+        for (int y = 0; y < rOldArea.Height(); y++)
+        {
+            for (int x = 0; x < rOldArea.Width(); x++)
+            {
+                pBuf->SetPixel(y, rNewArea.Height()-x-1, mpImage->GetPixel(x, y));
+            }
+        }
+
+        mpImage->Init(rNewArea.Width(), rNewArea.Height());
+        mpImage->Blt(pBuf.get(), rNewArea, rNewArea);
+
+//        mpImage = pBuf;
+    }
+    else if (rotation == kRight)
+    {
+        tZBufferPtr pBuf(new ZBuffer());
+
+        ZRect rOldArea(mpImage->GetArea());
+        ZRect rNewArea(0, 0, rOldArea.Height(), rOldArea.Width());
+
+        pBuf->Init(rNewArea.Width(), rNewArea.Height());
+        for (int y = 0; y < rOldArea.Height(); y++)
+        {
+            for (int x = 0; x < rOldArea.Width(); x++)
+            {
+                pBuf->SetPixel(rNewArea.Width()-y-1, x, mpImage->GetPixel(x, y));
+            }
+        }
+
+        mpImage->Init(rNewArea.Width(), rNewArea.Height());
+        mpImage->Blt(pBuf.get(), rNewArea, rNewArea);
+    }
+
+    FitImageToWindow();
+    return true;
+}
+
+bool ZImageWin::HandleMessage(const ZMessage& message)
+{
+    string sType = message.GetType();
+
+    if (sType == "rotate_left")
+    {
+        return Rotate(kLeft);
+    }
+    else if (sType == "rotate_right")
+    {
+        return Rotate(kRight);
+    }
+
+    return ZWin::HandleMessage(message);
+}
+
 
 bool ZImageWin::InitFromXML(ZXMLNode* pNode)
 {

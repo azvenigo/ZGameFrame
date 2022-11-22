@@ -146,6 +146,7 @@ void ZMessageSystem::Process()
 
 		if (msg.HasTarget())
 		{
+            string sTarget(msg.GetTarget().c_str());
 			tNameToMessageTargetMap::iterator it = mNameToMessageTargetMap.find(msg.GetTarget());
 			//CEASSERT_MESSAGE(it != mNameToMessageTargetMap.end(), string("Target:\"" + msg.GetTarget() + "\" not registerred in message system!").c_str());
 			if (it != mNameToMessageTargetMap.end())

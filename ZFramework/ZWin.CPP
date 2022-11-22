@@ -47,6 +47,7 @@ mnTransformOutTime(kDefaultTransformTime),
 mbShutdownFlag(false),
 mIdleSleepMS(kDefaultIdleTime)
 {
+    Sprintf(msWinName, "win_%x", this); // default to unique window name
 }
 
 ZWin::~ZWin() 

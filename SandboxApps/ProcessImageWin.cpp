@@ -146,7 +146,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 
             string sMessage;
             Sprintf(sMessage, "type=selectimg;index=%d;target=imageprocesswin", i);
-            pOriginalImageWin->SetOnClickMessage( sMessage );
+            pOriginalImageWin->SetSelectable( sMessage );
             pOriginalImageWin->SetZoomable(true, 0.01, 2.0);
             pOriginalImageWin->SetFill(0x00000000);
             ChildAdd(pOriginalImageWin);
@@ -249,8 +249,11 @@ void cProcessImageWin::Process_SelectImage(int32_t nIndex)
     if (nIndex >= 0 && nIndex < mImagesToProcess.size())
     {
         mnSelectedImageIndex = nIndex;
-        ZRect r(mpResultBuffer.get()->GetArea());
+        ZRect r(mImagesToProcess[nIndex].get()->GetArea());
+        mpResultBuffer.get()->Init(r.Width(), r.Height());
         mpResultBuffer.get()->Blt(mImagesToProcess[nIndex].get(), r, r, &r);
+
+        mpResultWin->SetImage(mpResultBuffer);
 
         mnSelectedImageW = mImagesToProcess[nIndex]->GetArea().Width();
         mnSelectedImageH = mImagesToProcess[nIndex]->GetArea().Height();
@@ -508,6 +511,11 @@ bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
     for (int i = 0; i < mThreads; i++)
     {
         int64_t nBottom = nTop+nLines;
+
+        // last thread? take the rest of the scanlines
+        if (i == mThreads - 1)
+            nBottom = mrOriginalImagesArea.bottom - mnProcessPixelRadius;
+
         if (nBottom > mrOriginalImagesArea.bottom - mnProcessPixelRadius)
             nBottom = mrOriginalImagesArea.bottom - mnProcessPixelRadius;
 

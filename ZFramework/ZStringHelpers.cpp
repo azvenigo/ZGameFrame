@@ -374,7 +374,7 @@ void Sprintf(string& sOut, const char* lpszFormat, ...)
 	len = vsnprintf(buf, 0, (char*) lpszFormat, args) + 1; // terminating '\0'
 	buf = new char[len];
 	vsprintf_s(buf, len, lpszFormat, args);
-	sOut.assign(buf, len);
+	sOut.assign(buf, len-1);    // minus '\0' terminator
 
 	delete[] buf;
 }
