@@ -67,7 +67,7 @@ public:
 
 	virtual bool			Tick();
 
-	virtual ZBuffer*		GetTransformTexture() { return mpTransformTexture; }
+	virtual tZBufferPtr		GetTransformTexture() { return mpTransformTexture; }
 	virtual bool			TransformDraw(ZBuffer* pBufferToDrawTo, ZRect* pClip = NULL);
 
 	ZRect&					GetBounds()			{ return mBounds; }
@@ -78,7 +78,7 @@ public:
 protected:
 	void					UpdateVertsAndBounds();
 
-	ZBuffer*				mpTransformTexture;
+    tZBufferPtr				mpTransformTexture;
 
 	eTransformState			mTransformState;
 	ZTransformation			mStartTransform;

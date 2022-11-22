@@ -65,7 +65,7 @@ bool ZWinWatchPanel::Process()
     int32_t nWatchedDoubleIndex = 0;
     int32_t nWatchedBoolIndex = 0;
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());  // these are modified within paint
+    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());  // these are modified within paint
 
     for (auto ws : mWatchList)
     {
@@ -137,13 +137,13 @@ bool ZWinWatchPanel::Process()
 
 bool ZWinWatchPanel::Paint()
 {
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbVisible)
         return false;
     if (!mbInvalid)
         return true;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, gDefaultDialogFill);
+    mpTransformTexture.get()->Fill(mAreaToDrawTo, gDefaultDialogFill);
 
     mWatchedStrings.clear();
     mWatchedInt64s.clear();
@@ -154,13 +154,13 @@ bool ZWinWatchPanel::Paint()
     {
         tZFontPtr pFont = gpFontSystem->GetDefaultFont(ws.nFont);
 
-        pFont->DrawTextParagraph(mpTransformTexture, ws.mCaption, ws.mArea, ws.nCaptionCol, ws.nCaptionCol, ZFont::kBottomLeft, ws.mStyle);
+        pFont->DrawTextParagraph(mpTransformTexture.get(), ws.mCaption, ws.mArea, ws.nCaptionCol, ws.nCaptionCol, ZFont::kBottomLeft, ws.mStyle);
 
         if (ws.mType == WatchType::kString)
         {
             string sValue = *((string*)ws.pMem);
             mWatchedStrings.push_back(sValue);
-            pFont->DrawTextParagraph(mpTransformTexture, sValue, ws.mArea, ws.nWatchCol, ws.nWatchCol, ZFont::kBottomRight, ws.mStyle);
+            pFont->DrawTextParagraph(mpTransformTexture.get(), sValue, ws.mArea, ws.nWatchCol, ws.nWatchCol, ZFont::kBottomRight, ws.mStyle);
         }
         else if (ws.mType == WatchType::kInt64)
         {
@@ -169,7 +169,7 @@ bool ZWinWatchPanel::Paint()
 
             string sValue;
             Sprintf(sValue, "%lld", nValue);
-            pFont->DrawTextParagraph(mpTransformTexture, sValue, ws.mArea, ws.nWatchCol, ws.nWatchCol, ZFont::kBottomRight, ws.mStyle);
+            pFont->DrawTextParagraph(mpTransformTexture.get(), sValue, ws.mArea, ws.nWatchCol, ws.nWatchCol, ZFont::kBottomRight, ws.mStyle);
         }
         else if (ws.mType == WatchType::kDouble)
         {
@@ -177,7 +177,7 @@ bool ZWinWatchPanel::Paint()
             mWatchedDoubles.push_back(fValue);
             string sValue;
             Sprintf(sValue, "%LF", fValue);
-            pFont->DrawTextParagraph(mpTransformTexture, sValue, ws.mArea, ws.nWatchCol, ws.nWatchCol, ZFont::kBottomRight, ws.mStyle);
+            pFont->DrawTextParagraph(mpTransformTexture.get(), sValue, ws.mArea, ws.nWatchCol, ws.nWatchCol, ZFont::kBottomRight, ws.mStyle);
         }
         else if (ws.mType == WatchType::kBool)
         {
@@ -188,7 +188,7 @@ bool ZWinWatchPanel::Paint()
                 sValue = "1";
             else 
                 sValue = "0";
-            pFont->DrawTextParagraph(mpTransformTexture, sValue, ws.mArea, ws.nWatchCol, ws.nWatchCol, ZFont::kBottomRight, ws.mStyle);
+            pFont->DrawTextParagraph(mpTransformTexture.get(), sValue, ws.mArea, ws.nWatchCol, ws.nWatchCol, ZFont::kBottomRight, ws.mStyle);
         }
     }
 

@@ -103,7 +103,7 @@ string ZTransformationList::ToString()
 
 ZTransformable::ZTransformable()
 {
-	mpTransformTexture = NULL;
+//    mpTransformTexture = NULL;
 	mTransformState = kNone;
 	mbFirstTransformation = false;
 	mVerts.resize(4);
@@ -132,7 +132,7 @@ bool ZTransformable::Init(const ZRect& rArea)
 
 	gTickManager.AddObject(this);
 
-	if (mpTransformTexture && mpTransformTexture->GetArea().Width() == rArea.Width() && mpTransformTexture->GetArea().Height() == rArea.Height())
+	if (mpTransformTexture.get() && mpTransformTexture.get()->GetArea().Width() == rArea.Width() && mpTransformTexture.get()->GetArea().Height() == rArea.Height())
 	{
 		// Initialize the current transform
 //		cCETransformation trans(ZPoint(rArea.left, rArea.top));
@@ -140,9 +140,8 @@ bool ZTransformable::Init(const ZRect& rArea)
 		return true;
 	}
 
-	delete mpTransformTexture;
-	mpTransformTexture = new ZBuffer();
-	mpTransformTexture->Init(rArea.Width(), rArea.Height());
+	mpTransformTexture.reset(new ZBuffer());
+    mpTransformTexture.get()->Init(rArea.Width(), rArea.Height());
 
 	// Initialize the current transform
 	ZTransformation trans(ZPoint(rArea.left, rArea.top));
@@ -160,7 +159,7 @@ bool ZTransformable::Init(ZBuffer* pBuffer)
     if (!ZTransformable::Init(r))
         return false;
 
-    mpTransformTexture->CopyPixels(pBuffer, r, r);
+    mpTransformTexture.get()->CopyPixels(pBuffer, r, r);
 
     return true;
 }
@@ -169,8 +168,9 @@ bool ZTransformable::Init(ZBuffer* pBuffer)
 
 bool ZTransformable::Shutdown()
 {
-	delete mpTransformTexture;
-	mpTransformTexture = NULL;
+//	delete mpTransformTexture;
+//	mpTransformTexture = NULL;
+    mpTransformTexture.reset();
 
 	gTickManager.RemoveObject(this);
 
@@ -327,7 +327,7 @@ void ZTransformable::UpdateVertsAndBounds()
 	mBounds.top = MAXINT32;
 	mBounds.bottom = MININT32;
 
-	ZRect rArea = mpTransformTexture->GetArea();
+	ZRect rArea = mpTransformTexture.get()->GetArea();
 	mVerts[0].mX = (double) mCurTransform.mPosition.mX;
 	mVerts[0].mY = (double)mCurTransform.mPosition.mY;
 
@@ -363,20 +363,20 @@ bool ZTransformable::TransformDraw(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 {
 //	ZDEBUG_OUT("Transform Draw: rect[%d,%d,%d,%d]\n", pClip->left, pClip->top, pClip->right, pClip->bottom);
 	ZASSERT(pBufferToDrawTo);
-	ZASSERT(mpTransformTexture);
+	ZASSERT(mpTransformTexture.get());
 
 	// If no transformation, just blt
 	if (mCurTransform.mRotation == 0.0 && mCurTransform.mScale == 1.0)
 	{
-		ZRect rSource = mpTransformTexture->GetArea();
+		ZRect rSource = mpTransformTexture.get()->GetArea();
 		int64_t nDestX = mCurTransform.mPosition.mX;
 		int64_t nDestY = mCurTransform.mPosition.mY;
 		ZRect rFinalDest(nDestX, nDestY, nDestX + rSource.Width(), nDestY + rSource.Height());
-		pBufferToDrawTo->BltAlpha(mpTransformTexture, rSource, rFinalDest, mCurTransform.mnAlpha, pClip);
+		pBufferToDrawTo->BltAlpha(mpTransformTexture.get(), rSource, rFinalDest, mCurTransform.mnAlpha, pClip);
 	}
 	else
 	{
-		gRasterizer.RasterizeWithAlpha(pBufferToDrawTo, mpTransformTexture, mVerts, pClip, (uint8_t) mCurTransform.mnAlpha);
+		gRasterizer.RasterizeWithAlpha(pBufferToDrawTo, mpTransformTexture.get(), mVerts, pClip, (uint8_t) mCurTransform.mnAlpha);
 	}
 
 	return true;

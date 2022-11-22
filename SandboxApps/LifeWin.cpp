@@ -113,7 +113,7 @@ bool cLifeWin::Paint()
 	const std::lock_guard<std::mutex> lock(mShutdownMutex);
 
 	string sTemp;
-	ZASSERT(mpTransformTexture);
+	ZASSERT(mpTransformTexture.get());
 
 
 	ZRect rGrid(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.bottom - 16);
@@ -133,7 +133,7 @@ bool cLifeWin::Paint()
 	ZRect rText(0, 0, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
 
 //    TIME_SECTION_START(LifeWinDrawText);
-    mpFont->DrawText(mpTransformTexture, sTemp, rText, 0xffffff00, 0xffffff00);
+    mpFont->DrawText(mpTransformTexture.get(), sTemp, rText, 0xffffff00, 0xffffff00);
 //    TIME_SECTION_END(LifeWinDrawText);
     
 	ZWin::Paint();
@@ -148,7 +148,7 @@ void cLifeWin::PaintGrid()
 	tUVVertexArray verts;
     rasterizer.RectToVerts(mAreaToDrawTo, verts);
 
-    rasterizer.Rasterize(mpTransformTexture, mpCurGrid, verts);
+    rasterizer.Rasterize(mpTransformTexture.get(), mpCurGrid, verts);
 }
 
 bool cLifeWin::OnMouseDownL(int64_t x, int64_t y)

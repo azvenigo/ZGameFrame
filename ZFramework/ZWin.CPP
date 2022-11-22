@@ -160,7 +160,7 @@ void ZWin::TransformOut()
 {
 	if (mTransformOut != kNone)
 	{
-		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mpTransformTexture);
+		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mpTransformTexture.get());
 		ZTransformation trans(GetTransform());
 
 		pImage->StartTransformation(trans);
@@ -503,7 +503,7 @@ bool  ZWin::Paint()
     if (!mbInitted || !mbInvalid)
         return false;
 
-    mpTransformTexture->SetRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
+    mpTransformTexture.get()->SetRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
 	mbInvalid = false;
 	return true;
 }               
@@ -539,13 +539,13 @@ void ZWin::SetAreaToDrawTo()
 {
 	mAreaToDrawTo.SetRect(0, 0, mArea.Width(), mArea.Height() );
 
-	if (mpTransformTexture)
+	if (mpTransformTexture.get())
 	{
 		ZWin* pCurrParent = mpParentWin;
 		mAreaToBltTo = mArea;
 		while (pCurrParent) 
 		{
-			if (pCurrParent->mpTransformTexture) 
+			if (pCurrParent->mpTransformTexture.get())
 				break;
 
 			mAreaToBltTo.OffsetRect(pCurrParent->mArea.left, pCurrParent->mArea.top);

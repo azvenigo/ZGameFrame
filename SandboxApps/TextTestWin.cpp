@@ -235,7 +235,7 @@ bool TextTestWin::Shutdown()
 
 bool TextTestWin::Paint()
 {
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
         return true;
 
@@ -249,17 +249,17 @@ bool TextTestWin::Paint()
     {
         tUVVertexArray verts;
         gRasterizer.RectToVerts(mAreaToDrawTo, verts);
-        gRasterizer.Rasterize(mpTransformTexture, &mBackground, verts);
+        gRasterizer.Rasterize(mpTransformTexture.get(), &mBackground, verts);
     }
     else
-        mpTransformTexture->Fill(mAreaToDrawTo, 0xff595850);
+        mpTransformTexture.get()->Fill(mAreaToDrawTo, 0xff595850);
 
     sTemp = msText + '|';
 
     assert(mpFont);
     int32_t nLines = (int32_t) (mpFont->CalculateNumberOfLines(rText.Width(), sTemp.data(), sTemp.length()));
     
-    mpFont->DrawTextParagraph(mpTransformTexture, sTemp, rText, 0xAA000000, 0x88000000);
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp, rText, 0xAA000000, 0x88000000);
 
 
 
@@ -269,7 +269,7 @@ bool TextTestWin::Paint()
 
     
     Sprintf(sTemp, "Font: %s Size:%d", mpFont->GetFontParams()->sFacename.c_str(), mpFont->FontHeight());
-    mpFont->DrawTextParagraph(mpTransformTexture, sTemp.c_str(), rText);
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp.c_str(), rText);
     rText.OffsetRect(0, mpFont->FontHeight()*2);
 
     string sSampleText("The quick brown fox jumped over the lazy dog.\nA Relic is Relish of Radishes! Show me the $$$$");
@@ -278,7 +278,7 @@ bool TextTestWin::Paint()
         uint32_t nCol1 = RANDI64(0xff000000, 0xffffffff);
         uint32_t nCol2 = RANDI64(0xff000000, 0xffffffff);
 
-        mpFont->DrawTextParagraph(mpTransformTexture, sSampleText, rText, nCol1, nCol2, ZFont::kTopLeft, ZFont::kShadowed);
+        mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, nCol1, nCol2, ZFont::kTopLeft, ZFont::kShadowed);
 
         int64_t nLines = mpFont->CalculateNumberOfLines(rText.Width(), sSampleText.data(), sSampleText.length());
         rText.OffsetRect(0, mpFont->FontHeight() * nLines);
@@ -286,7 +286,7 @@ bool TextTestWin::Paint()
 
 
         TIME_SECTION_START(TextTestLines);
-    mpFont->DrawTextParagraph(mpTransformTexture, sAliceText, rText, 0xaa696157, 0x88696157, ZFont::kTopLeft, ZFont::kEmbossed);
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sAliceText, rText, 0xaa696157, 0x88696157, ZFont::kTopLeft, ZFont::kEmbossed);
 
   TIME_SECTION_END(TextTestLines);
   

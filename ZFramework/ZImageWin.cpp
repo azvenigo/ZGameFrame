@@ -305,24 +305,24 @@ void ZImageWin::SetImage(tZBufferPtr pImage)
 
 bool ZImageWin::Paint()
 {
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
         return true;
 
-    ZRect rDest(mpTransformTexture->GetArea());
+    ZRect rDest(mpTransformTexture.get()->GetArea());
     ZRect rSource(mpImage->GetArea());
 
-    mpTransformTexture->Fill(mpTransformTexture->GetArea(), mFillColor);
+    mpTransformTexture.get()->Fill(mpTransformTexture.get()->GetArea(), mFillColor);
 
     if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
     {
-        mpTransformTexture->Blt(mpImage.get(), rSource, rDest);
+        mpTransformTexture.get()->Blt(mpImage.get(), rSource, rDest);
     }
     else
     {
         tUVVertexArray verts;
         gRasterizer.RectToVerts(mImageArea, verts);
-        gRasterizer.RasterizeWithAlpha(mpTransformTexture, mpImage.get(), verts, &mAreaToDrawTo);
+        gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
     }
 
     if (!msCaption.empty())
@@ -331,7 +331,7 @@ bool ZImageWin::Paint()
         assert(pFont);
 
         ZRect rCaption(pFont->GetOutputRect(mAreaToDrawTo, msCaption.data(), msCaption.length(), mCaptionPos));
-        pFont->DrawText(mpTransformTexture, msCaption, rCaption, mnCaptionCol, mnCaptionCol);
+        pFont->DrawText(mpTransformTexture.get(), msCaption, rCaption, mnCaptionCol, mnCaptionCol);
     }
 
     if (mbShowZoom)
@@ -345,7 +345,7 @@ bool ZImageWin::Paint()
             Sprintf(sZoom, "%d%%", (int32_t)(mfZoom * 100.0));
 
             ZRect rZoomCaption(pFont->GetOutputRect(mAreaToDrawTo, sZoom.data(), sZoom.length(), mZoomCaptionPos));
-            pFont->DrawText(mpTransformTexture, sZoom, rZoomCaption, mZoomCaptionColor, mZoomCaptionColor);
+            pFont->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, mZoomCaptionColor, mZoomCaptionColor);
         }
     }
 

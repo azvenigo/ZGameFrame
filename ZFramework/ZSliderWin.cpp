@@ -227,17 +227,17 @@ bool ZSliderWin::Paint()
 	if (!mbInvalid)
 		return true;
 
-	if (!mpTransformTexture)
+	if (!mpTransformTexture.get())
 		return false;
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
    
-    mpTransformTexture->BltEdge(mpBufSliderBackground, mrEdgeBackground, mAreaToDrawTo);
+    mpTransformTexture.get()->BltEdge(mpBufSliderBackground, mrEdgeBackground, mAreaToDrawTo);
 
 	ZRect rThumb(GetSliderThumbRect());
 	rThumb.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
-	mpTransformTexture->BltEdge(mpBufSliderThumb, mrEdgeThumb, rThumb);
+    mpTransformTexture.get()->BltEdge(mpBufSliderThumb, mrEdgeThumb, rThumb);
 
 	if (mbDrawValue)
 	{
@@ -247,7 +247,7 @@ bool ZSliderWin::Paint()
 			Sprintf(sLabel, "%d", GetSliderValue());
             tZFontPtr pFont(gpFontSystem->GetDefaultFont(mnFontID));
 			ZRect rText(pFont->GetOutputRect(rThumb, sLabel.data(), sLabel.length(), ZFont::kMiddleCenter));
-			pFont->DrawText(mpTransformTexture, sLabel, rText, 0xffffffff, 0xffffffff, ZFont::kShadowed);
+			pFont->DrawText(mpTransformTexture.get(), sLabel, rText, 0xffffffff, 0xffffffff, ZFont::kShadowed);
 		}	
 	}
 

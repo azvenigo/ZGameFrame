@@ -65,7 +65,7 @@ bool Marquee::Paint()
     if (!mbInvalid)
         return false;
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     mpTransformTexture->FillAlpha(mAreaToDrawTo, mFillColor);
 
     ZRect rDraw(mpFont->GetOutputRect(mAreaToDrawTo, msText.data(), msText.length(), ZFont::kMiddleLeft));
@@ -79,7 +79,7 @@ bool Marquee::Paint()
         rDraw.OffsetRect((int64_t) mfScrollPos, 0);
     }
 
-    mpFont->DrawText(mpTransformTexture, msText, rDraw, mFontCol1, mFontCol2, mFontStyle);
+    mpFont->DrawText(mpTransformTexture.get(), msText, rDraw, mFontCol1, mFontCol2, mFontStyle);
 
     ZWin::Paint();
 

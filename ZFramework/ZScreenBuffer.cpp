@@ -83,7 +83,7 @@ void ZScreenBuffer::EndRender()
 #endif
 }
 
-void ZScreenBuffer::Render(ZBuffer* pTexture, ZRect& rAreaToDrawTo)
+void ZScreenBuffer::Render(tZBufferPtr pTexture, ZRect& rAreaToDrawTo)
 {
     if (!mbRenderingEnabled)
         return;
@@ -200,7 +200,7 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 	bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
 
 
-    ZBuffer* pCurBuffer = nullptr;
+    tZBufferPtr pCurBuffer;
 
     int64_t nRenderedCount = 0;
 

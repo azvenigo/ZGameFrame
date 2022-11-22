@@ -905,7 +905,7 @@ ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(ZBuffer* pBuffer, Z
 
 	ZRect rDest(0,0,rArea.Width(), rArea.Height());
 	ZTransformable::Init(rDest);
-	mpTransformTexture->CopyPixels(pBuffer, rArea, rDest, NULL);
+    mpTransformTexture.get()->CopyPixels(pBuffer, rArea, rDest, NULL);
 #ifdef _DEBUG
 	Sprintf(msDebugName, "TransformingImage:%d x %d", pBuffer->GetArea().Width(), pBuffer->GetArea().Height());
 #endif
@@ -933,8 +933,8 @@ ZAnimObject_TransformingText::ZAnimObject_TransformingText(const string& sText, 
 {
 	ZRect rAdjustedArea = pFont->GetOutputRect(rArea, sText.data(), sText.length(), nPosition);
 	ZTransformable::Init(rAdjustedArea);
-	mpTransformTexture->Fill(mpTransformTexture->GetArea(), 0x00000000);
-	pFont->DrawText(mpTransformTexture, sText.data(), mpTransformTexture->GetArea(), nColor, nColor2, nStyle); 
+    mpTransformTexture.get()->Fill(mpTransformTexture.get()->GetArea(), 0x00000000);
+	pFont->DrawText(mpTransformTexture.get(), sText.data(), mpTransformTexture.get()->GetArea(), nColor, nColor2, nStyle);
 #ifdef _DEBUG
 	msDebugName = "TransformingText::sText";
 #endif

@@ -84,7 +84,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
     pScreenBuffer->EnableRendering(false);
 
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     mImagesToProcess.clear();
 
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
@@ -1114,12 +1114,12 @@ bool cProcessImageWin::Paint()
     if (!mbInvalid)
         return true;
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
-    mpTransformTexture->Fill(mAreaToDrawTo, 0xff000000);
+    mpTransformTexture.get()->Fill(mAreaToDrawTo, 0xff000000);
 
     tZFontPtr pFont(gpFontSystem->GetDefaultFont(4));
-	pFont->DrawText(mpTransformTexture, msResult, mrResultImageDest, 0x88ffffff, 0x88888888);
+	pFont->DrawText(mpTransformTexture.get(), msResult, mrResultImageDest, 0x88ffffff, 0x88888888);
 
 
 	return ZWin::Paint();

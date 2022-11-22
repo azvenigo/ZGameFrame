@@ -290,12 +290,12 @@ bool ZFormattedTextWin::Paint()
 	ZRect rLocalTextArea(mrTextArea);
 	//   rLocalTextArea.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
 	if (mbFillBackground)
-		mpTransformTexture->Fill(rLocalTextBorderArea, mnFillColor);
+        mpTransformTexture.get()->Fill(rLocalTextBorderArea, mnFillColor);
     else if (mbDrawBorder)
-        mpTransformTexture->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalTextBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mArea);
+        mpTransformTexture.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalTextBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mArea);
 
 	ZRect rClip(rLocalTextArea);
 
@@ -332,20 +332,20 @@ bool ZFormattedTextWin::Paint()
 
 				int64_t nShadowOffset = max((int) pFont->FontHeight()/16, (int) 1);
 
-				pFont->DrawText(mpTransformTexture, entry.sText, rText, entry.nColor, entry.nColor2, entry.style, &rClip);
+				pFont->DrawText(mpTransformTexture.get(), entry.sText, rText, entry.nColor, entry.nColor2, entry.style, &rClip);
 
 				if (mbUnderlineLinks && !entry.sLink.empty())
 				{
 					ZRect rUnderline(rText);
 					rUnderline.top = rUnderline.bottom-nShadowOffset;
 					rUnderline.IntersectRect(&rClip);
-					mpTransformTexture->Fill(rUnderline, entry.nColor2);
+                    mpTransformTexture.get()->Fill(rUnderline, entry.nColor2);
 
 					if (entry.style == ZFont::kShadowed)
 					{
 						rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
 						rUnderline.IntersectRect(&rClip);
-						mpTransformTexture->Fill(rUnderline, 0xff000000);
+                        mpTransformTexture.get()->Fill(rUnderline, 0xff000000);
 					}
 				}
 			}

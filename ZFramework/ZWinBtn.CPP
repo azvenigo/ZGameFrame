@@ -56,7 +56,7 @@ bool ZWinBtn::Paint()
 
 	ZASSERT( mrSrcRect.Width() > 0 && mrSrcRect.Height() > 0 );
 
-	mpTransformTexture->Blt(mpButtonImage.get(), mrSrcRect, mAreaToDrawTo);
+    mpTransformTexture.get()->Blt(mpButtonImage.get(), mrSrcRect, mAreaToDrawTo);
 
 	return ZWin::Paint();
 }
@@ -168,7 +168,7 @@ bool  ZWinPushBtn::Paint()
 		}
 
 		// Draw it here
-		mpFont->DrawText(mpTransformTexture, sText, rText, 0xffffffff, 0xffffffff, ZFont::kNormal);
+		mpFont->DrawText(mpTransformTexture.get(), sText, rText, 0xffffffff, 0xffffffff, ZFont::kNormal);
 	}
 
 	return ZWin::Paint();
@@ -393,7 +393,7 @@ bool ZWinSizablePushBtn::Paint()
 
     // experimentally blt parent's buffer to test transparency
     if (mpParentWin)
-        mpTransformTexture->Blt(mpParentWin->GetTransformTexture(), mAreaToDrawTo, mpTransformTexture->GetArea());
+        mpTransformTexture.get()->Blt(mpParentWin->GetTransformTexture().get(), mAreaToDrawTo, mpTransformTexture.get()->GetArea());
 
 	// Draw the button image
 	ZBuffer* pBufferToUse;
@@ -406,7 +406,7 @@ bool ZWinSizablePushBtn::Paint()
     
 	ZASSERT(pBufferToUse);
 
-	mpTransformTexture->BltEdge(pBufferToUse, mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch);
+    mpTransformTexture.get()->BltEdge(pBufferToUse, mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch);
 
 
 	// Draw the text
@@ -423,7 +423,7 @@ bool ZWinSizablePushBtn::Paint()
 		if (mDrawState == kDown)
 			rText.OffsetRect(nOffset,nOffset);
 
-		mpFont->DrawText(mpTransformTexture, sCaptionToDraw, rText, mnTextColor, mnTextColor2, mCaptionStyle);
+		mpFont->DrawText(mpTransformTexture.get(), sCaptionToDraw, rText, mnTextColor, mnTextColor2, mCaptionStyle);
 	}
 
 	return ZWin::Paint();

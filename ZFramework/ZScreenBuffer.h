@@ -7,7 +7,7 @@ class ZScreenRect
 {
 public:
 	ZScreenRect();
-	ZScreenRect(ZBuffer* pSourceBuffer, ZRect rDest, ZPoint sourcePt) 
+	ZScreenRect(tZBufferPtr pSourceBuffer, ZRect rDest, ZPoint sourcePt) 
 	{ 
 		mpSourceBuffer = pSourceBuffer; 
 		mrDest = rDest;
@@ -22,7 +22,7 @@ public:
 	}
 
 public:
-	ZBuffer*	mpSourceBuffer;
+    tZBufferPtr	mpSourceBuffer;
 	ZRect		mrDest;
 	ZPoint		mSourcePt;
 };
@@ -46,7 +46,7 @@ public:
 
     void    BeginRender();
 
-	void	Render(ZBuffer* pTexture, ZRect& rAreaToDrawTo);
+	void	Render(tZBufferPtr pTexture, ZRect& rAreaToDrawTo);
 
     void    EndRender();
 

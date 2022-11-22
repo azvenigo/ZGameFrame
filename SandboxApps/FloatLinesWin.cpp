@@ -518,7 +518,7 @@ bool cFloatLinesWin::Paint()
     {
         if (mbReset)
         {
-            ClearBuffer(mpTransformTexture);
+            ClearBuffer(mpTransformTexture.get());
             RandomizeSettings();
         }
 
@@ -538,7 +538,7 @@ bool cFloatLinesWin::Paint()
         /* end test code*/
 
 
-        DrawAlphaLine(mpTransformTexture, v2, v1, &mAreaToDrawTo);
+        DrawAlphaLine(mpTransformTexture.get(), v2, v1, &mAreaToDrawTo);
 
         if (mbXMirror)
         {
@@ -548,7 +548,7 @@ bool cFloatLinesWin::Paint()
             vx1.mx = mAreaToDrawTo.right - vx1.mx;
             vx2.mx = mAreaToDrawTo.right - vx2.mx;
 
-            DrawAlphaLine(mpTransformTexture, vx1, vx2, &mAreaToDrawTo);
+            DrawAlphaLine(mpTransformTexture.get(), vx1, vx2, &mAreaToDrawTo);
         }
 
         // Now Y mirror
@@ -560,7 +560,7 @@ bool cFloatLinesWin::Paint()
             vy1.my = mAreaToDrawTo.bottom - vy1.my;
             vy2.my = mAreaToDrawTo.bottom - vy2.my;
 
-            DrawAlphaLine(mpTransformTexture, vy1, vy2, &mAreaToDrawTo);
+            DrawAlphaLine(mpTransformTexture.get(), vy1, vy2, &mAreaToDrawTo);
 
 
             if (mbXMirror)
@@ -571,7 +571,7 @@ bool cFloatLinesWin::Paint()
                 vxy1.mx = mAreaToDrawTo.right - vxy1.mx;
                 vxy2.mx = mAreaToDrawTo.right - vxy2.mx;
 
-                DrawAlphaLine(mpTransformTexture, vxy1, vxy2, &mAreaToDrawTo);
+                DrawAlphaLine(mpTransformTexture.get(), vxy1, vxy2, &mAreaToDrawTo);
             }
         }
 
@@ -582,7 +582,7 @@ bool cFloatLinesWin::Paint()
             ZFloatVertex vs1(mTailLine.mfX1, mTailLine.mfY1, -mfLineAlpha, mTailLine.mfR, mTailLine.mfG, mTailLine.mfB);
             ZFloatVertex vs2(mTailLine.mfX2, mTailLine.mfY2, -mfLineAlpha, mTailLine.mfR, mTailLine.mfG, mTailLine.mfB);
 
-            DrawAlphaLine(mpTransformTexture, vs2, vs1, &mAreaToDrawTo);
+            DrawAlphaLine(mpTransformTexture.get(), vs2, vs1, &mAreaToDrawTo);
 
             if (mbXMirror)
             {
@@ -592,7 +592,7 @@ bool cFloatLinesWin::Paint()
                 vsx1.mx = mAreaToDrawTo.right - vsx1.mx;
                 vsx2.mx = mAreaToDrawTo.right - vsx2.mx;
 
-                DrawAlphaLine(mpTransformTexture, vsx1, vsx2, &mAreaToDrawTo);
+                DrawAlphaLine(mpTransformTexture.get(), vsx1, vsx2, &mAreaToDrawTo);
             }
 
             // Now Y mirror
@@ -604,7 +604,7 @@ bool cFloatLinesWin::Paint()
                 vsy1.my = mAreaToDrawTo.bottom - vsy1.my;
                 vsy2.my = mAreaToDrawTo.bottom - vsy2.my;
 
-                DrawAlphaLine(mpTransformTexture, vsy1, vsy2, &mAreaToDrawTo);
+                DrawAlphaLine(mpTransformTexture.get(), vsy1, vsy2, &mAreaToDrawTo);
 
 
                 if (mbXMirror)
@@ -615,7 +615,7 @@ bool cFloatLinesWin::Paint()
                     vsxy1.mx = mAreaToDrawTo.right - vsxy1.mx;
                     vsxy2.mx = mAreaToDrawTo.right - vsxy2.mx;
 
-                    DrawAlphaLine(mpTransformTexture, vsxy1, vsxy2, &mAreaToDrawTo);
+                    DrawAlphaLine(mpTransformTexture.get(), vsxy1, vsxy2, &mAreaToDrawTo);
                 }
             }
 
@@ -640,7 +640,7 @@ bool cFloatLinesWin::Paint()
             for (int64_t i = 0; i < 20; i++)
             {
                 double* pDest = mpFloatBuffer + (mnDecayScanLine)*mArea.Width() * 3;
-                FillInSpan(mpTransformTexture, pDest, rArea.Width(), 255, 255, 255, -mfDecayAmount, rArea.left, mnDecayScanLine);
+                FillInSpan(mpTransformTexture.get(), pDest, rArea.Width(), 255, 255, 255, -mfDecayAmount, rArea.left, mnDecayScanLine);
 
                 mnDecayScanLine++;
                 if (mnDecayScanLine > mAreaToDrawTo.bottom - 1)
@@ -649,7 +649,7 @@ bool cFloatLinesWin::Paint()
         }
     }
 
-    mAnimator.Paint(mpTransformTexture, &mAreaToDrawTo);
+    mAnimator.Paint(mpTransformTexture.get(), &mAreaToDrawTo);
 
     ZWin::Paint();
     mbInvalid = true;
