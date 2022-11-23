@@ -106,23 +106,21 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 
     int32_t nNumImages = (int32_t) mImagesToProcess.size();
 
-    ZRect rOriginalImage;
-    
     if (mImagesToProcess.empty())
     {
-        mrOriginalImagesArea.SetRect(0, 0, 0, 0);
+        mrIntersectionWorkArea.SetRect(0, 0, 0, 0);
     }
     else
     {
-        mrOriginalImagesArea.SetRect(mImagesToProcess[0]->GetArea());
+        mrIntersectionWorkArea.SetRect(mImagesToProcess[0]->GetArea());
         for (int i = 1; i < nNumImages; i++)
-            mrOriginalImagesArea.IntersectRect(mImagesToProcess[i]->GetArea());
+            mrIntersectionWorkArea.IntersectRect(mImagesToProcess[i]->GetArea());
 
 
 
         double fScale = 2.0;
 
-        double fImageAspect = (double)mrOriginalImagesArea.Width() / (double)mrOriginalImagesArea.Height();
+        double fImageAspect = (double)mrIntersectionWorkArea.Width() / (double)mrIntersectionWorkArea.Height();
         int64_t nImageWidth = mAreaToDrawTo.Width() / nNumImages;
         int64_t nImageHeight = (int64_t) (nImageWidth / fImageAspect);
 
@@ -133,12 +131,12 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
         }
 
 
-        rOriginalImage.SetRect(0, 0, nImageWidth, nImageHeight);
+        mrThumbnailSize.SetRect(0, 0, nImageWidth, nImageHeight);
 
         for (int32_t i = 0; i < mImagesToProcess.size(); i++)
         {
             ZImageWin* pOriginalImageWin = new ZImageWin();
-            pOriginalImageWin->SetArea(rOriginalImage);
+            pOriginalImageWin->SetArea(mrThumbnailSize);
             pOriginalImageWin->SetImage(mImagesToProcess[i]);
 
             if (mImagesToProcess.size() > 1)
@@ -158,17 +156,11 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 
             mChildImageWins.push_back(pOriginalImageWin);
 
-            rOriginalImage.OffsetRect(rOriginalImage.Width(),0);
+            mrThumbnailSize.OffsetRect(mrThumbnailSize.Width(),0);
         }
 
     }
 
-
-    int64_t nResultAreaHeight = mAreaToDrawTo.bottom - rOriginalImage.bottom;
-
-    double fResultAreaAspect = (double) rOriginalImage.Width() / (double) rOriginalImage.Height();
-
-    mrResultImageDest.SetRect(0,rOriginalImage.bottom, (int64_t) (nResultAreaHeight * fResultAreaAspect), mAreaToDrawTo.bottom);
     ResetResultsBuffer();
 
     pScreenBuffer->EnableRendering(true);
@@ -253,6 +245,8 @@ void cProcessImageWin::Process_SelectImage(int32_t nIndex)
 {
     if (nIndex >= 0 && nIndex < mImagesToProcess.size())
     {
+        mrIntersectionWorkArea.SetRect(mImagesToProcess[nIndex]->GetArea());
+
         mnSelectedImageIndex = nIndex;
         ZRect r(mImagesToProcess[nIndex].get()->GetArea());
         mpResultBuffer.get()->GetMutex().lock();
@@ -492,9 +486,6 @@ void cProcessImageWin::Process_FloatColorSandbox()
 
 bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
 {
-//    ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
-//    pScreenBuffer->EnableRendering(false);
-
     ZBuffer sourceImg(mpResultBuffer.get());
     ResetResultsBuffer();
     if (mImagesToProcess.empty())
@@ -511,7 +502,7 @@ bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
     std::atomic<int64_t> nBarrierSync = mThreads;
         
     int64_t nTop = mnProcessPixelRadius;        // start radius pixels down
-    int64_t nLines = mrOriginalImagesArea.Height() / mThreads;
+    int64_t nLines = mrIntersectionWorkArea.Height() / mThreads;
 
     mfHighestContrast = 0.0;
 
@@ -521,12 +512,12 @@ bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
 
         // last thread? take the rest of the scanlines
         if (i == mThreads - 1)
-            nBottom = mrOriginalImagesArea.bottom - mnProcessPixelRadius;
+            nBottom = mrIntersectionWorkArea.bottom - mnProcessPixelRadius;
 
-        if (nBottom > mrOriginalImagesArea.bottom - mnProcessPixelRadius)
-            nBottom = mrOriginalImagesArea.bottom - mnProcessPixelRadius;
+        if (nBottom > mrIntersectionWorkArea.bottom - mnProcessPixelRadius)
+            nBottom = mrIntersectionWorkArea.bottom - mnProcessPixelRadius;
 
-        workers[i].rArea.SetRect(mrOriginalImagesArea.left+mnProcessPixelRadius, nTop, mrOriginalImagesArea.right-mnProcessPixelRadius, nBottom);
+        workers[i].rArea.SetRect(mrIntersectionWorkArea.left+mnProcessPixelRadius, nTop, mrIntersectionWorkArea.right-mnProcessPixelRadius, nBottom);
         workers[i].nRadius = mnProcessPixelRadius;
         workers[i].pSourceImage = &sourceImg;
         workers[i].pDestImage = mpResultBuffer.get();
@@ -843,7 +834,7 @@ void  cProcessImageWin::ComputeContrast(void* pContext)
         for (int64_t x = pJP->rArea.left; x < pJP->rArea.right; x++)
         {
             double fContrast = pJP->pThis->ComputePixelContrast(pJP->pSourceImage, x, y, pJP->nRadius);
-            int64_t nIndex = (y * pJP->pThis->mrOriginalImagesArea.Width()) + x;
+            int64_t nIndex = (y * pJP->pThis->mrIntersectionWorkArea.Width()) + x;
             pJP->pThis->mpContrastFloatBuffer[nIndex] = fContrast;
 
             if (fContrast > pJP->pThis->mfHighestContrast)
@@ -866,7 +857,7 @@ void  cProcessImageWin::ComputeContrast(void* pContext)
     {
         for (int64_t x = pJP->rArea.left; x < pJP->rArea.right; x++)
         {
-            int64_t nIndex = (y * pJP->pThis->mrOriginalImagesArea.Width()) + x;
+            int64_t nIndex = (y * pJP->pThis->mrIntersectionWorkArea.Width()) + x;
             double fContrast = (255.0 * pJP->pThis->mpContrastFloatBuffer[nIndex] / pJP->pThis->mfHighestContrast);
             uint8_t nContrast = (uint8_t)fContrast;
             uint32_t nResultColor = ARGB(0xff, nContrast, nContrast, nContrast);
@@ -881,10 +872,10 @@ bool cProcessImageWin::Init()
 
     int64_t panelW = grFullArea.Width() / 10;
     int64_t panelH = grFullArea.Height() / 4;
-    ZRect rControlPanel(grFullArea.right-panelW, grFullArea.bottom-panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
+    mrControlPanel.SetRect(grFullArea.right-panelW, grFullArea.bottom-panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
 
     ZWinControlPanel* pCP = new ZWinControlPanel();
-    pCP->SetArea(rControlPanel);
+    pCP->SetArea(mrControlPanel);
 //    pCP->SetTriggerRect(grControlPanelTrigger);
 
     pCP->Init();
@@ -909,15 +900,31 @@ bool cProcessImageWin::Init()
     ChildAdd(pCP);
 
 
-    ZRect rWatchPanel(rControlPanel);
-    rWatchPanel.OffsetRect(-rWatchPanel.Width() + 8, 0);
+    mrWatchPanel.SetRect(mrControlPanel);
+    mrWatchPanel.OffsetRect(-mrWatchPanel.Width() + 8, 0);
     ZWinWatchPanel* pWP = new ZWinWatchPanel();
-    pWP->SetArea(rWatchPanel);
+    pWP->SetArea(mrWatchPanel);
     pWP->Init();
     pWP->AddItem(WatchType::kLabel, "Watch Panel", nullptr, 3, 0xff000000, 0xff000000, ZFont::kEmbossed);
-    pWP->AddItem(WatchType::kInt64, "Width", (void*)&mrOriginalImagesArea.right, 2, 0xff333333, 0xff333333);
-    pWP->AddItem(WatchType::kInt64, "Height", (void*)&mrOriginalImagesArea.bottom, 2, 0xff333333, 0xff333333);
+    pWP->AddItem(WatchType::kInt64, "Width", (void*)&mrIntersectionWorkArea.right, 2, 0xff333333, 0xff333333);
+    pWP->AddItem(WatchType::kInt64, "Height", (void*)&mrIntersectionWorkArea.bottom, 2, 0xff333333, 0xff333333);
     ChildAdd(pWP);
+
+    std::list<string> filenames = {
+    "res/414A2616.jpg",
+    "res/414A2617.jpg",
+    "res/414A2618.jpg",
+    "res/414A2619.jpg",
+    "res/414A2620.jpg",
+    "res/414A2621.jpg",
+    "res/414A2622.jpg",
+    "res/414A2623.jpg",
+    "res/414A2624.jpg",
+    };
+
+    LoadImages(filenames);
+
+
 
     Process_SelectImage(0);
 	return ZWin::Init();
@@ -925,7 +932,9 @@ bool cProcessImageWin::Init()
 
 void cProcessImageWin::ResetResultsBuffer()
 {
-	if (mImagesToProcess.empty())
+    mrResultImageDest.SetRect(0, mrThumbnailSize.bottom, mrWatchPanel.left, grFullArea.bottom);
+   
+    if (mImagesToProcess.empty())
 	{
 		mpResultBuffer = nullptr;
 		return;
@@ -935,12 +944,12 @@ void cProcessImageWin::ResetResultsBuffer()
 //    pScreenBuffer->EnableRendering(false);
 
 
-	ZASSERT(mrOriginalImagesArea.Width() > 0 && mrOriginalImagesArea.Height() > 0);
+	ZASSERT(mrIntersectionWorkArea.Width() > 0 && mrIntersectionWorkArea.Height() > 0);
     // if there is a result buffer and the dimenstions already match, no need to do anything with it
-    if (!mpResultBuffer || mpResultBuffer->GetArea().Width() != mrOriginalImagesArea.Width() || mpResultBuffer->GetArea().Height() != mrOriginalImagesArea.Height())
+    if (!mpResultBuffer || mpResultBuffer->GetArea().Width() != mrIntersectionWorkArea.Width() || mpResultBuffer->GetArea().Height() != mrIntersectionWorkArea.Height())
     {
         mpResultBuffer.reset(new ZBuffer());
-        mpResultBuffer->Init(mrOriginalImagesArea.Width(), mrOriginalImagesArea.Height());
+        mpResultBuffer->Init(mrIntersectionWorkArea.Width(), mrIntersectionWorkArea.Height());
 
         if (mpResultWin)
             ChildDelete(mpResultWin);
@@ -960,8 +969,8 @@ void cProcessImageWin::ResetResultsBuffer()
     if (mpContrastFloatBuffer)
         delete[] mpContrastFloatBuffer;
 
-    mpContrastFloatBuffer = new double[mrOriginalImagesArea.Width() * mrOriginalImagesArea.Height()];
-    memset(mpContrastFloatBuffer, 0, mrOriginalImagesArea.Width() * mrOriginalImagesArea.Height() * sizeof(double));
+    mpContrastFloatBuffer = new double[mrIntersectionWorkArea.Width() * mrIntersectionWorkArea.Height()];
+    memset(mpContrastFloatBuffer, 0, mrIntersectionWorkArea.Width() * mrIntersectionWorkArea.Height() * sizeof(double));
 
 //    pScreenBuffer->EnableRendering(true);
 }
@@ -989,6 +998,9 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
     }
 	else if (sType == "stackimages")
 	{
+        mrIntersectionWorkArea.SetRect(mImagesToProcess[0]->GetArea());
+        for (int i = 1; i < mImagesToProcess.size(); i++)
+            mrIntersectionWorkArea.IntersectRect(mImagesToProcess[i]->GetArea());
         SpawnWork(&StackImages, true);
 		return true;
 	}

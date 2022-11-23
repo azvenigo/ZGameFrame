@@ -156,23 +156,6 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 		cProcessImageWin* pWin = new cProcessImageWin();
 		pWin->SetArea(0, 0, grFullArea.Width(), grFullArea.Height());
 
-
-        std::list<string> filenames = {
-        "res/414A2616.jpg",
-        "res/414A2617.jpg",
-        "res/414A2618.jpg",
-        "res/414A2619.jpg",
-        "res/414A2620.jpg",
-        "res/414A2621.jpg",
-        "res/414A2622.jpg",
-        "res/414A2623.jpg",
-        "res/414A2624.jpg",
-    
-        
-        };
-        pWin->LoadImages(filenames);
-
-
 //		pWin->LoadImages("res/414A2616.jpg");
 		//pWin->SetImageToProcess("res/test_contrast_image2.png");
 		//pWin->SetImageToProcess("res/test_contrast_onepixel.png");

@@ -79,8 +79,11 @@ private:
 
 
 	std::vector< tZBufferPtr > mImagesToProcess;
-	ZRect mrOriginalImagesArea;
+	ZRect mrIntersectionWorkArea;
     ZRect mrResultImageDest;
+    ZRect mrWatchPanel;
+    ZRect mrControlPanel;
+    ZRect mrThumbnailSize;
 //	cCEBuffer*	mpBufferToProcess;
 
 	ZImageWin* mpProcessedImageWin;
