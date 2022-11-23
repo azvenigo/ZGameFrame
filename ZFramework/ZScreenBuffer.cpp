@@ -338,7 +338,7 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
 		else
 		{
 			ZRect rOverlap(oldRect.mrDest);
-			rOverlap.IntersectRect(&screenRect.mrDest);
+			rOverlap.IntersectRect(screenRect.mrDest);
 
 			ZRect rDest(oldRect.mrDest);
 

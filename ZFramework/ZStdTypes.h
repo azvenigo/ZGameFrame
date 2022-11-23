@@ -387,19 +387,19 @@ public:
 	}
 
     // Operations that fill '*this' with result
-    bool IntersectRect(const tRect* pRect)
+    bool IntersectRect(const tRect& rhs)
 	{
-		if (left < pRect->left)
-			left = pRect->left;
+		if (left < rhs.left)
+			left = rhs.left;
 
-		if (top < pRect->top)
-			top = pRect->top;
+		if (top < rhs.top)
+			top = rhs.top;
 
-		if (right > pRect->right)
-			right = pRect->right;
+		if (right > rhs.right)
+			right = rhs.right;
 
-		if (bottom > pRect->bottom)
-			bottom = pRect->bottom;
+		if (bottom > rhs.bottom)
+			bottom = rhs.bottom;
 
 		if (left > right || top > bottom)
 		{

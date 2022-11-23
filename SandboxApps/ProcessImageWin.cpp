@@ -115,6 +115,11 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
     else
     {
         mrOriginalImagesArea.SetRect(mImagesToProcess[0]->GetArea());
+        for (int i = 1; i < nNumImages; i++)
+            mrOriginalImagesArea.IntersectRect(mImagesToProcess[i]->GetArea());
+
+
+
         double fScale = 2.0;
 
         double fImageAspect = (double)mrOriginalImagesArea.Width() / (double)mrOriginalImagesArea.Height();
@@ -250,8 +255,10 @@ void cProcessImageWin::Process_SelectImage(int32_t nIndex)
     {
         mnSelectedImageIndex = nIndex;
         ZRect r(mImagesToProcess[nIndex].get()->GetArea());
+        mpResultBuffer.get()->GetMutex().lock();
         mpResultBuffer.get()->Init(r.Width(), r.Height());
         mpResultBuffer.get()->Blt(mImagesToProcess[nIndex].get(), r, r, &r);
+        mpResultBuffer.get()->GetMutex().unlock();
 
         mpResultWin->SetImage(mpResultBuffer);
 
@@ -908,8 +915,8 @@ bool cProcessImageWin::Init()
     pWP->SetArea(rWatchPanel);
     pWP->Init();
     pWP->AddItem(WatchType::kLabel, "Watch Panel", nullptr, 3, 0xff000000, 0xff000000, ZFont::kEmbossed);
-    pWP->AddItem(WatchType::kInt64, "Width", (void*)&mnSelectedImageW, 2, 0xff333333, 0xff333333);
-    pWP->AddItem(WatchType::kInt64, "Height", (void*)&mnSelectedImageH, 2, 0xff333333, 0xff333333);
+    pWP->AddItem(WatchType::kInt64, "Width", (void*)&mrOriginalImagesArea.right, 2, 0xff333333, 0xff333333);
+    pWP->AddItem(WatchType::kInt64, "Height", (void*)&mrOriginalImagesArea.bottom, 2, 0xff333333, 0xff333333);
     ChildAdd(pWP);
 
     Process_SelectImage(0);

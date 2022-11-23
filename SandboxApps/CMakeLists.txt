@@ -135,7 +135,7 @@ source_group(Common FILES ${COMMON_FILES})
 
 if(MSVC)
     # ignore pdb not found
-    set(EXTRA_FLAGS "/W3")
+    set(EXTRA_FLAGS "/W3 /MP")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     set(TARGET_PROPS  PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:SandboxApps>")

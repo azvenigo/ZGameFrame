@@ -305,9 +305,11 @@ void ZImageWin::SetImage(tZBufferPtr pImage)
 
 bool ZImageWin::Paint()
 {
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    
     if (!mbInvalid)
         return true;
+    const std::lock_guard<std::mutex> imageSurfaceLock(mpImage.get()->GetMutex());
 
     ZRect rDest(mpTransformTexture.get()->GetArea());
     ZRect rSource(mpImage->GetArea());
