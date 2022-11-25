@@ -45,7 +45,7 @@ bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage,
 bool ZWinControlPanel::AddCaption(const string& sCaption, uint32_t nFont, uint32_t nFontCol, uint32_t nFillCol, ZFont::eStyle style, ZFont::ePosition pos)
 {
     ZFormattedTextWin* pWin = new ZFormattedTextWin();
-    pWin->SetArea(mrNextControl.left, mrNextControl.top, mrNextControl.right, mrNextControl.bottom);
+    pWin->SetArea(mrNextControl);
     pWin->AddTextLine(sCaption, nFont, nFontCol, nFontCol, style, pos);
     pWin->SetFill(nFillCol);
     ChildAdd(pWin);

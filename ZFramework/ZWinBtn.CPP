@@ -121,7 +121,9 @@ bool  ZWinPushBtn::Init()
 {
 	ZASSERT(mpButtonImage);
 
-	SetSize(mpButtonImage->GetArea().Width()/2, mpButtonImage->GetArea().Height());
+    ZRect buttonImageRect(mpButtonImage->GetArea());
+    buttonImageRect.right = buttonImageRect.Width() / 2;
+	SetArea(buttonImageRect);
 	mrSrcRect = mrBaseRect;
 	mbAcceptsCursorMessages = true;
     mIdleSleepMS = 10000;
@@ -183,7 +185,7 @@ bool	ZWinPushBtn::SetImage(tZBufferPtr pImage )
 	mrBaseRect = ZRect( 0, 0, mpButtonImage->GetArea().Width()/2, mpButtonImage->GetArea().Height() );
 	mrSrcRect = mrBaseRect;
 
-	SetSize( mrBaseRect.Width(), mrBaseRect.Height() );
+	SetArea(mrBaseRect);
 
 	return true;
 }

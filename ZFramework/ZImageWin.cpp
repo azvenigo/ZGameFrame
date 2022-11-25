@@ -15,6 +15,8 @@ ZImageWin::ZImageWin()
 {
 	mbAcceptsCursorMessages = true;
     mpImage.reset();
+    mbZoomable = false;
+    mbControlPanelEnabled = false;
 	mfZoom = 1.0;
     mfPerfectFitZoom = 1.0;
     mfMinZoom = 0.01;
@@ -26,6 +28,7 @@ ZImageWin::ZImageWin()
     mZoomCaptionFontID = 0;
     mZoomCaptionColor = 0;
     mZoomCaptionPos = ZFont::kTopLeft;
+    mpPanel = nullptr;
 }
 
 ZImageWin::~ZImageWin()
@@ -36,80 +39,55 @@ bool ZImageWin::Init()
 {
     mIdleSleepMS = 10000;
 
-    if (mbZoomable || !msSelectMessage.empty())
+    if (mbControlPanelEnabled)
     {
-        ZWinControlPanel* pPanel = new ZWinControlPanel();
+        mpPanel = new ZWinControlPanel();
         ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.bottom - 16, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
-        pPanel->SetTriggerRect(mAreaAbsolute);
-        pPanel->SetHideOnMouseExit(true);
-        pPanel->SetArea(rPanelArea);
-        ChildAdd(pPanel);
+        mpPanel->SetTriggerRect(mAreaAbsolute);
+        mpPanel->SetHideOnMouseExit(true);
+        mpPanel->SetArea(rPanelArea);
+        ChildAdd(mpPanel);
 
-        if (mbZoomable)
-        {
-            ZRect rButton(0, 0, 16, 16);
+        ZRect rButton(0, 0, 16, 16);
 
-            ZWinSizablePushBtn* pBtn;
+        ZWinSizablePushBtn* pBtn;
 
-            pBtn = new ZWinSizablePushBtn();
-            pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
-            pBtn->SetCaption(":"); // wingdings rotate left
-            pBtn->SetFont(gpFontSystem->GetDefaultFont("Wingdings 3", 12));
-            pBtn->SetColor(0xffffffff);
-            pBtn->SetColor2(0xffffffff);
-            pBtn->SetStyle(ZFont::kNormal);
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+        pBtn->SetCaption(":"); // wingdings rotate left
+        pBtn->SetFont(gpFontSystem->GetDefaultFont("Wingdings 3", 12));
+        pBtn->SetColor(0xffffffff);
+        pBtn->SetColor2(0xffffffff);
+        pBtn->SetStyle(ZFont::kNormal);
 
-            pBtn->SetArea(rButton);
+        pBtn->SetArea(rButton);
 
 
-            string sMessage;
-            Sprintf(sMessage, "type=rotate_left;target=%s", GetTargetName().c_str());
-            pBtn->SetMessage(sMessage);
-            pPanel->ChildAdd(pBtn);
+        string sMessage;
+        Sprintf(sMessage, "type=rotate_left;target=%s", GetTargetName().c_str());
+        pBtn->SetMessage(sMessage);
+        mpPanel->ChildAdd(pBtn);
 
 
 
-            rButton.OffsetRect(16, 0);
+        rButton.OffsetRect(16, 0);
 
-            pBtn = new ZWinSizablePushBtn();
-            pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
-            pBtn->SetCaption(";"); // wingdings rotate right
-            pBtn->SetFont(gpFontSystem->GetDefaultFont("Wingdings 3", 12));
-            pBtn->SetColor(0xffffffff);
-            pBtn->SetColor2(0xffffffff);
-            pBtn->SetStyle(ZFont::kNormal);
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+        pBtn->SetCaption(";"); // wingdings rotate right
+        pBtn->SetFont(gpFontSystem->GetDefaultFont("Wingdings 3", 12));
+        pBtn->SetColor(0xffffffff);
+        pBtn->SetColor2(0xffffffff);
+        pBtn->SetStyle(ZFont::kNormal);
 
-            pBtn->SetArea(rButton);
+        pBtn->SetArea(rButton);
 
-            Sprintf(sMessage, "type=rotate_right;target=%s", GetTargetName().c_str());
+        Sprintf(sMessage, "type=rotate_right;target=%s", GetTargetName().c_str());
 
-            pBtn->SetMessage(sMessage);
+        pBtn->SetMessage(sMessage);
 
 
-            pPanel->ChildAdd(pBtn);
-        }
-
-        if (!msSelectMessage.empty())
-        {
-            ZWinSizablePushBtn* pBtn;
-
-            ZRect rButton(rPanelArea.Width() - 64,0, rPanelArea.Width(), rPanelArea.Height());
-            rButton.left = rPanelArea.right - 64;
-
-            pBtn = new ZWinSizablePushBtn();
-            pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
-            pBtn->SetCaption("set"); // wingdings rotate left
-            pBtn->SetFont(gpFontSystem->GetDefaultFont(0));
-            pBtn->SetColor(0xffffffff);
-            pBtn->SetColor2(0xffffffff);
-            pBtn->SetStyle(ZFont::kNormal);
-
-            pBtn->SetArea(rButton);
-
-            pBtn->SetMessage(msSelectMessage);
-            pPanel->ChildAdd(pBtn);
-        }
-
+        mpPanel->ChildAdd(pBtn);
     }
 
 
@@ -121,6 +99,8 @@ bool ZImageWin::Init()
 bool ZImageWin::OnMouseUpL(int64_t x, int64_t y)
 {
     ReleaseCapture();
+    if (!msMouseUpLMessage.empty() && mImageArea.PtInRect(x, y))
+        gMessageSystem.Post(msMouseUpLMessage);
     return ZWin::OnMouseUpL(x, y);
 }
 
@@ -247,8 +227,26 @@ void ZImageWin::LoadImage(const string& sName)
     FitImageToWindow();
 }
 
+void ZImageWin::SetArea(const ZRect& newArea)
+{
+    ZWin::SetArea(newArea);
+
+    if (mpPanel)
+    {
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.bottom - 16, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
+        mpPanel->SetTriggerRect(mAreaAbsolute);
+        mpPanel->SetArea(rPanelArea);
+    }
+
+    FitImageToWindow();
+}
+
+
 void ZImageWin::FitImageToWindow()
 {
+    if (!mpImage)
+        return;
+
     // determine initial scale to fit into window
 
     ZRect rImageArea(mpImage->GetArea());

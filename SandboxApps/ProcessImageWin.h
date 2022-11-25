@@ -38,6 +38,9 @@ public:
 
 	bool	LoadImages(std::list<std::string>& filenames);
 
+    bool    RemoveImage(const std::string& sFilename);
+    bool    ClearImages();
+
 	bool	HandleMessage(const ZMessage& message);
 
 protected:
@@ -48,7 +51,7 @@ private:
 	void	ProcessImages();
 
 	void	Process_LoadImages();
-    void	Process_SelectImage(int32_t nIndex);
+    void	Process_SelectImage(std::string sImageName);
     void    Process_ComputeGradient();
     void    Process_FloatColorSandbox();
 
@@ -78,7 +81,7 @@ private:
     int64_t mnSubdivisionLevels;
 
 
-	std::vector< tZBufferPtr > mImagesToProcess;
+//	std::vector< tZBufferPtr > mImagesToProcess;
 	ZRect mrIntersectionWorkArea;
     ZRect mrResultImageDest;
     ZRect mrWatchPanel;
@@ -87,12 +90,6 @@ private:
 //	cCEBuffer*	mpBufferToProcess;
 
 	ZImageWin* mpProcessedImageWin;
-
-
-    int64_t     mnSelectedImageIndex;
-    int64_t     mnSelectedImageW;
-    int64_t     mnSelectedImageH;
-
 
     ZFloatColorBuffer           mFloatColorBuffer;
 
@@ -103,7 +100,9 @@ private:
 
 
     std::list<ZImageWin*>       mChildImageWins;
+
     ZImageWin*                  mpResultWin;
+
     std::string                 msResult;
 
     uint32_t                    mThreads;

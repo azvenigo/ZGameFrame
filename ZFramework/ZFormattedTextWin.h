@@ -42,7 +42,7 @@ public:
 	void				UpdateScrollbar();					// Creates a scrollbar if one is needed
 
 
-	virtual void		SetArea(int64_t l, int64_t t, int64_t r, int64_t b);
+	virtual void		SetArea(const ZRect& newArea);
 	virtual bool		OnMouseDownL(int64_t x, int64_t y);
 	virtual bool		OnMouseUpL(int64_t x, int64_t y);
 	virtual bool		OnMouseMove(int64_t x, int64_t y);

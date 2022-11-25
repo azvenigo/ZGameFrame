@@ -107,9 +107,9 @@ bool ZFormattedTextWin::Init()
 }
 
 
-void ZFormattedTextWin::SetArea(int64_t l,int64_t t,int64_t r,int64_t b)
+void ZFormattedTextWin::SetArea(const ZRect& newArea)
 {
-	ZWin::SetArea(l, t, r, b);
+	ZWin::SetArea(newArea);
 	UpdateScrollbar();
 }
 
@@ -243,7 +243,7 @@ void ZFormattedTextWin::UpdateScrollbar()
             mpSliderWin = new ZSliderWin(&mnSliderVal);
             mpSliderWin->Init(gSliderThumb.get(), grSliderThumbEdge, gSliderBackground.get(), grSliderBgEdge);
             mpSliderWin->SetDrawSliderValueFlag(false, false, 2);
-            mpSliderWin->SetArea(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height());
+            mpSliderWin->SetArea(ZRect(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height()));
             ChildAdd(mpSliderWin);
         }
 

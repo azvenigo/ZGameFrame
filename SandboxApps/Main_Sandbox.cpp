@@ -154,7 +154,7 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 	{
 #ifdef _WIN64
 		cProcessImageWin* pWin = new cProcessImageWin();
-		pWin->SetArea(0, 0, grFullArea.Width(), grFullArea.Height());
+		pWin->SetArea(grFullArea);
 
 //		pWin->LoadImages("res/414A2616.jpg");
 		//pWin->SetImageToProcess("res/test_contrast_image2.png");
@@ -254,7 +254,7 @@ bool Sandbox::SandboxInitialize()
 
     SandboxInitializeFonts();
     gpMainWin = new ZMainWin();
-    gpMainWin->SetArea(0, 0, grFullArea.Width(), grFullArea.Height());
+    gpMainWin->SetArea(grFullArea);
     gpMainWin->Init();
 
     InitControlPanel();

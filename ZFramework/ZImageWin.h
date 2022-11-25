@@ -4,6 +4,7 @@
 #include "ZBuffer.h"
 #include "ZStdTypes.h"
 #include "ZAnimObjects.h"
+#include "ZWinControlPanel.h"
 class ZImageWin : public ZWin
 {
 public:
@@ -30,11 +31,13 @@ public:
     bool        OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
 
     void        FitImageToWindow();
+
+    void        SetEnableControlPanel(bool bEnable) { mbControlPanelEnabled = bEnable; }
     void        SetZoomable(bool bZoomable, double fMinZoom = 0.01, double fMaxZoom = 1000.0) { mbZoomable = bZoomable; mfMinZoom = fMinZoom; mfMaxZoom = fMaxZoom; }
     void        SetZoom(double fZoom);
     double      GetZoom();
     void        ScrollTo(int64_t nX, int64_t nY);
-    void        SetSelectable(const std::string& sMessage) { msSelectMessage = sMessage; }
+    void        SetMouseUpLMessage(const std::string& sMessage) { msMouseUpLMessage = sMessage; }
 
 
     void        SetFill(uint32_t nCol) { mFillColor = nCol; Invalidate(); }
@@ -43,8 +46,10 @@ public:
 
     void        LoadImage(const std::string& sName);
     void        SetImage(tZBufferPtr pImage);
+    tZBufferPtr GetImage() { return mpImage; }
 
     bool        Rotate(eRotation rotation);
+    void        SetArea(const ZRect& newArea);
 
 
 protected:
@@ -53,13 +58,14 @@ protected:
 private:
     bool                mbScrollable;
     bool                mbZoomable;
+    bool                mbControlPanelEnabled;
 
     double              mfZoom;
     double              mfPerfectFitZoom;
     double              mfMinZoom;
     double              mfMaxZoom;
     ZRect               mImageArea;
-    std::string         msSelectMessage;
+    std::string         msMouseUpLMessage;
 
 
     bool                mbShowZoom;
@@ -76,4 +82,5 @@ private:
     uint32_t            mFillColor;
 
     tZBufferPtr         mpImage;
+    ZWinControlPanel*   mpPanel;
 };

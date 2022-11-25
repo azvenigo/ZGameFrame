@@ -214,7 +214,7 @@ void ZWin::CenterWindowInRect(const ZRect &outerRect)
 {
 	const int64_t tempX = outerRect.left + ( (outerRect.Width() - mArea.Width() ) / 2 );
 	const int64_t tempY = outerRect.top  + ( (outerRect.Height()- mArea.Height() ) / 2 );
-	SetArea( tempX, tempY, tempX + mArea.Width(), tempY + mArea.Height());
+	SetArea( ZRect(tempX, tempY, tempX + mArea.Width(), tempY + mArea.Height()));
 }
 
 bool  ZWin::SetParentWin(ZWin* pNewParent) 
@@ -750,29 +750,16 @@ void ZWin::InvalidateChildren()
 }
 
 
-void ZWin::SetArea(int64_t l,int64_t t,int64_t r,int64_t b) 
-{
-	mArea.SetRect(l, t, r, b);
-
-	//	if (mpBuffer && ( (r - l) != mArea.Width()) || ((b - t)!= mArea.Height()))       
-	//		PrivateBuffer(true);
-//	if (mbTransformable)
-		ZTransformable::Init(mArea);
-	SetAreaToDrawToRecursive();
-	CalcAbsoluteArea();
-}
-
-void ZWin::SetSize( int64_t width, int64_t height ) 
-{
-	SetArea( mArea.left, mArea.top, mArea.left + width, mArea.top + height );
-}
-
 void ZWin::SetArea( const ZRect& area ) 
 {
-	SetArea(area.left, area.top, area.right, area.bottom);
+    mArea.SetRect(area);
+
+    ZTransformable::Init(mArea);
+    SetAreaToDrawToRecursive();
+    CalcAbsoluteArea();
 }
 
-void  ZWin::MoveTo(int64_t newX, int64_t newY) 
+/*void  ZWin::MoveTo(int64_t newX, int64_t newY) 
 {
 	SetArea(newX, newY, newX+mArea.Width(), newY+mArea.Height());
 }
@@ -781,7 +768,7 @@ void  ZWin::OffsetTo(int64_t deltaX, int64_t deltaY)
 {
 	SetArea( mArea.left + deltaX, mArea.top + deltaY, mArea.right + deltaX, mArea.bottom + deltaY );
 }
-
+*/
 
 bool ZWin::WindowThreadProc(void* pContext)
 {
