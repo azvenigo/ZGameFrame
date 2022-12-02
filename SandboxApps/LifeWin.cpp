@@ -34,10 +34,10 @@ bool cLifeWin::Init()
 //	mpGrid  = new char[mnWidth * mnHeight];
 //	mpGrid2 = new char[mnWidth * mnHeight];
 
-	mpGrid = new ZBuffer();
+	mpGrid.reset(new ZBuffer());
 	mpGrid->Init(mnWidth, mnHeight);
 
-	mpGrid2 = new ZBuffer();
+	mpGrid2.reset(new ZBuffer());
 	mpGrid2->Init(mnWidth, mnHeight);
 
 
@@ -88,10 +88,7 @@ bool cLifeWin::Shutdown()
 
 	ZWin::Shutdown();
 
-	delete mpGrid;
 	mpGrid = nullptr;
-
-	delete mpGrid2;
 	mpGrid2 = nullptr;
 
 /*	if (mpFont)
@@ -122,7 +119,7 @@ bool cLifeWin::Paint()
 //	mpTransformTexture->Fill(rGrid, mpTransformTexture->ConvertRGB(255, 128,128,128));
 //	mpTransformTexture->Fill(rHandle, mpTransformTexture->ConvertRGB(255, 128,128,255));
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture->GetMutex());
     PaintGrid();
 
 	Sprintf(sTemp, "I: %ld  C: %ld", mnIterations, mnNumCells);
@@ -148,7 +145,7 @@ void cLifeWin::PaintGrid()
 	tUVVertexArray verts;
     rasterizer.RectToVerts(mAreaToDrawTo, verts);
 
-    rasterizer.Rasterize(mpTransformTexture.get(), mpCurGrid, verts);
+    rasterizer.Rasterize(mpTransformTexture.get(), mpCurGrid.get(), verts);
 }
 
 bool cLifeWin::OnMouseDownL(int64_t x, int64_t y)
@@ -255,7 +252,7 @@ bool cLifeWin::Process()
 
     mTimer.Reset();
 
-	ZBuffer*	pFromGrid;
+    tZBufferPtr	pFromGrid;
 
 	mnIterations ++;
 	mnNumCells = 0;

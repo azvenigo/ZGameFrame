@@ -43,6 +43,9 @@ public:
     void        SetFill(uint32_t nCol) { mFillColor = nCol; Invalidate(); }
     void        SetShowZoom(int32_t nFontID, uint32_t nCol, ZFont::ePosition pos, bool bShow100Also) { mbShowZoom = true; mZoomCaptionFontID = nFontID; mZoomCaptionColor = nCol; mZoomCaptionPos = pos; mbShow100Also = bShow100Also; }
     void        SetCaption(const std::string& sCaption, int32_t nFontID, uint32_t nCol, ZFont::ePosition pos) { msCaption = sCaption; mCaptionFontID = nFontID; mnCaptionCol = nCol; mCaptionPos = pos; }
+    void        SetCloseButtonMessage(const std::string& sMessage) { msCloseButtonMessage = sMessage; }
+    void        SetSaveButtonMessage(const std::string& sMessage) { msSaveButtonMessage = sMessage; }
+
 
     void        LoadImage(const std::string& sName);
     void        SetImage(tZBufferPtr pImage);
@@ -66,6 +69,8 @@ private:
     double              mfMaxZoom;
     ZRect               mImageArea;
     std::string         msMouseUpLMessage;
+    std::string         msCloseButtonMessage;
+    std::string         msSaveButtonMessage;
 
 
     bool                mbShowZoom;

@@ -241,7 +241,7 @@ void ZFormattedTextWin::UpdateScrollbar()
         if (!mpSliderWin)
         {
             mpSliderWin = new ZSliderWin(&mnSliderVal);
-            mpSliderWin->Init(gSliderThumb.get(), grSliderThumbEdge, gSliderBackground.get(), grSliderBgEdge);
+            mpSliderWin->Init(gSliderThumb, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
             mpSliderWin->SetDrawSliderValueFlag(false, false, 2);
             mpSliderWin->SetArea(ZRect(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height()));
             ChildAdd(mpSliderWin);
@@ -280,6 +280,9 @@ bool ZFormattedTextWin::Paint()
 	if (!mbInvalid)
 		return true;
 
+    if (!mpTransformTexture.get())
+        return false;
+
 	ZRect rEdgeSrc(3,5,21,61);
 
 	// Get a local rect
@@ -290,7 +293,7 @@ bool ZFormattedTextWin::Paint()
 	ZRect rLocalTextArea(mrTextArea);
 	//   rLocalTextArea.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
 	if (mbFillBackground)
         mpTransformTexture.get()->Fill(rLocalTextBorderArea, mnFillColor);

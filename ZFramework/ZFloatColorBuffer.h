@@ -22,13 +22,13 @@ public:
     void        MultRect(ZRect& rArea, double fMult);
     void        AddRect(ZRect& rArea, ZFColor fCol);
 
-    ZBuffer&    GetBuffer() { return mBuffer; }
+    tZBufferPtr    GetBuffer() { return mpBuffer; }
 
     static      uint32_t    FloatColToCol(ZFColor fCol);
     static      ZFColor     ColToFloatCol(uint32_t nCol);
 
 protected:
-    ZBuffer     mBuffer;
+    tZBufferPtr     mpBuffer;
 
     ZFColor*    mpFloatPixels;
 

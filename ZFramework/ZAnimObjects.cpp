@@ -222,7 +222,7 @@ bool ZCEAnimObject_Sparkler::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 }
 
 // ZCEAnimObject_Sparkler 
-void ZCEAnimObject_Sparkler::SetSource(ZBuffer* pSource, const ZRect& rBounds, uint32_t nSourceColor)
+void ZCEAnimObject_Sparkler::SetSource(tZBufferPtr pSource, const ZRect& rBounds, uint32_t nSourceColor)
 {
 	mrBounds = rBounds;
 	mnSourceColor = nSourceColor;
@@ -401,7 +401,6 @@ ZAnimObject_BitmapShatterer::ZAnimObject_BitmapShatterer() : ZAnimObject()
 
 ZAnimObject_BitmapShatterer::~ZAnimObject_BitmapShatterer()
 {
-	delete mpTexture;
 }
 
 void ZAnimObject_BitmapShatterer::SetBitmapToShatter(ZBuffer* pBufferToShatter, ZRect& rSrc, ZRect& rStartingDst, int64_t nSubdivisions)
@@ -410,7 +409,7 @@ void ZAnimObject_BitmapShatterer::SetBitmapToShatter(ZBuffer* pBufferToShatter, 
 	CreateShatterListFromBuffer(pBufferToShatter, rSrc, nSubdivisions);
 
 	ZRect rDst(0,0,rSrc.Width(),rSrc.Height());
-	mpTexture = new ZBuffer();
+	mpTexture.reset(new ZBuffer());
 	mpTexture->Init(rSrc.Width(), rSrc.Height());
 
 	// Instead of BLT we're doing a direct pixel translation to get all the pixel values (ignore alpha)
@@ -446,7 +445,7 @@ bool ZAnimObject_BitmapShatterer::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 			transformedQuad.mVertices[i].mY = fCenterY + transformedQuad.fScale*(x*sinAngle + y*cosAngle);
 		}
 
-		mRasterizer.RasterizeWithAlpha(pBufferToDrawTo, mpTexture, transformedQuad.mVertices, pClip, 128);
+		mRasterizer.RasterizeWithAlpha(pBufferToDrawTo, mpTexture.get(), transformedQuad.mVertices, pClip, 128);
 	}
 
 	Process(pBufferToDrawTo->GetArea());

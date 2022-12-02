@@ -104,9 +104,11 @@ bool TextTestWin::Init()
 #endif
 
 #ifdef _WIN64
-    mBackground.LoadBuffer("res/paper.jpg");
+    mpBackground.reset(new ZBuffer());
+    mpBackground.get()->LoadBuffer("res/paper.jpg");
 #else
-    mBackground.LoadBuffer("/app0/res/paper.jpg");
+    mpBackground.reset(new ZBuffer());
+    mpBackground.get()->LoadBuffer("/app0/res/paper.jpg");
 #endif
 
     
@@ -142,7 +144,7 @@ bool TextTestWin::Init()
     ZScriptedDialogWin* pWin = new ZScriptedDialogWin();
     pWin->SetArea(rFontSelectionWin);
 
-    mBackground.LoadBuffer("res/paper.jpg");
+    mpBackground.get()->LoadBuffer("res/paper.jpg");
 
 /*    ZFormattedTextWin* pTextWin = new ZFormattedTextWin();
     pTextWin->SetScrollable();
@@ -235,7 +237,7 @@ bool TextTestWin::Shutdown()
 
 bool TextTestWin::Paint()
 {
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
         return true;
 
@@ -245,11 +247,11 @@ bool TextTestWin::Paint()
 
 	ZRect rText(0, 0, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
 
-    if (mBackground.GetArea().Width() > 0)
+    if (mpBackground.get()->GetArea().Width() > 0)
     {
         tUVVertexArray verts;
         gRasterizer.RectToVerts(mAreaToDrawTo, verts);
-        gRasterizer.Rasterize(mpTransformTexture.get(), &mBackground, verts);
+        gRasterizer.Rasterize(mpTransformTexture.get(), mpBackground.get(), verts);
     }
     else
         mpTransformTexture.get()->Fill(mAreaToDrawTo, 0xff595850);

@@ -26,7 +26,7 @@ bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage,
     ZWinSizablePushBtn* pBtn;
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption(sCaption);
     pBtn->SetFont(gpFontSystem->GetDefaultFont(nFont));
     pBtn->SetColor(nFontCol1);
@@ -60,7 +60,7 @@ bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const st
 {
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
-    pCheck->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+    pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pCheck->SetCaption(sCaption);
     pCheck->SetArea(mrNextControl);
     pCheck->SetFont(gpFontSystem->GetDefaultFont(nFont));
@@ -78,7 +78,7 @@ bool ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t n
 {
     ZSliderWin* pSlider = new ZSliderWin(pnSliderValue);
     pSlider->SetArea(mrNextControl);
-    pSlider->Init(gSliderThumb.get(), grSliderThumbEdge, gSliderBackground.get(), grSliderBgEdge, ZSliderWin::kHorizontal);
+    pSlider->Init(gSliderThumb, grSliderThumbEdge, gSliderBackground, grSliderBgEdge, ZSliderWin::kHorizontal);
     pSlider->SetSliderRange(nMin, nMax, nMultiplier);
     pSlider->SetSliderSetMessage(sMessage);
     pSlider->SetDrawSliderValueFlag(bDrawValue, bMouseOnlyDrawValue, nFontID);

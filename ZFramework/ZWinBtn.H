@@ -128,7 +128,7 @@ public:
 	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
 	virtual std::string     GetMessage() { return msButtonMessage; }
 
-	void                    SetImages(ZBuffer* pUpEdgeImage, ZBuffer* pDownEdgeImage, ZRect rUpEdge );  
+	void                    SetImages(tZBufferPtr pUpEdgeImage, tZBufferPtr pDownEdgeImage, ZRect rUpEdge );
 
 protected:
     virtual bool            Paint();
@@ -141,8 +141,8 @@ protected:
 	uint32_t                mnTextColor2;
 	ZFont::eStyle           mCaptionStyle;
 
-	ZBuffer*                mpUpEdgeImage;              // not owned by this class
-	ZBuffer*                mpDownEdgeImage;            // not owned by this class
+    tZBufferPtr             mpUpEdgeImage;              // not owned by this class
+    tZBufferPtr             mpDownEdgeImage;            // not owned by this class
 	ZRect                   mrEdge;
 
     tZFontPtr               mpFont;

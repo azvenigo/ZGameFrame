@@ -32,6 +32,7 @@ using namespace std;
 ZScreenBuffer::ZScreenBuffer()
 {
     mbRenderingEnabled = true;
+    mbCurrentlyRendering = false;
 #ifdef USE_D3D
 	ZeroMemory((void*)&mLockedRect, sizeof(mLockedRect));
 	ZeroMemory((void*)&mSurfaceDesc, sizeof(mSurfaceDesc));
@@ -61,14 +62,28 @@ bool ZScreenBuffer::Shutdown()
 void ZScreenBuffer::EnableRendering(bool bEnable)
 {
     if (bEnable)
+    {
         mbVisibilityNeedsComputing = true;
+        mbRenderingEnabled = true;
+    }
     else
-        RenderVisibleRects();   // flush
-    mbRenderingEnabled = bEnable;
+    {
+        while (mbCurrentlyRendering)
+        {
+            mbRenderingEnabled = false; // set so that no more rendering after it's finished
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+        }
+
+        mbRenderingEnabled = false;
+    }
 };
 
 void ZScreenBuffer::BeginRender()
 {
+    if (!mbRenderingEnabled)
+        return;
+
+    mbCurrentlyRendering = true;
 #ifdef _WIN64
     // Copy to our window surface
     mDC = BeginPaint(mpGraphicSystem->GetMainHWND(), &mPS);
@@ -78,15 +93,20 @@ void ZScreenBuffer::BeginRender()
 
 void ZScreenBuffer::EndRender()
 {
+    if (!mbRenderingEnabled)
+        return;
 #ifdef _WIN64
     EndPaint(mpGraphicSystem->GetMainHWND(), &mPS);
 #endif
+    mbCurrentlyRendering = false;
 }
 
 void ZScreenBuffer::Render(tZBufferPtr pTexture, ZRect& rAreaToDrawTo)
 {
     if (!mbRenderingEnabled)
         return;
+
+    ZASSERT(mbCurrentlyRendering == true);
 
 #ifdef _DEBUG
 	string sTemp;

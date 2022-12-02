@@ -4,6 +4,7 @@
 #include "ZWin.h"
 #include "ZFont.h"
 #include "ZTimer.h"
+#include "ZBuffer.h"
 
 /////////////////////////////////////////////////////////////////////////
 // 
@@ -30,7 +31,7 @@ private:
     ZFontParams mCustomFontParams;
     tZFontPtr   mpFont;
 
-    ZBuffer     mBackground;
+    tZBufferPtr  mpBackground;
 
     std::string msText;
 

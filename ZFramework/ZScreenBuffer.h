@@ -66,6 +66,7 @@ protected:
 	tScreenRectList		mScreenRectList;
 	bool				mbVisibilityNeedsComputing;
     bool                mbRenderingEnabled; 
+    bool                mbCurrentlyRendering;
 
 
 #ifdef USE_D3D

@@ -32,15 +32,15 @@ public:
 private:
    void		PaintGrid();
    
-   ZBuffer*     pBufBackground;
+   tZBufferPtr     pBufBackground;
    tZFontPtr    mpFont;
    bool		    mbForward;
 
-   ZBuffer*		mpGrid;
-   ZBuffer*		mpGrid2;
+   tZBufferPtr		mpGrid;
+   tZBufferPtr		mpGrid2;
 
 
-   ZBuffer*	    mpCurGrid;
+   tZBufferPtr	    mpCurGrid;
    int64_t	    mnIterations;
    ZTimer	    mTimer;
 

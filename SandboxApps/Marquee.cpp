@@ -65,7 +65,7 @@ bool Marquee::Paint()
     if (!mbInvalid)
         return false;
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     mpTransformTexture->FillAlpha(mAreaToDrawTo, mFillColor);
 
     ZRect rDraw(mpFont->GetOutputRect(mAreaToDrawTo, msText.data(), msText.length(), ZFont::kMiddleLeft));

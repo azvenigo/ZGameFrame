@@ -103,7 +103,7 @@ string ZTransformationList::ToString()
 
 ZTransformable::ZTransformable()
 {
-//    mpTransformTexture = NULL;
+    mpTransformTexture = NULL;
 	mTransformState = kNone;
 	mbFirstTransformation = false;
 	mVerts.resize(4);
@@ -134,9 +134,6 @@ bool ZTransformable::Init(const ZRect& rArea)
 
 	if (mpTransformTexture.get() && mpTransformTexture.get()->GetArea().Width() == rArea.Width() && mpTransformTexture.get()->GetArea().Height() == rArea.Height())
 	{
-		// Initialize the current transform
-//		cCETransformation trans(ZPoint(rArea.left, rArea.top));
-//		SetTransform(trans);
 		return true;
 	}
 
@@ -168,8 +165,6 @@ bool ZTransformable::Init(ZBuffer* pBuffer)
 
 bool ZTransformable::Shutdown()
 {
-//	delete mpTransformTexture;
-//	mpTransformTexture = NULL;
     mpTransformTexture.reset();
 
 	gTickManager.RemoveObject(this);

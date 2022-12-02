@@ -283,7 +283,8 @@ void ZWin::ChildDeleteAll()
 
 bool ZWin::ChildDelete(ZWin* pChild) 
 {
-	if (pChild) 
+    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
+    if (pChild)
 	{
 		if (ChildRemove(pChild)) 
 		{

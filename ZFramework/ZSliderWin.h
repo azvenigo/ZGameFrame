@@ -20,7 +20,7 @@ public:
 	ZSliderWin(int64_t* pnSliderValue);
 	~ZSliderWin();
 
-	bool            Init(ZBuffer* pBufSliderThumb, ZRect rEdgeThumb, ZBuffer* pBufSliderBackground, ZRect& rEdgeBackground, eOrientation orientation = kVertical);
+	bool            Init(tZBufferPtr pBufSliderThumb, ZRect rEdgeThumb, tZBufferPtr pBufSliderBackground, ZRect& rEdgeBackground, eOrientation orientation = kVertical);
 	bool			Shutdown();
 
 	virtual bool	OnMouseIn() { return ZWin::OnMouseIn(); }
@@ -55,8 +55,8 @@ private:
 	void		UpdateSliderDrawBounds();
 
 
-	ZBuffer*	mpBufSliderThumb;          // not owned by this window
-	ZBuffer*	mpBufSliderBackground;     // not owned by this window
+    tZBufferPtr	mpBufSliderThumb;          // not owned by this window
+    tZBufferPtr	mpBufSliderBackground;     // not owned by this window
 
 	ZRect		mrEdgeThumb;
 	ZRect		mrEdgeBackground;

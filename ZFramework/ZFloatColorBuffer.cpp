@@ -3,6 +3,7 @@
 ZFloatColorBuffer::ZFloatColorBuffer()
 {
     mpFloatPixels = nullptr;
+    mpBuffer.reset(new ZBuffer);
 }
 
 ZFloatColorBuffer::~ZFloatColorBuffer()
@@ -13,7 +14,7 @@ ZFloatColorBuffer::~ZFloatColorBuffer()
 bool ZFloatColorBuffer::From(ZBuffer* pSrc)
 {
     ZRect rSrc(pSrc->GetArea());
-    ZRect rOur(mBuffer.GetArea());
+    ZRect rOur(mpBuffer.get()->GetArea());
 
     if (rSrc != rOur)
     {
@@ -22,7 +23,7 @@ bool ZFloatColorBuffer::From(ZBuffer* pSrc)
             assert(false);
             return false;
         }
-        if (!mBuffer.CopyPixels(pSrc, rSrc, rSrc))
+        if (!mpBuffer.get()->CopyPixels(pSrc, rSrc, rSrc))
         {
             assert(false);
             return false;
@@ -51,22 +52,22 @@ bool ZFloatColorBuffer::Init(int64_t nWidth, int64_t nHeight)
     if (mpFloatPixels)
         delete[] mpFloatPixels;
     mpFloatPixels = new ZFColor[nWidth * nHeight];
-    return mBuffer.Init(nWidth, nHeight);
+    return mpBuffer.get()->Init(nWidth, nHeight);
 }
 
 bool ZFloatColorBuffer::Shutdown()
 {
     delete[] mpFloatPixels;
     mpFloatPixels = nullptr;
-    mBuffer.Shutdown();
+    mpBuffer.get()->Shutdown();
     return true;
 }
 
 void ZFloatColorBuffer::MultRect(ZRect& rArea, double fMult)
 {
-    ZRect rSrcArea(mBuffer.GetArea());
+    ZRect rSrcArea(mpBuffer.get()->GetArea());
 
-    if (mBuffer.Clip(rSrcArea, rSrcArea, rArea))
+    if (mpBuffer.get()->Clip(rSrcArea, rSrcArea, rArea))
     {
         for (int64_t y = rArea.top; y < rArea.bottom; y++)
         {
@@ -81,9 +82,9 @@ void ZFloatColorBuffer::MultRect(ZRect& rArea, double fMult)
 
 void ZFloatColorBuffer::AddRect(ZRect& rArea, ZFColor col)
 {
-    ZRect rSrcArea(mBuffer.GetArea());
+    ZRect rSrcArea(mpBuffer.get()->GetArea());
 
-    if (mBuffer.Clip(rSrcArea, rSrcArea, rArea))
+    if (mpBuffer.get()->Clip(rSrcArea, rSrcArea, rArea))
     {
         for (int64_t y = rArea.top; y < rArea.bottom; y++)
         {
@@ -93,7 +94,7 @@ void ZFloatColorBuffer::AddRect(ZRect& rArea, ZFColor col)
                 ZFColor totalCol = *pCol + col;
                 totalCol.a = 255.0; // force full alpha for now
                 *pCol = totalCol;
-                mBuffer.SetPixel(x, y, FloatColToCol(totalCol));
+                mpBuffer.get()->SetPixel(x, y, FloatColToCol(totalCol));
             }
         }
     }
@@ -103,13 +104,13 @@ void ZFloatColorBuffer::AddRect(ZRect& rArea, ZFColor col)
 										
 void ZFloatColorBuffer::GetPixel(int64_t x, int64_t y, ZFColor& col)
 {
-    col = *(mpFloatPixels + (y * mBuffer.GetArea().Width() + x));
+    col = *(mpFloatPixels + (y * mpBuffer.get()->GetArea().Width() + x));
 }
 
 void ZFloatColorBuffer::SetPixel(int64_t x, int64_t y, ZFColor col)
 {
-    *(mpFloatPixels + (y * mBuffer.GetArea().Width() + x)) = col;
-    mBuffer.SetPixel(x, y, ARGB((uint8_t)col.a, (uint8_t)col.r, (uint8_t)col.g, (uint8_t)col.b));
+    *(mpFloatPixels + (y * mpBuffer.get()->GetArea().Width() + x)) = col;
+    mpBuffer.get()->SetPixel(x, y, ARGB((uint8_t)col.a, (uint8_t)col.r, (uint8_t)col.g, (uint8_t)col.b));
 }
 
 uint32_t ZFloatColorBuffer::FloatColToCol(ZFColor fCol)

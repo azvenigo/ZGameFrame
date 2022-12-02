@@ -184,8 +184,10 @@ bool ZScriptedDialogWin::Paint()
 {
 	if (!mbInvalid)
 		return true;
+    if (!mpTransformTexture)
+        return false;
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture->GetMutex());
    
     // Draw the dialog edge
 	if (mbDrawDefaultBackground)
@@ -297,7 +299,7 @@ bool ZScriptedDialogWin::ProcessNode(ZXMLNode* pNode)
 	else if (sComponent == ksElementButton)
 	{
 		ZWinSizablePushBtn* pBtn = new ZWinSizablePushBtn();
-		pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+		pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 		pBtn->InitFromXML(pNode);
 		ChildAdd(pBtn);
 		bool bArrangedButton = pNode->GetAttribute(ksAreaTag).empty();	// if there is no area specified, then this button is auto-arranged

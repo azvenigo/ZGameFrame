@@ -14,6 +14,9 @@
 #define ARGB_B(nCol) (nCol&0x000000ff)
 #define ARGB(nA, nR, nG, nB) ((nA)<<24)|((nR)<<16)|((nG)<<8)|(nB)
 
+typedef std::shared_ptr<class ZBuffer> tZBufferPtr;
+
+
 class ZBuffer
 {
 public:
@@ -42,12 +45,25 @@ public:
 
 	virtual bool            Init(int64_t nWidth, int64_t nHeight);
 	virtual bool            Shutdown();
-												
+
+    // Accessors and Manipulation
+    virtual bool            CopyPixels(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip = NULL);		// like BLT but copies pixel values directly.... including alpha
+    virtual uint32_t        GetPixel(int64_t x, int64_t y);
+    virtual void            SetPixel(int64_t x, int64_t y, uint32_t nCol);
+
+    virtual ZRect&          GetArea() { return mSurfaceArea; }
+
+    virtual uint32_t*       GetPixels() { return mpPixels; }
+
+    // Flags
+    virtual bool            GetRenderFlag(eRenderFlags flag) { return mRenderFlags & flag; }
+    virtual void            SetRenderFlag(eRenderFlags flag) { mRenderFlags = mRenderFlags | flag; }
+    virtual void            ClearRenderFlag(eRenderFlags flag) { mRenderFlags = mRenderFlags & ~flag; }
+
+
+    // Drawing
 	virtual bool            Fill(ZRect& rDst, uint32_t nCol);			// fills a rect with nCol, forcing alpha to ARGB_A(nCol)
 	virtual bool            FillAlpha(ZRect& rDst, uint32_t nCol);	// fills a rect with nCol, blending based on ARGB_A(nCol)
-
-
-	virtual bool            CopyPixels(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip = NULL);		// like BLT but copies pixel values directly.... including alpha
 
 	virtual bool            BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType type = kAlphaDest);
 	virtual bool            BltAlphaNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, uint32_t nAlpha, eAlphaBlendType type = kAlphaDest);
@@ -62,23 +78,18 @@ public:
 
 	virtual void            DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRect* pClip = NULL);
 
-	virtual uint32_t        GetPixel(int64_t x, int64_t y);
-	virtual void            SetPixel(int64_t x, int64_t y, uint32_t nCol);
 
-	virtual ZRect&          GetArea() { return mSurfaceArea; }
-
+    // Load/Save
 	virtual bool            LoadBuffer(const std::string& sName);
 #ifdef _WIN64
 	virtual bool            LoadBuffer(uint32_t nResourceID);
+    virtual bool            SaveBuffer(const std::string& sName);
 #endif
 
-	virtual uint32_t*       GetPixels() { return mpPixels; }
 
-    virtual std::mutex&     GetMutex() { return mMutex; }
-    virtual bool            GetRenderFlag(eRenderFlags flag) { return mRenderFlags & flag; }
-    virtual void            SetRenderFlag(eRenderFlags flag) { mRenderFlags = mRenderFlags|flag; }
-    virtual void            ClearRenderFlag(eRenderFlags flag) { mRenderFlags = mRenderFlags&~flag; }
 
+    // Thread Safety
+    virtual std::recursive_mutex& GetMutex() { return mMutex; }
 
 
 	// Alpha Blending Functions
@@ -98,11 +109,9 @@ protected:
 
 	uint32_t*               mpPixels;        // The color data
 	ZRect                   mSurfaceArea;
-    std::mutex              mMutex;
+    std::recursive_mutex    mMutex;
     uint32_t                mRenderFlags;
 };
-
-typedef std::shared_ptr<ZBuffer> tZBufferPtr;
 
 
 inline uint32_t ZBuffer::AlphaBlend_Col1Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)

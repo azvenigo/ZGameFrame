@@ -372,6 +372,7 @@ bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, t
 	int64_t nTopScanLine;
 	int64_t nBottomScanLine;
 
+    ZASSERT(pDestination->GetPixels() != nullptr);
 	SetupRasterization(pDestination, pTexture, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
 
 	// For each scanline
@@ -399,19 +400,16 @@ bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, t
 
 		ZASSERT(nStartX + nScanLinePixels <= rDest.right);
 
+        ZASSERT(pDestination->GetPixels() != nullptr);
+
 		for (int64_t nCount = 0; nCount < nScanLinePixels; nCount++)
 		{
-			int64_t nTextureX = (int64_t) (fTextureU * fTextureW);
+            int64_t nTextureX = (int64_t) (fTextureU * fTextureW);
 			int64_t nTextureY = (int64_t) (fTextureV * fTextureH);
 			uint32_t nSourceCol = *(pSourcePixels + nTextureY*nTextureStride + nTextureX);
 			if (ARGB_A(nSourceCol) > 0)
 				*pDestPixels = pDestination->AlphaBlend_Col2Alpha(nSourceCol, *pDestPixels, nAlpha);
-//				*pDestPixels = pDestination->AddColors(nSourceCol, *pDestPixels);
 			pDestPixels++;
-
-//			int64_t nTestX = rand()%600;
-//			int64_t nTestY = rand()%900;
-//			*(pDestination->GetPixels() + nTestY * 600 + nTestX) = nSourceCol;
 			fTextureU += fTextureDX;
 			fTextureV += fTextureDV;
 		}
@@ -458,9 +456,6 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexA
 		int64_t nStartX = (int64_t) scanLineMin.mX;
 		int64_t nScanLinePixels = (int64_t) scanLineMax.mX - (int64_t) scanLineMin.mX;
 		uint32_t* pDestPixels = pDestination->GetPixels() + nScanLine*nDestStride + nStartX;
-
-
-		//		int64_t nRand = pDestination->GetArea().Width() * pDestination->GetArea().Height();
 
 		ZASSERT(nStartX + nScanLinePixels <= rDest.right);
 
@@ -510,9 +505,6 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tColorVert
         int64_t nStartX = (int64_t)scanLineMin.mX;
         int64_t nScanLinePixels = (int64_t)scanLineMax.mX - (int64_t)scanLineMin.mX;
         uint32_t* pDestPixels = pDestination->GetPixels() + nScanLine * nDestStride + nStartX;
-
-
-        //		int64_t nRand = pDestination->GetArea().Width() * pDestination->GetArea().Height();
 
         ZASSERT(nStartX + nScanLinePixels <= rDest.right);
 

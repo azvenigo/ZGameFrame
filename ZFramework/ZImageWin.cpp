@@ -52,8 +52,31 @@ bool ZImageWin::Init()
 
         ZWinSizablePushBtn* pBtn;
 
+        if (!msCloseButtonMessage.empty())
+        {
+
+            pBtn = new ZWinSizablePushBtn();
+            pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+            pBtn->SetCaption("X"); 
+            pBtn->SetFont(gpFontSystem->GetDefaultFont(1));
+            pBtn->SetColor(0xffffffff);
+            pBtn->SetColor2(0xffffffff);
+            pBtn->SetStyle(ZFont::kNormal);
+
+            pBtn->SetArea(rButton);
+            pBtn->SetMessage(msCloseButtonMessage);
+            mpPanel->ChildAdd(pBtn);
+
+            rButton.OffsetRect(32, 0);
+        }
+
+
+
+
+
+
         pBtn = new ZWinSizablePushBtn();
-        pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(":"); // wingdings rotate left
         pBtn->SetFont(gpFontSystem->GetDefaultFont("Wingdings 3", 12));
         pBtn->SetColor(0xffffffff);
@@ -73,7 +96,7 @@ bool ZImageWin::Init()
         rButton.OffsetRect(16, 0);
 
         pBtn = new ZWinSizablePushBtn();
-        pBtn->SetImages(gStandardButtonUpEdgeImage.get(), gStandardButtonDownEdgeImage.get(), grStandardButtonEdge);
+        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(";"); // wingdings rotate right
         pBtn->SetFont(gpFontSystem->GetDefaultFont("Wingdings 3", 12));
         pBtn->SetColor(0xffffffff);
@@ -85,9 +108,26 @@ bool ZImageWin::Init()
         Sprintf(sMessage, "type=rotate_right;target=%s", GetTargetName().c_str());
 
         pBtn->SetMessage(sMessage);
-
-
         mpPanel->ChildAdd(pBtn);
+
+        rButton.OffsetRect(16, 0);
+
+        if (!msSaveButtonMessage.empty())
+        {
+            rButton.right = rButton.left + 48;
+
+            pBtn = new ZWinSizablePushBtn();
+            pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+            pBtn->SetCaption("save"); 
+            pBtn->SetFont(gpFontSystem->GetDefaultFont(1));
+            pBtn->SetColor(0xffffffff);
+            pBtn->SetColor2(0xffffffff);
+            pBtn->SetStyle(ZFont::kNormal);
+
+            pBtn->SetArea(rButton);
+            pBtn->SetMessage(msSaveButtonMessage);
+            mpPanel->ChildAdd(pBtn);
+        }
     }
 
 
@@ -221,14 +261,22 @@ void ZImageWin::ScrollTo(int64_t nX, int64_t nY)
 
 void ZImageWin::LoadImage(const string& sName)
 {
+    mbVisible = false;
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+
+    // if there's an old image, acquire the lock before freeing it
     mpImage.reset(new ZBuffer());
+
+    const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
     mpImage->LoadBuffer(sName);
 
     FitImageToWindow();
+    mbVisible = true;
 }
 
 void ZImageWin::SetArea(const ZRect& newArea)
 {
+    OutputDebugLockless("SetArea %s [%d,%d,%d,%d\n", msWinName.c_str(), newArea.left, newArea.top, newArea.right, newArea.bottom);
     ZWin::SetArea(newArea);
 
     if (mpPanel)
@@ -303,26 +351,40 @@ void ZImageWin::SetImage(tZBufferPtr pImage)
 
 bool ZImageWin::Paint()
 {
-    const std::lock_guard<std::mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
-    
+    if (!mbVisible || !mpTransformTexture)
+        return false;
+
     if (!mbInvalid)
         return true;
-    const std::lock_guard<std::mutex> imageSurfaceLock(mpImage.get()->GetMutex());
+
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+
+    ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
+
+    OutputDebugLockless("painting %s", msWinName.c_str());
 
     ZRect rDest(mpTransformTexture.get()->GetArea());
-    ZRect rSource(mpImage->GetArea());
 
     mpTransformTexture.get()->Fill(mpTransformTexture.get()->GetArea(), mFillColor);
+    ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
-    if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
+
+    if (mpImage)
     {
-        mpTransformTexture.get()->Blt(mpImage.get(), rSource, rDest);
-    }
-    else
-    {
-        tUVVertexArray verts;
-        gRasterizer.RectToVerts(mImageArea, verts);
-        gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
+        const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
+        ZRect rSource(mpImage->GetArea());
+
+        if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
+        {
+            mpTransformTexture.get()->Blt(mpImage.get(), rSource, rDest);
+        }
+        else
+        {
+            tUVVertexArray verts;
+            gRasterizer.RectToVerts(mImageArea, verts);
+            ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
+            gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
+        }
     }
 
     if (!msCaption.empty())
@@ -356,43 +418,43 @@ bool ZImageWin::Rotate(eRotation rotation)
 {
     if (rotation == kLeft)
     {
-        tZBufferPtr pBuf(new ZBuffer());
+        ZBuffer buf;
 
         ZRect rOldArea(mpImage->GetArea());
         ZRect rNewArea(0, 0, rOldArea.Height(), rOldArea.Width());
 
-        pBuf->Init(rNewArea.Width(), rNewArea.Height());
+        buf.Init(rNewArea.Width(), rNewArea.Height());
         for (int y = 0; y < rOldArea.Height(); y++)
         {
             for (int x = 0; x < rOldArea.Width(); x++)
             {
-                pBuf->SetPixel(y, rNewArea.Height()-x-1, mpImage->GetPixel(x, y));
+                buf.SetPixel(y, rNewArea.Height()-x-1, mpImage->GetPixel(x, y));
             }
         }
 
         mpImage->Init(rNewArea.Width(), rNewArea.Height());
-        mpImage->Blt(pBuf.get(), rNewArea, rNewArea);
+        mpImage->Blt(&buf, rNewArea, rNewArea);
 
 //        mpImage = pBuf;
     }
     else if (rotation == kRight)
     {
-        tZBufferPtr pBuf(new ZBuffer());
+        ZBuffer buf;
 
         ZRect rOldArea(mpImage->GetArea());
         ZRect rNewArea(0, 0, rOldArea.Height(), rOldArea.Width());
 
-        pBuf->Init(rNewArea.Width(), rNewArea.Height());
+        buf.Init(rNewArea.Width(), rNewArea.Height());
         for (int y = 0; y < rOldArea.Height(); y++)
         {
             for (int x = 0; x < rOldArea.Width(); x++)
             {
-                pBuf->SetPixel(rNewArea.Width()-y-1, x, mpImage->GetPixel(x, y));
+                buf.SetPixel(rNewArea.Width()-y-1, x, mpImage->GetPixel(x, y));
             }
         }
 
         mpImage->Init(rNewArea.Width(), rNewArea.Height());
-        mpImage->Blt(pBuf.get(), rNewArea, rNewArea);
+        mpImage->Blt(&buf, rNewArea, rNewArea);
     }
 
     FitImageToWindow();

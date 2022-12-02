@@ -41,7 +41,7 @@ ZSliderWin::~ZSliderWin()
 {
 }
 
-bool ZSliderWin::Init(ZBuffer* pBufSliderThumb, ZRect rEdgeThumb, ZBuffer* pBufSliderBackground, ZRect& rEdgeBackground, eOrientation orientation )
+bool ZSliderWin::Init(tZBufferPtr pBufSliderThumb, ZRect rEdgeThumb, tZBufferPtr pBufSliderBackground, ZRect& rEdgeBackground, eOrientation orientation )
 {
 	ZASSERT(pBufSliderThumb);
 	ZASSERT(pBufSliderBackground);
@@ -230,14 +230,14 @@ bool ZSliderWin::Paint()
 	if (!mpTransformTexture.get())
 		return false;
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
    
-    mpTransformTexture.get()->BltEdge(mpBufSliderBackground, mrEdgeBackground, mAreaToDrawTo);
+    mpTransformTexture.get()->BltEdge(mpBufSliderBackground.get(), mrEdgeBackground, mAreaToDrawTo);
 
 	ZRect rThumb(GetSliderThumbRect());
 	rThumb.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
-    mpTransformTexture.get()->BltEdge(mpBufSliderThumb, mrEdgeThumb, rThumb);
+    mpTransformTexture.get()->BltEdge(mpBufSliderThumb.get(), mrEdgeThumb, rThumb);
 
 	if (mbDrawValue)
 	{

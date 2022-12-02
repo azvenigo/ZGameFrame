@@ -43,6 +43,8 @@ ZBuffer::~ZBuffer()
 
 bool ZBuffer::Init(int64_t nWidth, int64_t nHeight)
 {
+    const std::lock_guard<std::recursive_mutex> lock(mMutex);
+
 	if (mpPixels)
 		delete[] mpPixels;
 
@@ -61,7 +63,8 @@ bool ZBuffer::Init(int64_t nWidth, int64_t nHeight)
 
 bool ZBuffer::Shutdown()
 {
-	if (mpPixels)
+    const std::lock_guard<std::recursive_mutex> lock(mMutex);
+    if (mpPixels)
 	{
 		delete[] mpPixels;
 		mpPixels = NULL;
@@ -113,6 +116,100 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 	return true;
 #endif
 }
+
+#ifdef _WIN64
+int GetEncoderClsid(const string& sFilename, CLSID* pClsid)
+{
+    string sExtension;
+    size_t nLastDot = sFilename.rfind('.');
+    if (nLastDot == std::string::npos)
+    {
+        cerr << "Couldn't extract extension from:" << sFilename << "\n";
+        return -1;
+    }
+
+    sExtension = sFilename.substr(nLastDot + 1);
+    StringHelpers::makelower(sExtension);
+
+    wstring wsFormat;
+    if (sExtension == "jpg" || sExtension == "jpeg")
+        wsFormat = L"image/jpeg";
+    else if (sExtension == "gif")
+        wsFormat = L"image/gif";
+    else if (sExtension == "bmp")
+        wsFormat = L"image/bmp";
+    else if (sExtension == "png")
+        wsFormat = L"image/png";
+    else if (sExtension == "tiff" || sExtension == "tif")
+        wsFormat = L"image/tiff";
+    else
+    {
+        OutputDebugLockless("Unsupported extension for filename:%s\n", sFilename.c_str());
+        return -1;
+    }
+
+        
+
+
+
+
+    UINT  num = 0;          // number of image encoders
+    UINT  size = 0;         // size of the image encoder array in bytes
+
+    ImageCodecInfo* pImageCodecInfo = NULL;
+
+    GetImageEncodersSize(&num, &size);
+    if (size == 0)
+        return -1;  // Failure
+
+    pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
+    if (pImageCodecInfo == NULL)
+        return -1;  // Failure
+
+    GetImageEncoders(num, size, pImageCodecInfo);
+
+    for (UINT j = 0; j < num; ++j)
+    {
+        if (wcscmp(pImageCodecInfo[j].MimeType, wsFormat.c_str()) == 0)
+        {
+            *pClsid = pImageCodecInfo[j].Clsid;
+            free(pImageCodecInfo);
+            return j;  // Success
+        }
+    }
+
+    free(pImageCodecInfo);
+    return -1;  // Failure
+}
+
+bool ZBuffer::SaveBuffer(const string& sFilename)
+{
+    BITMAPINFO bi;
+    
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+    bi.bmiHeader.biWidth = GetArea().Width();
+    bi.bmiHeader.biHeight = -GetArea().Height();
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    bi.bmiHeader.biSizeImage = 0;
+    bi.bmiHeader.biXPelsPerMeter = 72;
+    bi.bmiHeader.biYPelsPerMeter = 72;
+    bi.bmiHeader.biClrUsed = bi.bmiHeader.biWidth * bi.bmiHeader.biHeight * 4;
+    bi.bmiHeader.biClrImportant = 0;
+//    bi.bmiColors = mpPixels;
+
+    CLSID   encoderClsid;
+       // Get the CLSID of the PNG encoder.
+    GetEncoderClsid(sFilename, &encoderClsid);
+
+    Bitmap bitmap(&bi, (void*) mpPixels);
+    bitmap.Save(StringHelpers::string2wstring(sFilename).c_str(), (const CLSID*)&encoderClsid);
+
+    return true;
+}
+#endif
+
 
 #ifdef _WIN64
 // TBD, do we want to keep loading from a resource?

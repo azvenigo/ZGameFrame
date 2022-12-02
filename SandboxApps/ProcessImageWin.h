@@ -51,6 +51,7 @@ private:
 	void	ProcessImages();
 
 	void	Process_LoadImages();
+    void    Process_SaveResultImage();
     void	Process_SelectImage(std::string sImageName);
     void    Process_ComputeGradient();
     void    Process_FloatColorSandbox();
@@ -68,12 +69,14 @@ private:
 
     bool BlurBox(int64_t x, int64_t y); // playing around with blurring around mouse cursor based on contrast
 
-    uint32_t    ComputePixelBlur(ZBuffer* pBuffer, int64_t nX, int64_t nY, int64_t nRadius);
-	double	ComputePixelContrast(ZBuffer* pBuffer, int64_t nX, int64_t nY, int64_t nRadius);
-	void	CopyPixelsInRadius(ZBuffer* pSourceBuffer, ZBuffer* pDestBuffer, int64_t nX, int64_t nY, int64_t nRadius);
+    uint32_t    ComputePixelBlur(tZBufferPtr pBuffer, int64_t nX, int64_t nY, int64_t nRadius);
+	double	ComputePixelContrast(tZBufferPtr pBuffer, int64_t nX, int64_t nY, int64_t nRadius);
+	void	CopyPixelsInRadius(tZBufferPtr pSourceBuffer, tZBufferPtr pDestBuffer, int64_t nX, int64_t nY, int64_t nRadius);
 	void	ResetResultsBuffer();
 
-    uint32_t ComputeAverageColor(ZBuffer* pBuffer, ZRect rArea);
+    void ComputeIntersectedWorkArea();
+
+    uint32_t ComputeAverageColor(tZBufferPtr pBuffer, ZRect rArea);
     bool    ComputeAverageColor(ZFloatColorBuffer* pBuffer, ZRect rArea, ZFColor& fCol);
 
 	int64_t	mnProcessPixelRadius;
@@ -102,9 +105,6 @@ private:
     std::list<ZImageWin*>       mChildImageWins;
 
     ZImageWin*                  mpResultWin;
-
-    std::string                 msResult;
-
     uint32_t                    mThreads;
 
 	ZRect mrSliderCaption;

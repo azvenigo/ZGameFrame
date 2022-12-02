@@ -50,8 +50,8 @@ public:
 
     cProcessImageWin*   pThis;
 
-    ZBuffer* pSourceImage;
-    ZBuffer* pDestImage;
+    tZBufferPtr pSourceImage;
+    tZBufferPtr pDestImage;
 
     std::thread         worker;
     atomic<int64_t>*    mpBarrierCount;
@@ -67,6 +67,7 @@ cProcessImageWin::cProcessImageWin()
     mnGradientLevels = 1;
     mnSubdivisionLevels = 4;
     mrThumbnailSize.SetRect(0, 0, 32, 32);  // initial size
+    mpResultWin = nullptr;
 
     mThreads = 32;
 
@@ -80,6 +81,9 @@ cProcessImageWin::~cProcessImageWin()
 
 bool cProcessImageWin::RemoveImage(const std::string& sFilename)
 {
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
+
     for (auto pWin : mChildImageWins)
     {
         if (pWin->GetWinName() == sFilename)
@@ -87,6 +91,7 @@ bool cProcessImageWin::RemoveImage(const std::string& sFilename)
             ChildDelete(pWin);
             mChildImageWins.remove(pWin);
             ResetResultsBuffer();
+            InvalidateChildren();
             return true;
         }
     }
@@ -96,6 +101,8 @@ bool cProcessImageWin::RemoveImage(const std::string& sFilename)
 
 bool cProcessImageWin::ClearImages()
 {
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     for (auto pWin : mChildImageWins)
     {
         ChildDelete(pWin);
@@ -112,16 +119,16 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
     pScreenBuffer->EnableRendering(false);
 
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 //    mImagesToProcess.clear();
 
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
-    for (auto pImageWins : mChildImageWins)
+/*    for (auto pImageWins : mChildImageWins)
     {
         pImageWins->Hide();
         ChildDelete(pImageWins);
     }
-    mChildImageWins.clear();
+    mChildImageWins.clear();*/
 
 /*	for (auto filename : filenames)
 	{
@@ -130,30 +137,49 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 		mImagesToProcess.push_back(pNewBuffer);
 	}*/
 
-    mpResultBuffer = nullptr;
+//    mpResultBuffer = nullptr;
 
     int32_t nNumImages = (int32_t)filenames.size();
 
     for (auto filename : filenames)
     {
-        ZImageWin* pOriginalImageWin = new ZImageWin();
-        pOriginalImageWin->SetArea(mrThumbnailSize);
-        pOriginalImageWin->LoadImage(filename);
-        pOriginalImageWin->SetWinName(filename);
+        bool bAlreadyLoaded = false;
+        // check that this image isn't already loaded
+        for (auto pImageWins : mChildImageWins)
+        {
+            if (pImageWins->GetWinName() == filename)
+            {
+                bAlreadyLoaded = true;
+                break;
+            }
+        }
+
+        if (!bAlreadyLoaded)
+        {
+            ZImageWin* pOriginalImageWin = new ZImageWin();
+            pOriginalImageWin->SetArea(mrThumbnailSize);
+            pOriginalImageWin->LoadImage(filename);
+            pOriginalImageWin->SetWinName(filename);
 
 
-        string sMessage;
-        Sprintf(sMessage, "type=selectimg;name=%s;target=imageprocesswin", filename.c_str());
-        pOriginalImageWin->SetMouseUpLMessage( sMessage );
-        pOriginalImageWin->SetEnableControlPanel(true);
-        pOriginalImageWin->SetFill(0x00000000);
-        ChildAdd(pOriginalImageWin);
+            string sMessage;
+            Sprintf(sMessage, "type=selectimg;name=%s;target=imageprocesswin", filename.c_str());
+            pOriginalImageWin->SetMouseUpLMessage(sMessage);
 
-        mChildImageWins.push_back(pOriginalImageWin);
+            Sprintf(sMessage, "type=closeimg;name=%s;target=imageprocesswin", filename.c_str());
+            pOriginalImageWin->SetCloseButtonMessage(sMessage);
+
+            pOriginalImageWin->SetEnableControlPanel(true);
+            pOriginalImageWin->SetFill(0x00000000);
+            ChildAdd(pOriginalImageWin);
+
+            mChildImageWins.push_back(pOriginalImageWin);
+        }
     }
 
-
+    mrIntersectionWorkArea.SetRect((*mChildImageWins.begin())->GetImage()->GetArea());  // set the work area to the first image to generate the result buffer
     ResetResultsBuffer();
+    Process_SelectImage(*filenames.begin());
 
     pScreenBuffer->EnableRendering(true);
 
@@ -228,7 +254,6 @@ void cProcessImageWin::Process_LoadImages()
     if (!filenames.empty())
     {
         LoadImages(filenames);
-        Process_SelectImage(*filenames.begin());
     }
 #endif
 }
@@ -249,7 +274,6 @@ void cProcessImageWin::Process_SelectImage(string sImageName)
 
             mpResultWin->SetImage(mpResultBuffer);
 
-            Sprintf(msResult, "Image:%s", sImageName);
             InvalidateChildren();
             return;
         }
@@ -258,7 +282,68 @@ void cProcessImageWin::Process_SelectImage(string sImageName)
     ZASSERT(false); // couldn't find image with that name
 }
 
-uint32_t cProcessImageWin::ComputeAverageColor(ZBuffer* pBuffer, ZRect rArea)
+void cProcessImageWin::Process_SaveResultImage()
+{
+    if (!mpResultBuffer)
+    {
+        ZASSERT(false);
+        return;
+    }
+
+#ifdef _WIN64
+    string sFileName;
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if (SUCCEEDED(hr))
+    {
+        IFileSaveDialog* pDialog;
+
+        // Create the FileOpenDialog object.
+        hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL, IID_IFileSaveDialog, reinterpret_cast<void**>(&pDialog));
+
+        if (SUCCEEDED(hr))
+        {
+            COMDLG_FILTERSPEC rgSpec[] =
+            {
+                { L"Supported Image Formats", L"*.jpg;*.jpeg;*.bmp;*.gif;*.png;*.tiff;*.tif" },
+                { L"All Files", L"*.*" }
+            };
+
+            pDialog->SetFileTypes(2, rgSpec);
+
+            // Show the Open dialog box.
+            hr = pDialog->Show(NULL);
+
+            // Get the file name from the dialog box.
+            if (SUCCEEDED(hr))
+            {
+                IShellItem* pItem;
+                hr = pDialog->GetResult(&pItem);
+                if (SUCCEEDED(hr))
+                {
+                    PWSTR pszFilePath;
+                    hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+                    wstring wideFilename(pszFilePath);
+                    sFileName = StringHelpers::wstring2string(wideFilename);
+
+                    pItem->Release();
+                }
+            }
+            pDialog->Release();
+        }
+        CoUninitialize();
+    }
+    if (!sFileName.empty())
+    {
+        mpResultBuffer->SaveBuffer(sFileName);
+        return;
+    }
+#endif
+
+    ZASSERT(false); // couldn't find image with that name
+}
+
+uint32_t cProcessImageWin::ComputeAverageColor(tZBufferPtr pBuffer, ZRect rArea)
 {
     uint64_t nTotalR = 0;
     uint64_t nTotalG = 0;
@@ -328,7 +413,7 @@ void cProcessImageWin::Process_ComputeGradient()
             ZRect rSubArea(nGridX * fSubW, nGridY * fSubH, (nGridX+1)* fSubW, (nGridY+1)* fSubH);
 
             int32_t nIndex = (nGridY * nSubdivisions) + nGridX;
-            subdivisionColorGrid[nIndex] = ComputeAverageColor(mpResultBuffer.get(), rSubArea);
+            subdivisionColorGrid[nIndex] = ComputeAverageColor(mpResultBuffer, rSubArea);
         }
     }
 
@@ -416,7 +501,7 @@ bool cProcessImageWin::Subdivide_and_Subtract(ZFloatColorBuffer* pBuffer, ZRect 
 void cProcessImageWin::Process_FloatColorSandbox()
 {
     mFloatColorBuffer.From(mpResultBuffer.get());
-    ZRect rArea(mFloatColorBuffer.GetBuffer().GetArea());
+    ZRect rArea(mFloatColorBuffer.GetBuffer().get()->GetArea());
 
 /*    double a = 0.0;
     double r = 0.0;
@@ -467,7 +552,7 @@ void cProcessImageWin::Process_FloatColorSandbox()
     OutputDebugLockless("Rects:%d, Memory:%d\n", floatAreas.size(), floatAreas.size() * sizeof(cFloatAreaDescriptor));
 
 //    mpResultBuffer.get()->Blt(&mFloatColorBuffer.GetBuffer(), rArea, rArea);
-    mpResultBuffer.get()->Blt(&newBuffer.GetBuffer(), rArea, rArea);
+    mpResultBuffer.get()->Blt(newBuffer.GetBuffer().get(), rArea, rArea);
 
     InvalidateChildren();
 }
@@ -480,7 +565,7 @@ void cProcessImageWin::Process_FloatColorSandbox()
 
 bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
 {
-    ZBuffer sourceImg(mpResultBuffer.get());
+    tZBufferPtr sourceImg(mpResultBuffer);
     ResetResultsBuffer();
     if (mChildImageWins.empty())
     {
@@ -513,8 +598,8 @@ bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
 
         workers[i].rArea.SetRect(mrIntersectionWorkArea.left+mnProcessPixelRadius, nTop, mrIntersectionWorkArea.right-mnProcessPixelRadius, nBottom);
         workers[i].nRadius = mnProcessPixelRadius;
-        workers[i].pSourceImage = &sourceImg;
-        workers[i].pDestImage = mpResultBuffer.get();
+        workers[i].pSourceImage = sourceImg;
+        workers[i].pDestImage = mpResultBuffer;
         workers[i].pThis = this;
         if (bBarrierSyncPoint)
             workers[i].mpBarrierCount = &nBarrierSync;
@@ -550,7 +635,7 @@ void cProcessImageWin::RadiusBlur(void* pContext)
     }
 }
 
-uint32_t cProcessImageWin::ComputePixelBlur(ZBuffer* pBuffer, int64_t nX, int64_t nY, int64_t nRadius)
+uint32_t cProcessImageWin::ComputePixelBlur(tZBufferPtr pBuffer, int64_t nX, int64_t nY, int64_t nRadius)
 {
     if (nRadius < 1)
         return 0xff;
@@ -656,7 +741,7 @@ void cProcessImageWin::StackImages(void* pContext)
 
             for (auto pBuffer : images)
             {
-                double fContrast = pJP->pThis->ComputePixelContrast(pBuffer.get(), x, y, pJP->nRadius);
+                double fContrast = pJP->pThis->ComputePixelContrast(pBuffer, x, y, pJP->nRadius);
                 imageContrasts[nContrastIndex++] = fContrast;
                 if (fHighestContrast < fContrast)
                     fHighestContrast = fContrast;
@@ -718,7 +803,7 @@ void cProcessImageWin::StackImages(void* pContext)
 
 
 
-void cProcessImageWin::CopyPixelsInRadius(ZBuffer* pSourceBuffer, ZBuffer* pDestBuffer, int64_t nX, int64_t nY, int64_t nRadius)
+void cProcessImageWin::CopyPixelsInRadius(tZBufferPtr pSourceBuffer, tZBufferPtr pDestBuffer, int64_t nX, int64_t nY, int64_t nRadius)
 {
 	if (nRadius < 1)
 		return;
@@ -765,7 +850,7 @@ void cProcessImageWin::CopyPixelsInRadius(ZBuffer* pSourceBuffer, ZBuffer* pDest
 }
 
 
-double cProcessImageWin::ComputePixelContrast(ZBuffer* pBuffer, int64_t nX, int64_t nY, int64_t nRadius)
+double cProcessImageWin::ComputePixelContrast(tZBufferPtr pBuffer, int64_t nX, int64_t nY, int64_t nRadius)
 {
 	if (nRadius < 1)
 		return 0xff;
@@ -872,7 +957,7 @@ bool cProcessImageWin::Init()
 	SetFocus();
 
     int64_t panelW = grFullArea.Width() / 10;
-    int64_t panelH = grFullArea.Height() / 4;
+    int64_t panelH = grFullArea.Height() / 2;
     mrControlPanel.SetRect(grFullArea.right-panelW, grFullArea.bottom-panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
 
     ZWinControlPanel* pCP = new ZWinControlPanel();
@@ -881,7 +966,12 @@ bool cProcessImageWin::Init()
 
     pCP->Init();
 
-    pCP->AddButton("Load Images", "type=loadimages;target=imageprocesswin");
+    pCP->AddButton("Load", "type=loadimages;target=imageprocesswin");
+    pCP->AddButton("Clear All", "type=clearall;target=imageprocesswin");
+
+    pCP->AddSpace(16);
+
+
     pCP->AddButton("Radius Blur", "type=radiusblur;target=imageprocesswin");
     pCP->AddButton("Stack", "type=stackimages;target=imageprocesswin");
     pCP->AddButton("compute contrast", "type=computecontrast;target=imageprocesswin");
@@ -914,13 +1004,7 @@ bool cProcessImageWin::Init()
     std::list<string> filenames = {
     "res/414A2616.jpg",
     "res/414A2617.jpg",
-    "res/414A2618.jpg",
-    "res/414A2619.jpg",
-    "res/414A2620.jpg",
-    "res/414A2621.jpg",
-    "res/414A2622.jpg",
-    "res/414A2623.jpg",
-    "res/414A2624.jpg",
+    "res/414A2618.jpg"
     };
 
     LoadImages(filenames);
@@ -931,14 +1015,9 @@ bool cProcessImageWin::Init()
 	return ZWin::Init();
 }
 
-void cProcessImageWin::ResetResultsBuffer()
-{
-    if (mChildImageWins.empty())
-	{
-		mpResultBuffer = nullptr;
-		return;
-	}
 
+void cProcessImageWin::ComputeIntersectedWorkArea()
+{
     // Compute the intersection area (i.e. smallest rect that all images fit into)
     bool bFirstRect = true;
     for (auto pWin : mChildImageWins)
@@ -953,6 +1032,22 @@ void cProcessImageWin::ResetResultsBuffer()
             mrIntersectionWorkArea.IntersectRect(pWin->GetImage()->GetArea());
         }
     }
+    ZASSERT(mrIntersectionWorkArea.Width() > 0 && mrIntersectionWorkArea.Height() > 0);
+}
+
+void cProcessImageWin::ResetResultsBuffer()
+{
+    if (mChildImageWins.empty())
+	{
+        if (mpResultWin)
+        {
+            ChildDelete(mpResultWin);
+            mpResultWin = nullptr;
+        }
+		mpResultBuffer = nullptr;
+		return;
+	}
+
     ZASSERT(mrIntersectionWorkArea.Width() > 0 && mrIntersectionWorkArea.Height() > 0);
 
     // Arrange all thumbnails
@@ -977,27 +1072,33 @@ void cProcessImageWin::ResetResultsBuffer()
     mrResultImageDest.SetRect(0, mrThumbnailSize.bottom, mrWatchPanel.left, grFullArea.bottom);
 
 
-    // if there is a result buffer and the dimenstions already match, no need to do anything with it
     if (!mpResultBuffer || mpResultBuffer->GetArea().Width() != mrIntersectionWorkArea.Width() || mpResultBuffer->GetArea().Height() != mrIntersectionWorkArea.Height())
     {
+        OutputDebugLockless("new mpResultBuffer. old:0x%x\n", (void*)mpResultBuffer.get());
         mpResultBuffer.reset(new ZBuffer());
         mpResultBuffer->Init(mrIntersectionWorkArea.Width(), mrIntersectionWorkArea.Height());
+    }
 
+    // if there is a result buffer and the dimenstions already match, no need to do anything with it
+    if (!mpResultWin || mrResultImageDest != mpResultWin->GetArea())
+    {
         if (mpResultWin)
             ChildDelete(mpResultWin);
 
         mpResultWin = new ZImageWin();
         mpResultWin->SetArea(mrResultImageDest);
         mpResultWin->SetShowZoom(4, 0x44ffffff, ZFont::kBottomRight, true);
-        mpResultWin->SetImage(mpResultBuffer);
         mpResultWin->SetFill(0xff222222);
         mpResultWin->SetArea(mrResultImageDest);
         mpResultWin->SetZoomable(true, 0.05, 100.0);
         mpResultWin->SetEnableControlPanel(true);
+        mpResultWin->SetSaveButtonMessage("type=saveimg;target=imageprocesswin");
+
 
         ChildAdd(mpResultWin);
-
     }
+
+    mpResultWin->SetImage(mpResultBuffer);
 
 
     if (mpContrastFloatBuffer)
@@ -1020,9 +1121,24 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
 		Process_LoadImages();
 		return true;
 	}
+    else if (sType == "clearall")
+    {
+        ClearImages();
+        return true;
+    }
+    else if (sType == "closeimg")
+    {
+        RemoveImage(message.GetParam("name"));
+        return true;
+    }
     else if (sType == "selectimg")
     {
         Process_SelectImage(message.GetParam("name"));
+        return true;
+    }
+    else if (sType == "saveimg")
+    {
+        Process_SaveResultImage();
         return true;
     }
     else if (sType == "radiusblur")
@@ -1032,6 +1148,7 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
     }
 	else if (sType == "stackimages")
 	{
+        ComputeIntersectedWorkArea();
         SpawnWork(&StackImages, true);
 		return true;
 	}
@@ -1076,11 +1193,11 @@ bool cProcessImageWin::BlurBox(int64_t x, int64_t y)
         rResultImageRect.PtInRect(nResultX + kDist, nResultY + kDist) &&
         rResultImageRect.PtInRect(nResultX - kDist, nResultY + kDist))
     {
-        double fContrast = ComputePixelContrast(mpResultBuffer.get(), nResultX, nResultY, 10);
+        double fContrast = ComputePixelContrast(mpResultBuffer, nResultX, nResultY, 10);
         int nAdjustedRect = fContrast / 26;
 
         ZRect r(nResultX - kDist, nResultY - kDist, nResultX + kDist, nResultY + kDist);
-        uint32_t nCol = ComputeAverageColor(mpResultBuffer.get(), r);
+        uint32_t nCol = ComputeAverageColor(mpResultBuffer, r);
 
 
         ZRect rDraw(nResultX - nAdjustedRect, nResultY - nAdjustedRect, nResultX + nAdjustedRect, nResultY + nAdjustedRect);
@@ -1164,13 +1281,9 @@ bool cProcessImageWin::Paint()
     if (!mbInvalid)
         return true;
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
     mpTransformTexture.get()->Fill(mAreaToDrawTo, 0xff000000);
-
-    tZFontPtr pFont(gpFontSystem->GetDefaultFont(4));
-	pFont->DrawText(mpTransformTexture.get(), msResult, mrResultImageDest, 0x88ffffff, 0x88888888);
-
 
 	return ZWin::Paint();
 }

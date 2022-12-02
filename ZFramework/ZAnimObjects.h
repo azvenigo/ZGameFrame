@@ -96,7 +96,7 @@ public:
    virtual bool		Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
 
    // ZCEAnimObject_Sparkler 
-   void           	SetSource(ZBuffer* pSource, const ZRect& rBounds, uint32_t nSourceColor);
+   void           	SetSource(tZBufferPtr pSource, const ZRect& rBounds, uint32_t nSourceColor);
    void           	SetNumParticles(int64_t nParticles) { mnParticles = nParticles; }
    void           	SetMaxStreakSize(int64_t nMaxStreakSize) { mnMaxStreakSize = nMaxStreakSize; }
    void           	SetMaxBrightness(double fMaxBrightness) { mfMaxBrightness = fMaxBrightness; }
@@ -111,7 +111,7 @@ private:
    double          	mfMaxBrightness;  // How "hot" it burns
 
    ZRect			mrBounds;
-   ZBuffer*		mpSourceBuffer;
+   tZBufferPtr		mpSourceBuffer;
    uint32_t			mnSourceColor;
 };
 
@@ -225,7 +225,7 @@ protected:
    void  			Process(ZRect& rBoundingArea);
 
    tShatterQuadList mShatterQuadList;
-   ZBuffer*		mpTexture;
+   tZBufferPtr		mpTexture;
    ZRasterizer	mRasterizer;
 };
 

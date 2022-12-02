@@ -65,7 +65,7 @@ bool ZWinWatchPanel::Process()
     int32_t nWatchedDoubleIndex = 0;
     int32_t nWatchedBoolIndex = 0;
 
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());  // these are modified within paint
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());  // these are modified within paint
 
     for (auto ws : mWatchList)
     {
@@ -137,7 +137,7 @@ bool ZWinWatchPanel::Process()
 
 bool ZWinWatchPanel::Paint()
 {
-    const std::lock_guard<std::mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbVisible)
         return false;
     if (!mbInvalid)
