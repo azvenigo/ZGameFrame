@@ -16,6 +16,7 @@
 #include "ZTimer.h"
 #include "ZRandom.h"
 #include "helpers/StringHelpers.h"
+#include "helpers/Registry.h"
 
 #ifdef _WIN64        // for open file dialong
 #include <windows.h>
@@ -1001,15 +1002,16 @@ bool cProcessImageWin::Init()
     pWP->AddItem(WatchType::kInt64, "Height", (void*)&mrIntersectionWorkArea.bottom, 2, 0xff333333, 0xff333333);
     ChildAdd(pWP);
 
+
     std::list<string> filenames = {
-    "res/414A2616.jpg",
-    "res/414A2617.jpg",
-    "res/414A2618.jpg"
+        "res/414A2616.jpg",
+        "res/414A2617.jpg",
+        "res/414A2618.jpg"
     };
 
+    gRegistry.GetOrSetDefault("ProcessImageWin", "images", filenames, filenames);   // sets default to above list if none already set
+            
     LoadImages(filenames);
-
-
 
     Process_SelectImage(*filenames.begin());
 	return ZWin::Init();
@@ -1119,16 +1121,19 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
 	if (sType == "loadimages")
 	{
 		Process_LoadImages();
+        UpdatePrefs();
 		return true;
 	}
     else if (sType == "clearall")
     {
         ClearImages();
+        UpdatePrefs();
         return true;
     }
     else if (sType == "closeimg")
     {
         RemoveImage(message.GetParam("name"));
+        UpdatePrefs();
         return true;
     }
     else if (sType == "selectimg")
@@ -1169,6 +1174,15 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
     }
 
 	return ZWin::HandleMessage(message);
+}
+
+void cProcessImageWin::UpdatePrefs()
+{
+    std::list<string> filenames;
+    for (auto pWin : mChildImageWins)
+        filenames.push_back(pWin->GetWinName());
+
+    gRegistry["ProcessImageWin"]["images"] = filenames;
 }
 
 

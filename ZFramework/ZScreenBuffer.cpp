@@ -93,12 +93,12 @@ void ZScreenBuffer::BeginRender()
 
 void ZScreenBuffer::EndRender()
 {
+    mbCurrentlyRendering = false;
     if (!mbRenderingEnabled)
         return;
 #ifdef _WIN64
     EndPaint(mpGraphicSystem->GetMainHWND(), &mPS);
 #endif
-    mbCurrentlyRendering = false;
 }
 
 void ZScreenBuffer::Render(tZBufferPtr pTexture, ZRect& rAreaToDrawTo)

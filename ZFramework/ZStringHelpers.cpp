@@ -59,109 +59,24 @@ string RectToString(const ZRect& rectValue)
 }
 
 
-void StringToStringArray(string sVal, std::vector<string>& stringArray)
-{
-	std::size_t current, previous = 0;
-
-	current = sVal.find(',');
-	while (current != std::string::npos) 
-	{
-		stringArray.push_back(sVal.substr(previous, current - previous));
-		previous = current + 1;
-		current = sVal.find(',', previous);
-	}
-	stringArray.push_back(sVal.substr(previous, current - previous));
-}
-
-
-string StringArrayToString(std::vector<string>& stringArray)
-{
-	string sValue;
-	for (uint32_t i = 0; i < stringArray.size(); i++)
-	{
-		ZASSERT_MESSAGE( stringArray[i].find(',') == -1, "Converting to a string array doesn't support strings with commas right now.");
-		if (!stringArray[i].empty())
-			sValue += stringArray[i] + ",";
-	}
-
-	if (!sValue.empty())
-		sValue = sValue.substr( sValue.length()-1 );	// remove the trailing ','
-
-	return sValue;
-}
-
-
-void StringToStringMap(string stringToSplit, tKeyValueMap& stringMap)
-{
-	std::size_t current, previous = 0;
-
-	current = stringToSplit.find(',');
-	while (current != std::string::npos)
-	{
-		std::size_t equalIndex = stringToSplit.find('=', previous);
-		if (equalIndex != std::string::npos)
-		{
-			string sKey(stringToSplit.substr(previous, equalIndex));
-			string sVal(stringToSplit.substr(equalIndex + 1, current));
-			stringMap[sKey] = sVal;
-		}
-
-		previous = current + 1;
-		current = stringToSplit.find(',', previous);
-	}
-
-	// final value
-	std::size_t equalIndex = stringToSplit.find('=', previous);
-	if (equalIndex != std::string::npos)
-	{
-		string sKey(stringToSplit.substr(previous, equalIndex));
-		string sVal(stringToSplit.substr(equalIndex + 1, current));
-		stringMap[sKey] = sVal;
-	}
-}
-
-
-string		StringMapToString(tKeyValueMap& stringMap)
-{
-	string sReturn;
-	for (tKeyValueMap::iterator it = stringMap.begin(); it != stringMap.end(); it++)
-	{
-		string sKey = (*it).first;
-		string sValue = (*it).second;
-
-		ZASSERT_MESSAGE( sKey.find(',') == -1, "Converting to a string array doesn't support strings with commas right now.");
-		ZASSERT_MESSAGE( sValue.find(',') == -1, "Converting to a string array doesn't support strings with commas right now.");
-		ZASSERT_MESSAGE( sKey.find('=') == -1, "Converting to a string array doesn't support strings with equals right now.");
-		ZASSERT_MESSAGE( sValue.find('=') == -1, "Converting to a string array doesn't support strings with equals right now.");
-		if (!sKey.empty())
-			sReturn += sKey + "=" + sValue + ",";
-	}
-
-	if (!sReturn.empty())
-		sReturn = sReturn.substr( sReturn.length()-1 );	// remove the trailing ','
-
-	return sReturn;
-}
-
-
 void StringToInt64Array(const string& sVal, std::vector<int64_t>& intArray)
 {
     char* pNext;
 
 #ifdef _WIN64
-    char* pVal = strtok_s((char*)sVal.c_str(), ",", &pNext);
+    char* pVal = strtok_s((char*)sVal.c_str(), &StringHelpers::kCharSplitToken, &pNext);
     while (pVal)
     {
         intArray.push_back(strtol(pVal, nullptr, 10));
-        pVal = strtok_s(nullptr, ",", &pNext);
+        pVal = strtok_s(nullptr, &StringHelpers::kCharSplitToken, &pNext);
     }
 #else
     rsize_t nRemainingChars = sVal.length();
-    char* pVal = strtok_s((char*) sVal.data(), &nRemainingChars,  ",", &pNext);
+    char* pVal = strtok_s((char*) sVal.data(), &nRemainingChars, &StringHelpers::kCharSplitToken, &pNext);
     while (pVal)
     {
         intArray.push_back(strtol(pVal, nullptr, 10));
-        pVal = strtok_s(nullptr, 0, ",", &pNext);
+        pVal = strtok_s(nullptr, 0, &StringHelpers::kCharSplitToken, &pNext);
     }
 #endif
 }
@@ -174,13 +89,13 @@ string Int64ArrayToString(std::vector<int64_t>& intArray)
 
 	for (uint32_t i = 0; i < intArray.size(); i++)
 	{
-		sprintf_s(buf, "%lld,", intArray[i]);
+		sprintf_s(buf, "%lld%c", intArray[i], StringHelpers::kCharSplitToken);
 
 		sValue.append(buf);
 	}
 
 	if (!sValue.empty())
-		sValue = sValue.substr(0, sValue.length()-1 );	// remove the trailing ','
+		sValue = sValue.substr(0, sValue.length()-1 );	// remove the trailing kCharSplitToken
 
 	return sValue;
 }
@@ -241,12 +156,6 @@ bool BinaryToString(void* pSource, int64_t nLength, string& sString)
 
 bool WriteStringToFile(const string& sFilename, const string& sString, bool bCompressEncode)
 {
-#ifdef _DEBUG
-	int64_t nSub = ZXMLNode::FindSubstring(sString, "<<", 0, true);
-	ZASSERT(nSub < 0);
-#endif
-
-//	HANDLE hFile = CreateFile(AsciiToWide(sFilename).c_str(), GENERIC_WRITE, NULL, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     std::ofstream stringFile(sFilename.c_str(), ios::out | ios::binary | ios::trunc);
     if (!stringFile.is_open())
     {

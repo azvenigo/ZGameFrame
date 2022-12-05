@@ -57,8 +57,6 @@ set(COMMON_FILES
 ../ZFramework/ZMemBuffer.h
 ../ZFramework/ZMessageSystem.cpp
 ../ZFramework/ZMessageSystem.h
-../ZFramework/ZPreferences.cpp
-../ZFramework/ZPreferences.h
 ../ZFramework/ZRandom.h
 ../ZFramework/ZRasterizer.cpp
 ../ZFramework/ZRasterizer.h
@@ -99,6 +97,9 @@ list(APPEND COMMON_FILES
 ../../ZLibraries/Common/helpers/StringHelpers.h 
 ../../ZLibraries/Common/helpers/StringHelpers.cpp 
 ../../ZLibraries/Common/helpers/ThreadPool.h
+../../ZLibraries/Common/helpers/Registry.h
+../../ZLibraries/Common/helpers/Registry.cpp
+../../ZLibraries/Common/json/json.hpp
 )
 
 list(APPEND COMMON_FILES  ../../ZLibraries/Common/zlib-1.2.11/deflate.c  ../../ZLibraries/Common/zlib-1.2.11/inflate.c 
@@ -108,7 +109,7 @@ list(APPEND COMMON_FILES  ../../ZLibraries/Common/zlib-1.2.11/deflate.c  ../../Z
 
 ####################
 # common source
-list(APPEND INCLUDE_DIRS ../ZFramework ../../ZLibraries/Common ../../ZLibraries/Common/zlib-1.2.11 )
+list(APPEND INCLUDE_DIRS ../ZFramework ../../ZLibraries/Common ../../ZLibraries/Common/zlib-1.2.11 ../../ZLibraries/Common/json)
 
 
 ####################
@@ -138,6 +139,7 @@ if(MSVC)
     set(EXTRA_FLAGS "/W3 /MP")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_compile_definitions(JSON_NOEXCEPTION)
     set(TARGET_PROPS  PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:SandboxApps>")
 else()
     set(EXTRA_FLAGS "-Wall -Wextra -Werror -march=x86-64 -pthread")

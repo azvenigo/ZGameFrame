@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <ZMemBuffer.h>
+#include "helpers/StringHelpers.h"
 
 // Conversion functions
 /*bool        StringToBool(std::string sVal);

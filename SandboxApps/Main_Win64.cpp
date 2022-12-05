@@ -5,6 +5,7 @@
 
 #include "Main_Sandbox.h"
 #include "helpers/StringHelpers.h"
+#include "helpers/Registry.h"
 
 using namespace std;
 
@@ -31,6 +32,9 @@ bool                    gbMouseHoverPosted = true;		// flag for knowing whether 
 // For resizing the window... it scales the mouse movements
 float                   gfMouseMultX = 1.0f;
 float                   gfMouseMultY = 1.0f;
+
+std::string             gsRegistryFile;
+
 
 int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -144,9 +148,12 @@ int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		}
     }
 
+
     Sandbox::SandboxShutdown();
     FlushDebugOutQueue();
-	return (int) msg.wParam;
+
+    gRegistry.Save(gsRegistryFile);
+    return (int) msg.wParam;
 }
 
 #define GENERATE_FRAMEWORK_FONTS
@@ -217,7 +224,19 @@ void SizeWindowToClientArea(HWND hWnd, int left, int top, int nWidth, int nHeigh
 const char* szAppClass = "ProcessImage";
 BOOL WinInitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-	string sRawPrefs;
+    string sUserPath(getenv("APPDATA"));
+    std::filesystem::path fullPath(sUserPath);
+    fullPath += "/ZSandbox/prefs.json";
+    gsRegistryFile = fullPath.make_preferred().string();
+
+    if (!gRegistry.Load(gsRegistryFile))
+    {
+        ZDEBUG_OUT("No registry file at:%s creating path for one.");
+        std::filesystem::path regPath(gsRegistryFile);
+        std::filesystem::create_directories(regPath.parent_path());
+    }
+
+
 	g_hInst = hInstance;		// Store instance handle in our global variable
 
 	WNDCLASS	wc;

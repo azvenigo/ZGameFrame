@@ -1,5 +1,6 @@
 #include "Main_Sandbox.h"
 #include "helpers/StringHelpers.h"
+#include "helpers/Registry.h"
 
 using namespace std;
 
@@ -31,7 +32,7 @@ int64_t                 gnLifeGridSize = 500;
 ZWin*                   gpCaptureWin = nullptr;
 ZWin*                   gpMouseOverWin = nullptr;
 ZPoint                  gLastMouseMove;
-
+REG::Registry           gRegistry;
 
 
 void Sandbox::InitControlPanel()
@@ -87,6 +88,8 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
     assert(gpControlPanel);     // needs to exist before this
 
     SandboxDeleteAllButControlPanel();
+
+    gRegistry["sandbox"]["mode"] = (int32_t)mode;
    
     if (mode == eSandboxMode::kFloatLinesWin)
 	{
@@ -251,6 +254,7 @@ bool Sandbox::SandboxInitialize()
     }
 
     gResources.Init("res/default_resources/");// todo, move this define elsewhere?
+//    gPreferences.Load("res/preferences.xml");
 
     SandboxInitializeFonts();
     gpMainWin = new ZMainWin();
@@ -258,7 +262,10 @@ bool Sandbox::SandboxInitialize()
     gpMainWin->Init();
 
     InitControlPanel();
-    SandboxInitChildWindows(kImageProcess);
+
+    int32_t nMode;
+    gRegistry.GetOrSetDefault("sandbox", "mode", nMode, (int32_t) kImageProcess);
+    SandboxInitChildWindows((eSandboxMode) nMode);
     return true;
 }
 
@@ -267,7 +274,7 @@ void Sandbox::SandboxShutdown()
     gbApplicationExiting = true;
 
     //gMessageSystem.Shutdown();
-    gPreferences.Save();
+    //gPreferences.Save();
     if (gpMainWin)
     {
         gpMainWin->Shutdown();

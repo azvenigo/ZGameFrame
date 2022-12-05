@@ -29,7 +29,6 @@ bool ZPreferences::Load(const string& sFilename)
 		return mPreferenceTree.Init(sRaw);
 #endif
 
-
 	if (ReadStringFromFile(msFilename, sRaw))
 		return mPreferenceTree.Init(sRaw);
 

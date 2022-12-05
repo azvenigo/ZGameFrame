@@ -58,6 +58,7 @@ private:
 
     bool    Subdivide_and_Subtract(ZFloatColorBuffer* pBuffer, ZRect rArea, int64_t nMinSize, tFloatAreas& floatAreas);   // Adds subtracted to floatAreas
 
+    void    UpdatePrefs();
 
     // Spawn threads with jobs to do
     bool    SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint = false);

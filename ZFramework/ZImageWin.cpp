@@ -276,7 +276,8 @@ void ZImageWin::LoadImage(const string& sName)
 
 void ZImageWin::SetArea(const ZRect& newArea)
 {
-    OutputDebugLockless("SetArea %s [%d,%d,%d,%d\n", msWinName.c_str(), newArea.left, newArea.top, newArea.right, newArea.bottom);
+    mbVisible = false;
+//    OutputDebugLockless("SetArea %s [%d,%d,%d,%d\n", msWinName.c_str(), newArea.left, newArea.top, newArea.right, newArea.bottom);
     ZWin::SetArea(newArea);
 
     if (mpPanel)
@@ -287,6 +288,7 @@ void ZImageWin::SetArea(const ZRect& newArea)
     }
 
     FitImageToWindow();
+    mbVisible = true;
 }
 
 
@@ -351,13 +353,17 @@ void ZImageWin::SetImage(tZBufferPtr pImage)
 
 bool ZImageWin::Paint()
 {
-    if (!mbVisible || !mpTransformTexture)
+    if (!mpTransformTexture)
+        return false;
+
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+
+    if (!mbVisible)
         return false;
 
     if (!mbInvalid)
         return true;
 
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
 
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 

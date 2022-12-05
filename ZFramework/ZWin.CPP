@@ -85,6 +85,13 @@ bool ZWin::Init()
 		mbShutdownFlag = false;
 		mThread = std::thread(&WindowThreadProc, (void*)this);
 
+#ifdef _WIN64
+        HRESULT r;
+        string sName;
+        Sprintf(sName, "th_0x%x", this);
+        r = SetThreadDescription(GetCurrentThread(), StringHelpers::string2wstring(sName).c_str() ); 
+#endif
+
 		mbInvalid = true;
 		mbInitted = true;
 	}
