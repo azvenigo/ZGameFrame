@@ -48,7 +48,7 @@ static void OutputDebug(const std::string& sOutput)
 static void OutputDebug(const char* format, ...)
 {
     va_list args;
-    static char  buf[1024];
+    static char  buf[2048];
 
     va_start(args, format);
     vsprintf_s(buf, format, args);
@@ -61,7 +61,7 @@ static void OutputDebug(const char* format, ...)
 static void OutputDebugLockless(const char* format, ...)
 {
     va_list args;
-    static char  buf[1024];
+    static char  buf[2048];
 
     va_start(args, format);
     vsprintf_s(buf, format, args);

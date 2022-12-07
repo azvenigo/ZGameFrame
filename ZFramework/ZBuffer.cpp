@@ -8,6 +8,7 @@
 #ifdef _WIN64
 #include <GdiPlus.h>
 using namespace Gdiplus;
+#include "GDIImageTags.h"
 #endif
 
 using namespace std;
@@ -77,6 +78,12 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 {
 #ifdef _WIN64
 	Bitmap bitmap(StringHelpers::string2wstring(sFilename).c_str());
+    if (bitmap.GetLastStatus() != Status::Ok)
+    {
+        OutputDebugLockless("ZBuffer::LoadBuffer failed to load %s. Status:%d\n", sFilename.c_str(), bitmap.GetLastStatus());
+        return false;
+    }
+
 
     uint32_t nPropertySize = 0;
     uint32_t nPropertyCount = 0;
@@ -89,14 +96,47 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
     PropertyItem* pPropBuffer = (PropertyItem*)malloc(nPropertySize);
     bitmap.GetAllPropertyItems(nPropertySize, nPropertyCount, pPropBuffer);
 
+    OutputDebugLockless("Properties for image:%s\n", sFilename.c_str());
     for (size_t i = 0; i < nPropertyCount; i++)
     {
-        OutputDebugLockless("property:%d id:0x%04d length:%d type:0x%04x value:0x%04x\n", i, pPropBuffer[i].id, pPropBuffer[i].length, pPropBuffer[i].type, pPropBuffer[i].value);
-    }
+        if (pPropBuffer[i].id == PropertyTagOrientation)
+        {
+            auto orientation = *((uint16_t*)pPropBuffer[i].value);
+            if (orientation != 1)
+            {
+                OutputDebugLockless("Rotating image. Orientation property:%d\n", orientation);
 
+                switch (orientation)
+                {
+                case 2:
+                    bitmap.RotateFlip(RotateNoneFlipX);
+                    break;
+                case 3:
+                    bitmap.RotateFlip(Rotate180FlipNone);
+                    break;
+                case 4:
+                    bitmap.RotateFlip(Rotate180FlipX);
+                    break;
+                case 5:
+                    bitmap.RotateFlip(Rotate90FlipX);
+                    break;
+                case 6:
+                    bitmap.RotateFlip(Rotate90FlipNone);
+                    break;
+                case 7:
+                    bitmap.RotateFlip(Rotate270FlipX);
+                    break;
+                case 8:
+                    bitmap.RotateFlip(Rotate270FlipNone);
+                    break;
+                }
+            }
+        }
+        OutputDebugLockless("%d:%s\n", i, PropertyItemToString(&pPropBuffer[i]).c_str());
+    }
+    
 
     free(pPropBuffer);
-
 
 	Shutdown(); // Clear out any existing data
 

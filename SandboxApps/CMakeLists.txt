@@ -88,6 +88,7 @@ set(COMMON_FILES
 ../ZFramework/ZXMLNode.h
 ../ZFramework/ZZipAPI.cpp
 ../ZFramework/ZZipAPI.h
+../ZFramework/platforms/windows/GDIImageTags.h
 )
 
 list(APPEND COMMON_FILES ../../ZLibraries/Common/helpers/FNMatch.h ../../ZLibraries/Common/helpers/FNMatch.cpp ../../ZLibraries/Common/helpers/HTTPCache.h ../../ZLibraries/Common/helpers/HTTPCache.cpp)
@@ -109,7 +110,7 @@ list(APPEND COMMON_FILES  ../../ZLibraries/Common/zlib-1.2.11/deflate.c  ../../Z
 
 ####################
 # common source
-list(APPEND INCLUDE_DIRS ../ZFramework ../../ZLibraries/Common ../../ZLibraries/Common/zlib-1.2.11 ../../ZLibraries/Common/json)
+list(APPEND INCLUDE_DIRS ../ZFramework ../../ZLibraries/Common ../../ZLibraries/Common/zlib-1.2.11 ../../ZLibraries/Common/json ../ZFramework/platforms/windows)
 
 
 ####################
