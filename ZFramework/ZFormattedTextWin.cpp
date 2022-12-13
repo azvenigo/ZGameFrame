@@ -494,12 +494,16 @@ void ZFormattedTextWin::AddTextLine(string sLine, int64_t nFontID, uint32_t nCol
 		mCurrentStyle = style;
 		mCurrentTextPosition = position;
 		msLink = sLink;
-		ProcessLineNode(&lineNode);
+
+        ProcessLineNode(lineNode.GetChild("line"));
 	}
 }
 
 bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
 {
+    if (!pTextNode)
+        return false;
+
 	tTextLine textLine;
 
 	string sParam;

@@ -3,6 +3,7 @@
 #include "ZWin.h"
 #include "ZAnimator.h"
 #include "ZFloatColorBuffer.h"
+#include "ZFormattedTextWin.h"
 
 class cXMLNode;
 class ZImageWin;
@@ -59,6 +60,7 @@ private:
     bool    Subdivide_and_Subtract(ZFloatColorBuffer* pBuffer, ZRect rArea, int64_t nMinSize, tFloatAreas& floatAreas);   // Adds subtracted to floatAreas
 
     void    UpdatePrefs();
+    void    UpdateImageProps(ZBuffer* pBuf);
 
     // Spawn threads with jobs to do
     bool    SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint = false);
@@ -93,7 +95,8 @@ private:
     ZRect mrThumbnailSize;
 //	cCEBuffer*	mpBufferToProcess;
 
-	ZImageWin* mpProcessedImageWin;
+	ZImageWin*                  mpProcessedImageWin;
+    ZFormattedTextWin*          mpImageProps;
 
     ZFloatColorBuffer           mFloatColorBuffer;
 

@@ -13,6 +13,7 @@ ZFontParams::ZFontParams()
     nHeight = 0;
     nWeight = 0;
     nTracking = 1;
+    bFixedWidth = false;
     bItalic = false;
     bUnderline = false;
     bStrikeOut = false;
@@ -23,6 +24,7 @@ ZFontParams::ZFontParams(const ZFontParams& rhs)
     nHeight = rhs.nHeight;
     nWeight = rhs.nWeight;
     nTracking = rhs.nTracking;
+    bFixedWidth = rhs.bFixedWidth;
     bItalic = rhs.bItalic;
     bUnderline = rhs.bUnderline;
     bStrikeOut = rhs.bStrikeOut;
@@ -37,7 +39,7 @@ extern ZTimer				gTimer;
 
 #pragma pack (1)
 
-string sZFontHeader("ZFONT v3.0 by Alex Zvenigorodsky");
+string sZFontHeader("ZFONT v3.1 by Alex Zvenigorodsky");
 
 #ifdef _DEBUG
 #define new new(_NORMAL_BLOCK, THIS_FILE, __LINE__)
@@ -114,6 +116,9 @@ bool ZFont::LoadFont(const string& sFilename)
     memcpy(&mFontParams.nTracking, pData, sizeof(mFontParams.nTracking));
     pData += sizeof(mFontParams.nTracking);
 
+    memcpy(&mFontParams.bFixedWidth, pData, sizeof(mFontParams.bFixedWidth));
+    pData += sizeof(mFontParams.bFixedWidth);
+
     memcpy(&mFontParams.bItalic, pData, sizeof(mFontParams.bItalic));
     pData += sizeof(mFontParams.bItalic);
 
@@ -170,6 +175,7 @@ bool ZFont::SaveFont(const string& sFilename)
     uncompBuffer->write((uint8_t*) &mFontParams.nHeight, sizeof(mFontParams.nHeight));
     uncompBuffer->write((uint8_t*)&mFontParams.nWeight, sizeof(mFontParams.nWeight));
     uncompBuffer->write((uint8_t*)&mFontParams.nTracking, sizeof(mFontParams.nTracking));
+    uncompBuffer->write((uint8_t*)&mFontParams.bFixedWidth, sizeof(mFontParams.bFixedWidth));
     uncompBuffer->write((uint8_t*)&mFontParams.bItalic, sizeof(mFontParams.bItalic));
     uncompBuffer->write((uint8_t*)&mFontParams.bStrikeOut, sizeof(mFontParams.bStrikeOut));
 
@@ -260,10 +266,12 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 
 	case kShadowed:
 		{
-			uint32_t nShadowColor = nCol & 0xff000000;		// draw the shadow, but only as dark as the text alpha
+			uint32_t nShadowColor = nCol & 0xAA000000;		// draw the shadow, but only as dark as the text alpha
 			int64_t nShadowOffset = mFontParams.nHeight/20;
             if (nShadowOffset < 1)
                 nShadowOffset = 1;
+            else if (nShadowOffset > 8)
+                nShadowOffset = 8;
 
 
 			ZRect rShadowRect(rAreaToDrawTo);
@@ -282,12 +290,14 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 
 	case kEmbossed:
 		{
-			uint32_t nShadowColor = nCol & 0xff000000;		// draw the shadow, but only as dark as the text alpha
-			uint32_t nHighlightColor = (nCol & 0xff000000) | 0x00ffffff;	// the highlight will also only be as bright as the text alpha
+			uint32_t nShadowColor = nCol & 0xAA000000;		// draw the shadow, but only as dark as the text alpha
+			uint32_t nHighlightColor = (nCol & 0xAA000000) | 0x00ffffff;	// the highlight will also only be as bright as the text alpha
 
 			int64_t nShadowOffset = mFontParams.nHeight/32;
             if (nShadowOffset < 1)
                 nShadowOffset = 1;
+            else if (nShadowOffset > 8)
+                nShadowOffset = 8;
 
 			ZRect rShadowRect(rAreaToDrawTo);
 			rShadowRect.OffsetRect(-nShadowOffset, -nShadowOffset);
@@ -405,6 +415,8 @@ void ZFont::DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, 
 
 	int64_t nCharWidth = mCharDescriptors[c].nCharWidth;
 
+    uint8_t nDrawAlpha = nCol >> 24;
+
 	int64_t nScanlineOffset = 0;
 	for (tPixelDataList::iterator it = mCharDescriptors[c].pixelData.begin(); it != mCharDescriptors[c].pixelData.end(); it++)
 	{
@@ -431,7 +443,7 @@ void ZFont::DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, 
 			uint32_t nAlpha = (uint32_t) nBright;
 			while (nNumPixels > 0)
 			{
-                if (nAlpha > 0xf0)
+                if (nAlpha > 0xf0 && nDrawAlpha > 0xf0)
                     *pDest = nCol;
                 else
 				    *pDest = pBuffer->AlphaBlend_AddAlpha(nCol, *pDest, nAlpha);
@@ -471,6 +483,8 @@ void ZFont::DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX,
 	uint32_t* pDest = (pBuffer->GetPixels()) + (nY * nDestStride) + nX;
 
 	int64_t nCharWidth = mCharDescriptors[c].nCharWidth;
+    uint8_t nDrawAlpha = nCol >> 24;
+
 
 	int64_t nScanlineOffset = 0;
 	for (tPixelDataList::iterator it = mCharDescriptors[c].pixelData.begin(); it != mCharDescriptors[c].pixelData.end(); it++)
@@ -503,7 +517,7 @@ void ZFont::DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX,
 			{
                 if (rClip.PtInRect(nDestX, nDestY))
                 {
-                    if (nAlpha > 0xf0)
+                    if (nAlpha > 0xf0 && nDrawAlpha > 0xf0)
                         *pDest = nCol;
                     else
                         *pDest = pBuffer->AlphaBlend_AddAlpha(nCol, *pDest, nAlpha);
@@ -818,49 +832,62 @@ int64_t ZFont::CalculateWordsThatFitOnLine(int64_t nLineWidth, const char* pChar
 	return nNumChars;
 }
 
-void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2)
+/*void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2)
 {
 	ZASSERT(mFontParams.nHeight > 1);
     mColorGradient.resize(mFontParams.nHeight);
-//	CEASSERT(mColorGradient.size() == mFontParams.nHeight);
 
 	// If the gradient is already set, don't bother
 	if (mColorGradient[0] == nColor1 && mColorGradient[mFontParams.nHeight -1] == nColor2)
 		return;
 
-	//ZDEBUG_OUT("Building gradient for colors %x - %x mFontParams.nHeight:%d", nColor1, nColor2, mFontParams.nHeight);
 
-	mColorGradient[0] = nColor1;
-	mColorGradient[mFontParams.nHeight -1] = nColor2;
+    float fHeight = (float) mFontParams.nHeight;
 
-	for (int64_t i = 1; i < mFontParams.nHeight -1; i++)
-	{
-		double fRange = 10.0 * (( (double) (i-1) - (double) (mFontParams.nHeight -3) / 2.0 ) / (double)mFontParams.nHeight);
-		double fArcTanTransition = 0.5 + (atan( fRange ) / 3.0);
-		if (fArcTanTransition < -0)
-			fArcTanTransition = 0;
-		else if (fArcTanTransition > 1.0)
-			fArcTanTransition = 1.0;
+    for (int64_t i = 0; i < mFontParams.nHeight; i++)
+    {
+        float fT = (float)i / fHeight;
 
-		int64_t nInverseAlpha = (int64_t) (255.0 * fArcTanTransition);
-		int64_t nAlpha = 255 - nInverseAlpha;
+        uint8_t nA = (uint8_t)ARGB_A(nColor1) * fT + (uint8_t)ARGB_A(nColor2) * (1.0f - fT);
+        uint8_t nR = (uint8_t)ARGB_R(nColor1) * fT + (uint8_t)ARGB_R(nColor2) * (1.0f - fT);
+        uint8_t nG = (uint8_t)ARGB_G(nColor1) * fT + (uint8_t)ARGB_G(nColor2) * (1.0f - fT);
+        uint8_t nB = (uint8_t)ARGB_B(nColor1) * fT + (uint8_t)ARGB_B(nColor2) * (1.0f - fT);
 
-/*		ZDEBUG_OUT("fRange:%f  fArcTan:%f nInverseAlpha:%d\n", fRange, fArcTanTransition, nInverseAlpha);
+        mColorGradient[i] = ARGB(nA, nR, nG, nB);
+    }
+}*/
 
-		for (int64_t j = 0; j < nInverseAlpha; j++)
-		{
-			ZDEBUG_OUT(".");
-		}
-		ZDEBUG_OUT("\n");*/
 
-		mColorGradient[i] = ARGB(
-			(uint8_t) (((ARGB_A(nColor1) * nAlpha + ARGB_A(nColor2) * nInverseAlpha)) >> 8),	
-			(uint8_t)(((ARGB_R(nColor1) * nAlpha + ARGB_R(nColor2) * nInverseAlpha)) >> 8),
-			(uint8_t)(((ARGB_G(nColor1) * nAlpha + ARGB_G(nColor2) * nInverseAlpha)) >> 8),
-			(uint8_t)(((ARGB_B(nColor1) * nAlpha + ARGB_B(nColor2) * nInverseAlpha)) >> 8)
-			);
-	}
+void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2)
+{
+    ZASSERT(mFontParams.nHeight > 1);
+    mColorGradient.resize(mFontParams.nHeight);
+    //	CEASSERT(mColorGradient.size() == mFontParams.nHeight);
+        // If the gradient is already set, don't bother
+    if (mColorGradient[0] == nColor1 && mColorGradient[mFontParams.nHeight - 1] == nColor2)
+        return;
+    //ZDEBUG_OUT("Building gradient for colors %x - %x mFontParams.nHeight:%d", nColor1, nColor2, mFontParams.nHeight);
+    mColorGradient[0] = nColor1;
+    mColorGradient[mFontParams.nHeight - 1] = nColor2;
+    for (int64_t i = 1; i < mFontParams.nHeight - 1; i++)
+    {
+        double fRange = 10.0 * (((double)(i - 1) - (double)(mFontParams.nHeight - 3) / 2.0) / (double)mFontParams.nHeight);
+        double fArcTanTransition = 0.5 + (atan(fRange) / 3.0);
+        if (fArcTanTransition < -0)
+            fArcTanTransition = 0;
+        else if (fArcTanTransition > 1.0)
+            fArcTanTransition = 1.0;
+        int64_t nInverseAlpha = (int64_t)(255.0 * fArcTanTransition);
+        int64_t nAlpha = 255 - nInverseAlpha;
+        mColorGradient[i] = ARGB(
+            (uint8_t)(((ARGB_A(nColor1) * nAlpha + ARGB_A(nColor2) * nInverseAlpha)) >> 8),
+            (uint8_t)(((ARGB_R(nColor1) * nAlpha + ARGB_R(nColor2) * nInverseAlpha)) >> 8),
+            (uint8_t)(((ARGB_G(nColor1) * nAlpha + ARGB_G(nColor2) * nInverseAlpha)) >> 8),
+            (uint8_t)(((ARGB_B(nColor1) * nAlpha + ARGB_B(nColor2) * nInverseAlpha)) >> 8)
+        );
+    }
 }
+
 
 void ZFont::FindKerning(char c1, char c2)
 {
@@ -1038,21 +1065,35 @@ bool ZDynamicFont::Init(const ZFontParams& params)
     mDIBInfo.bmiHeader.biPlanes = 1;
     mDIBInfo.bmiHeader.biSize = 40;
     mDIBInfo.bmiHeader.biSizeImage = (DWORD) mrScratchArea.Width() * (DWORD) mrScratchArea.Height() * 4;
-    mDIBInfo.bmiHeader.biXPelsPerMeter = 3780;
-    mDIBInfo.bmiHeader.biYPelsPerMeter = 3780;
+    mDIBInfo.bmiHeader.biXPelsPerMeter = 2835;
+    mDIBInfo.bmiHeader.biYPelsPerMeter = 2835;
     mDIBInfo.bmiColors[0].rgbBlue = 0;
     mDIBInfo.bmiColors[0].rgbGreen = 0;
     mDIBInfo.bmiColors[0].rgbRed = 0;
     mDIBInfo.bmiColors[0].rgbReserved = 0;
 
+    DWORD pitch = DEFAULT_PITCH;
+    if (mFontParams.bFixedWidth)
+    {
+        pitch = FIXED_PITCH;
+        mbEnableKerning = false;
+    }
+
+    DWORD nCharSet = ANSI_CHARSET;
+    if (mFontParams.sFacename.find("Wingdings") != string::npos)
+        nCharSet = SYMBOL_CHARSET;
 
     //mWinHDC = GetDC(ghWnd);
     mhWinTargetBitmap = CreateDIBSection(mWinHDC, &mDIBInfo, DIB_RGB_COLORS, (void**)&mpBits, NULL, 0);
 
     mhWinTargetDC = CreateCompatibleDC(mWinHDC);
 
+//    int nDPI = ::GetDeviceCaps(mhWinTargetDC, LOGPIXELSY);
+//    double fDPIAdjustedHeight = (double) mFontParams.nHeight * (double)nDPI / 96.0;
+
     mhWinFont = CreateFontA( 
-        (int) mFontParams.nHeight, 
+//        (int)fDPIAdjustedHeight,
+        mFontParams.nHeight,
         0,                      /*nWidth*/
         0,                      /*nEscapement*/
         0,                      /*nOrientation*/
@@ -1060,28 +1101,37 @@ bool ZDynamicFont::Init(const ZFontParams& params)
         mFontParams.bItalic, 
         mFontParams.bUnderline, 
         mFontParams.bStrikeOut, 
-        ANSI_CHARSET,           /*nCharSet*/
+        nCharSet,           /*nCharSet*/
         OUT_DEVICE_PRECIS,     /*nOutPrecision*/
         OUT_DEFAULT_PRECIS,     /*nClipPrecision*/
         CLEARTYPE_QUALITY,    /*nQuality*/
-        DEFAULT_PITCH,          /*nPitchAndFamily*/
+        pitch,          /*nPitchAndFamily*/
         mFontParams.sFacename.c_str());
 
 
+    SelectObject(mhWinTargetDC, mhWinTargetBitmap);
+    SelectFont(mhWinTargetDC, mhWinFont);
+    GetTextMetricsA(mhWinTargetDC, &mWinTextMetrics);
+
     int64_t nStart = gTimer.GetUSSinceEpoch();
 
+    mnWidestCharacterWidth = FindWidestCharacterWidth();
     mnWidestNumberWidth = FindWidestNumberWidth();
 
     for (char c = 32; c <= 126; c++)        // 33 '!' through 126 '~' are the visible chars
         GenerateGlyph(c);
 
-    if (!RetrieveKerningPairs())
+    if (!mFontParams.bFixedWidth)
     {
-        // manually compute kerning pairs
-        for (char c1 = 33; c1 <= 126; c1++)        // 33 '!' through 126 '~' are the visible chars
+        // Variable size font
+        if (!RetrieveKerningPairs())    // try and retrieve built in kerning pairs
         {
-            for (char c2 = 33; c2 <= 126; c2++)        // 33 '!' through 126 '~' are the visible chars
-                FindKerning(c1, c2);
+            // none available. manually compute 
+            for (char c1 = 33; c1 <= 126; c1++)        // 33 '!' through 126 '~' are the visible chars
+            {
+                for (char c2 = 33; c2 <= 126; c2++)        // 33 '!' through 126 '~' are the visible chars
+                    FindKerning(c1, c2);
+            }
         }
     }
 
@@ -1183,11 +1233,16 @@ bool ZDynamicFont::ExtractChar(char c)
 
     ZRect rExtents = FindCharExtents();
 
-//    if (rExtents.bottom - rExtents.top + 1 > mFontParams.nHeight)
-//        mFontParams.nHeight = rExtents.bottom - rExtents.top + 1;
+    if (mFontParams.bFixedWidth && rExtents.Width() > 0)   // for fixed width fonts
+    {
+        int64_t nCharWidth = rExtents.right - rExtents.left;
+        int64_t nPadding = (mnWidestCharacterWidth - nCharWidth) / 2;
 
-    // For numbers, use the width of the '0' character
-    if (c >= '0' && c <= '9')
+        rExtents.left = rExtents.left - nPadding;
+        rExtents.right = rExtents.left + mnWidestCharacterWidth;
+        ZASSERT(rExtents.left > 0 && rExtents.right < mrScratchArea.right);
+    }
+    else if (c >= '0' && c <= '9')  // otherwise numbers use fixed width based on their own widest char
     {
         assert(mnWidestNumberWidth > 0);         // need to have this one already.....may need to look into this requirement
         int64_t nNumWidth = rExtents.right - rExtents.left;
@@ -1210,8 +1265,6 @@ bool ZDynamicFont::ExtractChar(char c)
     {
         for (int64_t x = rExtents.left; x <= rExtents.right; x++)
         {
-//            DWORD nCol = GetPixel(mhWinTargetDC, x, y);
-//            unsigned char nBright = 255 - GetGValue(nCol);
             uint32_t nCol = (uint32_t) *((uint32_t*)mpBits + y * mrScratchArea.right + x);
             unsigned char nBright = 255-nCol&0x000000ff;
 
@@ -1266,9 +1319,37 @@ bool ZDynamicFont::SaveFont(const string& sFilename)
 }
 
 
+int32_t ZDynamicFont::FindWidestCharacterWidth()
+{
+    int32_t nWidest = 0;
+
+    std::list<char> charsToTest = { 'W', 'M', '@', '_' };
+
+    for (auto c : charsToTest)
+    {
+        RECT r;
+        r.left = 0;
+        r.top = 0;
+        r.right = (LONG)mrScratchArea.right;
+        r.bottom = (LONG)mrScratchArea.bottom;
+
+        SelectObject(mhWinTargetDC, mhWinTargetBitmap);
+        SetBkMode(mhWinTargetDC, TRANSPARENT);
+        BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int)mrScratchArea.Width(), (int)mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
+
+        SelectFont(mhWinTargetDC, mhWinFont);
+        ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_CENTER);
+
+        ZRect rExtents = FindCharExtents();
+        if (rExtents.Width() > nWidest)
+            nWidest = (int)rExtents.Width();
+    }
+
+    return nWidest;
+}
+
 int32_t ZDynamicFont::FindWidestNumberWidth()
 {
-
     int32_t nWidest = 0;
 
     for (char c = '0'; c <= '9'; c++)
@@ -1291,7 +1372,6 @@ int32_t ZDynamicFont::FindWidestNumberWidth()
             nWidest = (int) rExtents.Width();
     }
 
-
     return nWidest;
 }
 
@@ -1301,22 +1381,26 @@ bool ZDynamicFont::GenerateGlyph(char c)
     if (c <= 0)
         return false;
 
+
+    
     RECT r;
     r.left = 0;
+    //r.top = -(mWinTextMetrics.tmHeight- mWinTextMetrics.tmAscent);  // windows leaves extra space above the top of the char
+//    r.top = -mWinTextMetrics.tmInternalLeading;
     r.top = 0;
     r.right = (LONG) mrScratchArea.right;
     r.bottom = (LONG) mrScratchArea.bottom;
 
-    SelectObject(mhWinTargetDC, mhWinTargetBitmap);
     SetBkMode(mhWinTargetDC, TRANSPARENT);
     BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int) mrScratchArea.Width(), (int) mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
 
     SelectFont(mhWinTargetDC, mhWinFont);
-    ::DrawTextA(mhWinTargetDC, (LPCSTR) &c, 1, &r, DT_TOP|DT_CENTER);
+    int nHeightReturned = ::DrawTextA(mhWinTargetDC, (LPCSTR) &c, 1, &r, DT_TOP|DT_CENTER);
 
     if (c == ' ')
     {
         mCharDescriptors[c].nCharWidth = (uint16_t) (mFontParams.nHeight / 4);  // 25% of the height seems good
+//        mCharDescriptors[c].nCharWidth = mnWidestCharacterWidth;
     }
     else
     {
@@ -1328,6 +1412,9 @@ bool ZDynamicFont::GenerateGlyph(char c)
 
 bool ZDynamicFont::RetrieveKerningPairs()
 {
+    if (mFontParams.bFixedWidth)
+        return false;
+
     SelectFont(mhWinTargetDC, mhWinFont);
     SetMapMode(mhWinTargetDC, MM_TEXT);
     DWORD nPairs = GetKerningPairs(mhWinTargetDC, 0, 0);   // how many pairs required?

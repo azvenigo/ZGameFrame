@@ -132,12 +132,16 @@ bool ZTransformable::Init(const ZRect& rArea)
 
 	gTickManager.AddObject(this);
 
-	if (mpTransformTexture.get() && mpTransformTexture.get()->GetArea().Width() == rArea.Width() && mpTransformTexture.get()->GetArea().Height() == rArea.Height())
+    if (!mpTransformTexture)
+    {
+        mpTransformTexture.reset(new ZBuffer());
+    }
+	else if (mpTransformTexture.get()->GetArea().Width() == rArea.Width() && mpTransformTexture.get()->GetArea().Height() == rArea.Height())
 	{
 		return true;
 	}
 
-	mpTransformTexture.reset(new ZBuffer());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
     mpTransformTexture.get()->Init(rArea.Width(), rArea.Height());
 
 	// Initialize the current transform

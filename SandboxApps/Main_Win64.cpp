@@ -179,6 +179,7 @@ void GenerateFrameworkFonts()
                 params.bItalic = false;
                 params.bUnderline = false;
                 params.bStrikeOut = false;
+                params.bFixedWidth = false;
                 params.sFacename = fontName;
                 if (fontSize < 24)
                 {
@@ -253,6 +254,8 @@ BOOL WinInitInstance(HINSTANCE hInstance, int nCmdShow)
 	wc.lpszClassName = szAppClass;
 
 	RegisterClass(&wc);
+
+    DPI_AWARENESS_CONTEXT oldContext = SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
 
 	if (gbFullScreen)
 	{

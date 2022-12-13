@@ -76,6 +76,7 @@ bool ZBuffer::Shutdown()
 
 bool ZBuffer::LoadBuffer(const string& sFilename)
 {
+    mBufferProps.clear();
 #ifdef _WIN64
 	Bitmap bitmap(StringHelpers::string2wstring(sFilename).c_str());
     if (bitmap.GetLastStatus() != Status::Ok)
@@ -99,9 +100,10 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
     OutputDebugLockless("Properties for image:%s\n", sFilename.c_str());
     for (size_t i = 0; i < nPropertyCount; i++)
     {
-        if (pPropBuffer[i].id == PropertyTagOrientation)
+        PropertyItem* pi = &pPropBuffer[i];
+        if (pi->id == PropertyTagOrientation)
         {
-            auto orientation = *((uint16_t*)pPropBuffer[i].value);
+            auto orientation = *((uint16_t*)pi->value);
             if (orientation != 1)
             {
                 OutputDebugLockless("Rotating image. Orientation property:%d\n", orientation);
@@ -132,7 +134,17 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
                 }
             }
         }
-        OutputDebugLockless("%d:%s\n", i, PropertyItemToString(&pPropBuffer[i]).c_str());
+
+        BufferProp prop;
+        prop.sName = GDIHelpers::TagFromID(pi->id);
+        prop.sType = GDIHelpers::TypeString(pi->type);
+        size_t nLength = pi->length;
+        if (nLength > 128)
+            nLength = 128;
+        prop.sValue = GDIHelpers::ValueStringByType(pi->type, pi->value, nLength);
+        mBufferProps.push_back(prop);
+
+        OutputDebugLockless("%d:%s\n", i, GDIHelpers::PropertyItemToString(&pPropBuffer[i]).c_str());
     }
     
 

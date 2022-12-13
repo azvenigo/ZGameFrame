@@ -84,14 +84,6 @@ bool ZWin::Init()
 
 		mbShutdownFlag = false;
 		mThread = std::thread(&WindowThreadProc, (void*)this);
-
-#ifdef _WIN64
-        HRESULT r;
-        string sName;
-        Sprintf(sName, "th_0x%x", this);
-        r = SetThreadDescription(GetCurrentThread(), StringHelpers::string2wstring(sName).c_str() ); 
-#endif
-
 		mbInvalid = true;
 		mbInitted = true;
 	}
@@ -781,6 +773,17 @@ void  ZWin::OffsetTo(int64_t deltaX, int64_t deltaY)
 bool ZWin::WindowThreadProc(void* pContext)
 {
 	ZWin* pThis = (ZWin*)pContext;
+
+#ifdef _WIN64
+    HRESULT r;
+    string sName;
+    Sprintf(sName, "th_0x%x", (int)GetCurrentThread());
+    r = SetThreadDescription(GetCurrentThread(), StringHelpers::string2wstring(sName).c_str());
+
+    SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+#endif
+
+
 
     while (!pThis->mbShutdownFlag && !gbApplicationExiting)
 	{

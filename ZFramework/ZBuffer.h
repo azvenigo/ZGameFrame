@@ -17,6 +17,16 @@
 typedef std::shared_ptr<class ZBuffer> tZBufferPtr;
 
 
+struct BufferProp
+{
+    std::string sName;
+    std::string sType;
+    std::string sValue;
+};
+
+typedef std::list<BufferProp> tBufferProps;
+
+
 class ZBuffer
 {
 public:
@@ -54,6 +64,8 @@ public:
     virtual ZRect&          GetArea() { return mSurfaceArea; }
 
     virtual uint32_t*       GetPixels() { return mpPixels; }
+
+    virtual tBufferProps&   GetProps() { return mBufferProps; }
 
     // Flags
     virtual bool            GetRenderFlag(eRenderFlags flag) { return mRenderFlags & flag; }
@@ -109,48 +121,50 @@ protected:
 
 	uint32_t*               mpPixels;        // The color data
 	ZRect                   mSurfaceArea;
+    tBufferProps            mBufferProps;       
     std::recursive_mutex    mMutex;
     uint32_t                mRenderFlags;
 };
 
 
+#ifdef EXPERIMENTING_WITH_ALPHA
+
 inline uint32_t ZBuffer::AlphaBlend_Col1Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
 {
-	nBlend = nBlend * ARGB_A(nCol1) >> 8;
-	uint32_t nInverseAlpha = 255 - nBlend;
+    uint32_t nAlpha = (nBlend + ARGB_A(nCol1)) / 2;
+    uint32_t nInverseAlpha = 255 - nBlend;
 
 	// Use Alpha value for the destination color (nCol1)
 	// Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
 	return ARGB(
 		ARGB_A(nCol1),
-		((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-		((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-		((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+		((ARGB_R(nCol1) * nAlpha + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
+		((ARGB_G(nCol1) * nAlpha + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
+		((ARGB_B(nCol1) * nAlpha + ARGB_B(nCol2) * nInverseAlpha)) >> 8
 		);
 }
 
 inline uint32_t ZBuffer::AlphaBlend_Col2Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
 {
-	nBlend = nBlend * ARGB_A(nCol1) >> 8;
-	uint32_t nInverseAlpha = 255 - nBlend;
+    uint32_t nAlpha = (nBlend + ARGB_A(nCol1)) / 2;
+    uint32_t nInverseAlpha = 255 - nBlend;
 
 	// Use Alpha value for the destination color (nCol2)
 	// Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
 	return ARGB(
 		ARGB_A(nCol2),	
-		((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-		((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-		((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+		((ARGB_R(nCol1) * nAlpha + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
+		((ARGB_G(nCol1) * nAlpha + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
+		((ARGB_B(nCol1) * nAlpha + ARGB_B(nCol2) * nInverseAlpha)) >> 8
 		);
 }
 
 inline uint32_t ZBuffer::AlphaBlend_AddAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
 {
-	nBlend = nBlend * ARGB_A(nCol1) >> 8;
+    uint32_t nAlpha = (nBlend + ARGB_A(nCol1))/2;
+	uint32_t nInverseAlpha = 255 - nAlpha;
 
-	uint32_t nInverseAlpha = 255 - nBlend;
-
-	uint32_t nFinalA = (ARGB_A(nCol1) + ARGB_A(nCol2));
+	uint32_t nFinalA = (ARGB_A(nCol1) + ARGB_A(nCol2)) >> 1;
 
 	if (nFinalA > 0x000000ff)
 		nFinalA = 0x000000ff;
@@ -159,26 +173,87 @@ inline uint32_t ZBuffer::AlphaBlend_AddAlpha(uint32_t nCol1, uint32_t nCol2, uin
 	// Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
 	return ARGB(
 		nFinalA,	
-		((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-		((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-		((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+		((ARGB_R(nCol1) * nAlpha + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
+		((ARGB_G(nCol1) * nAlpha + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
+		((ARGB_B(nCol1) * nAlpha + ARGB_B(nCol2) * nInverseAlpha)) >> 8
 		);
 }
 
 inline uint32_t ZBuffer::AlphaBlend_BlendAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
 {
-	nBlend = nBlend * ARGB_A(nCol1) >> 8;
-	uint32_t nInverseAlpha = 255 - nBlend;
+    uint32_t nAlpha = (nBlend + ARGB_A(nCol1)) / 2;
+    uint32_t nInverseAlpha = 255 - nBlend;
 
 	// Use Alpha value for the destination color (nCol2)
 	// Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
 	return ARGB(
-		((ARGB_A(nCol1) * nBlend + ARGB_A(nCol2) * nInverseAlpha)) >> 8,	
-		((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-		((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-		((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+		((ARGB_A(nCol1) * nAlpha + ARGB_A(nCol2) * nInverseAlpha)) >> 8,
+		((ARGB_R(nCol1) * nAlpha + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
+		((ARGB_G(nCol1) * nAlpha + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
+		((ARGB_B(nCol1) * nAlpha + ARGB_B(nCol2) * nInverseAlpha)) >> 8
 		);
 }
+
+#else
+
+inline uint32_t ZBuffer::AlphaBlend_Col1Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
+{
+    nBlend = nBlend * ARGB_A(nCol1) >> 8;
+    uint32_t nInverseAlpha = 255 - nBlend;
+    // Use Alpha value for the destination color (nCol1)
+    // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
+    return ARGB(
+        ARGB_A(nCol1),
+        ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
+        ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
+        ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+    );
+}
+inline uint32_t ZBuffer::AlphaBlend_Col2Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
+{
+    nBlend = nBlend * ARGB_A(nCol1) >> 8;
+    uint32_t nInverseAlpha = 255 - nBlend;
+    // Use Alpha value for the destination color (nCol2)
+    // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
+    return ARGB(
+        ARGB_A(nCol2),
+        ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
+        ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
+        ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+    );
+}
+inline uint32_t ZBuffer::AlphaBlend_AddAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
+{
+    nBlend = nBlend * ARGB_A(nCol1) >> 8;
+    uint32_t nInverseAlpha = 255 - nBlend;
+    uint32_t nFinalA = (ARGB_A(nCol1) + ARGB_A(nCol2));
+    if (nFinalA > 0x000000ff)
+        nFinalA = 0x000000ff;
+    // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
+    return ARGB(
+        nFinalA,
+        ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
+        ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
+        ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+    );
+}
+inline uint32_t ZBuffer::AlphaBlend_BlendAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
+{
+    nBlend = nBlend * ARGB_A(nCol1) >> 8;
+    uint32_t nInverseAlpha = 255 - nBlend;
+    // Use Alpha value for the destination color (nCol2)
+    // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
+    return ARGB(
+        ((ARGB_A(nCol1) * nBlend + ARGB_A(nCol2) * nInverseAlpha)) >> 8,
+        ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
+        ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
+        ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+    );
+}
+
+#endif
+
+
 
 
 inline uint32_t ZBuffer::AddColors(uint32_t nCol1, uint32_t nCol2)

@@ -42,6 +42,7 @@ public:
     int64_t nHeight;
     int64_t nWeight;
     int64_t nTracking;
+    bool bFixedWidth;
     bool bItalic;
     bool bUnderline;
     bool bStrikeOut;
@@ -165,6 +166,7 @@ private:
     bool                GenerateGlyph(char c);
     bool                ExtractChar(char c);
     int32_t             FindWidestNumberWidth();
+    int32_t             FindWidestCharacterWidth();
     bool                RetrieveKerningPairs();
     ZRect               FindCharExtents();
 
@@ -177,8 +179,9 @@ private:
     uint8_t*            mpBits;
     HDC                 mWinHDC;
     HFONT               mhWinFont;
-
+    TEXTMETRICA         mWinTextMetrics;
     int32_t             mnWidestNumberWidth;
+    int32_t             mnWidestCharacterWidth;
 
 };
 

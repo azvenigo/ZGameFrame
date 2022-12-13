@@ -15,6 +15,7 @@
 #include "ZWinWatchPanel.h"
 #include "ZTimer.h"
 #include "ZRandom.h"
+#include "ZFont.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
 
@@ -259,6 +260,40 @@ void cProcessImageWin::Process_LoadImages()
 #endif
 }
 
+void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
+{
+    if (!mpImageProps)
+        return;
+    mpImageProps->Clear();
+
+    if (!pBuf)
+        return;
+
+    tBufferProps& props = pBuf->GetProps();
+
+    for (auto prop : props)
+    {
+        string sPropLineXMLNode("<line wrap=0>");
+
+        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
+        sPropLineXMLNode += " position=MiddleLeft>";
+        sPropLineXMLNode += prop.sName;
+        sPropLineXMLNode += "</text>";
+
+        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
+        sPropLineXMLNode += " position=middleCenter>";
+        sPropLineXMLNode += prop.sType;
+        sPropLineXMLNode += "</text>";
+
+        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
+        sPropLineXMLNode += " position=middleRight>";
+        sPropLineXMLNode += prop.sValue;
+        sPropLineXMLNode += "</text></line>";
+
+        mpImageProps->AddTextLine(sPropLineXMLNode, 1, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+    }
+}
+
 void cProcessImageWin::Process_SelectImage(string sImageName)
 {
     for (auto pWin : mChildImageWins)
@@ -274,6 +309,8 @@ void cProcessImageWin::Process_SelectImage(string sImageName)
             mpResultBuffer.get()->GetMutex().unlock();
 
             mpResultWin->SetImage(mpResultBuffer);
+
+            UpdateImageProps(pWin->GetImage().get());
 
             InvalidateChildren();
             return;
@@ -997,10 +1034,24 @@ bool cProcessImageWin::Init()
     ZWinWatchPanel* pWP = new ZWinWatchPanel();
     pWP->SetArea(mrWatchPanel);
     pWP->Init();
-    pWP->AddItem(WatchType::kLabel, "Watch Panel", nullptr, 3, 0xff000000, 0xff000000, ZFont::kEmbossed);
-    pWP->AddItem(WatchType::kInt64, "Width", (void*)&mrIntersectionWorkArea.right, 2, 0xff333333, 0xff333333);
-    pWP->AddItem(WatchType::kInt64, "Height", (void*)&mrIntersectionWorkArea.bottom, 2, 0xff333333, 0xff333333);
+    pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, 3, 0xff000000, 0xff000000, ZFont::kEmbossed);
     ChildAdd(pWP);
+
+    tZFontPtr pLabelFont = gpFontSystem->GetDefaultFont(3);
+
+    ZRect rImageProps(8, pLabelFont.get()->FontHeight()*2, mrWatchPanel.Width() - 8, mrWatchPanel.Height() - 8);
+
+    mpImageProps = new ZFormattedTextWin();
+    mpImageProps->SetArea(rImageProps);
+    mpImageProps->SetFill(0xff888888);
+    mpImageProps->AddTextLine("testline\nand more", 1, 0xff000000, 0xff000000);
+
+    pWP->ChildAdd(mpImageProps);
+
+
+
+
+
 
 
     std::list<string> filenames = {
