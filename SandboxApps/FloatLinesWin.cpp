@@ -102,10 +102,10 @@ void ZLine::CheckLimits()
 {
     double fLimit = 50.0;
 
-    assert(mfdY1 > -fLimit & mfdY1 < fLimit);
-    assert(mfdX1 > -fLimit & mfdX1 < fLimit);
-    assert(mfdY2 > -fLimit & mfdY2 < fLimit);
-    assert(mfdX2 > -fLimit & mfdX2 < fLimit);
+    assert(mfdY1 > -fLimit && mfdY1 < fLimit);
+    assert(mfdX1 > -fLimit && mfdX1 < fLimit);
+    assert(mfdY2 > -fLimit && mfdY2 < fLimit);
+    assert(mfdX2 > -fLimit && mfdX2 < fLimit);
 
     assert(mfX1 >= mrBounds.left && mfX1 <= mrBounds.right);
     assert(mfY1 >= mrBounds.top && mfY1 <= mrBounds.bottom);

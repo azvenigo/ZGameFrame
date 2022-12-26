@@ -41,8 +41,8 @@ public:
 
 
     void        SetFill(uint32_t nCol) { mFillColor = nCol; Invalidate(); }
-    void        SetShowZoom(int32_t nFontID, uint32_t nCol, ZFont::ePosition pos, bool bShow100Also) { mbShowZoom = true; mZoomCaptionFontID = nFontID; mZoomCaptionColor = nCol; mZoomCaptionPos = pos; mbShow100Also = bShow100Also; }
-    void        SetCaption(const std::string& sCaption, int32_t nFontID, uint32_t nCol, ZFont::ePosition pos) { msCaption = sCaption; mCaptionFontID = nFontID; mnCaptionCol = nCol; mCaptionPos = pos; }
+    void        SetShowZoom(tZFontPtr pFont, uint32_t nCol, ZFont::ePosition pos, bool bShow100Also) { mbShowZoom = true; mpZoomCaptionFont = pFont; mZoomCaptionColor = nCol; mZoomCaptionPos = pos; mbShow100Also = bShow100Also; }
+    void        SetCaption(const std::string& sCaption, tZFontPtr pFont, uint32_t nCol, ZFont::ePosition pos) { msCaption = sCaption; mpCaptionFont = pFont; mnCaptionCol = nCol; mCaptionPos = pos; }
     void        SetCloseButtonMessage(const std::string& sMessage) { msCloseButtonMessage = sMessage; }
     void        SetSaveButtonMessage(const std::string& sMessage) { msSaveButtonMessage = sMessage; }
 
@@ -75,12 +75,12 @@ private:
 
     bool                mbShowZoom;
     bool                mbShow100Also;
-    int32_t             mZoomCaptionFontID;
+    tZFontPtr           mpZoomCaptionFont;
     uint32_t            mZoomCaptionColor;
     ZFont::ePosition    mZoomCaptionPos;
 
     std::string         msCaption;
-    int32_t             mCaptionFontID;
+    tZFontPtr           mpCaptionFont;
     ZFont::ePosition    mCaptionPos;
     uint32_t            mnCaptionCol;
 

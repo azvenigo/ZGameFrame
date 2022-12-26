@@ -11,7 +11,7 @@ class ZFont;
 struct sTextEntry
 {
     std::string         sText;
-	int64_t             nFontID;
+	ZFontParams         fontParams;
 	uint32_t            nColor;
 	uint32_t            nColor2;
 	ZFont::ePosition    position;
@@ -35,7 +35,7 @@ public:
 	virtual void		SetScrollable(bool bScrollable = true) { mbScrollable = bScrollable; }
 	virtual void		Clear();
     virtual void        SetFill(uint32_t nCol, bool bEnable = true) { mnFillColor = nCol; mbFillBackground = bEnable; }
-	virtual void		AddTextLine(std::string sLine, int64_t nFontID, uint32_t nCol1, uint32_t nCol2, ZFont::eStyle style = ZFont::kNormal, ZFont::ePosition = ZFont::kBottomLeft, bool bWrap = true, const std::string& sLink = "");
+	virtual void		AddTextLine(std::string sLine, ZFontParams fontParams, uint32_t nCol1, uint32_t nCol2, ZFont::eStyle style = ZFont::kNormal, ZFont::ePosition = ZFont::kBottomLeft, bool bWrap = true, const std::string& sLink = "");
 	int64_t   			GetFullDocumentHeight() { return mnFullDocumentHeight; }
 
 	void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
@@ -72,7 +72,7 @@ private:
 	tDocument    		mDocument;     // parsed document
 
 	// Storage for text parameters while parsing the document
-	int64_t				mnCurrentFontID;
+	ZFontParams		    mCurrentFont;
 	uint32_t			mnCurrentColor;
 	uint32_t			mnCurrentColor2;
 	ZFont::ePosition	mCurrentTextPosition;

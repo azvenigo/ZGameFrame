@@ -27,7 +27,6 @@ public:
     WatchType       mType;
     void*           pMem;
 
-    uint32_t        nFont;
     uint32_t        nCaptionCol;
     uint32_t        nWatchCol;
     ZRect           mArea;
@@ -46,7 +45,7 @@ public:
 
     virtual bool    Init();
 
-    bool            AddItem(WatchType type, const std::string& sCaption, void* pWatchAddress = nullptr, uint32_t nFont = 1, uint32_t nCaptionCol = 0xffaaaaaa, uint32_t nWatchFont = 0xffffffff, ZFont::eStyle style = ZFont::kNormal);
+    bool            AddItem(WatchType type, const std::string& sCaption, void* pWatchAddress = nullptr, uint32_t nCaptionCol = 0xffaaaaaa, uint32_t nWatchColor = 0xffffffff, ZFont::eStyle style = ZFont::kNormal);
     void            AddSpace(int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
 
     bool            Process();

@@ -56,11 +56,6 @@ extern ZWin*                gpCaptureWin;
 extern ZWin*                gpMouseOverWin;
 extern ZPoint               gLastMouseMove;
 
-extern std::list<int32_t>   frameworkFontSizes;
-extern std::list<string>    frameworkFontNames;
-extern string               gsDefaultFontName;
-
-
 namespace Sandbox
 {
     enum eSandboxMode

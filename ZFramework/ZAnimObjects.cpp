@@ -370,12 +370,12 @@ bool ZAnimObject_TextPulser::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 }
 
 // cCEAnimObject_TextPulser
-void ZAnimObject_TextPulser::SetText(const string& sText, uint32_t nColor, uint32_t nFontID, bool bShadow)
+void ZAnimObject_TextPulser::SetText(const string& sText, uint32_t nColor, tZFontPtr pFont, bool bShadow)
 {
 	msText = sText;
 	mnColor = nColor;
 	mbShadow = bShadow;
-	mpFont = gpFontSystem->GetDefaultFont(nFontID);
+	mpFont = pFont;
 
 	ZASSERT(mpFont);
 

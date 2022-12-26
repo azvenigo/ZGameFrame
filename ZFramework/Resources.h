@@ -5,6 +5,7 @@
 
 #include <memory>
 #include "ZBuffer.h"
+#include "ZFont.h"
 
 class ZBuffer;
 
@@ -40,6 +41,11 @@ extern tZBufferPtr  gSliderThumb;
 extern tZBufferPtr  gSliderBackground;
 extern ZRect        grSliderBgEdge;
 extern ZRect        grSliderThumbEdge;
+
+// Fonts
+extern ZFontParams  gDefaultButtonFont;
+extern ZFontParams  gDefaultTitleFont;
+extern ZFontParams  gDefaultTextFont;
 
 
 typedef std::map<std::string, tZBufferPtr >	tBufferResourceMap;

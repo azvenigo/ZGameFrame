@@ -28,6 +28,10 @@ ZRect           grControlPanelTrigger;
 int64_t         gnControlPanelButtonHeight;
 int64_t         gnControlPanelEdge;
 
+//Fonts
+ZFontParams     gDefaultButtonFont("Verdana", 30, 600);
+ZFontParams     gDefaultTitleFont("Gadugi", 40);
+ZFontParams     gDefaultTextFont("Gadugi", 20);
 
 cResources::cResources()
 {

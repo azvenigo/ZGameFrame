@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ZWin.h"
+#include "ZFont.h"
 
 extern ZRect	grSliderBgEdge;
 extern ZRect	grSliderThumbEdge;
@@ -41,7 +42,7 @@ public:
 
     void            SetSliderSetMessage(const std::string& sMessage) { msSliderSetMessage = sMessage; }
 
-	void			SetDrawSliderValueFlag(bool bEnable, bool bMouseOverDrawOnly, int32_t nFontID) { mbDrawValue = bEnable; mbMouseOverDrawOnly = bMouseOverDrawOnly; mnFontID = nFontID; }
+    void			SetDrawSliderValueFlag(bool bEnable, bool bMouseOverDrawOnly, tZFontPtr pFont);
 
 protected:
 	virtual bool	Paint();
@@ -78,7 +79,7 @@ private:
 
 	bool		mbDrawValue;
 	bool		mbMouseOverDrawOnly;
-	int32_t		mnFontID;
+	tZFontPtr   mpFont;
 
     std::string msSliderSetMessage;     // on release
 

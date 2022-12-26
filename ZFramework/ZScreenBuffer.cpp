@@ -113,7 +113,7 @@ void ZScreenBuffer::Render(tZBufferPtr pTexture, ZRect& rAreaToDrawTo)
 	ZRect rArea(2,2,66,32);
 	Sprintf(sTemp, "FPS:%d\ntime:%d", gnFramesPerSecond, gTimer.GetElapsedTime());
 	FillAlpha(rArea, 0x66000000);
-    gpFontSystem->GetDefaultFont(1)->DrawTextParagraph(this, sTemp, ZRect(4,4,320,120), 0xffffffff, 0xffffffff, ZFont::kTopLeft, ZFont::kShadowed);
+    gpFontSystem->GetDefaultFont()->DrawTextParagraph(this, sTemp, ZRect(4,4,320,120), 0xffffffff, 0xffffffff, ZFont::kTopLeft, ZFont::kShadowed);
 #endif
 
 #ifdef USE_D3D 

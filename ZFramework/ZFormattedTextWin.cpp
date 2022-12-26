@@ -18,8 +18,6 @@ extern ZRect				grDimRectEdge;
 
 const int64_t 				kDefaultColor = 0;
 const int64_t				kSliderWidth = 20;
-const int32_t               kDefaultFontID = 0;
-
 const ZFont::ePosition	    kDefaultTextPosition = ZFont::kBottomLeft; // we use bottom left by default in case there are multiple size fonts per text line
 const ZFont::eStyle		    kDefaultStyle = ZFont::kNormal;
 
@@ -27,7 +25,7 @@ const ZFont::eStyle		    kDefaultStyle = ZFont::kNormal;
 const string				ksLineTag("line");
 const string				ksTextTag("text");
 const string				ksCaptionTag("caption");
-const string				ksSizeTag("size");
+const string				ksFontParamsTag("fontparams");
 const string				ksColorTag("color");
 const string				ksColor2Tag("color2");
 const string				ksPositionTag("position");
@@ -56,7 +54,7 @@ ZFormattedTextWin::ZFormattedTextWin()
 	mrTextArea.SetRect(0,0,0,0);
 	mrTextBorderArea.SetRect(0,0,0,0);
 
-	mnCurrentFontID				= kDefaultFontID;
+    mCurrentFont                = ZFontParams("Ariel", 12);
 	mnCurrentColor				= kDefaultColor;
 	mnCurrentColor2				= kDefaultColor;
 	mCurrentTextPosition		= kDefaultTextPosition;       
@@ -153,7 +151,7 @@ bool ZFormattedTextWin::OnMouseDownL(int64_t x, int64_t y)
 			{
 				sTextEntry& entry = *lineIt;
 
-                tZFontPtr pFont(gpFontSystem->GetDefaultFont((int32_t) entry.nFontID));
+                tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
 				ZRect rText = pFont->GetOutputRect(rLine, entry.sText.data(), entry.sText.length(), entry.position);
 				if (rText.PtInRect(nMouseX, nMouseY))
 				{
@@ -242,7 +240,7 @@ void ZFormattedTextWin::UpdateScrollbar()
         {
             mpSliderWin = new ZSliderWin(&mnSliderVal);
             mpSliderWin->Init(gSliderThumb, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
-            mpSliderWin->SetDrawSliderValueFlag(false, false, 2);
+            mpSliderWin->SetDrawSliderValueFlag(false, false, gpFontSystem->GetFont(mCurrentFont));
             mpSliderWin->SetArea(ZRect(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height()));
             ChildAdd(mpSliderWin);
         }
@@ -330,7 +328,7 @@ bool ZFormattedTextWin::Paint()
 			{
 				sTextEntry& entry = *lineIt;
 
-                tZFontPtr pFont(gpFontSystem->GetDefaultFont((int32_t) entry.nFontID));
+                tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
 				ZRect rText = pFont->GetOutputRect(rLine, entry.sText.data(), entry.sText.length(), entry.position);
 
 				int64_t nShadowOffset = max((int) pFont->FontHeight()/16, (int) 1);
@@ -366,21 +364,18 @@ bool ZFormattedTextWin::Paint()
 
 int64_t ZFormattedTextWin::GetLineHeight(tTextLine& textLine)
 {
-	int64_t nLargestFont = 0;
+	ZFontParams largestFont;
 	for (tTextLine::iterator it = textLine.begin(); it != textLine.end(); it++)
 	{
 		sTextEntry& textEntry = *it;
-		if (textEntry.nFontID > nLargestFont)
-			nLargestFont = textEntry.nFontID;
+		if (textEntry.fontParams.nHeight > largestFont.nHeight)
+            largestFont = textEntry.fontParams;
 	}
 
-    tZFontPtr pLargestFont(gpFontSystem->GetDefaultFont((int32_t) nLargestFont));
+    tZFontPtr pLargestFont(gpFontSystem->GetFont(largestFont));
     assert(pLargestFont);
 
-    if (pLargestFont)
-        return pLargestFont->FontHeight();
-
-	return gpFontSystem->GetDefaultFont(gpFontSystem->GetDefaultFontCount()-1)->FontHeight();
+    return pLargestFont->FontHeight();
 }
 
 void ZFormattedTextWin::CalculateFullDocumentHeight()
@@ -401,7 +396,7 @@ void ZFormattedTextWin::Clear()
 	mnFullDocumentHeight = 0;
 
 	// Restore the defaults
-	mnCurrentFontID			= kDefaultFontID;
+	mCurrentFont			= ZFontParams("Arial", 12);
 	mnCurrentColor			= kDefaultColor;
 	mnCurrentColor2			= kDefaultColor;
 	mCurrentTextPosition	= kDefaultTextPosition;       
@@ -452,7 +447,7 @@ bool ZFormattedTextWin::ParseDocument(ZXMLNode* pNode)
 	return true;
 }
 
-void ZFormattedTextWin::AddTextLine(string sLine, int64_t nFontID, uint32_t nCol1, uint32_t nCol2, ZFont::eStyle style, ZFont::ePosition position, bool bWrap, const string& sLink)
+void ZFormattedTextWin::AddTextLine(string sLine, ZFontParams fontParams, uint32_t nCol1, uint32_t nCol2, ZFont::eStyle style, ZFont::ePosition position, bool bWrap, const string& sLink)
 {
 	tTextLine textLine;
 	if (bWrap)
@@ -460,7 +455,7 @@ void ZFormattedTextWin::AddTextLine(string sLine, int64_t nFontID, uint32_t nCol
 		// Insert as much text on each line as will fit
 		while (sLine.length() > 0)
 		{
-            tZFontPtr pFont(gpFontSystem->GetDefaultFont((int32_t) nFontID));
+            tZFontPtr pFont(gpFontSystem->GetFont(fontParams));
             assert(pFont);
 			int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrTextArea.Width(), sLine.data(), sLine.length());
 
@@ -469,7 +464,7 @@ void ZFormattedTextWin::AddTextLine(string sLine, int64_t nFontID, uint32_t nCol
 			textEntry.nColor	= nCol1;
 			textEntry.nColor2	= nCol2;
 			textEntry.style		= style;
-			textEntry.nFontID	= nFontID;
+			textEntry.fontParams	= fontParams;
 			textEntry.position	= position;
 			textEntry.sLink		= sLink;
 
@@ -490,7 +485,7 @@ void ZFormattedTextWin::AddTextLine(string sLine, int64_t nFontID, uint32_t nCol
 		lineNode.Init(sLine);
 		mnCurrentColor = nCol1;
 		mnCurrentColor2 = nCol2;
-		mnCurrentFontID = nFontID;
+		mCurrentFont = fontParams;
 		mCurrentStyle = style;
 		mCurrentTextPosition = position;
 		msLink = sLink;
@@ -523,7 +518,7 @@ bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
 
 		if (bWrapLine)
 		{
-			AddTextLine(sCaption, mnCurrentFontID, mnCurrentColor, mnCurrentColor2, mCurrentStyle, mCurrentTextPosition, bWrapLine, msLink);
+			AddTextLine(sCaption, mCurrentFont, mnCurrentColor, mnCurrentColor2, mCurrentStyle, mCurrentTextPosition, bWrapLine, msLink);
 		}
 		else
 		{
@@ -532,7 +527,7 @@ bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
 			textEntry.nColor		= mnCurrentColor;
 			textEntry.nColor2		= mnCurrentColor2;
 			textEntry.style			= mCurrentStyle;
-			textEntry.nFontID		= mnCurrentFontID;
+			textEntry.fontParams	= mCurrentFont;
 			textEntry.position		= mCurrentTextPosition;
 			textEntry.sLink			= msLink;
 
@@ -553,13 +548,10 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 {
 	string sParam;
 
-	// Get the fontID
-	sParam = pTextNode->GetAttribute(ksSizeTag);
+	sParam = pTextNode->GetAttribute(ksFontParamsTag);
 	if (!sParam.empty())
 	{
-		mnCurrentFontID = StringHelpers::ToInt(sParam);
-
-//		CEASSERT(mnCurrentFontID >= 0 && mnCurrentFontID < kMaxFonts);      // make sure it's valid
+        mCurrentFont = ZFontParams(StringHelpers::URL_Decode(sParam));
 	}
 
 	sParam = pTextNode->GetAttribute(ksColorTag);

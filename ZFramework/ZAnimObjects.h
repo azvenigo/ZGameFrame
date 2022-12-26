@@ -125,7 +125,7 @@ public:
    virtual bool Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
 
    // cCEAnimObject_TextPulser
-   void			SetText(const std::string& sText, uint32_t nColor, uint32_t nFontID, bool bShadow = false);
+   void			SetText(const std::string& sText, uint32_t nColor, tZFontPtr pFont, bool bShadow = false);
    void			SetPulse(int64_t nMinAlpha, int64_t nMaxAlpha, double fPeriod);
 
 protected:

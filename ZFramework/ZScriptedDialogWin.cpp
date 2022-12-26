@@ -44,7 +44,7 @@ const string		ksElementButton("btn");
 const string		ksAreaTag("area");     // format "l,t,r,b"
 const string		ksColorTag("color");      // format "r,g,b"
 const string		ksMessageTag("message");
-const string		ksSizeTag("size");     // Text Size
+const string        ksFontParamsTag("fontparams");
 
 const int64_t       kButtonMeasure = 32;
 const int64_t       kPadding = 4;
@@ -91,7 +91,6 @@ bool ZScriptedDialogWin::Init()
 	{
 		// Find the largest button
 		int64_t nLargestCaptionSize = 0;
-		int64_t nLargestFontID = 0;
 		for (it = mArrangedMessageBoxButtonList.begin(); it != mArrangedMessageBoxButtonList.end(); it++)
 		{
 			ZWinSizablePushBtn* pBtn = *it;
@@ -113,9 +112,9 @@ bool ZScriptedDialogWin::Init()
 		//
 		//  With 2 buttons, there are three spaces, a b & c
 
-		int64_t nButtonWidth = nLargestCaptionSize + nLargestFontID*kPadding*2;
+		int64_t nButtonWidth = nLargestCaptionSize;
 
-		int64_t nButtonsPerRow = (mArea.Width()) / (nButtonWidth + nLargestFontID*kPadding);
+		int64_t nButtonsPerRow = (mArea.Width()) / (nButtonWidth);
 
 		// If there are fewer buttons than can fit.... use this value
 		if (nButtonsPerRow > (int64_t) mArrangedMessageBoxButtonList.size())
@@ -157,7 +156,7 @@ bool ZScriptedDialogWin::Init()
 		// Now move all of the buttons down to the bottom of the window
 		int64_t nButtonRows = (mArrangedMessageBoxButtonList.size() + nButtonsPerRow - 1) / nButtonsPerRow;
 
-		int64_t nYOffset = mArea.Height() - kPadding*2 - kButtonMeasure - (kButtonMeasure + nLargestFontID*kPadding) * nButtonRows;
+		int64_t nYOffset = mArea.Height() - kPadding*2 - kButtonMeasure - (kButtonMeasure) * nButtonRows;
 		for (it = mArrangedMessageBoxButtonList.begin(); it != mArrangedMessageBoxButtonList.end(); it++)
 		{
 			ZWinSizablePushBtn* pBtn = *it;

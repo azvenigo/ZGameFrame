@@ -138,7 +138,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
         BufferProp prop;
         prop.sName = GDIHelpers::TagFromID(pi->id);
         prop.sType = GDIHelpers::TypeString(pi->type);
-        size_t nLength = pi->length;
+        int32_t nLength = pi->length;
         if (nLength > 128)
             nLength = 128;
         prop.sValue = GDIHelpers::ValueStringByType(pi->type, pi->value, nLength);
@@ -239,8 +239,8 @@ bool ZBuffer::SaveBuffer(const string& sFilename)
     BITMAPINFO bi;
     
     bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
-    bi.bmiHeader.biWidth = GetArea().Width();
-    bi.bmiHeader.biHeight = -GetArea().Height();
+    bi.bmiHeader.biWidth = (LONG)GetArea().Width();
+    bi.bmiHeader.biHeight = (LONG)-GetArea().Height();
     bi.bmiHeader.biPlanes = 1;
     bi.bmiHeader.biBitCount = 32;
     bi.bmiHeader.biCompression = BI_RGB;

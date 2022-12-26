@@ -16,6 +16,7 @@
 #include "ZTimer.h"
 #include "ZRandom.h"
 #include "ZFont.h"
+#include "Resources.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
 
@@ -271,6 +272,9 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
 
     tBufferProps& props = pBuf->GetProps();
 
+    tZFontPtr pSmallFont = gpFontSystem->GetFont(ZFontParams("System", 16, 200, 0, true));
+    ZFontParams fp(pSmallFont->GetFontParams());
+
     for (auto prop : props)
     {
         string sPropLineXMLNode("<line wrap=0>");
@@ -280,17 +284,17 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
         sPropLineXMLNode += prop.sName;
         sPropLineXMLNode += "</text>";
 
-        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
+/*        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
         sPropLineXMLNode += " position=middleCenter>";
         sPropLineXMLNode += prop.sType;
-        sPropLineXMLNode += "</text>";
+        sPropLineXMLNode += "</text>";*/
 
-        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
+        sPropLineXMLNode += "<text size=0 color=0xff000000 color2=0xff000000 ";
         sPropLineXMLNode += " position=middleRight>";
-        sPropLineXMLNode += prop.sValue;
+        sPropLineXMLNode += prop.sValue.substr(0,16);
         sPropLineXMLNode += "</text></line>";
 
-        mpImageProps->AddTextLine(sPropLineXMLNode, 1, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+        mpImageProps->AddTextLine(sPropLineXMLNode, fp, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
     }
 }
 
@@ -386,9 +390,9 @@ uint32_t cProcessImageWin::ComputeAverageColor(tZBufferPtr pBuffer, ZRect rArea)
     uint64_t nTotalR = 0;
     uint64_t nTotalG = 0;
     uint64_t nTotalB = 0;
-    for (int32_t y = rArea.top; y < rArea.bottom; y++)
+    for (int32_t y = (int32_t)rArea.top; y < (int32_t)rArea.bottom; y++)
     {
-        for (int32_t x = rArea.left; x < rArea.right; x++)
+        for (int32_t x = (int32_t)rArea.left; x < (int32_t)rArea.right; x++)
         {
             uint32_t nCol = pBuffer->GetPixel(x, y);
             nTotalR += ARGB_R(nCol);
@@ -415,9 +419,9 @@ bool cProcessImageWin::ComputeAverageColor(ZFloatColorBuffer* pBuffer, ZRect rAr
     fCol.g = 0.0;
     fCol.b = 0.0;
 
-    for (int32_t y = rArea.top; y < rArea.bottom; y++)
+    for (int64_t y = rArea.top; y < rArea.bottom; y++)
     {
-        for (int32_t x = rArea.left; x < rArea.right; x++)
+        for (int64_t x = rArea.left; x < rArea.right; x++)
         {
             ZFColor c;
             pBuffer->GetPixel(x, y, c);
@@ -425,7 +429,7 @@ bool cProcessImageWin::ComputeAverageColor(ZFloatColorBuffer* pBuffer, ZRect rAr
         }
     }
 
-    double fPixels = rArea.Width() * rArea.Height();
+    double fPixels = (double)rArea.Width() * (double)rArea.Height();
 
     fCol *= (1.0 / fPixels);    // divide by total number of pixels
     fCol.a = 255.0;
@@ -436,7 +440,7 @@ bool cProcessImageWin::ComputeAverageColor(ZFloatColorBuffer* pBuffer, ZRect rAr
 
 void cProcessImageWin::Process_ComputeGradient()
 {
-    int32_t nSubdivisions = /*1 <<*/ mnGradientLevels;
+    int64_t nSubdivisions = /*1 <<*/ mnGradientLevels;
 
     double fSubW = (double) mpResultBuffer->GetArea().Width() / (double) nSubdivisions;
     double fSubH = (double) mpResultBuffer->GetArea().Height() / (double) nSubdivisions;
@@ -444,28 +448,28 @@ void cProcessImageWin::Process_ComputeGradient()
 
     uint32_t* subdivisionColorGrid = new uint32_t[nSubdivisions * nSubdivisions];
 
-    for (int32_t nGridY = 0; nGridY < nSubdivisions; nGridY++)
+    for (int64_t nGridY = 0; nGridY < nSubdivisions; nGridY++)
     {
-        for (int32_t nGridX = 0; nGridX < nSubdivisions; nGridX++)
+        for (int64_t nGridX = 0; nGridX < nSubdivisions; nGridX++)
         {
-            ZRect rSubArea(nGridX * fSubW, nGridY * fSubH, (nGridX+1)* fSubW, (nGridY+1)* fSubH);
+            ZRect rSubArea((int64_t)(nGridX * fSubW), (int64_t)(nGridY * fSubH), (int64_t)((nGridX+1)* fSubW), (int64_t)((nGridY+1) * fSubH));
 
-            int32_t nIndex = (nGridY * nSubdivisions) + nGridX;
+            int64_t nIndex = (nGridY * nSubdivisions) + nGridX;
             subdivisionColorGrid[nIndex] = ComputeAverageColor(mpResultBuffer, rSubArea);
         }
     }
 
-    for (int32_t nGridY = 0; nGridY < nSubdivisions; nGridY++)
+    for (int64_t nGridY = 0; nGridY < nSubdivisions; nGridY++)
     {
-        for (int32_t nGridX = 0; nGridX < nSubdivisions; nGridX++)
+        for (int64_t nGridX = 0; nGridX < nSubdivisions; nGridX++)
         {
 //            if (nGridX == 1 && nGridY%2 == 1)
             {
-                ZRect rSubArea(nGridX * fSubW, nGridY *fSubH, (nGridX + 1) * fSubW, (nGridY + 1) * fSubH);
+                ZRect rSubArea((int64_t)(nGridX * fSubW), (int64_t)(nGridY *fSubH), (int64_t)((nGridX + 1) * fSubW), (int64_t)((nGridY + 1) * fSubH));
 //                tColorVertexArray verts;
 //                gRasterizer.RectToVerts(rSubArea, verts);
 
-                int32_t nIndex = (nGridY * nSubdivisions) + nGridX; // TL
+                int64_t nIndex = (nGridY * nSubdivisions) + nGridX; // TL
 //                verts[0].mColor = subdivisionColorGrid[nIndex];
 //                verts[1].mColor = subdivisionColorGrid[nIndex];
 //                verts[2].mColor = subdivisionColorGrid[nIndex];
@@ -623,7 +627,7 @@ bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
 
     mfHighestContrast = 0.0;
 
-    for (int i = 0; i < mThreads; i++)
+    for (uint32_t i = 0; i < mThreads; i++)
     {
         int64_t nBottom = nTop+nLines;
 
@@ -647,7 +651,7 @@ bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
         nTop += nLines;
     }
 
-    for (int i = 0; i < mThreads; i++)
+    for (uint32_t i = 0; i < mThreads; i++)
     {
         workers[i].worker.join();
     }
@@ -708,9 +712,9 @@ uint32_t cProcessImageWin::ComputePixelBlur(tZBufferPtr pBuffer, int64_t nX, int
 
             if (fDistance > 0.0)
             {
-                nResultR += ((nCurR) / fDistance);
-                nResultG += ((nCurG) / fDistance);
-                nResultB += ((nCurB) / fDistance);
+                nResultR += (uint32_t)(((nCurR) / fDistance));
+                nResultG += (uint32_t)(((nCurG) / fDistance));
+                nResultB += (uint32_t)(((nCurB) / fDistance));
                 fPixelsInRadius += 1/fDistance;
             }
             else
@@ -723,9 +727,9 @@ uint32_t cProcessImageWin::ComputePixelBlur(tZBufferPtr pBuffer, int64_t nX, int
         }
     }
 
-    nResultR = nResultR/fPixelsInRadius;
-    nResultG = nResultG/fPixelsInRadius;
-    nResultB = nResultB/fPixelsInRadius;
+    nResultR = (uint32_t)(nResultR/fPixelsInRadius);
+    nResultG = (uint32_t)(nResultG/fPixelsInRadius);
+    nResultB = (uint32_t)(nResultB/fPixelsInRadius);
 
 
 
@@ -1002,28 +1006,31 @@ bool cProcessImageWin::Init()
     pCP->SetArea(mrControlPanel);
 //    pCP->SetTriggerRect(grControlPanelTrigger);
 
+    tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
+
+
     pCP->Init();
 
-    pCP->AddButton("Load", "type=loadimages;target=imageprocesswin");
-    pCP->AddButton("Clear All", "type=clearall;target=imageprocesswin");
+    pCP->AddButton("Load", "type=loadimages;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Clear All", "type=clearall;target=imageprocesswin", pBtnFont);
 
     pCP->AddSpace(16);
 
 
-    pCP->AddButton("Radius Blur", "type=radiusblur;target=imageprocesswin");
-    pCP->AddButton("Stack", "type=stackimages;target=imageprocesswin");
-    pCP->AddButton("compute contrast", "type=computecontrast;target=imageprocesswin");
-    pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, 1);
+    pCP->AddButton("Radius Blur", "type=radiusblur;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Stack", "type=stackimages;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("compute contrast", "type=computecontrast;target=imageprocesswin", pBtnFont);
+    pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, pBtnFont);
 
     pCP->AddSpace(16);
 
-    pCP->AddButton("compute gradients", "type=computegradients;target=imageprocesswin");
-    pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, 1);
+    pCP->AddButton("compute gradients", "type=computegradients;target=imageprocesswin", pBtnFont);
+    pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, pBtnFont);
 
     pCP->AddSpace(16);
 
-    pCP->AddButton("float color sandbox", "type=floatcolorsandbox;target=imageprocesswin");
-    pCP->AddSlider(&mnSubdivisionLevels, 1, 512, 1, "", true, false, 1);
+    pCP->AddButton("float color sandbox", "type=floatcolorsandbox;target=imageprocesswin", pBtnFont);
+    pCP->AddSlider(&mnSubdivisionLevels, 1, 512, 1, "", true, false, pBtnFont);
 
 
     ChildAdd(pCP);
@@ -1034,17 +1041,15 @@ bool cProcessImageWin::Init()
     ZWinWatchPanel* pWP = new ZWinWatchPanel();
     pWP->SetArea(mrWatchPanel);
     pWP->Init();
-    pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, 3, 0xff000000, 0xff000000, ZFont::kEmbossed);
+    pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, 0xff000000, 0xff000000, ZFont::kEmbossed);
     ChildAdd(pWP);
 
-    tZFontPtr pLabelFont = gpFontSystem->GetDefaultFont(3);
-
-    ZRect rImageProps(8, pLabelFont.get()->FontHeight()*2, mrWatchPanel.Width() - 8, mrWatchPanel.Height() - 8);
+    ZRect rImageProps(8, gDefaultTextFont.nHeight*2, mrWatchPanel.Width() - 8, mrWatchPanel.Height() - 8);
 
     mpImageProps = new ZFormattedTextWin();
     mpImageProps->SetArea(rImageProps);
     mpImageProps->SetFill(0xff888888);
-    mpImageProps->AddTextLine("testline\nand more", 1, 0xff000000, 0xff000000);
+    mpImageProps->AddTextLine("testline\nand more", gDefaultTextFont, 0xff000000, 0xff000000);
 
     pWP->ChildAdd(mpImageProps);
 
@@ -1140,7 +1145,7 @@ void cProcessImageWin::ResetResultsBuffer()
 
         mpResultWin = new ZImageWin();
         mpResultWin->SetArea(mrResultImageDest);
-        mpResultWin->SetShowZoom(4, 0x44ffffff, ZFont::kBottomRight, true);
+        mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont), 0x44ffffff, ZFont::kBottomRight, true);
         mpResultWin->SetFill(0xff222222);
         mpResultWin->SetArea(mrResultImageDest);
         mpResultWin->SetZoomable(true, 0.05, 100.0);
@@ -1259,7 +1264,7 @@ bool cProcessImageWin::BlurBox(int64_t x, int64_t y)
         rResultImageRect.PtInRect(nResultX - kDist, nResultY + kDist))
     {
         double fContrast = ComputePixelContrast(mpResultBuffer, nResultX, nResultY, 10);
-        int nAdjustedRect = fContrast / 26;
+        int nAdjustedRect = (int)(fContrast / 26);
 
         ZRect r(nResultX - kDist, nResultY - kDist, nResultX + kDist, nResultY + kDist);
         uint32_t nCol = ComputeAverageColor(mpResultBuffer, r);

@@ -5,6 +5,7 @@
 #include "ZStdTypes.h"
 #include "ZStdDebug.h"
 #include <vector>
+#include "json/json.hpp"
 
 #ifdef _WIN64
 #include <windowsx.h>       // for dynamic font glyph generation
@@ -38,6 +39,87 @@ class ZFontParams
 public:
     ZFontParams();
     ZFontParams(const ZFontParams& rhs);
+
+    ZFontParams(const std::string name, int64_t height, int64_t weight = 200, int64_t tracking = 0, bool fixed = false, bool italic = false, bool underline = false, bool strikeout = false)
+    {
+        sFacename = name;
+        nHeight = height;
+        nWeight = weight;
+        nTracking = tracking;
+        bFixedWidth = fixed;
+        bItalic = italic;
+        bUnderline = underline;
+        bStrikeOut = strikeout;
+    }
+
+    ZFontParams(const std::string& sJSON)
+    {
+        nlohmann::json j = nlohmann::json::parse(sJSON);
+        sFacename = j["n"];
+        nHeight = j["h"];
+        nWeight = j["w"];
+        nTracking = j["t"];
+
+        if (j.contains("f"))
+            bFixedWidth = j["f"];
+        else
+            bFixedWidth = false;
+
+        if (j.contains("i"))
+            bItalic = j["i"];
+        else
+            bItalic = false;
+
+        if (j.contains("u"))
+            bUnderline = j["u"];
+        else
+            bUnderline = false;
+
+        if (j.contains("s"))
+            bStrikeOut = j["s"];
+        else
+            bStrikeOut = false;
+    }
+
+    // overloaded cast
+    operator std::string() const
+    {
+        nlohmann::json j;
+        j["n"] = sFacename.c_str();
+        j["h"] = nHeight;
+        j["w"] = nWeight;
+        j["t"] = nTracking;
+        if (bFixedWidth)
+            j["f"] = bFixedWidth;
+
+        if (bItalic)
+            j["i"] = bItalic;
+
+        if (bUnderline)
+            j["u"] = bUnderline;
+
+        if (bStrikeOut)
+            j["s"] = bStrikeOut;
+
+        return j.dump();
+    }
+
+    bool operator < (const ZFontParams& rhs) const
+    {
+        int nNameCompare = sFacename.compare(rhs.sFacename);
+        if (nNameCompare < 0)
+            return true;
+        else if (nNameCompare > 0)
+            return false;
+
+        if (nHeight < rhs.nHeight)
+            return true;
+
+        if (nWeight < rhs.nWeight)
+            return true;
+
+        return false;
+    }
 
     int64_t nHeight;
     int64_t nWeight;
@@ -80,9 +162,9 @@ public:
     virtual bool    LoadFont(const std::string& sFilename);
     virtual bool    SaveFont(const std::string& sFilename);
 
-    ZFontParams*    GetFontParams() { return &mFontParams; }
+    ZFontParams&    GetFontParams() { return mFontParams; }
 
-    std::string     GetFilename() { return msFilename; }
+//    std::string     GetFilename() { return msFilename; }
 
     bool            DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, eStyle style = kNormal, ZRect* pClip = NULL);
     bool            DrawTextParagraph(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, ePosition paragraphPosition = kTopLeft, eStyle style = kNormal, ZRect* pClip = NULL);
@@ -113,7 +195,7 @@ protected:
 
     void                    FindKerning(char c1, char c2);
 
-    std::string             msFilename;
+//    std::string             msFilename;
 //	uint32_t                mnFontHeight;
     ZFontParams             mFontParams;
     bool                    mbEnableKerning;
@@ -187,6 +269,59 @@ private:
 
 #endif
 
+
+#define REPLACE_FONT_SYSTEM_NEW_PARAM_BASED_MAPPING
+
+
+#ifdef REPLACE_FONT_SYSTEM_NEW_PARAM_BASED_MAPPING
+
+typedef std::shared_ptr<ZFont>              tZFontPtr;
+typedef std::map<ZFontParams, tZFontPtr>    tZFontMap;
+
+class ZFontSystem
+{
+public:
+    ZFontSystem();
+    ~ZFontSystem();
+
+    bool        Init();
+    void        Shutdown();
+
+
+    tZFontPtr   LoadFont(const std::string& sFilename);
+#ifdef _WIN64
+    tZFontPtr   CreateFont(const ZFontParams& params);
+#endif
+
+//    std::vector<std::string>    GetFontNames();
+//    std::vector<int32_t>        GetAvailableSizes(const std::string& sFontName);
+
+    size_t          GetFontCount() { return mFontMap.size(); }
+
+    ZFontParams&    GetDefaultFontParam() { return mpDefault->GetFontParams(); }
+    tZFontPtr       GetDefaultFont() { return mpDefault; }
+
+    tZFontPtr       GetFont(const std::string& sFontName, int32_t nFontSize);
+    tZFontPtr       GetFont(const ZFontParams& params);
+
+    // Cache related
+    bool            SetCacheFolder(const std::string& sFolderPath); // returns false if folder doesn't exist
+    bool            IsCached(const ZFontParams& params);
+    std::string     FontCacheFilename(const ZFontParams& params);   // name to store for a given set of parameters (including folder)
+
+private:
+
+
+    tZFontPtr       mpDefault;
+    tZFontMap       mFontMap;
+
+    // caching
+    std::string     msCacheFolder;
+};
+
+
+#else
+
 typedef std::shared_ptr<ZFont>  tZFontPtr;
 typedef std::map< int32_t, tZFontPtr > tSizeToFont;
 typedef std::map< std::string, tSizeToFont >  tNameToFontMap;
@@ -221,5 +356,7 @@ private:
     tNameToFontMap  mNameToFontMap;
     std::string     msDefaultFontName;
 };
+
+#endif
 
 extern ZFontSystem* gpFontSystem;

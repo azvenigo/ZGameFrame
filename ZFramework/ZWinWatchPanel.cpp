@@ -18,13 +18,12 @@ bool ZWinWatchPanel::Init()
 }
 
 
-bool ZWinWatchPanel::AddItem(WatchType type, const string& sCaption, void* pWatchAddress, uint32_t nFont, uint32_t nCaptionCol, uint32_t nWatchCol, ZFont::eStyle style)
+bool ZWinWatchPanel::AddItem(WatchType type, const string& sCaption, void* pWatchAddress, uint32_t nCaptionCol, uint32_t nWatchCol, ZFont::eStyle style)
 {
     WatchStruct newWatch;
     newWatch.mCaption = sCaption;
     newWatch.mType = type;
     newWatch.pMem = pWatchAddress;
-    newWatch.nFont = nFont;
     newWatch.nCaptionCol = nCaptionCol;
     newWatch.nWatchCol = nWatchCol;
     newWatch.mStyle = style;
@@ -152,7 +151,7 @@ bool ZWinWatchPanel::Paint()
 
     for (auto ws : mWatchList)
     {
-        tZFontPtr pFont = gpFontSystem->GetDefaultFont(ws.nFont);
+        tZFontPtr pFont = gpFontSystem->GetDefaultFont();
 
         pFont->DrawTextParagraph(mpTransformTexture.get(), ws.mCaption, ws.mArea, ws.nCaptionCol, ws.nCaptionCol, ZFont::kBottomLeft, ws.mStyle);
 

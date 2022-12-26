@@ -21,14 +21,14 @@ bool ZWinControlPanel::Init()
 }
 
 
-bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage, uint32_t nFont, uint32_t nFontCol1, uint32_t nFontCol2, ZFont::eStyle style)
+bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage, tZFontPtr pFont, uint32_t nFontCol1, uint32_t nFontCol2, ZFont::eStyle style)
 {
     ZWinSizablePushBtn* pBtn;
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption(sCaption);
-    pBtn->SetFont(gpFontSystem->GetDefaultFont(nFont));
+    pBtn->SetFont(pFont);
     pBtn->SetColor(nFontCol1);
     pBtn->SetColor2(nFontCol2);
     pBtn->SetStyle(style);
@@ -42,11 +42,11 @@ bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage,
     return true;
 }
 
-bool ZWinControlPanel::AddCaption(const string& sCaption, uint32_t nFont, uint32_t nFontCol, uint32_t nFillCol, ZFont::eStyle style, ZFont::ePosition pos)
+bool ZWinControlPanel::AddCaption(const string& sCaption, ZFontParams& fontParams, uint32_t nFontCol, uint32_t nFillCol, ZFont::eStyle style, ZFont::ePosition pos)
 {
     ZFormattedTextWin* pWin = new ZFormattedTextWin();
     pWin->SetArea(mrNextControl);
-    pWin->AddTextLine(sCaption, nFont, nFontCol, nFontCol, style, pos);
+    pWin->AddTextLine(sCaption, fontParams, nFontCol, nFontCol, style, pos);
     pWin->SetFill(nFillCol);
     ChildAdd(pWin);
 
@@ -56,14 +56,14 @@ bool ZWinControlPanel::AddCaption(const string& sCaption, uint32_t nFont, uint32
 }
 
 
-bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, uint32_t nFont, uint32_t nFontCol, ZFont::eStyle style)
+bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, tZFontPtr pFont, uint32_t nFontCol, ZFont::eStyle style)
 {
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pCheck->SetCaption(sCaption);
     pCheck->SetArea(mrNextControl);
-    pCheck->SetFont(gpFontSystem->GetDefaultFont(nFont));
+    pCheck->SetFont(pFont);
     pCheck->SetColor(nFontCol);
     pCheck->SetColor2(nFontCol);
     pCheck->SetStyle(style);
@@ -74,14 +74,14 @@ bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const st
 }
 
 
-bool ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue, int32_t nFontID)
+bool ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue, tZFontPtr pFont)
 {
     ZSliderWin* pSlider = new ZSliderWin(pnSliderValue);
     pSlider->SetArea(mrNextControl);
+    pSlider->SetDrawSliderValueFlag(bDrawValue, bMouseOnlyDrawValue, pFont);
     pSlider->Init(gSliderThumb, grSliderThumbEdge, gSliderBackground, grSliderBgEdge, ZSliderWin::kHorizontal);
     pSlider->SetSliderRange(nMin, nMax, nMultiplier);
     pSlider->SetSliderSetMessage(sMessage);
-    pSlider->SetDrawSliderValueFlag(bDrawValue, bMouseOnlyDrawValue, nFontID);
     ChildAdd(pSlider);
 
     mrNextControl.OffsetRect(0, mrNextControl.Height());

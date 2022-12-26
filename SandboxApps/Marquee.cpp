@@ -38,10 +38,10 @@ bool Marquee::OnChar(char key)
 }
 
 
-void Marquee::SetText(const string& sText, uint32_t nFont, uint32_t nFontCol1, uint32_t nFontCol2, ZFont::eStyle style)
+void Marquee::SetText(const string& sText, tZFontPtr pFont, uint32_t nFontCol1, uint32_t nFontCol2, ZFont::eStyle style)
 {
     msText = sText;
-    mpFont = gpFontSystem->GetDefaultFont(nFont);
+    mpFont = pFont;
     assert(mpFont);
     mFontCol1 = nFontCol1;
     mFontCol2 = nFontCol2;

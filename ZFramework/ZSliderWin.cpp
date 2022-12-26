@@ -26,8 +26,6 @@ ZSliderWin::ZSliderWin(int64_t* pnSliderValue)
 	mnSliderValMax = 0;
     mnSliderValMultiplier = 1;
 
-
-    mnFontID = 0;
     mbMouseOverDrawOnly = false;
     mbDrawValue = true;
 
@@ -104,6 +102,17 @@ void ZSliderWin::UpdateSliderDrawBounds()
 	}
 
 	Invalidate();
+}
+
+void ZSliderWin::SetDrawSliderValueFlag(bool bEnable, bool bMouseOverDrawOnly, tZFontPtr pFont) 
+{ 
+    mbDrawValue = bEnable; 
+    mbMouseOverDrawOnly = bMouseOverDrawOnly; 
+    if (pFont)
+        mpFont = pFont;
+    else
+        mpFont = gpFontSystem->GetDefaultFont();
+    ZASSERT(mpFont);
 }
 
 void ZSliderWin::SetAreaToDrawTo()
@@ -245,9 +254,8 @@ bool ZSliderWin::Paint()
 		{
 			string sLabel;
 			Sprintf(sLabel, "%d", GetSliderValue());
-            tZFontPtr pFont(gpFontSystem->GetDefaultFont(mnFontID));
-			ZRect rText(pFont->GetOutputRect(rThumb, sLabel.data(), sLabel.length(), ZFont::kMiddleCenter));
-			pFont->DrawText(mpTransformTexture.get(), sLabel, rText, 0xffffffff, 0xffffffff, ZFont::kShadowed);
+			ZRect rText(mpFont->GetOutputRect(rThumb, sLabel.data(), sLabel.length(), ZFont::kMiddleCenter));
+            mpFont->DrawText(mpTransformTexture.get(), sLabel, rText, 0xffffffff, 0xffffffff, ZFont::kShadowed);
 		}	
 	}
 

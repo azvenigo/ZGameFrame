@@ -32,6 +32,7 @@ ZFontParams::ZFontParams(const ZFontParams& rhs)
 }
 
 
+
 #ifdef _WIN64
 extern HWND ghWnd;
 #endif
@@ -1093,7 +1094,7 @@ bool ZDynamicFont::Init(const ZFontParams& params)
 
     mhWinFont = CreateFontA( 
 //        (int)fDPIAdjustedHeight,
-        mFontParams.nHeight,
+        (int)mFontParams.nHeight,
         0,                      /*nWidth*/
         0,                      /*nEscapement*/
         0,                      /*nOrientation*/
@@ -1504,6 +1505,9 @@ bool ZFontSystem::Init()
     ::sort(gWindowsFontFacenames.begin(), gWindowsFontFacenames.end());
 #endif
 
+    ZFontParams default("Arial", 12);
+    mpDefault = CreateFont(default);
+
     return true;
 }
 
@@ -1512,106 +1516,118 @@ void ZFontSystem::Shutdown()
 #ifdef _WIN64
     gWindowsFontFacenames.clear();
 #endif
-    mNameToFontMap.clear();
+    mFontMap.clear();
 }
+
+bool ZFontSystem::SetCacheFolder(const std::string& sFolderPath)
+{
+    if (!std::filesystem::exists(sFolderPath))
+    {
+        ZDEBUG_OUT("Font Cache Folder:%s Doesn't exist!\n", sFolderPath.c_str());
+        return false;
+    }
+
+    msCacheFolder = sFolderPath;
+    return true;
+}
+
+bool ZFontSystem::IsCached(const ZFontParams& params)
+{
+    if (msCacheFolder.empty())
+        return false;
+
+    return std::filesystem::exists(FontCacheFilename(params));
+}
+
+string ZFontSystem::FontCacheFilename(const ZFontParams& params)
+{
+    std::filesystem::path cachePath(msCacheFolder);
+
+    string sFilename;
+    Sprintf(sFilename, "%s_%d_%d_%d", params.sFacename.c_str(), params.nHeight, params.nWeight, params.nTracking);
+    if (params.bItalic)
+        sFilename += "_i";
+    if (params.bFixedWidth)
+        sFilename += "_f";
+    sFilename += ".zfont";
+
+    cachePath.append(sFilename);
+
+    return cachePath.string();
+}
+
 
 tZFontPtr ZFontSystem::LoadFont(const string& sFilename)
 {
-    ZFont* pNewFont = new ZFont();
+    tZFontPtr pNewFont(new ZFont());
     if (!pNewFont->LoadFont(sFilename))
     {
-        delete pNewFont;
-        ZDEBUG_OUT("Failed to load font:%s\n", sFilename.c_str());
         return nullptr;
     }
-    string name(pNewFont->GetFontParams()->sFacename);
-    int32_t nHeight = (int32_t) pNewFont->GetFontParams()->nHeight;
+    ZFontParams fp(pNewFont->GetFontParams());
+    ZDEBUG_OUT("Loaded font:%s size:%d\n", fp.sFacename, fp.nHeight);
 
-    ZDEBUG_OUT("Loaded font:%s\n", name.c_str());
-
-    mNameToFontMap[name][nHeight].reset(pNewFont);      // add it to the map by name and size
-
-    return mNameToFontMap[name][nHeight];
+    mFontMap[pNewFont->GetFontParams()] = pNewFont;
+    return pNewFont;
 }
 
 #ifdef _WIN64
 tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
 {
+    if (IsCached(params))
+    {
+        tZFontPtr pLoaded = LoadFont(FontCacheFilename(params));
+        if (pLoaded)
+        {
+            mFontMap[pLoaded->GetFontParams()] = pLoaded;
+            return pLoaded;
+        }
+
+        ZDEBUG_OUT("WARNING: cached font failed to load...re-creating.");
+    }
+
     ZDynamicFont* pNewFont = new ZDynamicFont();
     pNewFont->Init(params);
 
-    string name(pNewFont->GetFontParams()->sFacename);
-    int32_t nHeight = (int32_t) pNewFont->GetFontParams()->nHeight;
+    ZFontParams fp(pNewFont->GetFontParams());
+    ZDEBUG_OUT("Created font:%s size:%d\n", fp.sFacename, fp.nHeight);
 
-    mNameToFontMap[name][nHeight].reset(pNewFont);      // add it to the map by name and size
+    mFontMap[pNewFont->GetFontParams()].reset(pNewFont);
 
-//    mFonts.emplace_back(pNewFont);
+    if (!msCacheFolder.empty())
+    {
+        ZDEBUG_OUT("Saving font:%s to cache", fp.sFacename.c_str());
+        pNewFont->SaveFont(FontCacheFilename(params));
+    }
 
-    ZDEBUG_OUT("ZFontSystem::CreateFont size:%d, name:%s\n", params.nHeight, params.sFacename.c_str());
-
-    return mNameToFontMap[name][nHeight];
+    return mFontMap[pNewFont->GetFontParams()];
 }
 #endif
 
-tZFontPtr ZFontSystem::GetDefaultFont(int32_t nIndex)
+
+tZFontPtr ZFontSystem::GetFont(const std::string& sFontName, int32_t nFontSize)
 {
-    if (nIndex < 0 || nIndex >= mNameToFontMap[msDefaultFontName].size())
+    for (auto findIt : mFontMap)
     {
-        assert(false);
-        return nullptr;
+        const ZFontParams& fp = findIt.first;
+        if (fp.sFacename == sFontName && fp.nHeight == nFontSize)
+            return findIt.second;
     }
 
-    tSizeToFont::iterator sizeIt = mNameToFontMap[msDefaultFontName].begin();
-    while (nIndex-- > 0)
-        sizeIt++;
-
-    return (*sizeIt).second;
+    // Not found, create one
+    return CreateFont(ZFontParams(sFontName, nFontSize));
 }
 
-std::vector<string> ZFontSystem::GetFontNames()
+tZFontPtr ZFontSystem::GetFont(const ZFontParams& params)
 {
-    std::vector<string> names;
+    auto findIt = mFontMap.find(params);
 
-    for (auto name : mNameToFontMap)        
-        names.emplace_back( name.first );
-
-    return names;
-}
-
-std::vector<int32_t> ZFontSystem::GetAvailableSizes(const string& sFontName)
-{
-    std::vector<int32_t> sizes;
-
-    auto it = mNameToFontMap.find(sFontName);
-    if (it != mNameToFontMap.end())
+    // If not found
+    if (findIt == mFontMap.end())
     {
-        ZDEBUG_OUT("Found font by name\"%s\" sizes", sFontName.c_str());
-
-        tSizeToFont& sizeToFontMap = (*it).second;
-
-        for (tSizeToFont::iterator fontSizeIterator = sizeToFontMap.begin(); fontSizeIterator != sizeToFontMap.end(); fontSizeIterator++)
-        {
-            ZDEBUG_OUT(":%d", (*fontSizeIterator).first);
-            sizes.push_back((*fontSizeIterator).first);
-        }
-        ZDEBUG_OUT("\n");
-    }
-    
-    return sizes;
-}
-
-tZFontPtr ZFontSystem::GetDefaultFont(const string& sFontName, int32_t nFontSize)
-{
-    auto it = mNameToFontMap.find(sFontName);
-    if (it != mNameToFontMap.end())
-    {
-        tSizeToFont& sizeToFontMap = (*it).second;
-        auto it2 = sizeToFontMap.find(nFontSize);
-        if (it2 != sizeToFontMap.end())
-            return (*it2).second;
+        ZDEBUG_OUT("Uncached font requested.");
+        return CreateFont(params);
     }
 
-    assert(false);
-    return nullptr;
+    return (*findIt).second;
 }
-

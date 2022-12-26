@@ -3,6 +3,7 @@
 #include "ZWinBtn.h"
 #include "ZRasterizer.h"
 #include "ZRandom.h"
+#include "Resources.h"
 extern bool gbApplicationExiting;
 
 using namespace std;
@@ -48,7 +49,7 @@ bool cLifeWin::Init()
 
     mnOffPixelCol = RANDI64(0xff000000, 0xffffffff);
 
-	mpFont = gpFontSystem->GetDefaultFont(0);
+	mpFont = gpFontSystem->GetFont(gDefaultTextFont);
 
 
 	mbAcceptsCursorMessages = true;

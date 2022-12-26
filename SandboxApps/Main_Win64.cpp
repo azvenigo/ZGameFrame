@@ -156,7 +156,7 @@ int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     return (int) msg.wParam;
 }
 
-#define GENERATE_FRAMEWORK_FONTS
+//#define GENERATE_FRAMEWORK_FONTS
 #ifdef GENERATE_FRAMEWORK_FONTS
 
 void GenerateFrameworkFonts()
