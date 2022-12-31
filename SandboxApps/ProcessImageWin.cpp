@@ -1286,7 +1286,7 @@ bool cProcessImageWin::BlurBox(int64_t x, int64_t y)
                     verts[2].mColor = nCol;
                     verts[3].mColor = nCol;*/
 
-        gRasterizer.Rasterize(mpResultBuffer.get(), mpResultBuffer.get(), verts);
+        gRasterizer.Rasterize(mpResultBuffer.get(), verts);
 
         InvalidateChildren();
     }

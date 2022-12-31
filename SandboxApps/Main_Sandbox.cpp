@@ -69,7 +69,7 @@ void Sandbox::InitControlPanel()
     gpControlPanel->AddButton("Font Tool", "type=initchildwindows;mode=6;target=MainAppMessageTarget", pBtnFont);
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("Marquee", "type=initchildwindows;mode=7;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("3DTestWin", "type=initchildwindows;mode=7;target=MainAppMessageTarget", pBtnFont);
 
     gpMainWin->ChildAdd(gpControlPanel);
 }
@@ -152,19 +152,13 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
         gpMainWin->ChildAdd(pWin);
     }
 
-    else if (mode == eSandboxMode::kMarquee)
+    else if (mode == eSandboxMode::k3DTestWin)
     {
-        Marquee* pWin = new Marquee();
+        Z3DTestWin* pWin = new Z3DTestWin();
         pWin->SetArea(grFullArea);
 
         uint32_t nCol1 = RANDU64(0xff000000, 0xffffffff);
         uint32_t nCol2 = RANDU64(0xff000000, 0xffffffff);
-
-        tZFontPtr  pFont = gpFontSystem->GetFont(gDefaultTextFont.sFacename, 10 + rand() % 500);
-
-        pWin->SetText("This is amazing!", pFont, nCol1, nCol2, ZFont::kNormal);
-        pWin->SetFill(0xff000000);
-        pWin->SetSpeed(-200.0);
 
         gpMainWin->ChildAdd(pWin);
 

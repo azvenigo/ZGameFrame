@@ -28,7 +28,7 @@
 #include "ZWinControlPanel.h"
 #include "ZRandom.h"
 #include "TextTestWin.h"
-#include "Marquee.h"
+#include "3DTestWin.h"
 
 using namespace std;
 
@@ -66,7 +66,7 @@ namespace Sandbox
         kImageProcess = 4,
         kOneLifeWin = 5,
         kTextTestWin = 6,
-        kMarquee = 7,
+        k3DTestWin = 7,
     };
 
     void SandboxShutdown();

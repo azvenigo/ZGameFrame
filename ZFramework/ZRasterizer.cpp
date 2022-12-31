@@ -93,10 +93,9 @@ bool ZRasterizer::FindScanlineIntersection(double fScanY, ZColorVertex& v1, ZCol
 }
 
 
-inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, ZBuffer* pTexture, tColorVertexArray& vertexArray, ZRect& rDest, ZRect* pClip, double& fClipLeft, double& fClipRight, int64_t& nTopScanline, int64_t& nBottomScanline)
+inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, tColorVertexArray& vertexArray, ZRect& rDest, ZRect* pClip, double& fClipLeft, double& fClipRight, int64_t& nTopScanline, int64_t& nBottomScanline)
 {
     ZASSERT(pDestination);
-    ZASSERT(pTexture);
 
     if (pClip)
         rDest.IntersectRect(pClip);
@@ -127,10 +126,9 @@ inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, ZBuffer* pTex
 }
 
 
-inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect& rDest, ZRect* pClip, double& fClipLeft, double& fClipRight, int64_t& nTopScanline, int64_t& nBottomScanline)
+inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, tUVVertexArray& vertexArray, ZRect& rDest, ZRect* pClip, double& fClipLeft, double& fClipRight, int64_t& nTopScanline, int64_t& nBottomScanline)
 {
 	ZASSERT(pDestination);
-	ZASSERT(pTexture);
 
 	if (pClip)
 		rDest.IntersectRect(pClip);
@@ -373,7 +371,7 @@ bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, t
 	int64_t nBottomScanLine;
 
     ZASSERT(pDestination->GetPixels() != nullptr);
-	SetupRasterization(pDestination, pTexture, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
+	SetupRasterization(pDestination, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
 
 	// For each scanline
 	for (int64_t nScanLine = nTopScanLine; nScanLine < nBottomScanLine; nScanLine++)
@@ -435,7 +433,7 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexA
 	int64_t nTopScanLine;
 	int64_t nBottomScanLine;
 
-	SetupRasterization(pDestination, pTexture, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
+	SetupRasterization(pDestination, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
 
 	// For each scanline
 	for (int64_t nScanLine = nTopScanLine; nScanLine < nBottomScanLine; nScanLine++)
@@ -478,7 +476,7 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexA
 	return true;
 }
 
-bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tColorVertexArray& vertexArray, ZRect* pClip)
+bool ZRasterizer::Rasterize(ZBuffer* pDestination, tColorVertexArray& vertexArray, ZRect* pClip)
 {
     ZRect rDest = pDestination->GetArea();
     int64_t nDestStride = pDestination->GetArea().Width();
@@ -487,7 +485,7 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tColorVert
     int64_t nTopScanLine;
     int64_t nBottomScanLine;
 
-    SetupRasterization(pDestination, pTexture, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
+    SetupRasterization(pDestination, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
 
     // For each scanline
     for (int64_t nScanLine = nTopScanLine; nScanLine < nBottomScanLine; nScanLine++)

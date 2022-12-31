@@ -22,7 +22,11 @@ endif()
 ####################
 # SandboxApps
 
-set(SANDBOXAPPS_SOURCES FloatLinesWin.h FloatLinesWin.cpp LifeWin.h LifeWin.cpp Main_Sandbox.h Main_Sandbox.cpp Main_Win64.cpp Marquee.h Marquee.cpp ProcessImageWin.h ProcessImageWin.cpp TextTestWin.h TextTestWin.cpp)
+set(SANDBOXAPPS_SOURCES 
+FloatLinesWin.h FloatLinesWin.cpp LifeWin.h LifeWin.cpp 
+Main_Sandbox.h Main_Sandbox.cpp Main_Win64.cpp 3DTestWin.h 3DTestWin.cpp 
+ProcessImageWin.h ProcessImageWin.cpp TextTestWin.h TextTestWin.cpp)
+
 set(COMMON_FILES 
 
 ../ZFramework/Resources.cpp
@@ -68,6 +72,7 @@ set(COMMON_FILES
 ../ZFramework/ZSliderWin.h
 ../ZFramework/ZStdDebug.h
 ../ZFramework/ZStdTypes.h
+../ZFramework/Z3DMath.h
 ../ZFramework/ZStringHelpers.cpp
 ../ZFramework/ZStringHelpers.h
 ../ZFramework/ZTickManager.cpp
@@ -110,7 +115,13 @@ list(APPEND COMMON_FILES  ../../ZLibraries/Common/zlib-1.2.11/deflate.c  ../../Z
 
 ####################
 # common source
-list(APPEND INCLUDE_DIRS ../ZFramework ../../ZLibraries/Common ../../ZLibraries/Common/zlib-1.2.11 ../../ZLibraries/Common/json ../ZFramework/platforms/windows)
+list(APPEND INCLUDE_DIRS 
+../ZFramework 
+../../ZLibraries/Common 
+../../ZLibraries/Common/zlib-1.2.11 
+../../ZLibraries/Common/json 
+../ZFramework/platforms/windows
+)
 
 
 ####################
