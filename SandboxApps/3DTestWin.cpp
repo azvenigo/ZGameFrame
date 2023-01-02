@@ -12,9 +12,12 @@
 #include "helpers/ThreadPool.h"
 #include "ZWinControlPanel.h"
 #include "Resources.h"
+#include "helpers/Registry.h"
 
 using namespace std;
 using namespace Z3D;
+
+extern ZPoint gLastMouseMove;
 
 
 
@@ -680,17 +683,17 @@ bool trace(
 class Sphere
 {
 public:
-    Sphere() : radius(0), radius2(0), transparency(0), reflection(0) {}
+    Sphere() : mRadius(0), mRadius2(0), mTransparency(0), mReflection(0) {}
 
     Sphere(
-        const Vec3f& c,
-        const float& r,
-        const Vec3f& sc,
-        const float& refl = 0,
-        const float& transp = 0,
-        const Vec3f& ec = 0) :
-        center(c), radius(r), radius2(r* r), surfaceColor(sc), emissionColor(ec),
-        transparency(transp), reflection(refl)
+        const Vec3f& center,
+        const float& radius,
+        const Vec3f& surfaceColor,
+        const float& reflection = 0,
+        const float& transparency = 0,
+        const Vec3f& emmisionColor = 0) :
+        mCenter(center), mRadius(radius), mRadius2(radius* radius), mSurfaceColor(surfaceColor), mEmissionColor(emmisionColor),
+        mTransparency(transparency), mReflection(reflection)
     {
     }
 
@@ -699,12 +702,12 @@ public:
     //[/comment]
     bool intersect(const Vec3f& rayorig, const Vec3f& raydir, float& t0, float& t1) const
     {
-        Vec3f l = center - rayorig;
+        Vec3f l = mCenter - rayorig;
         float tca = l.dotProduct(raydir);
         if (tca < 0) return false;
         float d2 = l.dotProduct(l) - tca * tca;
-        if (d2 > radius2) return false;
-        float thc = sqrt(radius2 - d2);
+        if (d2 > mRadius2) return false;
+        float thc = sqrt(mRadius2 - d2);
         t0 = tca - thc;
         t1 = tca + thc;
 
@@ -712,10 +715,10 @@ public:
     }
 
 
-    Vec3f center;                           /// position of the sphere
-    float radius, radius2;                  /// sphere radius and radius^2
-    Vec3f surfaceColor, emissionColor;      /// surface color and emission (light)
-    float transparency, reflection;         /// surface transparency and reflectivity
+    Vec3f mCenter;                           /// position of the sphere
+    float mRadius, mRadius2;                  /// sphere radius and radius^2
+    Vec3f mSurfaceColor, mEmissionColor;      /// surface color and emission (light)
+    float mTransparency, mReflection;         /// surface transparency and reflectivity
 
 };
 
@@ -749,7 +752,7 @@ Vec3f TraceSpheres(
     if (!sphere) return Vec3f(2);
     Vec3f surfaceColor = 0; // color of the ray/surfaceof the object intersected by the ray
     Vec3f phit = rayorig + raydir * tnear; // point of intersection
-    Vec3f nhit = phit - sphere->center; // normal at the intersection point
+    Vec3f nhit = phit - sphere->mCenter; // normal at the intersection point
     nhit.normalize(); // normalize normal direction
     // If the normal and the view direction are not opposite to each other
     // reverse the normal direction. That also means we are inside the sphere so set
@@ -758,7 +761,7 @@ Vec3f TraceSpheres(
     float bias = 1e-4; // add some bias to the point from which we will be tracing
     bool inside = false;
     if (raydir.dotProduct(nhit) > 0) nhit = -nhit, inside = true;
-    if ((sphere->transparency > 0 || sphere->reflection > 0) && depth < MAX_RAY_DEPTH) {
+    if ((sphere->mTransparency > 0 || sphere->mReflection > 0) && depth < MAX_RAY_DEPTH) {
         float facingratio = -raydir.dotProduct(nhit);
         // change the mix value to tweak the effect
         float fresneleffect = mix(pow(1 - facingratio, 3), 1, 0.1);
@@ -769,7 +772,7 @@ Vec3f TraceSpheres(
         Vec3f reflection = TraceSpheres(phit + nhit * bias, refldir, depth + 1, spheres);
         Vec3f refraction = 0;
         // if the sphere is also transparent compute refraction ray (transmission)
-        if (sphere->transparency) {
+        if (sphere->mTransparency) {
             float ior = 1.1, eta = (inside) ? ior : 1 / ior; // are we inside or outside the surface?
             float cosi = -nhit.dotProduct(raydir);
             float k = 1 - eta * eta * (1 - cosi * cosi);
@@ -780,15 +783,15 @@ Vec3f TraceSpheres(
         // the result is a mix of reflection and refraction (if the sphere is transparent)
         surfaceColor = (
             reflection * fresneleffect +
-            refraction * (1 - fresneleffect) * sphere->transparency) * sphere->surfaceColor;
+            refraction * (1 - fresneleffect) * sphere->mTransparency) * sphere->mSurfaceColor;
     }
     else {
         // it's a diffuse object, no need to raytrace any further
         for (unsigned i = 0; i < spheres.size(); ++i) {
-            if (spheres[i].emissionColor.x > 0) {
+            if (spheres[i].mEmissionColor.x > 0) {
                 // this is a light
                 Vec3f transmission = 1;
-                Vec3f lightDirection = spheres[i].center - phit;
+                Vec3f lightDirection = spheres[i].mCenter - phit;
                 lightDirection.normalize();
                 for (unsigned j = 0; j < spheres.size(); ++j) {
                     if (i != j) {
@@ -799,13 +802,13 @@ Vec3f TraceSpheres(
                         }
                     }
                 }
-                surfaceColor += sphere->surfaceColor * transmission *
-                    std::max<float>(float(0), nhit.dotProduct(lightDirection)) * spheres[i].emissionColor;
+                surfaceColor += sphere->mSurfaceColor * transmission *
+                    std::max<float>(float(0), nhit.dotProduct(lightDirection)) * spheres[i].mEmissionColor;
             }
         }
     }
 
-    return surfaceColor + sphere->emissionColor;
+    return surfaceColor + sphere->mEmissionColor;
 }
 
 
@@ -815,11 +818,11 @@ void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest
     ZRect rFullArea(pDest->GetArea());
     float invWidth = 1 / float(rFullArea.Width()), invHeight = 1 / float(rFullArea.Height());
     float fov = 30, aspectratio = rFullArea.Width() / float(rFullArea.Height());
-    float angle = tan(M_PI * 0.5 * fov / 180.);
+    float angle = tan( M_PI * 0.5 * fov / 180.);
 
     for (unsigned y = rArea.top; y < rArea.bottom; ++y) {
         for (unsigned x = rArea.left; x < rArea.right; ++x) {
-            float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
+            float xx = ( 2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
             float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
             Vec3f raydir(xx, yy, -1);
             raydir.normalize();
@@ -840,8 +843,8 @@ void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest
 //[/comment]
 void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface)
 {
-    uint32_t width = mnSpheresWindowSize;
-    uint32_t height = mnSpheresWindowSize;
+    uint32_t width = mnRenderSize;
+    uint32_t height = mnRenderSize;
     mpSurface->Init(width, height);
 
 
@@ -904,12 +907,13 @@ Z3DTestWin::Z3DTestWin()
     mnTargetSphereCount = 3;
     mnMinSphereSizeTimes100 = kDefaultMinSphereSize;
     mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize;
-    mnRotateSpeed = 100;
+    mnRotateSpeed = 50;
     mfBaseAngle = 0.0;
 
     mbRenderCube = false;
     mbRenderSpheres = true;
-    mnSpheresWindowSize = 256;
+    mbOuterSphere = false;
+    mnRenderSize = 256;
 
     mLastTimeStamp = gTimer.GetMSSinceEpoch();
     msWinName = "3dtestwin";
@@ -920,6 +924,9 @@ bool Z3DTestWin::Init()
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
     mbInvalidateParentWhenInvalid = true;
+
+
+    gRegistry.GetOrSetDefault("3dtestwin", "render_size", mnRenderSize, (int64_t) 256);
 
 
     mCubeVertices.resize(8);
@@ -1019,15 +1026,16 @@ bool Z3DTestWin::Init()
     pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, "type=updatespherecount;target=3dtestwin", true, false, pBtnFont);
 
     pCP->AddCaption("Speed", gDefaultTitleFont);
-    pCP->AddSlider(&mnRotateSpeed, 1, 100, 1, "", true, false, pBtnFont);
+    pCP->AddSlider(&mnRotateSpeed, 0, 100, 1, "", true, false, pBtnFont);
 
     pCP->AddSpace(16);
     pCP->AddCaption("Render Size", gDefaultTitleFont);
-    pCP->AddSlider(&mnSpheresWindowSize, 1, 128, 16, "", true);
+    pCP->AddSlider(&mnRenderSize, 1, 128, 16, "type=updaterendersize;target=3dtestwin", true);
 
     pCP->AddSpace(16);
     pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", pBtnFont);
     pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", pBtnFont);
+    pCP->AddToggle(&mbOuterSphere, "Outer Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", pBtnFont);
 
     ChildAdd(pCP);
 
@@ -1041,9 +1049,14 @@ void Z3DTestWin::UpdateSphereCount()
     ZASSERT(mnTargetSphereCount > 0 && mnTargetSphereCount < 10000);
 
     mSpheres.resize(mnTargetSphereCount);
-//    mSpheres[0] = Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.20, 0.20, 0.20), 0, 00);    // surrounding sphere
+    int i = 0;
+    if (mbOuterSphere)
+    {
+        mSpheres[0] = Sphere(Vec3f(0.0, 0, 0), 500, Vec3f(0, 0, 0), 0.0, 0.0, Vec3f(0,0,0));    // surrounding sphere
+        i++;
+    }
 
-    for (int i = 0; i < mnTargetSphereCount; i++)
+    for (;i < mnTargetSphereCount; i++)
     {
         float fMaxDist = 100.0;
         float fRadius = RANDDOUBLE( (mnMinSphereSizeTimes100 / 100.0), (mnMaxSphereSizeTimes100 / 100.0));
@@ -1142,8 +1155,8 @@ void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection,
 /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
             continue;*/
 
-        screenVerts[i].mX = mAreaToDrawTo.Width()/2 + (int64_t)(vertProjected.x * mnSpheresWindowSize*10);
-        screenVerts[i].mY = mAreaToDrawTo.Height()/2 + (int64_t)(vertProjected.y * mnSpheresWindowSize*10);
+        screenVerts[i].mX = mAreaToDrawTo.Width()/2 + (int64_t)(vertProjected.x * mnRenderSize *10);
+        screenVerts[i].mY = mAreaToDrawTo.Height()/2 + (int64_t)(vertProjected.y * mnRenderSize *10);
 
         screenVerts[i].mColor = nCol;
     }
@@ -1175,8 +1188,8 @@ void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection,
         /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
                     continue;*/
 
-        screenVerts[i].mX = mAreaToDrawTo.Width() / 2 + (int64_t)(vertProjected.x * mnSpheresWindowSize * 10);
-        screenVerts[i].mY = mAreaToDrawTo.Height() / 2 + (int64_t)(vertProjected.y * mnSpheresWindowSize * 10);
+        screenVerts[i].mX = mAreaToDrawTo.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10);
+        screenVerts[i].mY = mAreaToDrawTo.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10);
     }
 
     Vec3f planeX(screenVerts[1].mX - screenVerts[0].mX, screenVerts[1].mY - screenVerts[0].mY, 1);
@@ -1223,7 +1236,7 @@ bool Z3DTestWin::Paint()
         float fAngle = mfBaseAngle;
         for (auto& sphere : mSpheres)
         {
-            sphere.center = Vec3f(5.0 * sin(fAngle * sphere.transparency), 10.0 * sin(fAngle * sphere.reflection), -50 + 5 * cos(fAngle * sphere.reflection));
+            sphere.mCenter = Vec3f(5.0 * sin(fAngle * sphere.mTransparency), 10.0 * sin(fAngle * sphere.mReflection), -50 + 5 * cos(fAngle * sphere.mReflection));
             fAngle += 1.2;
         }
 
@@ -1319,6 +1332,11 @@ bool Z3DTestWin::HandleMessage(const ZMessage& message)
     if (sType == "updatespherecount")
     {
         UpdateSphereCount();
+        return true;
+    }
+    else if (sType == "updaterendersize")
+    {
+        gRegistry["3dtestwin"]["render_size"] = mnRenderSize;
         return true;
     }
 

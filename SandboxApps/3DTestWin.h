@@ -85,7 +85,9 @@ private:
     bool        mbRenderCube;
     bool        mbRenderSpheres;
 
-    int64_t     mnSpheresWindowSize;
+    bool        mbOuterSphere;
+
+    int64_t     mnRenderSize;
 #endif
 
     uint64_t mLastTimeStamp;
