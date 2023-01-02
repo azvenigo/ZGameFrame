@@ -52,6 +52,7 @@ public:
 
     void    RenderPoly(std::vector<Z3D::Vec3f>& worldVerts, Z3D::Matrix44f& mtxProjection, Z3D::Matrix44f& mtxWorldToCamera, uint32_t nCol);
     void    RenderPoly(std::vector<Z3D::Vec3f>& worldVerts, Z3D::Matrix44f& mtxProjection, Z3D::Matrix44f& mtxWorldToCamera, tZBufferPtr pTexture);
+    bool	HandleMessage(const ZMessage& message);
 
 private:
 
@@ -70,10 +71,21 @@ private:
 
 #ifdef RENDER_SPHERES
     tZBufferPtr mpSpheresRender;
+    void UpdateSphereCount();
     void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface);
 //    static Z3D::Vec3f   TraceSpheres(const Z3D::Vec3f& rayorig, const Z3D::Vec3f& raydir, const int& depth, const std::vector<class Sphere>& spheres);
 
     std::vector<class Sphere> mSpheres;
+    int64_t     mnTargetSphereCount;
+    int64_t     mnMinSphereSizeTimes100;
+    int64_t     mnMaxSphereSizeTimes100;
+    int64_t     mnRotateSpeed;
+    double      mfBaseAngle;
+
+    bool        mbRenderCube;
+    bool        mbRenderSpheres;
+
+    int64_t     mnSpheresWindowSize;
 #endif
 
     uint64_t mLastTimeStamp;

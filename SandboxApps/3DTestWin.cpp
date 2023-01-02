@@ -10,6 +10,8 @@
 #include <algorithm>
 #include "teapotdata.h"
 #include "helpers/ThreadPool.h"
+#include "ZWinControlPanel.h"
+#include "Resources.h"
 
 using namespace std;
 using namespace Z3D;
@@ -678,10 +680,8 @@ bool trace(
 class Sphere
 {
 public:
-    Vec3f center;                           /// position of the sphere
-    float radius, radius2;                  /// sphere radius and radius^2
-    Vec3f surfaceColor, emissionColor;      /// surface color and emission (light)
-    float transparency, reflection;         /// surface transparency and reflectivity
+    Sphere() : radius(0), radius2(0), transparency(0), reflection(0) {}
+
     Sphere(
         const Vec3f& c,
         const float& r,
@@ -710,6 +710,13 @@ public:
 
         return true;
     }
+
+
+    Vec3f center;                           /// position of the sphere
+    float radius, radius2;                  /// sphere radius and radius^2
+    Vec3f surfaceColor, emissionColor;      /// surface color and emission (light)
+    float transparency, reflection;         /// surface transparency and reflectivity
+
 };
 
 #define MAX_RAY_DEPTH 5
@@ -833,10 +840,8 @@ void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest
 //[/comment]
 void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface)
 {
-//    unsigned width = 640, height = 480;
-
-    uint32_t width = 1024;
-    uint32_t height = 1024;
+    uint32_t width = mnSpheresWindowSize;
+    uint32_t height = mnSpheresWindowSize;
     mpSurface->Init(width, height);
 
 
@@ -890,11 +895,24 @@ void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface)
 #endif
 
 
+const int64_t kDefaultMinSphereSize = 1;
+const int64_t kDefaultMaxSphereSize = 1000;
 
 Z3DTestWin::Z3DTestWin()
 {
     mIdleSleepMS = 1000;
+    mnTargetSphereCount = 3;
+    mnMinSphereSizeTimes100 = kDefaultMinSphereSize;
+    mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize;
+    mnRotateSpeed = 100;
+    mfBaseAngle = 0.0;
+
+    mbRenderCube = false;
+    mbRenderSpheres = true;
+    mnSpheresWindowSize = 256;
+
     mLastTimeStamp = gTimer.GetMSSinceEpoch();
+    msWinName = "3dtestwin";
 }
    
 bool Z3DTestWin::Init()
@@ -973,30 +991,76 @@ bool Z3DTestWin::Init()
 
 #ifdef RENDER_SPHERES
     mpSpheresRender.reset(new ZBuffer());
-
-    // position, radius, surface color, reflectivity, transparency, emission color
-    mSpheres.push_back(Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.20, 0.20, 0.20), 0, 0.0));
-    mSpheres.push_back(Sphere(Vec3f(0.0, 0, -20), 4, Vec3f(1.00, 0.32, 0.36), 1, 0.5));
-    mSpheres.push_back(Sphere(Vec3f(5.0, -1, -15), 2, Vec3f(0.90, 0.76, 0.46), 1, 0.0));
-    mSpheres.push_back(Sphere(Vec3f(5.0, 0, -25), 3, Vec3f(0.65, 0.77, 0.97), 1, 0.0));
-    mSpheres.push_back(Sphere(Vec3f(-5.5, 0, -15), 3, Vec3f(0.90, 0.90, 0.90), 1, 0.0));
-    // light
-    mSpheres.push_back(Sphere(Vec3f(0.0, 20, -30), 3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
-
-
-
-
-
-
-
-
-    RenderSpheres(mpSpheresRender);
+    UpdateSphereCount();
 #endif
 
 
 
+    int64_t panelW = grFullArea.Width() / 10;
+    int64_t panelH = grFullArea.Height() / 2;
+    ZRect rControlPanel(grFullArea.right - panelW, grFullArea.bottom - panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
+
+    ZWinControlPanel* pCP = new ZWinControlPanel();
+    pCP->SetArea(rControlPanel);
+
+    tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
+
+
+    pCP->Init();
+
+    pCP->AddCaption("Sphere Count", gDefaultTitleFont);
+    pCP->AddSlider(&mnTargetSphereCount, 1, 50, 1, "type=updatespherecount;target=3dtestwin", true, false, pBtnFont);
+//    pCP->AddSpace(16);
+
+    pCP->AddCaption("Min Sphere Size", gDefaultTitleFont);
+    pCP->AddSlider(&mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, "type=updatespherecount;target=3dtestwin", true, false, pBtnFont);
+
+    pCP->AddCaption("Max Sphere Size", gDefaultTitleFont);
+    pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, "type=updatespherecount;target=3dtestwin", true, false, pBtnFont);
+
+    pCP->AddCaption("Speed", gDefaultTitleFont);
+    pCP->AddSlider(&mnRotateSpeed, 1, 100, 1, "", true, false, pBtnFont);
+
+    pCP->AddSpace(16);
+    pCP->AddCaption("Render Size", gDefaultTitleFont);
+    pCP->AddSlider(&mnSpheresWindowSize, 1, 128, 16, "", true);
+
+    pCP->AddSpace(16);
+    pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", pBtnFont);
+    pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", pBtnFont);
+
+    ChildAdd(pCP);
+
+
 
     return ZWin::Init();
+}
+
+void Z3DTestWin::UpdateSphereCount()
+{
+    ZASSERT(mnTargetSphereCount > 0 && mnTargetSphereCount < 10000);
+
+    mSpheres.resize(mnTargetSphereCount);
+//    mSpheres[0] = Sphere(Vec3f(0.0, -10004, -20), 10000, Vec3f(0.20, 0.20, 0.20), 0, 00);    // surrounding sphere
+
+    for (int i = 0; i < mnTargetSphereCount; i++)
+    {
+        float fMaxDist = 100.0;
+        float fRadius = RANDDOUBLE( (mnMinSphereSizeTimes100 / 100.0), (mnMaxSphereSizeTimes100 / 100.0));
+
+        Vec3f center(fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))),
+                     fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))), 
+                     fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))));
+
+        Vec3f color(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
+        float fReflective(RANDDOUBLE(0.0, 1.0));
+        float fTransparent(RANDDOUBLE(0.0, 1.0));
+        Vec3f emmisionColor(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
+
+        mSpheres[i] = Sphere(center, fRadius, color, fReflective, fTransparent, 0);
+    }
+
+//    RenderSpheres(mpSpheresRender);
 }
 
 bool Z3DTestWin::OnChar(char key)
@@ -1078,8 +1142,8 @@ void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection,
 /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
             continue;*/
 
-        screenVerts[i].mX = mAreaToDrawTo.Width()/2 + (int64_t)(vertProjected.x * 4000);
-        screenVerts[i].mY = mAreaToDrawTo.Height()/2 + (int64_t)(vertProjected.y * 4000);
+        screenVerts[i].mX = mAreaToDrawTo.Width()/2 + (int64_t)(vertProjected.x * mnSpheresWindowSize*10);
+        screenVerts[i].mY = mAreaToDrawTo.Height()/2 + (int64_t)(vertProjected.y * mnSpheresWindowSize*10);
 
         screenVerts[i].mColor = nCol;
     }
@@ -1111,8 +1175,8 @@ void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection,
         /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
                     continue;*/
 
-        screenVerts[i].mX = mAreaToDrawTo.Width() / 2 + (int64_t)(vertProjected.x * 4000);
-        screenVerts[i].mY = mAreaToDrawTo.Height() / 2 + (int64_t)(vertProjected.y * 4000);
+        screenVerts[i].mX = mAreaToDrawTo.Width() / 2 + (int64_t)(vertProjected.x * mnSpheresWindowSize * 10);
+        screenVerts[i].mY = mAreaToDrawTo.Height() / 2 + (int64_t)(vertProjected.y * mnSpheresWindowSize * 10);
     }
 
     Vec3f planeX(screenVerts[1].mX - screenVerts[0].mX, screenVerts[1].mY - screenVerts[0].mY, 1);
@@ -1149,20 +1213,22 @@ bool Z3DTestWin::Paint()
     RenderTeapot();
 #endif
 
-#ifdef RENDER_SPHERES
-
-    float fAngle = 0.1;
-    for (auto& sphere : mSpheres)
-    {
-        sphere.center = Vec3f(5.0* sin(fAngle+gTimer.GetElapsedTime() / 2500.0), 10.0 * sin(fAngle + gTimer.GetElapsedTime() / 4500.0), -50+5 * cos(fAngle+gTimer.GetElapsedTime() / 2500.0));
-        fAngle += 1.2;
-    }
-
-
-    RenderSpheres(mpSpheresRender);
-#endif
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
-    mpTransformTexture->FillAlpha(mAreaToDrawTo, 0xff000088);
+    mpTransformTexture->FillAlpha(mAreaToDrawTo, 0xff000000);
+
+    if (mbRenderSpheres)
+    {
+        mfBaseAngle += (mnRotateSpeed / 1000.0) * gTimer.GetElapsedTime() / 10000.0;
+
+        float fAngle = mfBaseAngle;
+        for (auto& sphere : mSpheres)
+        {
+            sphere.center = Vec3f(5.0 * sin(fAngle * sphere.transparency), 10.0 * sin(fAngle * sphere.reflection), -50 + 5 * cos(fAngle * sphere.reflection));
+            fAngle += 1.2;
+        }
+
+        RenderSpheres(mpSpheresRender);
+    }
 
 
     uint64_t nTime = gTimer.GetMSSinceEpoch();
@@ -1171,75 +1237,53 @@ bool Z3DTestWin::Paint()
     gpFontSystem->GetDefaultFont()->DrawText(mpTransformTexture.get(), sTime, mAreaToDrawTo);
     mLastTimeStamp = nTime;
 
-/*    tColorVertexArray verts;
-
-    verts.resize(5);
-    verts[0].mX = 100;
-    verts[0].mY = 100;
-    verts[0].mColor = 0xffff00ff;
-
-    verts[1].mX = 500;
-    verts[1].mY = 100;
-    verts[1].mColor = 0xffffff00;
-
-    verts[2].mX = 250;
-    verts[2].mY = 500;
-    verts[2].mColor = 0xffffffff;
-
-    verts[3].mX = 200;
-    verts[3].mY = 800;
-    verts[3].mColor = 0x00fffff;
-
-    verts[4].mX = 800;
-    verts[4].mY = 600;
-    verts[4].mColor = 0xff000000;
-
-    gRasterizer.Rasterize(mpTransformTexture.get(), verts);*/
-
-
-    Matrix44f mtxProjection;
-    Matrix44f mtxWorldToCamera;
-
-//    Z3D::LookAt(Vec3f(10*sin(gTimer.GetMSSinceEpoch() / 1000.0), 0, -10-10*cos(gTimer.GetMSSinceEpoch()/1000.0)), Vec3f(0, 0, 0), Vec3f(0, 1, 0), mtxWorldToCamera);
-//    Z3D::LookAt(Vec3f(0, 1, -20 - 10 * cos(gTimer.GetMSSinceEpoch() / 1000.0)), Vec3f(0, 0, 0), Vec3f(0, 10, 0), mtxWorldToCamera);
-    Z3D::LookAt(Vec3f(0, 1, -20), Vec3f(0, 0, 0), Vec3f(0, 10, 0), mtxWorldToCamera);
-    
-    double fFoV = 90;
-    double fNear = 0.1;
-    double fFar = 100;
-
-    setProjectionMatrix(fFoV, fNear, fFar, mtxProjection);
-
-
-    vector<Vec3f> worldVerts;
-    worldVerts.resize(4);
-
-    int i = 1;
-//    for (; i < 100; i++)
+    if (mbRenderCube)
     {
-        //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
-        setOrientationMatrix(4.0, 0.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
+        Matrix44f mtxProjection;
+        Matrix44f mtxWorldToCamera;
 
-        std::vector<Vec3f> cubeWorldVerts;
-        cubeWorldVerts.resize(8);
-        for (int i = 0; i < 8; i++)
-            multPointMatrix(mCubeVertices[i], cubeWorldVerts[i], mObjectToWorld);
+        //    Z3D::LookAt(Vec3f(10*sin(gTimer.GetMSSinceEpoch() / 1000.0), 0, -10-10*cos(gTimer.GetMSSinceEpoch()/1000.0)), Vec3f(0, 0, 0), Vec3f(0, 1, 0), mtxWorldToCamera);
+        //    Z3D::LookAt(Vec3f(0, 1, -20 - 10 * cos(gTimer.GetMSSinceEpoch() / 1000.0)), Vec3f(0, 0, 0), Vec3f(0, 10, 0), mtxWorldToCamera);
+        Z3D::LookAt(Vec3f(0, 1, -20), Vec3f(0, 0, 0), Vec3f(0, 10, 0), mtxWorldToCamera);
 
-        for (int i = 0; i < 6; i++)
+        double fFoV = 90;
+        double fNear = 0.1;
+        double fFar = 100;
+
+        setProjectionMatrix(fFoV, fNear, fFar, mtxProjection);
+
+
+        vector<Vec3f> worldVerts;
+        worldVerts.resize(4);
+
+        int i = 1;
+        //    for (; i < 100; i++)
         {
-            worldVerts[0] = cubeWorldVerts[mSides[i].mSide[0]];
-            worldVerts[1] = cubeWorldVerts[mSides[i].mSide[1]];
-            worldVerts[2] = cubeWorldVerts[mSides[i].mSide[2]];
-            worldVerts[3] = cubeWorldVerts[mSides[i].mSide[3]];
+            //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
+            setOrientationMatrix(4.0, 0.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
+
+            std::vector<Vec3f> cubeWorldVerts;
+            cubeWorldVerts.resize(8);
+            for (int i = 0; i < 8; i++)
+                multPointMatrix(mCubeVertices[i], cubeWorldVerts[i], mObjectToWorld);
+
+            for (int i = 0; i < 6; i++)
+            {
+                worldVerts[0] = cubeWorldVerts[mSides[i].mSide[0]];
+                worldVerts[1] = cubeWorldVerts[mSides[i].mSide[1]];
+                worldVerts[2] = cubeWorldVerts[mSides[i].mSide[2]];
+                worldVerts[3] = cubeWorldVerts[mSides[i].mSide[3]];
 
 #define RENDER_TEXTURE
 
 #ifdef RENDER_TEXTURE
-            RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpTexture);
+                RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpTexture);
 #else
-            RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mSides[i].mColor);
+                RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mSides[i].mColor);
 #endif
+            }
         }
+
     }
 
 #ifdef RENDER_TEAPOT
@@ -1250,13 +1294,17 @@ bool Z3DTestWin::Paint()
     }
 #endif
 
-#ifdef RENDER_SPHERES
-    if (mpSpheresRender)
+    if (mbRenderSpheres)
     {
-        ZRect rArea(mpSpheresRender.get()->GetArea());
-        mpTransformTexture->Blt(mpSpheresRender.get(), rArea, rArea);
+        if (mpSpheresRender)
+        {
+            ZRect rArea(mpSpheresRender.get()->GetArea());
+
+            ZRect rDest(rArea.CenterInRect(mAreaToDrawTo));
+
+            mpTransformTexture->Blt(mpSpheresRender.get(), rArea, rDest);
+        }
     }
-#endif
 
     ZWin::Paint();
 
@@ -1264,3 +1312,15 @@ bool Z3DTestWin::Paint()
     return true;
 }
    
+bool Z3DTestWin::HandleMessage(const ZMessage& message)
+{
+    string sType = message.GetType();
+
+    if (sType == "updatespherecount")
+    {
+        UpdateSphereCount();
+        return true;
+    }
+
+    return ZWin::HandleMessage(message);
+}

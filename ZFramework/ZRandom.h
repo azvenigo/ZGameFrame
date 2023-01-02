@@ -57,9 +57,9 @@ static std::exponential_distribution<double>     gExponentialDouble;
 #define RANDU64(minrand, maxrand)       minrand + (gUniformUint64(gRandGenerator)%((maxrand - minrand)))
 
 #define RANDBOOL                        gUniformUint64(gRandGenerator)%2==0
-#define RANDDOUBLE(minrand,maxrand)     minrand + (gUniformDouble(gRandGenerator)*(maxrand - minrand))
-#define RANDEXP_DOUBLE(minrand,maxrand) minrand + (gExponentialDouble(gRandGenerator)*(maxrand - minrand))
+#define RANDDOUBLE(minrand,maxrand)     (double)(minrand + (gUniformDouble(gRandGenerator)*(maxrand - minrand)))
+#define RANDEXP_DOUBLE(minrand,maxrand) (double)(minrand + (gExponentialDouble(gRandGenerator)*(maxrand - minrand)))
 
-#define RANDPERCENT(percent)            (gUniformDouble(gRandGenerator)*100.0) < percent
+#define RANDPERCENT(percent)            (double)((gUniformDouble(gRandGenerator)*100.0)) < percent
 
 #endif

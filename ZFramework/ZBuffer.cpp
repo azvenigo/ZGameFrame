@@ -50,7 +50,7 @@ bool ZBuffer::Init(int64_t nWidth, int64_t nHeight)
 	ZASSERT(nWidth > 0 && nHeight > 0);
 	if (nWidth > 0 && nHeight > 0)
 	{
-        if (nWidth * nHeight != mSurfaceArea.Width() * mSurfaceArea.Height())   // if the number of pixels hasn't changed, no need to reallocate
+        if (!mpPixels || nWidth * nHeight != mSurfaceArea.Width() * mSurfaceArea.Height())   // if the number of pixels hasn't changed, no need to reallocate
         {
             delete[] mpPixels;
             mpPixels = new uint32_t[nWidth * nHeight];

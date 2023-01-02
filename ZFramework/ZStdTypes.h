@@ -429,6 +429,14 @@ public:
 		return true;
 	}
 
+    tRect CenterInRect(const tRect& outerRect)
+    {
+        T tempX = outerRect.left + ((outerRect.Width() - Width()) / 2);
+        T tempY = outerRect.top + ((outerRect.Height() - Height()) / 2);
+        return tRect(tempX, tempY, tempX + Width(), tempY + Height());
+    }
+
+
     // Additional Operations
     void operator=(const tRect& r)
 	{
