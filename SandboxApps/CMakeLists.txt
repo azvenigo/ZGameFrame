@@ -25,7 +25,9 @@ endif()
 set(SANDBOXAPPS_SOURCES 
 FloatLinesWin.h FloatLinesWin.cpp LifeWin.h LifeWin.cpp 
 Main_Sandbox.h Main_Sandbox.cpp Main_Win64.cpp 3DTestWin.h 3DTestWin.cpp 
-ProcessImageWin.h ProcessImageWin.cpp TextTestWin.h TextTestWin.cpp)
+ProcessImageWin.h ProcessImageWin.cpp TextTestWin.h TextTestWin.cpp
+teapotdata.h
+)
 
 set(COMMON_FILES 
 

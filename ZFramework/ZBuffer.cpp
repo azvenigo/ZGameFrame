@@ -46,18 +46,27 @@ bool ZBuffer::Init(int64_t nWidth, int64_t nHeight)
 {
     const std::lock_guard<std::recursive_mutex> lock(mMutex);
 
-	if (mpPixels)
-		delete[] mpPixels;
 
 	ZASSERT(nWidth > 0 && nHeight > 0);
 	if (nWidth > 0 && nHeight > 0)
 	{
-		mpPixels = new uint32_t[nWidth * nHeight];
+        if (nWidth * nHeight != mSurfaceArea.Width() * mSurfaceArea.Height())   // if the number of pixels hasn't changed, no need to reallocate
+        {
+            delete[] mpPixels;
+            mpPixels = new uint32_t[nWidth * nHeight];
+        }
+
 		mSurfaceArea.SetRect(0, 0, nWidth, nHeight);
 		Fill(mSurfaceArea, 0);
 
 		return true;
 	}
+    else
+    {
+        delete[] mpPixels;
+        mpPixels = nullptr;
+    }
+
 
 	return false;
 }
