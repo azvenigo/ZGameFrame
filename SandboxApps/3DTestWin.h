@@ -86,6 +86,7 @@ private:
     bool        mbRenderSpheres;
 
     bool        mbOuterSphere;
+    bool        mbCenterSphere;
 
     int64_t     mnRenderSize;
 #endif

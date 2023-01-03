@@ -913,6 +913,7 @@ Z3DTestWin::Z3DTestWin()
     mbRenderCube = false;
     mbRenderSpheres = true;
     mbOuterSphere = false;
+    mbCenterSphere = false;
     mnRenderSize = 256;
 
     mLastTimeStamp = gTimer.GetMSSinceEpoch();
@@ -1036,7 +1037,8 @@ bool Z3DTestWin::Init()
     pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", pBtnFont);
     pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", pBtnFont);
     pCP->AddToggle(&mbOuterSphere, "Outer Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", pBtnFont);
-
+    pCP->AddToggle(&mbCenterSphere, "Center Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", pBtnFont);
+    
     ChildAdd(pCP);
 
 
@@ -1048,11 +1050,18 @@ void Z3DTestWin::UpdateSphereCount()
 {
     ZASSERT(mnTargetSphereCount > 0 && mnTargetSphereCount < 10000);
 
-    mSpheres.resize(mnTargetSphereCount);
+    int64_t nCount = mnTargetSphereCount + mbOuterSphere + mbCenterSphere;
+    mSpheres.resize(nCount);
     int i = 0;
     if (mbOuterSphere)
     {
-        mSpheres[0] = Sphere(Vec3f(0.0, 0, 0), 500, Vec3f(0, 0, 0), 0.0, 0.0, Vec3f(0,0,0));    // surrounding sphere
+        mSpheres[i] = Sphere(Vec3f(0, 0, -50), 500, Vec3f(0, 0, 0), 0.0, 0.0, Vec3f(0,0,0));   
+        i++;
+    }
+
+    if (mbCenterSphere)
+    {
+        mSpheres[i] = Sphere(Vec3f(0, 0, -50), 5, Vec3f(0.5, 0.5, 0.5), 0.5, 0.5, Vec3f(0, 0, 0)); 
         i++;
     }
 
@@ -1068,9 +1077,12 @@ void Z3DTestWin::UpdateSphereCount()
         Vec3f color(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
         float fReflective(RANDDOUBLE(0.0, 1.0));
         float fTransparent(RANDDOUBLE(0.0, 1.0));
-        Vec3f emmisionColor(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
+        Vec3f emmisionColor(0);
 
-        mSpheres[i] = Sphere(center, fRadius, color, fReflective, fTransparent, 0);
+        if (RANDPERCENT(10))    // 10% of spheres will be emitters
+            emmisionColor = Vec3f(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
+
+        mSpheres[i] = Sphere(center, fRadius, color, fReflective, fTransparent, emmisionColor);
     }
 
 //    RenderSpheres(mpSpheresRender);
@@ -1234,9 +1246,15 @@ bool Z3DTestWin::Paint()
         mfBaseAngle += (mnRotateSpeed / 1000.0) * gTimer.GetElapsedTime() / 10000.0;
 
         float fAngle = mfBaseAngle;
-        for (auto& sphere : mSpheres)
+
+        int nStartSphere = 0;
+        if (mbCenterSphere)
+            nStartSphere++;
+        if (mbOuterSphere)
+            nStartSphere++;
+        for (int i = nStartSphere; i < mSpheres.size(); i++)
         {
-            sphere.mCenter = Vec3f(5.0 * sin(fAngle * sphere.mTransparency), 10.0 * sin(fAngle * sphere.mReflection), -50 + 5 * cos(fAngle * sphere.mReflection));
+            mSpheres[i].mCenter = Vec3f(5 * cos(fAngle * mSpheres[i].mSurfaceColor.length()), 5.0 * sin(fAngle * mSpheres[i].mTransparency), -50+10.0 * sin(fAngle * mSpheres[i].mReflection));
             fAngle += 1.2;
         }
 
