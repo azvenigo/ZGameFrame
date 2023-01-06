@@ -7,7 +7,8 @@ using namespace std;
 cResources	gResources;
 
 tZBufferPtr		gDefaultDialogBackground;
-tZBufferPtr		gSliderThumb;
+tZBufferPtr		gSliderThumbHorizontal;
+tZBufferPtr		gSliderThumbVertical;
 tZBufferPtr		gSliderBackground;
 tZBufferPtr		gDimRectBackground;
 tZBufferPtr		gStandardButtonUpEdgeImage;
@@ -18,7 +19,7 @@ ZRect			grTextArea;
 uint32_t        gDefaultDialogFill(0xff575757);
 
 ZRect			grSliderBgEdge(16, 16, 48, 48);
-ZRect			grSliderThumbEdge(5, 5, 50, 50);
+ZRect			grSliderThumbEdge(9, 8, 43, 44);
 //ZRect			grDimRectEdge(4, 4, 102, 103);
 ZRect			grDimRectEdge(16, 16, 48, 48);
 ZRect			grStandardButtonEdge(5, 5, 50, 50);
@@ -48,9 +49,14 @@ bool cResources::Init(const string& sDefaultResourcePath)
 	bResult &= AddResource(sDefaultResourcePath+"slider_bg.png",gSliderBackground);
     assert(bResult);
 
-    gSliderThumb.reset(new ZBuffer());
-	bResult &= AddResource(sDefaultResourcePath+"slider_thumb.png",gSliderThumb);
+    gSliderThumbHorizontal.reset(new ZBuffer());
+	bResult &= AddResource(sDefaultResourcePath+"slider_thumb_h.png",gSliderThumbHorizontal);
     assert(bResult);
+
+    gSliderThumbVertical.reset(new ZBuffer());
+    bResult &= AddResource(sDefaultResourcePath + "slider_thumb_v.png", gSliderThumbVertical);
+    assert(bResult);
+
 
     gStandardButtonUpEdgeImage.reset(new ZBuffer());
 	bResult &= AddResource(sDefaultResourcePath+"btnsizable_up.png", gStandardButtonUpEdgeImage);
@@ -98,8 +104,9 @@ bool cResources::Shutdown()
 
     gSliderBackground = nullptr;
 
-    gSliderThumb = nullptr;
-    
+    gSliderThumbHorizontal = nullptr;
+    gSliderThumbVertical = nullptr;
+
     gStandardButtonUpEdgeImage = nullptr;
 
     gStandardButtonDownEdgeImage = nullptr;

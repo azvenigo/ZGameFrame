@@ -37,7 +37,8 @@ extern int64_t      gnControlPanelButtonHeight;
 extern int64_t      gnControlPanelEdge;
 
 // Slider
-extern tZBufferPtr  gSliderThumb;
+extern tZBufferPtr  gSliderThumbHorizontal;
+extern tZBufferPtr  gSliderThumbVertical;
 extern tZBufferPtr  gSliderBackground;
 extern ZRect        grSliderBgEdge;
 extern ZRect        grSliderThumbEdge;

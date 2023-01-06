@@ -21,7 +21,7 @@ bool ZWinControlPanel::Init()
 }
 
 
-bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage, tZFontPtr pFont, uint32_t nFontCol1, uint32_t nFontCol2, ZFont::eStyle style)
+bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage, tZFontPtr pFont, uint32_t nFontColTop, uint32_t nFontColBottom, ZFont::eStyle style)
 {
     ZWinSizablePushBtn* pBtn;
 
@@ -29,8 +29,7 @@ bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage,
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption(sCaption);
     pBtn->SetFont(pFont);
-    pBtn->SetColor(nFontCol1);
-    pBtn->SetColor2(nFontCol2);
+    pBtn->SetColors(nFontColTop, nFontColBottom);
     pBtn->SetStyle(style);
 
     pBtn->SetArea(mrNextControl);
@@ -56,7 +55,7 @@ bool ZWinControlPanel::AddCaption(const string& sCaption, ZFontParams& fontParam
 }
 
 
-bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, tZFontPtr pFont, uint32_t nFontCol, ZFont::eStyle style)
+bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, tZFontPtr pFont, uint32_t nFontColUnchecked, uint32_t nFontColChecked, ZFont::eStyle style)
 {
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
@@ -64,8 +63,7 @@ bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const st
     pCheck->SetCaption(sCaption);
     pCheck->SetArea(mrNextControl);
     pCheck->SetFont(pFont);
-    pCheck->SetColor(nFontCol);
-    pCheck->SetColor2(nFontCol);
+    pCheck->SetCheckedColors(nFontColUnchecked, nFontColChecked);
     pCheck->SetStyle(style);
     ChildAdd(pCheck);
 
@@ -79,7 +77,7 @@ bool ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t n
     ZSliderWin* pSlider = new ZSliderWin(pnSliderValue);
     pSlider->SetArea(mrNextControl);
     pSlider->SetDrawSliderValueFlag(bDrawValue, bMouseOnlyDrawValue, pFont);
-    pSlider->Init(gSliderThumb, grSliderThumbEdge, gSliderBackground, grSliderBgEdge, ZSliderWin::kHorizontal);
+    pSlider->Init(gSliderThumbHorizontal, grSliderThumbEdge, gSliderBackground, grSliderBgEdge, ZSliderWin::kHorizontal);
     pSlider->SetSliderRange(nMin, nMax, nMultiplier);
     pSlider->SetSliderSetMessage(sMessage);
     ChildAdd(pSlider);

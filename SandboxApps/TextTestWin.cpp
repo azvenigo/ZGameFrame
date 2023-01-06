@@ -209,19 +209,19 @@ bool TextTestWin::Init()
     pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "type=setfonttracking;target=TextTestWin", true, false, pBtnFont);
 
 
-    pCP->AddToggle(&mCustomFontParams.bFixedWidth, "Fixed Width", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", pBtnFont, 0xff737373, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bFixedWidth, "Fixed Width", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
-    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", pBtnFont, 0xff737373, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
-    pCP->AddToggle(&mCustomFontParams.bUnderline, "Underline", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", pBtnFont, 0xff737373, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bUnderline, "Underline", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
-    pCP->AddToggle(&mCustomFontParams.bStrikeOut, "StrikeOut", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", pBtnFont, 0xff737373, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bStrikeOut, "StrikeOut", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
 
 
     pCP->AddSpace(16);
 
-    pCP->AddToggle(&mbEnableKerning, "View Kerning", "type=togglekerning;enable=1;target=TextTestWin", "type=togglekerning;enable=0;target=TextTestWin", pBtnFont, 0xff737373, ZFont::kEmbossed);
+    pCP->AddToggle(&mbEnableKerning, "View Kerning", "type=togglekerning;enable=1;target=TextTestWin", "type=togglekerning;enable=0;target=TextTestWin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     pCP->AddSpace(16);
 
     pCP->AddButton("Load Font", "type=loadfont;target=TextTestWin", pBtnFont, 0xff737373, 0xff737373, ZFont::kEmbossed);

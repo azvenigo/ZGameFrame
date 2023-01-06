@@ -59,8 +59,7 @@ bool ZImageWin::Init()
             pBtn->SetCaption("X"); 
 //            pBtn->SetFont(gpFontSystem->GetDefaultFont(1));
             pBtn->SetFont(gpFontSystem->GetFont(gDefaultButtonFont));
-            pBtn->SetColor(0xffffffff);
-            pBtn->SetColor2(0xffffffff);
+            pBtn->SetColors(0xffffffff, 0xffffffff);
             pBtn->SetStyle(ZFont::kNormal);
 
             pBtn->SetArea(rButton);
@@ -79,8 +78,7 @@ bool ZImageWin::Init()
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(":"); // wingdings rotate left
         pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", 12));
-        pBtn->SetColor(0xffffffff);
-        pBtn->SetColor2(0xffffffff);
+        pBtn->SetColors(0xffffffff,0xffffffff);
         pBtn->SetStyle(ZFont::kNormal);
 
         pBtn->SetArea(rButton);
@@ -99,8 +97,7 @@ bool ZImageWin::Init()
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(";"); // wingdings rotate right
         pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", 12));
-        pBtn->SetColor(0xffffffff);
-        pBtn->SetColor2(0xffffffff);
+        pBtn->SetColors(0xffffffff,0xffffffff);
         pBtn->SetStyle(ZFont::kNormal);
 
         pBtn->SetArea(rButton);
@@ -120,8 +117,7 @@ bool ZImageWin::Init()
             pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
             pBtn->SetCaption("save"); 
             pBtn->SetFont(gpFontSystem->GetFont(gDefaultButtonFont));
-            pBtn->SetColor(0xffffffff);
-            pBtn->SetColor2(0xffffffff);
+            pBtn->SetColors(0xffffffff,0xffffffff);
             pBtn->SetStyle(ZFont::kNormal);
 
             pBtn->SetArea(rButton);

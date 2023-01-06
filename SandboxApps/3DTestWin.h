@@ -80,6 +80,7 @@ private:
     int64_t     mnMinSphereSizeTimes100;
     int64_t     mnMaxSphereSizeTimes100;
     int64_t     mnRotateSpeed;
+    int64_t     mnRayDepth;
     double      mfBaseAngle;
 
     bool        mbRenderCube;

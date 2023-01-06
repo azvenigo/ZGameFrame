@@ -722,7 +722,7 @@ public:
 
 };
 
-#define MAX_RAY_DEPTH 5
+//#define MAX_RAY_DEPTH 5
 
 float mix(const float& a, const float& b, const float& mix)
 {
@@ -732,7 +732,7 @@ float mix(const float& a, const float& b, const float& mix)
 Vec3f TraceSpheres(
     const Vec3f& rayorig,
     const Vec3f& raydir,
-    const int& depth, const std::vector<class Sphere>& spheres)
+    const int& depthRemaining, const std::vector<class Sphere>& spheres)
 {
     //if (raydir.length() != 1) std::cerr << "Error " << raydir << std::endl;
     float tnear = INFINITY;
@@ -761,7 +761,7 @@ Vec3f TraceSpheres(
     float bias = 1e-4; // add some bias to the point from which we will be tracing
     bool inside = false;
     if (raydir.dotProduct(nhit) > 0) nhit = -nhit, inside = true;
-    if ((sphere->mTransparency > 0 || sphere->mReflection > 0) && depth < MAX_RAY_DEPTH) {
+    if ((sphere->mTransparency > 0 || sphere->mReflection > 0) && depthRemaining > 0) {
         float facingratio = -raydir.dotProduct(nhit);
         // change the mix value to tweak the effect
         float fresneleffect = mix(pow(1 - facingratio, 3), 1, 0.1);
@@ -769,7 +769,7 @@ Vec3f TraceSpheres(
         // are already normalized)
         Vec3f refldir = raydir - nhit * 2 * raydir.dotProduct(nhit);
         refldir.normalize();
-        Vec3f reflection = TraceSpheres(phit + nhit * bias, refldir, depth + 1, spheres);
+        Vec3f reflection = TraceSpheres(phit + nhit * bias, refldir, depthRemaining-1, spheres);
         Vec3f refraction = 0;
         // if the sphere is also transparent compute refraction ray (transmission)
         if (sphere->mTransparency) {
@@ -778,7 +778,7 @@ Vec3f TraceSpheres(
             float k = 1 - eta * eta * (1 - cosi * cosi);
             Vec3f refrdir = raydir * eta + nhit * (eta * cosi - sqrt(k));
             refrdir.normalize();
-            refraction = TraceSpheres(phit - nhit * bias, refrdir, depth + 1, spheres);
+            refraction = TraceSpheres(phit - nhit * bias, refrdir, depthRemaining - 1, spheres);
         }
         // the result is a mix of reflection and refraction (if the sphere is transparent)
         surfaceColor = (
@@ -813,7 +813,7 @@ Vec3f TraceSpheres(
 
 
 
-void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest)
+void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest, int64_t nDepth)
 {
     ZRect rFullArea(pDest->GetArea());
     float invWidth = 1 / float(rFullArea.Width()), invHeight = 1 / float(rFullArea.Height());
@@ -826,7 +826,7 @@ void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest
             float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
             Vec3f raydir(xx, yy, -1);
             raydir.normalize();
-            Vec3f pixel = TraceSpheres(Vec3f(0), raydir, 0, spheres);
+            Vec3f pixel = TraceSpheres(Vec3f(0), raydir, nDepth, spheres);
 
             char r = (char)(255 * clamp(0, 1, pixel.x));
             char g = (char)(255 * clamp(0, 1, pixel.y));
@@ -863,7 +863,7 @@ void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface)
         if (i == nThreadCount - 1)
             nBottom = height;
 
-        workers.emplace_back(std::thread(ThreadTrace, ZRect(0, nTop, width, nBottom), mSpheres, mpSurface.get()));
+        workers.emplace_back(std::thread(ThreadTrace, ZRect(0, nTop, width, nBottom), mSpheres, mpSurface.get(), mnRayDepth));
 
         nTop += nLines;
     }
@@ -908,6 +908,7 @@ Z3DTestWin::Z3DTestWin()
     mnMinSphereSizeTimes100 = kDefaultMinSphereSize;
     mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize;
     mnRotateSpeed = 50;
+    mnRayDepth = 5;
     mfBaseAngle = 0.0;
 
     mbRenderCube = false;
@@ -1029,15 +1030,20 @@ bool Z3DTestWin::Init()
     pCP->AddCaption("Speed", gDefaultTitleFont);
     pCP->AddSlider(&mnRotateSpeed, 0, 100, 1, "", true, false, pBtnFont);
 
+    pCP->AddCaption("Ray Depth", gDefaultTitleFont);
+    pCP->AddSlider(&mnRayDepth, 0, 10, 1, "", true, false, pBtnFont);
+
+    
+
     pCP->AddSpace(16);
     pCP->AddCaption("Render Size", gDefaultTitleFont);
     pCP->AddSlider(&mnRenderSize, 1, 128, 16, "type=updaterendersize;target=3dtestwin", true);
 
     pCP->AddSpace(16);
-    pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", pBtnFont);
-    pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", pBtnFont);
-    pCP->AddToggle(&mbOuterSphere, "Outer Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", pBtnFont);
-    pCP->AddToggle(&mbCenterSphere, "Center Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", pBtnFont);
+    pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbOuterSphere, "Outer Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbCenterSphere, "Center Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     
     ChildAdd(pCP);
 
@@ -1241,10 +1247,10 @@ bool Z3DTestWin::Paint()
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     mpTransformTexture->FillAlpha(mAreaToDrawTo, 0xff000000);
 
+    mfBaseAngle += (mnRotateSpeed / 1000.0) * gTimer.GetElapsedTime() / 10000.0;
+
     if (mbRenderSpheres)
     {
-        mfBaseAngle += (mnRotateSpeed / 1000.0) * gTimer.GetElapsedTime() / 10000.0;
-
         float fAngle = mfBaseAngle;
 
         int nStartSphere = 0;
@@ -1291,7 +1297,7 @@ bool Z3DTestWin::Paint()
         //    for (; i < 100; i++)
         {
             //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
-            setOrientationMatrix(4.0, 0.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
+            setOrientationMatrix(4.0, 0.0, mfBaseAngle, mObjectToWorld);
 
             std::vector<Vec3f> cubeWorldVerts;
             cubeWorldVerts.resize(8);

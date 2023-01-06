@@ -119,8 +119,7 @@ public:
 
 	virtual void            SetCaption(const std::string& sCaption);
     std::string             GetCaption() { return msCaption; };
-    void                    SetColor(uint32_t nCol);
-	void                    SetColor2(uint32_t nCol2);
+    void                    SetColors(uint32_t nColTop, uint32_t nColBottom);
 	void                    SetStyle(ZFont::eStyle style);
     virtual void		    SetFont(tZFontPtr pFont) { mpFont = pFont; }
     tZFontPtr  GetFont()    { return mpFont; }
@@ -137,8 +136,8 @@ protected:
 	eSizablePushBtnState	mDrawState;
 	std::string             msCaption;
 
-	uint32_t                mnTextColor;
-	uint32_t                mnTextColor2;
+	uint32_t                mnTextColorTop;
+	uint32_t                mnTextColorBottom;
 	ZFont::eStyle           mCaptionStyle;
 
     tZBufferPtr             mpUpEdgeImage;              // not owned by this class
@@ -168,6 +167,7 @@ public:
 	// IMessageTarget
 	virtual bool			HandleMessage(const ZMessage& message);
 
+    void                    SetCheckedColors(uint32_t nUncheckedColor, uint32_t nCheckedColor) { mnUncheckedColor = nUncheckedColor; mnCheckedColor = nCheckedColor; }
 public:  // cCEWinCheck ///////////////////////////////////////////////////////
 
 	bool					GetState() { return *mpbChecked; }
@@ -179,6 +179,8 @@ protected:
    
     bool*					mpbChecked;
 	std::string				msUncheckMessage;
+    uint32_t                mnCheckedColor;
+    uint32_t                mnUncheckedColor;
 };
 
 

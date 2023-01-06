@@ -8,7 +8,7 @@
 
 using namespace std;
 
-extern shared_ptr<ZBuffer>  gSliderThumb;
+extern shared_ptr<ZBuffer>  gSliderThumbVertical;
 extern shared_ptr<ZBuffer>  gSliderBackground;
 extern ZRect            	grSliderBgEdge;
 extern ZRect				grSliderThumbEdge;
@@ -239,7 +239,7 @@ void ZFormattedTextWin::UpdateScrollbar()
         if (!mpSliderWin)
         {
             mpSliderWin = new ZSliderWin(&mnSliderVal);
-            mpSliderWin->Init(gSliderThumb, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
+            mpSliderWin->Init(gSliderThumbVertical, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
             mpSliderWin->SetDrawSliderValueFlag(false, false, gpFontSystem->GetFont(mCurrentFont));
             mpSliderWin->SetArea(ZRect(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height()));
             ChildAdd(mpSliderWin);
