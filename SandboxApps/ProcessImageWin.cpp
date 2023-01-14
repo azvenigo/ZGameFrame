@@ -118,6 +118,9 @@ bool cProcessImageWin::ClearImages()
 
 bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 {
+    if (filenames.empty())
+        return true;
+
     ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
     pScreenBuffer->EnableRendering(false);
 
@@ -1059,17 +1062,27 @@ bool cProcessImageWin::Init()
 
 
 
-    std::list<string> filenames = {
-        "res/414A2616.jpg",
-        "res/414A2617.jpg",
-        "res/414A2618.jpg"
-    };
+    std::list<string> filenames;
 
     gRegistry.GetOrSetDefault("ProcessImageWin", "images", filenames, filenames);   // sets default to above list if none already set
-            
+    
+    if (filenames.empty())
+    {
+        filenames = std::list<string>{
+            "res/414A2616.jpg",
+            "res/414A2617.jpg",
+            "res/414A2618.jpg",
+            "res/414A2619.jpg",
+            "res/414A2620.jpg",
+            "res/414A2621.jpg",
+            "res/414A2622.jpg",
+            "res/414A2623.jpg",
+            "res/414A2624.jpg"
+        };
+    }
     LoadImages(filenames);
-
     Process_SelectImage(*filenames.begin());
+
 	return ZWin::Init();
 }
 

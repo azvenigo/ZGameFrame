@@ -12,9 +12,9 @@ using namespace std;
 
 ATOM					MyRegisterClass(HINSTANCE, LPTSTR);
 BOOL					WinInitInstance(HINSTANCE, int);
-bool gbFullScreen = true;
-HINSTANCE		    g_hInst;				// The current instance
-HWND			    ghWnd;
+bool                    gbFullScreen = true;
+HINSTANCE		        g_hInst;				// The current instance
+HWND			        ghWnd;
 
 LRESULT CALLBACK		WndProc(HWND, UINT, WPARAM, LPARAM);
 void					Window_OnLButtonUp(UINT nX, UINT nY);
@@ -281,6 +281,9 @@ BOOL WinInitInstance(HINSTANCE hInstance, int nCmdShow)
 		grFullArea.SetRect(0, 0, nScreenWidth, nScreenHeight);
 	else
 		grFullArea.SetRect(0, 0, (long) (nScreenWidth * 0.75), (long)(nScreenHeight * 0.75));
+
+
+
 
 	SizeWindowToClientArea(ghWnd, (int) (nScreenWidth - grFullArea.Width())/2, (int) (nScreenHeight-grFullArea.Height())/2, (int) grFullArea.Width(), (int) grFullArea.Height());
 

@@ -898,23 +898,23 @@ void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface)
 #endif
 
 
-const int64_t kDefaultMinSphereSize = 1;
-const int64_t kDefaultMaxSphereSize = 1000;
+const int64_t kDefaultMinSphereSize = 10;
+const int64_t kDefaultMaxSphereSize = 400;
 
 Z3DTestWin::Z3DTestWin()
 {
     mIdleSleepMS = 1000;
-    mnTargetSphereCount = 3;
+    mnTargetSphereCount = 5;
     mnMinSphereSizeTimes100 = kDefaultMinSphereSize;
     mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize;
-    mnRotateSpeed = 50;
-    mnRayDepth = 5;
+    mnRotateSpeed = 10;
+    mnRayDepth = 3;
     mfBaseAngle = 0.0;
 
     mbRenderCube = false;
     mbRenderSpheres = true;
-    mbOuterSphere = false;
-    mbCenterSphere = false;
+    mbOuterSphere = true;
+    mbCenterSphere = true;
     mnRenderSize = 256;
 
     mLastTimeStamp = gTimer.GetMSSinceEpoch();

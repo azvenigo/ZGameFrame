@@ -139,6 +139,7 @@ bool ZFormattedTextWin::OnMouseDownL(int64_t x, int64_t y)
 		nY -=  mnMouseDownSliderVal;
 	}
 
+    std::unique_lock<std::mutex> lk(mDocumentMutex);
 	for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
 	{
 		tTextLine& textLine = *it;
@@ -252,6 +253,7 @@ void ZFormattedTextWin::UpdateScrollbar()
 			int64_t nLine = 0;
 			int64_t nHeight = 0;
 
+            std::unique_lock<std::mutex> lk(mDocumentMutex);
 			for (tDocument::iterator it = mDocument.begin(); it != mDocument.end() && nLine < mnScrollToOnInit; it++, nLine++)
 			{
 				tTextLine& textLine = *it;
@@ -316,7 +318,8 @@ bool ZFormattedTextWin::Paint()
 		nY -=  (int64_t) mpSliderWin->GetSliderValue();
 	}
 
-	for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
+    std::unique_lock<std::mutex> lk(mDocumentMutex);
+    for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
 	{
 		tTextLine& textLine = *it;
 
@@ -382,7 +385,8 @@ void ZFormattedTextWin::CalculateFullDocumentHeight()
 {
 	mnFullDocumentHeight = 0;
 
-	for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
+    std::unique_lock<std::mutex> lk(mDocumentMutex);
+    for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
 	{
 		tTextLine& textLine = *it;
 
@@ -392,7 +396,8 @@ void ZFormattedTextWin::CalculateFullDocumentHeight()
 
 void ZFormattedTextWin::Clear()
 {
-	mDocument.clear();
+    std::unique_lock<std::mutex> lk(mDocumentMutex);
+    mDocument.clear();
 	mnFullDocumentHeight = 0;
 
 	// Restore the defaults
@@ -471,7 +476,8 @@ void ZFormattedTextWin::AddTextLine(string sLine, ZFontParams fontParams, uint32
 			textLine.push_back(textEntry);
 
 			// Add it to the document, and on to the next line
-			mDocument.push_back(textLine);
+            std::unique_lock<std::mutex> lk(mDocumentMutex);
+            mDocument.push_back(textLine);
 			mnFullDocumentHeight += GetLineHeight(textLine);
 			textLine.clear();
 
@@ -537,6 +543,7 @@ bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
 
 	if (textLine.size() > 0)
 	{
+        std::unique_lock<std::mutex> lk(mDocumentMutex);
 		mDocument.push_back(textLine);
 		mnFullDocumentHeight += GetLineHeight(textLine);
 	}

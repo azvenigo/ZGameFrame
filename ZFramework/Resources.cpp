@@ -45,6 +45,13 @@ cResources::~cResources()
 bool cResources::Init(const string& sDefaultResourcePath)
 {
 	bool bResult = true;
+
+    // Adjust font sizes based on screen resolution
+    gDefaultButtonFont.nHeight = grFullArea.Height() / 72;
+    gDefaultTitleFont.nHeight = grFullArea.Height() / 54;
+    gDefaultTextFont.nHeight = grFullArea.Height() / 108;
+
+
     gSliderBackground.reset(new ZBuffer());
 	bResult &= AddResource(sDefaultResourcePath+"slider_bg.png",gSliderBackground);
     assert(bResult);

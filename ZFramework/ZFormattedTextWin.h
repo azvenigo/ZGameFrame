@@ -70,6 +70,8 @@ private:
 	ZRect        		mrTextBorderArea;
 
 	tDocument    		mDocument;     // parsed document
+    std::mutex          mDocumentMutex;		// when held, document may not be modified
+
 
 	// Storage for text parameters while parsing the document
 	ZFontParams		    mCurrentFont;
