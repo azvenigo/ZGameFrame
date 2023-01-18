@@ -112,6 +112,7 @@ bool cProcessImageWin::ClearImages()
     }
     mChildImageWins.clear();
     ResetResultsBuffer();
+    InvalidateChildren();
     return true;
 }
 
@@ -298,6 +299,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
         sPropLineXMLNode += "</text></line>";
 
         mpImageProps->AddTextLine(sPropLineXMLNode, fp, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+        mpImageProps->SetScrollable();
     }
 }
 
@@ -756,6 +758,44 @@ std::multimap<B, A> flip_map(const std::map<A, B>& src)
     return dst;
 }
 
+void cProcessImageWin::NegativeImage(void* pContext)
+{
+    JobParams* pJP = (JobParams*)pContext;
+
+    for (int64_t y = pJP->rArea.top; y < pJP->rArea.bottom; y++)
+    {
+        for (int64_t x = pJP->rArea.left; x < pJP->rArea.right; x++)
+        {
+            uint32_t nCol = *(pJP->pDestImage->GetPixels() + (y * pJP->pThis->mrIntersectionWorkArea.Width()) + x);
+
+            uint8_t nR = 255-ARGB_R(nCol);
+            uint8_t nG = 255-ARGB_G(nCol);
+            uint8_t nB = 255-ARGB_B(nCol);
+
+            *(pJP->pDestImage->GetPixels() + (y * pJP->pThis->mrIntersectionWorkArea.Width()) + x) = ARGB(0xff, nR, nG, nB);
+        }
+    }
+
+}
+
+void cProcessImageWin::Mono(void* pContext)
+{
+    JobParams* pJP = (JobParams*)pContext;
+
+    for (int64_t y = pJP->rArea.top; y < pJP->rArea.bottom; y++)
+    {
+        for (int64_t x = pJP->rArea.left; x < pJP->rArea.right; x++)
+        {
+            uint32_t nCol = *(pJP->pDestImage->GetPixels() + (y * pJP->pThis->mrIntersectionWorkArea.Width()) + x);
+
+            uint32_t nV = (ARGB_R(nCol) + ARGB_G(nCol) + ARGB_B(nCol)) / 3;
+
+            *(pJP->pDestImage->GetPixels() + (y * pJP->pThis->mrIntersectionWorkArea.Width()) + x) = ARGB(0xff, nV, nV, nV);
+        }
+    }
+}
+
+
 void cProcessImageWin::StackImages(void* pContext)
 {
     JobParams* pJP = (JobParams*)pContext;
@@ -1017,16 +1057,24 @@ bool cProcessImageWin::Init()
     pCP->AddButton("Load", "type=loadimages;target=imageprocesswin", pBtnFont);
     pCP->AddButton("Clear All", "type=clearall;target=imageprocesswin", pBtnFont);
 
-    pCP->AddSpace(16);
+    pCP->AddSpace(32);
 
-
-    pCP->AddButton("Radius Blur", "type=radiusblur;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Stack", "type=stackimages;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("compute contrast", "type=computecontrast;target=imageprocesswin", pBtnFont);
+    pCP->AddCaption("Radius", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
     pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, pBtnFont);
 
-    pCP->AddSpace(16);
+    pCP->AddButton("Blur", "type=radiusblur;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Stack", "type=stackimages;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("compute contrast", "type=computecontrast;target=imageprocesswin", pBtnFont);
 
+    pCP->AddSpace(32);
+    pCP->AddCaption("Ops", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
+    pCP->AddButton("Negative", "type=negative;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Monochrome", "type=mono;target=imageprocesswin", pBtnFont);
+
+
+    pCP->AddSpace(64);
+
+    pCP->AddCaption("Experiments", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
     pCP->AddButton("compute gradients", "type=computegradients;target=imageprocesswin", pBtnFont);
     pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, pBtnFont);
 
@@ -1226,7 +1274,17 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
         SpawnWork(&StackImages, true);
 		return true;
 	}
-	else if (sType == "computecontrast")
+    else if (sType == "negative")
+    {
+        SpawnWork(&NegativeImage, true);
+        return true;
+    }
+    else if (sType == "mono")
+    {
+        SpawnWork(&Mono, true);
+        return true;
+    }
+    else if (sType == "computecontrast")
 	{
         SpawnWork(&ComputeContrast, true);
         return true;

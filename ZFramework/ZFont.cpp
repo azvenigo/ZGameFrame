@@ -237,8 +237,8 @@ int64_t ZFont::StringWidth(const string& sText)
 
 	int64_t nWidth = 0;
     int32_t nLength = (int32_t) sText.length();
-    const char* pChar;
-    for (pChar = sText.c_str(); pChar < sText.data()+nLength-1; pChar++)   // add up all of the chars except last one
+    const uint8_t* pChar;
+    for (pChar = (uint8_t*)sText.c_str(); pChar < (uint8_t*)sText.data()+nLength-1; pChar++)   // add up all of the chars except last one
     {
         nWidth += mCharDescriptors[*pChar].nCharWidth + 1 + GetSpaceBetweenChars(*pChar, *(pChar+1)); // char width adjusted by kerning with next char
     }
@@ -342,8 +342,8 @@ inline bool ZFont::DrawText_Helper(ZBuffer* pBuffer, const string& sText, const 
 		pBuffer->Clip(rClip, rSrc, rClipDest);
 
 		// Draw the text clipped
-        const char* pChar = sText.data();
-        for (;pChar < sText.data()+sText.length(); pChar++)
+        const uint8_t* pChar = (uint8_t*)sText.data();
+        for (;pChar < (uint8_t*)sText.data()+sText.length(); pChar++)
 		{
 			DrawCharClipped(pBuffer, *pChar, nCol, nX, nY, (ZRect*) &rClipDest);
 
@@ -354,8 +354,8 @@ inline bool ZFont::DrawText_Helper(ZBuffer* pBuffer, const string& sText, const 
 	}
 	else
 	{
-        const char* pChar = sText.data();
-        for (; pChar < sText.data() + sText.length(); pChar++)
+        const uint8_t* pChar = (uint8_t*)sText.data();
+        for (; pChar < (uint8_t*)sText.data() + sText.length(); pChar++)
         {
 			DrawCharNoClip(pBuffer, *pChar, nCol, nX, nY);
 
@@ -391,8 +391,8 @@ inline bool ZFont::DrawText_Gradient_Helper(ZBuffer* pBuffer, const string& sTex
 	BuildGradient(nCol, nCol2);
 
 	// Draw the text clipped
-    const char* pChar = sText.data();
-    for (; pChar < sText.data() + sText.length(); pChar++)
+    const uint8_t* pChar = (uint8_t*)sText.data();
+    for (; pChar < (uint8_t*)sText.data() + sText.length(); pChar++)
     {
 		DrawCharGradient(pBuffer, *pChar, nX, nY, (ZRect*) &rClipDest);
 

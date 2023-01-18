@@ -69,6 +69,9 @@ private:
     static void RadiusBlur(void* pContext);
     static void	ComputeContrast(void* pContext);
     static void	StackImages(void* pContext);
+    static void NegativeImage(void* pContext);
+    static void Mono(void* pContext);
+
 
     bool BlurBox(int64_t x, int64_t y); // playing around with blurring around mouse cursor based on contrast
 
