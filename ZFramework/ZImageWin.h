@@ -63,6 +63,9 @@ private:
     bool                mbZoomable;
     bool                mbControlPanelEnabled;
 
+    int64_t             mnControlPanelButtonSide;
+    int64_t             mnControlPanelFontHeight;
+
     double              mfZoom;
     double              mfPerfectFitZoom;
     double              mfMinZoom;

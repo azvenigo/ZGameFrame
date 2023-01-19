@@ -66,7 +66,7 @@ cProcessImageWin::cProcessImageWin()
 	mbAcceptsCursorMessages = true;
 	mpResultBuffer = nullptr;
     mpContrastFloatBuffer = nullptr;
-	mnProcessPixelRadius = 1;
+	mnProcessPixelRadius = 2;
     mnGradientLevels = 1;
     mnSubdivisionLevels = 4;
     mrThumbnailSize.SetRect(0, 0, 32, 32);  // initial size
@@ -673,13 +673,29 @@ void cProcessImageWin::RadiusBlur(void* pContext)
 {
     JobParams* pJP = (JobParams*) pContext;
 
+    ZBuffer blur;
+    blur.Init(pJP->rArea.Width(), pJP->rArea.Height());
+
+
     for (int64_t y = pJP->rArea.top; y < pJP->rArea.bottom; y++)
     {
         for (int64_t x = pJP->rArea.left; x < pJP->rArea.right; x++)
         {
-            pJP->pDestImage->SetPixel(x, y, pJP->pThis->ComputePixelBlur(pJP->pSourceImage, x, y, pJP->nRadius));
+            //pJP->pDestImage->SetPixel(x, y, pJP->pThis->ComputePixelBlur(pJP->pSourceImage, x, y, pJP->nRadius));
+            int64_t nXTemp = x - pJP->rArea.left;
+            int64_t nYTemp = y - pJP->rArea.top;
+            blur.SetPixel(nXTemp, nYTemp, pJP->pThis->ComputePixelBlur(pJP->pSourceImage, x, y, pJP->nRadius));
         }
     }
+
+    if (pJP->mpBarrierCount)
+    {
+        (*pJP->mpBarrierCount)--;
+        while (*pJP->mpBarrierCount > 0)
+            std::this_thread::sleep_for(std::chrono::microseconds(50));
+    }
+
+    pJP->pDestImage->Blt(&blur, blur.GetArea(), pJP->rArea);
 }
 
 uint32_t cProcessImageWin::ComputePixelBlur(tZBufferPtr pBuffer, int64_t nX, int64_t nY, int64_t nRadius)
@@ -1054,8 +1070,8 @@ bool cProcessImageWin::Init()
 
     pCP->Init();
 
-    pCP->AddButton("Load", "type=loadimages;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Clear All", "type=clearall;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Load Image", "type=loadimages;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Close All Images", "type=clearall;target=imageprocesswin", pBtnFont);
 
     pCP->AddSpace(32);
 
@@ -1064,7 +1080,7 @@ bool cProcessImageWin::Init()
 
     pCP->AddButton("Blur", "type=radiusblur;target=imageprocesswin", pBtnFont);
     pCP->AddButton("Stack", "type=stackimages;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("compute contrast", "type=computecontrast;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Contrast", "type=computecontrast;target=imageprocesswin", pBtnFont);
 
     pCP->AddSpace(32);
     pCP->AddCaption("Ops", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
@@ -1265,7 +1281,7 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "radiusblur")
     {
-        SpawnWork(&RadiusBlur);
+        SpawnWork(&RadiusBlur, true);
         return true;
     }
 	else if (sType == "stackimages")

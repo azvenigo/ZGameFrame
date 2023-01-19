@@ -17,6 +17,8 @@ ZImageWin::ZImageWin()
     mpImage.reset();
     mbZoomable = false;
     mbControlPanelEnabled = false;
+    mnControlPanelButtonSide = 0;
+    mnControlPanelFontHeight = 0;
 	mfZoom = 1.0;
     mfPerfectFitZoom = 1.0;
     mfMinZoom = 0.01;
@@ -41,13 +43,20 @@ bool ZImageWin::Init()
     if (mbControlPanelEnabled)
     {
         mpPanel = new ZWinControlPanel();
-        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.bottom - 16, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
+        mnControlPanelButtonSide = mAreaToDrawTo.Height() / 16;
+        mnControlPanelFontHeight = mAreaToDrawTo.Height() / 24;
+        if (mnControlPanelButtonSide < 20)
+            mnControlPanelButtonSide = 20;
+        if (mnControlPanelFontHeight < 16)
+            mnControlPanelFontHeight = 16;
+
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.bottom - mnControlPanelButtonSide, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
         mpPanel->SetTriggerRect(mAreaAbsolute);
         mpPanel->SetHideOnMouseExit(true);
         mpPanel->SetArea(rPanelArea);
         ChildAdd(mpPanel);
 
-        ZRect rButton(0, 0, 16, 16);
+        ZRect rButton(0, 0, mnControlPanelButtonSide, mnControlPanelButtonSide);
 
         ZWinSizablePushBtn* pBtn;
 
@@ -66,7 +75,7 @@ bool ZImageWin::Init()
             pBtn->SetMessage(msCloseButtonMessage);
             mpPanel->ChildAdd(pBtn);
 
-            rButton.OffsetRect(32, 0);
+            rButton.OffsetRect(mnControlPanelButtonSide *2, 0);
         }
 
 
@@ -77,7 +86,7 @@ bool ZImageWin::Init()
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(":"); // wingdings rotate left
-        pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", 12));
+        pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", mnControlPanelFontHeight));
         pBtn->SetColors(0xffffffff,0xffffffff);
         pBtn->SetStyle(ZFont::kNormal);
 
@@ -91,12 +100,12 @@ bool ZImageWin::Init()
 
 
 
-        rButton.OffsetRect(16, 0);
+        rButton.OffsetRect(mnControlPanelButtonSide, 0);
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(";"); // wingdings rotate right
-        pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", 12));
+        pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", mnControlPanelFontHeight));
         pBtn->SetColors(0xffffffff,0xffffffff);
         pBtn->SetStyle(ZFont::kNormal);
 
@@ -107,11 +116,11 @@ bool ZImageWin::Init()
         pBtn->SetMessage(sMessage);
         mpPanel->ChildAdd(pBtn);
 
-        rButton.OffsetRect(16, 0);
+        rButton.OffsetRect(mnControlPanelButtonSide, 0);
 
         if (!msSaveButtonMessage.empty())
         {
-            rButton.right = rButton.left + 48;
+            rButton.right = rButton.left + mnControlPanelButtonSide *3;
 
             pBtn = new ZWinSizablePushBtn();
             pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
@@ -278,7 +287,7 @@ void ZImageWin::SetArea(const ZRect& newArea)
 
     if (mpPanel)
     {
-        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.bottom - 16, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.bottom - mnControlPanelButtonSide, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
         mpPanel->SetTriggerRect(mAreaAbsolute);
         mpPanel->SetArea(rPanelArea);
     }
