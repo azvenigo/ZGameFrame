@@ -1040,10 +1040,10 @@ bool Z3DTestWin::Init()
     pCP->AddSlider(&mnRenderSize, 1, 128, 16, "type=updaterendersize;target=3dtestwin", true);
 
     pCP->AddSpace(16);
-    pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-    pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-    pCP->AddToggle(&mbOuterSphere, "Outer Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-    pCP->AddToggle(&mbCenterSphere, "Center Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", "rendermode", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", "rendermode", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbOuterSphere, "Outer Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbCenterSphere, "Center Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     
     ChildAdd(pCP);
 

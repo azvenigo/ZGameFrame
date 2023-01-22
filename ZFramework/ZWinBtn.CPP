@@ -255,6 +255,7 @@ bool ZWinPushBtn::OnMouseMove(int64_t x, int64_t y)
 ///////////////////////////////////////////////////////////////////////////////
 ZWinCheck::ZWinCheck(bool* pbChecked)
 {
+    ZASSERT(pbChecked);
 	mpbChecked = pbChecked;
     mnCheckedColor = 0xff000000;
     mnUncheckedColor = 0xff000000;
@@ -307,29 +308,66 @@ bool ZWinCheck::Paint()
 
 bool ZWinCheck::HandleMessage(const ZMessage& message)
 {
+    string sType = message.GetType();
+    if (sType == "radio_check")
+    {
+        string sGroupName = message.GetParam("group");
+        if (sGroupName == msRadioGroupName)
+        {
+            // Part of our group
+
+            string sCheckedName = message.GetParam("checked");
+            if (sCheckedName != msWinName && *mpbChecked)
+            {
+                // Part of our group but not us....and we're checked
+                SetState(false, true);
+            }
+        }
+        return true;
+    }
+
 	return ZWinSizablePushBtn::HandleMessage(message);
 }
 
 
 void ZWinCheck::SetState(bool bChecked, bool bPostNotifications)
 {
-	*mpbChecked = bChecked;
+    *mpbChecked = bChecked;
 
-	// Post messages
-	if (bPostNotifications)
-	{
-		if (*mpbChecked)
-		{
-			gMessageSystem.Post(msButtonMessage);
-		}
-		else
-		{
-			gMessageSystem.Post(msUncheckMessage);
-		}
-	}
+    // Post messages
+    if (bPostNotifications)
+    {
+        if (*mpbChecked)
+        {
+            gMessageSystem.Post(msButtonMessage);
+        }
+        else
+        {
+            gMessageSystem.Post(msUncheckMessage);
+        }
+    }
+
+    if (bChecked && !msRadioGroupName.empty())
+    {
+        // If we're part of a radio group and we're being checked, send out a message to uncheck all others in the group
+        string sUncheckMessage;
+        Sprintf(sUncheckMessage, "type=radio_check;group=%s;checked=%s", msRadioGroupName.c_str(), msWinName.c_str());
+        gMessageSystem.Post(sUncheckMessage);
+    }
+
 
     Invalidate();
 }
+
+void ZWinCheck::SetRadioGroup(const std::string& sRadioGroupName)
+{
+    msRadioGroupName = sRadioGroupName;
+    if (!msRadioGroupName.empty())
+    {
+        gMessageSystem.AddNotification("radio_check", this);
+    }
+}
+
 
 bool ZWinCheck::OnMouseUpL(int64_t, int64_t)
 {

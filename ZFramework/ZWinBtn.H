@@ -168,17 +168,19 @@ public:
 	virtual bool			HandleMessage(const ZMessage& message);
 
     void                    SetCheckedColors(uint32_t nUncheckedColor, uint32_t nCheckedColor) { mnUncheckedColor = nUncheckedColor; mnCheckedColor = nCheckedColor; }
-public:  // cCEWinCheck ///////////////////////////////////////////////////////
+public:  // ZWinCheck ///////////////////////////////////////////////////////
 
 	bool					GetState() { return *mpbChecked; }
 	void					SetState(bool bChecked, bool bPostNotifications = true);
 	void					SetMessages(const std::string& sCheckMessage, const std::string sUncheckMessage) { msButtonMessage = sCheckMessage; msUncheckMessage = sUncheckMessage; }
+    void                    SetRadioGroup(const std::string& sRadioGroupName); // If part of a radio group, when any other in the same group is checked, automatically unchecks
 
 protected:
     virtual bool  			Paint();
    
     bool*					mpbChecked;
 	std::string				msUncheckMessage;
+    std::string             msRadioGroupName;
     uint32_t                mnCheckedColor;
     uint32_t                mnUncheckedColor;
 };

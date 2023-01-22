@@ -55,10 +55,11 @@ bool ZWinControlPanel::AddCaption(const string& sCaption, ZFontParams& fontParam
 }
 
 
-bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, tZFontPtr pFont, uint32_t nFontColUnchecked, uint32_t nFontColChecked, ZFont::eStyle style)
+bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, const std::string& sRadioGroup, tZFontPtr pFont, uint32_t nFontColUnchecked, uint32_t nFontColChecked, ZFont::eStyle style)
 {
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
+    pCheck->SetRadioGroup(sRadioGroup);
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pCheck->SetCaption(sCaption);
     pCheck->SetArea(mrNextControl);
