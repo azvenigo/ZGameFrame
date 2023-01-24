@@ -9,26 +9,14 @@
 
 #include "ZMessageSystem.h"
 #include "ZTickManager.h"
-#include "ZStringHelpers.h"
-#include "ZStdDebug.h"
-#include "ZXMLNode.h"
 #include "ZRasterizer.h"
 #include "ZPreferences.h"
 #include "ZAnimator.h"
-#include "FloatLinesWin.h"
-#include "ZScriptedDialogWin.h"
-#include "Resources.h"
-#include "ProcessImageWin.h"
-#include <string>
-#include "ZStringHelpers.h"
-#include <random>
-#include "LifeWin.h"
-#include "ZImageWin.h"
-#include "ZSliderWin.h"
-#include "ZWinControlPanel.h"
 #include "ZRandom.h"
-#include "TextTestWin.h"
-#include "3DTestWin.h"
+#include "ZWinControlPanel.h"
+
+
+
 
 using namespace std;
 
@@ -67,6 +55,7 @@ namespace Sandbox
         kOneLifeWin = 5,
         kTextTestWin = 6,
         k3DTestWin = 7,
+        kChessWin = 8
     };
 
     void SandboxShutdown();

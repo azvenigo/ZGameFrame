@@ -13,7 +13,7 @@ ZFontParams::ZFontParams()
     nHeight = 0;
     nWeight = 0;
     nTracking = 1;
-    bFixedWidth = false;
+    nFixedWidth = 0;
     bItalic = false;
     bUnderline = false;
     bStrikeOut = false;
@@ -24,7 +24,7 @@ ZFontParams::ZFontParams(const ZFontParams& rhs)
     nHeight = rhs.nHeight;
     nWeight = rhs.nWeight;
     nTracking = rhs.nTracking;
-    bFixedWidth = rhs.bFixedWidth;
+    nFixedWidth = rhs.nFixedWidth;
     bItalic = rhs.bItalic;
     bUnderline = rhs.bUnderline;
     bStrikeOut = rhs.bStrikeOut;
@@ -117,8 +117,8 @@ bool ZFont::LoadFont(const string& sFilename)
     memcpy(&mFontParams.nTracking, pData, sizeof(mFontParams.nTracking));
     pData += sizeof(mFontParams.nTracking);
 
-    memcpy(&mFontParams.bFixedWidth, pData, sizeof(mFontParams.bFixedWidth));
-    pData += sizeof(mFontParams.bFixedWidth);
+    memcpy(&mFontParams.nFixedWidth, pData, sizeof(mFontParams.nFixedWidth));
+    pData += sizeof(mFontParams.nFixedWidth);
 
     memcpy(&mFontParams.bItalic, pData, sizeof(mFontParams.bItalic));
     pData += sizeof(mFontParams.bItalic);
@@ -176,7 +176,7 @@ bool ZFont::SaveFont(const string& sFilename)
     uncompBuffer->write((uint8_t*) &mFontParams.nHeight, sizeof(mFontParams.nHeight));
     uncompBuffer->write((uint8_t*)&mFontParams.nWeight, sizeof(mFontParams.nWeight));
     uncompBuffer->write((uint8_t*)&mFontParams.nTracking, sizeof(mFontParams.nTracking));
-    uncompBuffer->write((uint8_t*)&mFontParams.bFixedWidth, sizeof(mFontParams.bFixedWidth));
+    uncompBuffer->write((uint8_t*)&mFontParams.nFixedWidth, sizeof(mFontParams.nFixedWidth));
     uncompBuffer->write((uint8_t*)&mFontParams.bItalic, sizeof(mFontParams.bItalic));
     uncompBuffer->write((uint8_t*)&mFontParams.bStrikeOut, sizeof(mFontParams.bStrikeOut));
 
@@ -347,7 +347,11 @@ inline bool ZFont::DrawText_Helper(ZBuffer* pBuffer, const string& sText, const 
 		{
 			DrawCharClipped(pBuffer, *pChar, nCol, nX, nY, (ZRect*) &rClipDest);
 
-			nX += mCharDescriptors[*pChar].nCharWidth + 1 + GetSpaceBetweenChars(*pChar, *(pChar+1));
+            if (mFontParams.nFixedWidth > 0)
+                nX += mFontParams.nFixedWidth;
+            else
+			    nX += mCharDescriptors[*pChar].nCharWidth + 1 + GetSpaceBetweenChars(*pChar, *(pChar+1));
+
             if (nX >= rAreaToDrawTo.right)
                 break;
 		}
@@ -359,7 +363,11 @@ inline bool ZFont::DrawText_Helper(ZBuffer* pBuffer, const string& sText, const 
         {
 			DrawCharNoClip(pBuffer, *pChar, nCol, nX, nY);
 
-			nX += mCharDescriptors[*pChar].nCharWidth + 1 + GetSpaceBetweenChars(*pChar, *(pChar+1));
+            if (mFontParams.nFixedWidth > 0)
+                nX += mFontParams.nFixedWidth;
+            else
+                nX += mCharDescriptors[*pChar].nCharWidth + 1 + GetSpaceBetweenChars(*pChar, *(pChar+1));
+
             if (nX >= rAreaToDrawTo.right)
                 break;
 		}
@@ -396,7 +404,11 @@ inline bool ZFont::DrawText_Gradient_Helper(ZBuffer* pBuffer, const string& sTex
     {
 		DrawCharGradient(pBuffer, *pChar, nX, nY, (ZRect*) &rClipDest);
 
-		nX += mCharDescriptors[*pChar].nCharWidth + 1 + GetSpaceBetweenChars(*pChar, *(pChar+1));
+        if (mFontParams.nFixedWidth > 0)
+            nX += mFontParams.nFixedWidth;
+        else
+            nX += mCharDescriptors[*pChar].nCharWidth + 1 + GetSpaceBetweenChars(*pChar, *(pChar+1));
+
 		if (nX >= rAreaToDrawTo.right)
             break;
 	}
@@ -1044,7 +1056,7 @@ ZDynamicFont::~ZDynamicFont()
 }
 
 
-bool ZDynamicFont::Init(const ZFontParams& params)
+bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn)
 {
     if (mbInitted)
     {
@@ -1074,7 +1086,7 @@ bool ZDynamicFont::Init(const ZFontParams& params)
     mDIBInfo.bmiColors[0].rgbReserved = 0;
 
     DWORD pitch = DEFAULT_PITCH;
-    if (mFontParams.bFixedWidth)
+    if (mFontParams.nFixedWidth > 0)
     {
         pitch = FIXED_PITCH;
         mbEnableKerning = false;
@@ -1119,10 +1131,13 @@ bool ZDynamicFont::Init(const ZFontParams& params)
     mnWidestCharacterWidth = FindWidestCharacterWidth();
     mnWidestNumberWidth = FindWidestNumberWidth();
 
-    for (char c = 32; c <= 126; c++)        // 33 '!' through 126 '~' are the visible chars
-        GenerateGlyph(c);
+    if (bInitGlyphs)
+    {
+        for (char c = 32; c <= 126; c++)        // 33 '!' through 126 '~' are the visible chars
+            GenerateGlyph(c);
+    }
 
-    if (!mFontParams.bFixedWidth)
+    if (bKearn && mFontParams.nFixedWidth == 0)
     {
         // Variable size font
         if (!RetrieveKerningPairs())    // try and retrieve built in kerning pairs
@@ -1234,7 +1249,18 @@ bool ZDynamicFont::ExtractChar(char c)
 
     ZRect rExtents = FindCharExtents();
 
-    if (mFontParams.bFixedWidth && rExtents.Width() > 0)   // for fixed width fonts
+    // if we've encountered a wider char than we've seen before
+    if (rExtents.right - rExtents.left > mnWidestCharacterWidth)
+    {
+        mnWidestCharacterWidth = rExtents.right - rExtents.left;
+
+        // If we have a fixed width font and we've encountered a wider character, adjust the font params?  <tbd if this is a bad idea>
+        if (mFontParams.nFixedWidth > 0 && mFontParams.nFixedWidth < mnWidestCharacterWidth)
+            mFontParams.nFixedWidth = mnWidestCharacterWidth;
+    }
+
+
+    if (mFontParams.nFixedWidth > 0 && rExtents.Width() > 0)   // for fixed width fonts
     {
         int64_t nCharWidth = rExtents.right - rExtents.left;
         int64_t nPadding = (mnWidestCharacterWidth - nCharWidth) / 2;
@@ -1381,13 +1407,9 @@ bool ZDynamicFont::GenerateGlyph(char c)
 {
     if (c <= 0)
         return false;
-
-
     
     RECT r;
     r.left = 0;
-    //r.top = -(mWinTextMetrics.tmHeight- mWinTextMetrics.tmAscent);  // windows leaves extra space above the top of the char
-//    r.top = -mWinTextMetrics.tmInternalLeading;
     r.top = 0;
     r.right = (LONG) mrScratchArea.right;
     r.bottom = (LONG) mrScratchArea.bottom;
@@ -1411,9 +1433,32 @@ bool ZDynamicFont::GenerateGlyph(char c)
     return true;
 }
 
+bool ZDynamicFont::GenerateSymbolicGlyph(char c, uint32_t symbol)
+{
+    if (c <= 0)
+        return false;
+
+    RECT r;
+    r.left = 0;
+    r.top = 0;
+    r.right = (LONG)mrScratchArea.right;
+    r.bottom = (LONG)mrScratchArea.bottom;
+
+    SetBkMode(mhWinTargetDC, TRANSPARENT);
+    BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int)mrScratchArea.Width(), (int)mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
+
+    SelectFont(mhWinTargetDC, mhWinFont);
+    int nHeightReturned = ::DrawTextW(mhWinTargetDC, (LPCWSTR)&symbol, 1, &r, DT_TOP | DT_CENTER);
+
+    ExtractChar(c);
+
+    return true;
+}
+
+
 bool ZDynamicFont::RetrieveKerningPairs()
 {
-    if (mFontParams.bFixedWidth)
+    if (mFontParams.nFixedWidth > 0)
         return false;
 
     SelectFont(mhWinTargetDC, mhWinFont);
@@ -1547,7 +1592,7 @@ string ZFontSystem::FontCacheFilename(const ZFontParams& params)
     Sprintf(sFilename, "%s_%d_%d_%d", params.sFacename.c_str(), params.nHeight, params.nWeight, params.nTracking);
     if (params.bItalic)
         sFilename += "_i";
-    if (params.bFixedWidth)
+    if (params.nFixedWidth > 0)
         sFilename += "_f";
     sFilename += ".zfont";
 

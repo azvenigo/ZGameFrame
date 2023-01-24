@@ -40,13 +40,13 @@ public:
     ZFontParams();
     ZFontParams(const ZFontParams& rhs);
 
-    ZFontParams(const std::string name, int64_t height, int64_t weight = 200, int64_t tracking = 0, bool fixed = false, bool italic = false, bool underline = false, bool strikeout = false)
+    ZFontParams(const std::string name, int64_t height, int64_t weight = 200, int64_t tracking = 0, int64_t fixed = 0, bool italic = false, bool underline = false, bool strikeout = false)
     {
         sFacename = name;
         nHeight = height;
         nWeight = weight;
         nTracking = tracking;
-        bFixedWidth = fixed;
+        nFixedWidth = fixed;
         bItalic = italic;
         bUnderline = underline;
         bStrikeOut = strikeout;
@@ -59,11 +59,7 @@ public:
         nHeight = j["h"];
         nWeight = j["w"];
         nTracking = j["t"];
-
-        if (j.contains("f"))
-            bFixedWidth = j["f"];
-        else
-            bFixedWidth = false;
+        nFixedWidth = j["f"];
 
         if (j.contains("i"))
             bItalic = j["i"];
@@ -89,8 +85,7 @@ public:
         j["h"] = nHeight;
         j["w"] = nWeight;
         j["t"] = nTracking;
-        if (bFixedWidth)
-            j["f"] = bFixedWidth;
+        j["f"] = nFixedWidth;
 
         if (bItalic)
             j["i"] = bItalic;
@@ -124,7 +119,7 @@ public:
     int64_t nHeight;
     int64_t nWeight;
     int64_t nTracking;
-    bool bFixedWidth;
+    int64_t nFixedWidth;
     bool bItalic;
     bool bUnderline;
     bool bStrikeOut;
@@ -233,8 +228,10 @@ public:
     ZDynamicFont();
     ~ZDynamicFont();
 
-    bool                Init(const ZFontParams& params);
+    bool                Init(const ZFontParams& params, bool bInitGlyphs = true, bool bKearn = true);
     bool                SaveFont(const std::string& sFilename);  // overload to first ensure all glyphs have been generated
+
+    bool                GenerateSymbolicGlyph(char c, uint32_t symbol);
 
 protected:
     // overloads from ZFont that will generate glyphs if needed
@@ -242,10 +239,10 @@ protected:
     virtual void        DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
     virtual void        DrawCharGradient(ZBuffer* pBuffer, char c, int64_t nX, int64_t nY, ZRect* pClip);
 
-
 private:
 
     bool                GenerateGlyph(char c);
+
     bool                ExtractChar(char c);
     int32_t             FindWidestNumberWidth();
     int32_t             FindWidestCharacterWidth();

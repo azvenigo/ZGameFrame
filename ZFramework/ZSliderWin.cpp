@@ -226,7 +226,19 @@ bool ZSliderWin::OnMouseMove(int64_t x, int64_t y)
 
 bool ZSliderWin::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 {
-	SetSliderValue(GetSliderValue() + nDelta);
+    ZRect rThumbRect(GetSliderThumbRect());
+    double fSliderRep;
+    if (mOrientation == kVertical)
+        fSliderRep = (double)rThumbRect.Height() / (double)mAreaToDrawTo.Height();
+    else
+        fSliderRep = (double)rThumbRect.Width() / (double)mAreaToDrawTo.Width();
+    int64_t nSliderValueRep = (int64_t)((double)(mnSliderValMax - mnSliderValMin) * fSliderRep);
+
+
+    if (nDelta > 0)
+	    SetSliderValue(*mpnSliderValue / mnSliderValMultiplier - nSliderValueRep);
+    else
+        SetSliderValue(*mpnSliderValue / mnSliderValMultiplier + nSliderValueRep);
 	return true;
 }
 

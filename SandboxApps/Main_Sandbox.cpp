@@ -2,6 +2,18 @@
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
 
+#include "LifeWin.h"
+#include "ZImageWin.h"
+#include "ProcessImageWin.h"
+#include "ZSliderWin.h"
+#include "FloatLinesWin.h"
+#include "TextTestWin.h"
+#include "3DTestWin.h"
+#include "ChessWin.h"
+#include "Resources.h"
+
+
+
 using namespace std;
 
 // Global Variables:
@@ -70,6 +82,10 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->AddButton("3DTestWin", "type=initchildwindows;mode=7;target=MainAppMessageTarget", pBtnFont);
+
+    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
+    gpControlPanel->AddButton("ChessWin", "type=initchildwindows;mode=8;target=MainAppMessageTarget", pBtnFont);
+
 
     gpMainWin->ChildAdd(gpControlPanel);
 }
@@ -162,6 +178,13 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 
         gpMainWin->ChildAdd(pWin);
 
+    }
+
+    else if (mode == eSandboxMode::kChessWin)
+    {
+        ZChessWin* pWin = new ZChessWin();
+        pWin->SetArea(grFullArea);
+        gpMainWin->ChildAdd(pWin);
     }
 
     gpMainWin->ChildAdd(gpControlPanel);

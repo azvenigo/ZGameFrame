@@ -208,8 +208,8 @@ bool TextTestWin::Init()
     pCP->AddCaption("Tracking", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
     pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "type=setfonttracking;target=TextTestWin", true, false, pBtnFont);
 
-
-    pCP->AddToggle(&mCustomFontParams.bFixedWidth, "Fixed Width", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddCaption("Fixed Width", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
+    pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, "type=setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
     pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
@@ -348,7 +348,7 @@ void TextTestWin::UpdateFontByParams()
     ZDynamicFont* pNewFont = new ZDynamicFont();
     pNewFont->Init(mCustomFontParams);
 
-    if (mCustomFontParams.bFixedWidth)
+    if (mCustomFontParams.nFixedWidth > 0)
         mbEnableKerning = false;
 
     pNewFont->SetEnableKerning(mbEnableKerning);
