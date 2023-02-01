@@ -66,11 +66,11 @@ public:
 		return tPoint(mX + p.mX, mY + p.mY); 
 	};
 
-	bool operator==(const tPoint& p) 
+	bool operator==(const tPoint& p) const
 	{ 
 		return (mX == p.mX && mY == p.mY); 
 	}
-	bool operator!=(const tPoint& p) 
+	bool operator!=(const tPoint& p) const
 	{ 
 		return (mX != p.mX || mY != p.mY); 
 	}
