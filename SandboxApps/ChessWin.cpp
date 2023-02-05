@@ -1,21 +1,23 @@
 #include "ChessWin.h"
 #include "Resources.h"
 #include "ZWinControlPanel.h"
+#include "ZStringHelpers.h"
+#include "ZWinFileDialog.h"
+#include <filesystem>
 
 using namespace std;
 
 
 char     mResetBoard[8][8] =
-{ {'R','N','B','Q','K','B','N','R'},
-    {'P','P','P','P','P','P','P','P'},
-    {0},
-    {0},
-    {0},
-    {0},
+{   {'r','n','b','q','k','b','n','r'},
     {'p','p','p','p','p','p','p','p'},
-    {'r','n','b','q','k','b','n','r'}
+    {0},
+    {0},
+    {0},
+    {0},
+    {'P','P','P','P','P','P','P','P'},
+    {'R','N','B','Q','K','B','N','R'}
 };
-
 
 ZChessWin::ZChessWin()
 {
@@ -27,6 +29,7 @@ ZChessWin::ZChessWin()
     mbCopyKeyEnabled = false;
     mbEditMode = true;
     mbViewWhiteOnBottom = true;
+    mbShowAttackCount = true;
 }
    
 bool ZChessWin::Init()
@@ -68,6 +71,9 @@ bool ZChessWin::Init()
     pCP->AddButton("Clear Board", "type=clearboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     pCP->AddButton("Reset Board", "type=resetboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     pCP->AddButton("Rotate Board", "type=rotateboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddSpace(panelH/30);
+    pCP->AddButton("Load Board", "type=loadboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddButton("Save Board", "type=saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
     ChildAdd(pCP);
 
@@ -88,26 +94,19 @@ void ZChessWin::UpdateSize()
         delete mpSymbolicFont;
     mpSymbolicFont = new ZDynamicFont();
     mpSymbolicFont->Init(ZFontParams("MS Gothic", mnPieceHeight, 400, mnPieceHeight / 4, true), false, false);
-    mpSymbolicFont->GenerateSymbolicGlyph('k', 9812);
-    mpSymbolicFont->GenerateSymbolicGlyph('q', 9813);
-    mpSymbolicFont->GenerateSymbolicGlyph('r', 9814);
-    mpSymbolicFont->GenerateSymbolicGlyph('b', 9815);
-    mpSymbolicFont->GenerateSymbolicGlyph('n', 9816);
-    mpSymbolicFont->GenerateSymbolicGlyph('p', 9817);
+    mpSymbolicFont->GenerateSymbolicGlyph('K', 9812);
+    mpSymbolicFont->GenerateSymbolicGlyph('Q', 9813);
+    mpSymbolicFont->GenerateSymbolicGlyph('R', 9814);
+    mpSymbolicFont->GenerateSymbolicGlyph('B', 9815);
+    mpSymbolicFont->GenerateSymbolicGlyph('N', 9816);
+    mpSymbolicFont->GenerateSymbolicGlyph('P', 9817);
 
-    mpSymbolicFont->GenerateSymbolicGlyph('K', 9818);
-    mpSymbolicFont->GenerateSymbolicGlyph('Q', 9819);
-    mpSymbolicFont->GenerateSymbolicGlyph('R', 9820);
-    mpSymbolicFont->GenerateSymbolicGlyph('B', 9821);
-    mpSymbolicFont->GenerateSymbolicGlyph('N', 9822);
-    mpSymbolicFont->GenerateSymbolicGlyph('P', 9823);
-
-    mPieceData['k'].GenerateImageFromSymbolicFont('k', mnPieceHeight, mpSymbolicFont, mbOutline);
-    mPieceData['q'].GenerateImageFromSymbolicFont('q', mnPieceHeight, mpSymbolicFont, mbOutline);
-    mPieceData['r'].GenerateImageFromSymbolicFont('r', mnPieceHeight, mpSymbolicFont, mbOutline);
-    mPieceData['b'].GenerateImageFromSymbolicFont('b', mnPieceHeight, mpSymbolicFont, mbOutline);
-    mPieceData['n'].GenerateImageFromSymbolicFont('n', mnPieceHeight, mpSymbolicFont, mbOutline);
-    mPieceData['p'].GenerateImageFromSymbolicFont('p', mnPieceHeight, mpSymbolicFont, mbOutline);
+    mpSymbolicFont->GenerateSymbolicGlyph('k', 9818);
+    mpSymbolicFont->GenerateSymbolicGlyph('q', 9819);
+    mpSymbolicFont->GenerateSymbolicGlyph('r', 9820);
+    mpSymbolicFont->GenerateSymbolicGlyph('b', 9821);
+    mpSymbolicFont->GenerateSymbolicGlyph('n', 9822);
+    mpSymbolicFont->GenerateSymbolicGlyph('p', 9823);
 
     mPieceData['K'].GenerateImageFromSymbolicFont('K', mnPieceHeight, mpSymbolicFont, mbOutline);
     mPieceData['Q'].GenerateImageFromSymbolicFont('Q', mnPieceHeight, mpSymbolicFont, mbOutline);
@@ -115,6 +114,13 @@ void ZChessWin::UpdateSize()
     mPieceData['B'].GenerateImageFromSymbolicFont('B', mnPieceHeight, mpSymbolicFont, mbOutline);
     mPieceData['N'].GenerateImageFromSymbolicFont('N', mnPieceHeight, mpSymbolicFont, mbOutline);
     mPieceData['P'].GenerateImageFromSymbolicFont('P', mnPieceHeight, mpSymbolicFont, mbOutline);
+
+    mPieceData['k'].GenerateImageFromSymbolicFont('k', mnPieceHeight, mpSymbolicFont, mbOutline);
+    mPieceData['q'].GenerateImageFromSymbolicFont('q', mnPieceHeight, mpSymbolicFont, mbOutline);
+    mPieceData['r'].GenerateImageFromSymbolicFont('r', mnPieceHeight, mpSymbolicFont, mbOutline);
+    mPieceData['b'].GenerateImageFromSymbolicFont('b', mnPieceHeight, mpSymbolicFont, mbOutline);
+    mPieceData['n'].GenerateImageFromSymbolicFont('n', mnPieceHeight, mpSymbolicFont, mbOutline);
+    mPieceData['p'].GenerateImageFromSymbolicFont('p', mnPieceHeight, mpSymbolicFont, mbOutline);
 
     mrBoardArea.SetRect(0, 0, mnPieceHeight * 8, mnPieceHeight * 8);
     mrBoardArea = mrBoardArea.CenterInRect(mAreaToDrawTo);
@@ -186,7 +192,7 @@ bool ZChessWin::OnMouseUpL(int64_t x, int64_t y)
         {
             ZPoint dstGrid(ScreenToGrid(x, y));
             if (mBoard.ValidCoord(dstGrid))
-                mBoard.MovePiece(mDraggingSourceGrid, dstGrid);    // moving piece from source to dest
+                mBoard.MovePiece(mDraggingSourceGrid, dstGrid, !mbEditMode);    // moving piece from source to dest
             else
                 mBoard.SetPiece(mDraggingSourceGrid, 0);           // dragging piece off the board
         }
@@ -334,7 +340,7 @@ void ZChessWin::DrawPalette()
 
 void ZChessWin::DrawBoard()
 {
-    std::list<sMove> legalMoves;
+    tMoveList legalMoves;
     if (mDraggingPiece)
         mBoard.GetMoves(mDraggingPiece, mDraggingSourceGrid, legalMoves);
 
@@ -374,8 +380,12 @@ void ZChessWin::DrawBoard()
 
             mpTransformTexture->Fill(SquareArea(grid), nSquareColor);
 
-
-
+            if (mbShowAttackCount)
+            {
+                string sCount;
+                Sprintf(sCount, "%d,%d", mBoard.UnderAttack(true, grid), mBoard.UnderAttack(false, grid));
+                gpFontSystem->GetDefaultFont()->DrawText(mpTransformTexture.get(), sCount, SquareArea(grid));
+            }
 
 
 
@@ -440,6 +450,32 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         InvalidateChildren();
         return true;
     }
+    else if (sType == "loadboard")
+    {
+        string sFilename;
+        if (ZWinFileDialog::ShowLoadDialog("Forsyth-Edwards Notation", "*.FEN", sFilename))
+        {
+            string sFEN;
+            if (ReadStringFromFile(sFilename, sFEN))
+            {
+                mBoard.FromFEN(sFEN);
+                InvalidateChildren();
+            }
+        }
+        return true;
+    }
+    else if (sType == "saveboard")
+    {
+        string sFilename;
+        if (ZWinFileDialog::ShowSaveDialog("Forsyth-Edwards Notation", "*.FEN", sFilename))
+        {
+            std::filesystem::path filepath(sFilename);
+            if (filepath.extension().empty())
+                filepath+=".FEN";
+            WriteStringToFile(filepath.string(), mBoard.ToFEN());
+        }
+        return true;
+    }
 
     return ZWin::HandleMessage(message);
 }
@@ -458,7 +494,7 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
 
     uint32_t nCol = nLightPiece;
     uint32_t nOutline = nDarkPiece;
-    if (c == 'Q' || c == 'K' || c == 'R' || c == 'N' || c == 'B' || c == 'P')
+    if (c == 'q' || c == 'k' || c == 'r' || c == 'n' || c == 'b' || c == 'p')
     {
         nCol = nDarkPiece;
         nOutline = nLightPiece;
@@ -502,7 +538,7 @@ bool ChessBoard::Empty(const ZPoint& grid)
 
 
 
-bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst)
+bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bGameMove)
 {
     if (!ValidCoord(gridSrc))
     {
@@ -526,8 +562,42 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst)
         return false;
     }
 
+    if (bGameMove)
+    {
+        if (mbWhitesTurn && !IsWhite(c))
+        {
+            ZDEBUG_OUT("Error: White's turn.\n");
+            return false;
+        }
+
+        if (!mbWhitesTurn && IsWhite(c))
+        {
+            ZDEBUG_OUT("Error: Black's turn.\n");
+            return false;
+        }
+
+        bool bIsCapture = false;
+        if (!LegalMove(gridSrc, gridDst, bIsCapture))
+        {
+            ZDEBUG_OUT("Error: Illegal move.\n");
+            return false;
+        }
+
+        if (bIsCapture || c == 'p' || c == 'P')
+            mHalfMovesSinceLastCaptureOrPawnAdvance = 0;
+        else
+            mHalfMovesSinceLastCaptureOrPawnAdvance++;
+
+        mbWhitesTurn = !mbWhitesTurn;
+
+        if (mbWhitesTurn)
+            mFullMoveNumber++;
+    }
+
+
     mBoard[gridDst.mY][gridDst.mX] = c;
     mBoard[gridSrc.mY][gridSrc.mX] = 0;
+    ComputeSquaresUnderAttack();
     return true;
 }
 
@@ -540,6 +610,7 @@ bool ChessBoard::SetPiece(const ZPoint& gridDst, char c)
     }
 
     mBoard[gridDst.mY][gridDst.mX] = c;
+    ComputeSquaresUnderAttack();
     return true;
 }
 
@@ -547,11 +618,19 @@ bool ChessBoard::SetPiece(const ZPoint& gridDst, char c)
 void ChessBoard::ResetBoard()
 {
     memcpy(mBoard, mResetBoard, sizeof(mBoard));
+    mbWhitesTurn = true;
+    mCastlingFlags = eCastlingFlags::kAll;
+    mEnPassantSquare.Set(-1, -1);
+    mHalfMovesSinceLastCaptureOrPawnAdvance = 0;
+    mFullMoveNumber = 1;
+    ComputeSquaresUnderAttack();
 }
 
 void ChessBoard::ClearBoard()
 {
     memset(mBoard, 0, sizeof(mBoard));
+    memset(mSquaresUnderAttackByBlack, 0, sizeof(mSquaresUnderAttackByBlack));
+    memset(mSquaresUnderAttackByWhite, 0, sizeof(mSquaresUnderAttackByWhite));
 }
 
 bool ChessBoard::SameSide(char c, const ZPoint& grid)
@@ -578,7 +657,7 @@ bool ChessBoard::Opponent(char c, const ZPoint& grid)
 }
 
 
-bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst)
+bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture)
 {
     if (!ValidCoord(src))
         return false;
@@ -591,17 +670,68 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst)
     if (s == 0)
         return false;
 
+    tMoveList legalMoves;
+    GetMoves(s, src, legalMoves);
+    bool bLegal = false;
+    IsOneOfMoves(dst, legalMoves, bLegal, bCapture);
 
-    return false;
+    return bLegal;
+}
+
+uint8_t ChessBoard::UnderAttack(bool bByWhyte, const ZPoint& grid)
+{
+    if (!ValidCoord(grid))
+        return false;
+
+    if (bByWhyte)
+        return mSquaresUnderAttackByWhite[grid.mY][grid.mX];
+
+    return mSquaresUnderAttackByBlack[grid.mY][grid.mX];
 }
 
 
-bool ChessBoard::GetMoves(char c, const ZPoint& src, std::list<sMove>& moves)
+
+void ChessBoard::ComputeSquaresUnderAttack()
+{
+    memset(mSquaresUnderAttackByBlack, 0, sizeof(mSquaresUnderAttackByBlack));
+    memset(mSquaresUnderAttackByWhite, 0, sizeof(mSquaresUnderAttackByWhite));
+
+    tMoveList moves;
+    for (int y = 0; y < 8; y++)
+    {
+        for (int x = 0; x < 8; x++)
+        {
+            ZPoint grid(x, y);
+            char c = Piece(grid);
+            if (c)
+            {
+                if (GetMoves(c, grid, moves))
+                {
+                    if (IsWhite(c))
+                    {
+                        for (auto move : moves)
+                            mSquaresUnderAttackByWhite[grid.mY][grid.mX]++;
+                    }
+                    else
+                    {
+                        for (auto move : moves)
+                            mSquaresUnderAttackByBlack[grid.mY][grid.mX]++;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
 {
     if (c == 0 || !ValidCoord(src))
         return false;
 
-    if (c == 'p')
+    moves.clear();
+
+    if (c == 'P')
     {
         if (src.mY == 6 && Empty(src.mX, 5) && Empty(src.mX, 4))    // pawn hasn't moved
             moves.push_back(ZPoint(src.mX, 4));             // two up
@@ -612,7 +742,7 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, std::list<sMove>& moves)
         if (src.mX < 7 && Opponent(c, ZPoint(src.mX+1, src.mY -1)))
             moves.push_back(sMove(src.mX+1, src.mY-1, true));     // capture right
     }
-    if (c == 'P')
+    if (c == 'p')
     {
         if (src.mY == 1 && Empty(src.mX, 2) && Empty(src.mX, 3))    // pawn hasn't moved
             moves.push_back(ZPoint(src.mX, 3));            // two down
@@ -958,12 +1088,78 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, std::list<sMove>& moves)
                 break;
             moves.push_back(sMove(checkGrid));
         } while (ValidCoord(checkGrid));
-
-
-
-
-
     }
+    else if (c == 'k' || c == 'K')
+    {
+        ZPoint checkGrid(src);
+        // up 
+        checkGrid.mY--;
+        if (Opponent(c, checkGrid))
+            moves.push_back(sMove(checkGrid, true));
+        else if (Empty(checkGrid))
+            moves.push_back(sMove(checkGrid));
+
+        // down
+        checkGrid = src;
+        checkGrid.mY++;
+        if (Opponent(c, checkGrid))
+            moves.push_back(sMove(checkGrid, true));
+        else if (Empty(checkGrid))
+            moves.push_back(sMove(checkGrid));
+
+        // left
+        checkGrid = src;
+        checkGrid.mX--;
+        if (Opponent(c, checkGrid))
+            moves.push_back(sMove(checkGrid, true));
+        else if (Empty(checkGrid))
+            moves.push_back(sMove(checkGrid));
+
+        // right
+        checkGrid = src;
+        checkGrid.mX++;
+        if (Opponent(c, checkGrid))
+            moves.push_back(sMove(checkGrid, true));
+        else if (Empty(checkGrid))
+            moves.push_back(sMove(checkGrid));
+
+        // left up
+        checkGrid = src;
+        checkGrid.mY--;
+        checkGrid.mX--;
+        if (Opponent(c, checkGrid))
+            moves.push_back(sMove(checkGrid, true));
+        else if (Empty(checkGrid))
+            moves.push_back(sMove(checkGrid));
+
+        // right up
+        checkGrid = src;
+        checkGrid.mY--;
+        checkGrid.mX++;
+        if (Opponent(c, checkGrid))
+            moves.push_back(sMove(checkGrid, true));
+        else if (Empty(checkGrid))
+            moves.push_back(sMove(checkGrid));
+
+        // left down
+        checkGrid = src;
+        checkGrid.mY++;
+        checkGrid.mX--;
+        if (Opponent(c, checkGrid))
+            moves.push_back(sMove(checkGrid, true));
+        else if (Empty(checkGrid))
+            moves.push_back(sMove(checkGrid));
+
+        // right down
+        checkGrid = src;
+        checkGrid.mY++;
+        checkGrid.mX++;
+        if (Opponent(c, checkGrid))
+            moves.push_back(sMove(checkGrid, true));
+        else if (Empty(checkGrid))
+            moves.push_back(sMove(checkGrid));
+    }
+
 
 
 
@@ -978,7 +1174,7 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, std::list<sMove>& moves)
     return true;
 }
 
-void ChessBoard::IsOneOfMoves(const ZPoint& src, const std::list<sMove>& moves, bool& bIncluded, bool& bCapture)
+void ChessBoard::IsOneOfMoves(const ZPoint& src, const tMoveList& moves, bool& bIncluded, bool& bCapture)
 {
     for (auto m : moves)
     {
@@ -991,6 +1187,187 @@ void ChessBoard::IsOneOfMoves(const ZPoint& src, const std::list<sMove>& moves, 
     }
 
     bIncluded = false;
+}
+
+string ChessBoard::ToPosition(const ZPoint& grid)
+{
+    if (!ValidCoord(grid))
+        return "";
+
+    return string(grid.mX + 'a', 1) + string('1' + (7 - grid.mY), 1);
+}
+
+ZPoint ChessBoard::FromPosition(string sPosition)
+{
+    StringHelpers::makelower(sPosition);
+
+    ZPoint grid(-1, -1);
+    if (sPosition.length() == 2)
+    {
+        char col = sPosition[0];
+        char row = sPosition[1];
+
+        if (col >= 'a' && col <= 'h')
+        {
+            if (row >= '1' && row <= '8')
+            {
+                grid.mX = col - 'a';
+                grid.mY = row - '1';
+            }
+
+        }
+    }
+
+    return grid;
+}
+
+
+
+string ChessBoard::ToFEN()
+{
+    string sFEN;
+    for (int y = 0; y < 8; y++)
+    {
+        for (int x = 0; x < 8;)
+        {
+            char c = mBoard[y][x];
+            if (c > 0)
+            {
+                sFEN += string(&c, 1);
+                x++;
+            }
+            else
+            {
+                uint32_t nBlanks = 0;
+                while (c == 0 && x < 8)
+                {
+                    nBlanks++;
+                    x++;
+                    c = mBoard[y][x];
+                }
+                if (nBlanks > 0)
+                {
+                    string sBlanks;
+                    Sprintf(sBlanks, "%d", nBlanks);
+                    sFEN += sBlanks;
+                }
+
+            }
+        }
+        if (y < 7)
+            sFEN += "/";
+    }
+
+    if (mbWhitesTurn)
+        sFEN += " w ";
+    else
+        sFEN += " b ";
+
+    if (mCastlingFlags == kNone)
+    {
+        sFEN += "-";
+    }
+    else
+    {
+        if (mCastlingFlags | eCastlingFlags::kWhiteKingSide)
+            sFEN += "K";
+        if (mCastlingFlags | eCastlingFlags::kWhiteQueenSide)
+            sFEN += "Q";
+        if (mCastlingFlags | eCastlingFlags::kBlackKingSide)
+            sFEN += "k";
+        if (mCastlingFlags | eCastlingFlags::kBlackQueenSide)
+            sFEN += "q";
+    }
+
+    if (ValidCoord(mEnPassantSquare))
+        sFEN += " " + ToPosition(mEnPassantSquare) + " ";
+    else
+        sFEN += " - ";
+
+    sFEN += StringHelpers::FromInt(mHalfMovesSinceLastCaptureOrPawnAdvance) + " ";
+    sFEN += StringHelpers::FromInt(mFullMoveNumber);
+
+    return sFEN;
+}
+
+bool ChessBoard::FromFEN(const string& sFEN)
+{
+    ClearBoard();
+    int nIndex = 0;
+    for (int y = 7; y >= 0; y--)
+    {
+        int x = 0;
+        while (x < 8)
+        {
+            char c = sFEN[nIndex];
+            if (c >= '1' && c <= '8')
+                x += (c - '0');
+            else
+            {
+                mBoard[y][x] = c;
+                x++;
+            }
+
+            nIndex++;
+        }
+
+        // skip the '/' (or space after the final row)
+        nIndex++;
+    }
+
+    // who's turn field
+    char w = sFEN[nIndex];
+    if (w == 'w')
+        mbWhitesTurn = true;
+    else
+        mbWhitesTurn = false;
+
+    nIndex += 2;    // after the w/b and space
+
+    // castleing field
+    size_t nNextSpace = sFEN.find(' ', nIndex);
+    string sCastling = sFEN.substr(nIndex, nNextSpace - nIndex);
+
+    if (sCastling == "-")
+    {
+        mCastlingFlags = eCastlingFlags::kNone;
+    }
+    else
+    {
+        for (int nCastlingIndex = 0; nCastlingIndex < sCastling.length(); nCastlingIndex++)
+        {
+            char c = sCastling[nCastlingIndex];
+            if (c == 'K')
+                mCastlingFlags |= eCastlingFlags::kWhiteKingSide;
+            if (c == 'Q')
+                mCastlingFlags |= eCastlingFlags::kWhiteQueenSide;
+            if (c == 'k')
+                mCastlingFlags |= eCastlingFlags::kBlackKingSide;
+            if (c == 'q')
+                mCastlingFlags |= eCastlingFlags::kBlackQueenSide;
+        }
+    }
+
+    nIndex += sCastling.length()+1;
+
+    // en passant field
+    nNextSpace = sFEN.find(' ', nIndex);
+    string sEnPassant(sFEN.substr(nIndex, nNextSpace - nIndex));
+
+    mEnPassantSquare = FromPosition(sEnPassant);
+    nIndex += sEnPassant.length()+1;
+
+    // half move since last capture or pawn move
+    nNextSpace = sFEN.find(' ', nIndex);
+    string sHalfMoves(sFEN.substr(nIndex, nNextSpace - nIndex));
+
+    mHalfMovesSinceLastCaptureOrPawnAdvance = StringHelpers::ToInt(sHalfMoves);
+    nIndex += sHalfMoves.length()+1;
+
+    mFullMoveNumber = StringHelpers::ToInt(sFEN.substr(nIndex));      // last value
+
+
+    return false;
 }
 
 

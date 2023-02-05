@@ -25,10 +25,22 @@ struct sMove
     bool bCapture;
 };
 
+typedef std::list<sMove> tMoveList;
+
 
 class ChessBoard
 {
 public:
+    enum eCastlingFlags : uint8_t
+    {
+        kNone           = 0,
+        kWhiteKingSide  = 1,
+        kWhiteQueenSide = 2,
+        kBlackKingSide  = 4,
+        kBlackQueenSide = 8,
+        kAll = kWhiteKingSide|kWhiteQueenSide|kBlackKingSide|kBlackQueenSide
+    };
+
     ChessBoard() { ResetBoard(); }
     void    ResetBoard();
     void    ClearBoard();
@@ -39,21 +51,39 @@ public:
     bool    Empty(int64_t x, int64_t y) { return Empty(ZPoint(x, y)); }
     bool    ValidCoord(const ZPoint& l) { return (l.mX >= 0 && l.mX < 8 && l.mY >= 0 && l.mY < 8); }
 
-    bool    MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst);
+    bool    MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bGameMove = true); // if bGameMove is false, this is simply manipulating the board outside of a game
     bool    SetPiece(const ZPoint& gridDst, char c);
 
-    bool    IsWhite(char c) { return  (c == 'q' || c == 'k' || c == 'r' || c == 'n' || c == 'b' || c == 'p'); }
-    bool    IsBlack(char c) { return  (c == 'Q' || c == 'K' || c == 'R' || c == 'N' || c == 'B' || c == 'P'); }
+    bool    IsBlack(char c) { return  (c == 'q' || c == 'k' || c == 'r' || c == 'n' || c == 'b' || c == 'p'); }
+    bool    IsWhite(char c) { return  (c == 'Q' || c == 'K' || c == 'R' || c == 'N' || c == 'B' || c == 'P'); }
 
-    bool    LegalMove(const ZPoint& src, const ZPoint& dst);
+    bool    LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture);
     bool    SameSide(char c, const ZPoint& grid); // true if the grid coordinate has a piece on the same side (black or white)
     bool    Opponent(char c, const ZPoint& grid); // true if an opponent is on the grid location
-    bool    GetMoves(char c, const ZPoint& src, std::list<sMove>& moves);
+    bool    GetMoves(char c, const ZPoint& src, tMoveList& moves);
 
-    void    IsOneOfMoves(const ZPoint& src, const std::list<sMove>& moves, bool& bIncluded, bool& bCapture);
+    void    IsOneOfMoves(const ZPoint& src, const tMoveList& moves, bool& bIncluded, bool& bCapture);
+    uint8_t UnderAttack(bool bByWhyte, const ZPoint& grid); // returns number of pieces attacking a square
 
 
-    char     mBoard[8][8];
+    std::string     ToPosition(const ZPoint& grid);
+    ZPoint          FromPosition(std::string sPosition);
+
+    std::string     ToFEN();   // converts board position to FEN format
+    bool            FromFEN(const std::string& sFEN);
+
+protected:
+    void    ComputeSquaresUnderAttack();
+
+    char    mBoard[8][8];
+    bool    mbWhitesTurn;
+    uint8_t mCastlingFlags;
+    ZPoint  mEnPassantSquare;
+    uint32_t mHalfMovesSinceLastCaptureOrPawnAdvance;
+    uint32_t mFullMoveNumber;
+
+    uint8_t mSquaresUnderAttackByWhite[8][8];
+    uint8_t mSquaresUnderAttackByBlack[8][8];
 };
 
 class ChessPiece
@@ -102,20 +132,21 @@ private:
     ZRect   SquareArea(const ZPoint& grid);
     uint32_t SquareColor(const ZPoint& grid);
 
-    ZDynamicFont*    mpSymbolicFont;
+    ZDynamicFont*   mpSymbolicFont;
 
-    int64_t          mnPieceHeight;
-    bool             mbOutline;
+    int64_t         mnPieceHeight;
+    bool            mbOutline;
     bool            mbEditMode;
     bool            mbCopyKeyEnabled;
     bool            mbViewWhiteOnBottom;
+    bool            mbShowAttackCount;
 
     int64_t         mnPalettePieceHeight;
 
     uint32_t        mLightSquareCol;
     uint32_t        mDarkSquareCol;
 
-    char mPalettePieces[12] = { 'Q', 'K', 'R', 'N', 'B', 'P', 'p', 'b', 'n', 'r', 'k', 'q' };
+    char mPalettePieces[12] = { 'q', 'k', 'r', 'n', 'b', 'p', 'P', 'B', 'N', 'R', 'K', 'Q' };
 
 
     ZRect mrBoardArea;

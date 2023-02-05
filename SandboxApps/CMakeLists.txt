@@ -93,6 +93,7 @@ set(COMMON_FILES
 ../ZFramework/ZWinBtn.H
 ../ZFramework/ZWinControlPanel.cpp
 ../ZFramework/ZWinControlPanel.h
+../ZFramework/ZWinFileDialog.h
 ../ZFramework/ZWinWatchPanel.cpp
 ../ZFramework/ZWinWatchPanel.h
 ../ZFramework/ZXMLNode.cpp
@@ -100,6 +101,7 @@ set(COMMON_FILES
 ../ZFramework/ZZipAPI.cpp
 ../ZFramework/ZZipAPI.h
 ../ZFramework/platforms/windows/GDIImageTags.h
+../ZFramework/platforms/windows/ZWinFileDialog_Windows.cpp
 )
 
 list(APPEND COMMON_FILES ../../ZLibraries/Common/helpers/FNMatch.h ../../ZLibraries/Common/helpers/FNMatch.cpp ../../ZLibraries/Common/helpers/HTTPCache.h ../../ZLibraries/Common/helpers/HTTPCache.cpp)

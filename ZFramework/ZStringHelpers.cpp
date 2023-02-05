@@ -206,6 +206,7 @@ bool ReadStringFromFile(const string& sFilename, string& sResult)
 
     ZMemBufferPtr inputBuffer(new ZMemBuffer(nLength));
     stringFile.read((char*)inputBuffer->data(), nLength);
+    inputBuffer->seekp(nLength);
 
 	if (nLength > 6 && memcmp(inputBuffer->data(), ksEncodedStringTag, 6) == 0)
 	{

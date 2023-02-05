@@ -19,11 +19,8 @@
 #include "Resources.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
+#include "ZWinFileDialog.h"
 
-#ifdef _WIN64        // for open file dialong
-#include <windows.h>
-#include <shobjidl.h> 
-#endif
 
 using namespace std;
 
@@ -199,70 +196,13 @@ void cProcessImageWin::Process_LoadImages()
 {
     std::list<string> filenames;
 
-#ifdef _WIN64
-    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    if (SUCCEEDED(hr))
+    if (ZWinFileDialog::ShowMultiLoadDialog("Supported Image Formats", "*.jpg;*.jpeg;*.bmp;*.gif;*.png;*.tiff;*.exif;*.wmf;*.emf", filenames ))
     {
-        IFileOpenDialog* pFileOpen;
-
-        // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
-
-        if (SUCCEEDED(hr))
+        if (!filenames.empty())
         {
-            COMDLG_FILTERSPEC rgSpec[] =
-            {
-                { L"Supported Image Formats", L"*.jpg;*.jpeg;*.bmp;*.gif;*.png;*.tiff;*.exif;*.wmf;*.emf" },
-                { L"All Files", L"*.*" }
-            };
-
-            pFileOpen->SetFileTypes(2, rgSpec);
-
-            DWORD dwOptions;
-            // Specify multiselect.
-            hr = pFileOpen->GetOptions(&dwOptions);
-
-            if (SUCCEEDED(hr))
-            {
-                hr = pFileOpen->SetOptions(dwOptions | FOS_ALLOWMULTISELECT);
-            }
-
-            // Show the Open dialog box.
-            hr = pFileOpen->Show(NULL);
-
-            // Get the file name from the dialog box.
-            if (SUCCEEDED(hr))
-            {
-                IShellItemArray* pItems;
-                hr = pFileOpen->GetResults(&pItems);
-                if (SUCCEEDED(hr))
-                {
-                    DWORD nCount = 0;
-                    pItems->GetCount(&nCount);
-                    for (DWORD i = 0; i < nCount; i++)
-                    {
-                        IShellItem* pItem;
-                        pItems->GetItemAt(i, &pItem);
-
-                        PWSTR pszFilePath;
-                        pItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath);
-
-                        wstring wideFilename(pszFilePath);
-                        filenames.push_back(StringHelpers::wstring2string(wideFilename));
-                        pItem->Release();
-                    }
-                }
-            }
-            pFileOpen->Release();
+            LoadImages(filenames);
         }
-        CoUninitialize();
     }
-
-    if (!filenames.empty())
-    {
-        LoadImages(filenames);
-    }
-#endif
 }
 
 void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
@@ -337,55 +277,16 @@ void cProcessImageWin::Process_SaveResultImage()
         return;
     }
 
-#ifdef _WIN64
     string sFileName;
-    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    if (SUCCEEDED(hr))
+
+    if (ZWinFileDialog::ShowSaveDialog("Supported Image Formats", "*.jpg;*.jpeg;*.bmp;*.gif;*.png;*.tiff;*.tif", sFileName))
     {
-        IFileSaveDialog* pDialog;
-
-        // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_ALL, IID_IFileSaveDialog, reinterpret_cast<void**>(&pDialog));
-
-        if (SUCCEEDED(hr))
+        if (!sFileName.empty())
         {
-            COMDLG_FILTERSPEC rgSpec[] =
-            {
-                { L"Supported Image Formats", L"*.jpg;*.jpeg;*.bmp;*.gif;*.png;*.tiff;*.tif" },
-                { L"All Files", L"*.*" }
-            };
-
-            pDialog->SetFileTypes(2, rgSpec);
-
-            // Show the Open dialog box.
-            hr = pDialog->Show(NULL);
-
-            // Get the file name from the dialog box.
-            if (SUCCEEDED(hr))
-            {
-                IShellItem* pItem;
-                hr = pDialog->GetResult(&pItem);
-                if (SUCCEEDED(hr))
-                {
-                    PWSTR pszFilePath;
-                    hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-
-                    wstring wideFilename(pszFilePath);
-                    sFileName = StringHelpers::wstring2string(wideFilename);
-
-                    pItem->Release();
-                }
-            }
-            pDialog->Release();
+            mpResultBuffer->SaveBuffer(sFileName);
+            return;
         }
-        CoUninitialize();
     }
-    if (!sFileName.empty())
-    {
-        mpResultBuffer->SaveBuffer(sFileName);
-        return;
-    }
-#endif
 
     ZASSERT(false); // couldn't find image with that name
 }

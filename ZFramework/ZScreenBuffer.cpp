@@ -288,6 +288,50 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 	return (int32_t) nRenderedCount;
 }
 
+bool ZScreenBuffer::RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst)
+{
+    if (!mbRenderingEnabled || !pSrc)
+        return false;
+
+    BITMAPINFO bmpInfo;
+    bmpInfo.bmiHeader.biBitCount = 32;
+    bmpInfo.bmiHeader.biCompression = BI_RGB;
+    bmpInfo.bmiHeader.biPlanes = 1;
+    bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
+
+
+    pSrc->GetMutex().lock();
+
+    ZRect rTexture(pSrc->GetArea());
+
+    bmpInfo.bmiHeader.biWidth = (LONG)rTexture.Width();
+    bmpInfo.bmiHeader.biHeight = (LONG)-rTexture.Height();
+
+    DWORD nStartScanline = (DWORD)rSrc.top;
+    DWORD nScanLines = (DWORD)rDst.Height();
+
+    void* pBits = pSrc->GetPixels() + rSrc.top * rTexture.Width();
+
+    int nRet = SetDIBitsToDevice(mDC,       // HDC
+        (DWORD)rDst.left,                 // Dest X
+        (DWORD)rDst.top,                  // Dest Y
+        (DWORD)rDst.Width(),            // Dest Width
+        (DWORD)rDst.Height(),           // Dest Height
+        (DWORD)rSrc.left,               // Src X
+        (DWORD)rSrc.top,                // Src Y
+        nStartScanline,                                  // Start Scanline
+        nScanLines,           // Num Scanlines
+        pBits,       // * pixels
+        &bmpInfo,                          // BMPINFO
+        DIB_RGB_COLORS);                    // Usage
+
+    pSrc->GetMutex().unlock();
+
+    return true;
+}
+
+
+
 #endif // _WIN64
 
 // #define DEBUG_VISIBILITY
