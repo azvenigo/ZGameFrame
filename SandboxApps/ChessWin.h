@@ -42,28 +42,37 @@ public:
     };
 
     ChessBoard() { ResetBoard(); }
-    void    ResetBoard();
-    void    ClearBoard();
-    //    void    RotateBoard();
+    void            ResetBoard();
+    void            ClearBoard();
 
-    char    Piece(const ZPoint& grid);
-    bool    Empty(const ZPoint& grid);
-    bool    Empty(int64_t x, int64_t y) { return Empty(ZPoint(x, y)); }
-    bool    ValidCoord(const ZPoint& l) { return (l.mX >= 0 && l.mX < 8 && l.mY >= 0 && l.mY < 8); }
+    char            Piece(const ZPoint& grid);
+    bool            Empty(const ZPoint& grid);
+    bool            Empty(int64_t x, int64_t y) { return Empty(ZPoint(x, y)); }
+    bool            ValidCoord(const ZPoint& l) { return (l.mX >= 0 && l.mX < 8 && l.mY >= 0 && l.mY < 8); }
 
-    bool    MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bGameMove = true); // if bGameMove is false, this is simply manipulating the board outside of a game
-    bool    SetPiece(const ZPoint& gridDst, char c);
+    bool            MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bGameMove = true); // if bGameMove is false, this is simply manipulating the board outside of a game
+    bool            SetPiece(const ZPoint& gridDst, char c);
 
-    bool    IsBlack(char c) { return  (c == 'q' || c == 'k' || c == 'r' || c == 'n' || c == 'b' || c == 'p'); }
-    bool    IsWhite(char c) { return  (c == 'Q' || c == 'K' || c == 'R' || c == 'N' || c == 'B' || c == 'P'); }
+    bool            IsBlack(char c) { return  (c == 'q' || c == 'k' || c == 'r' || c == 'n' || c == 'b' || c == 'p'); }
+    bool            IsWhite(char c) { return  (c == 'Q' || c == 'K' || c == 'R' || c == 'N' || c == 'B' || c == 'P'); }
 
-    bool    LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture);
-    bool    SameSide(char c, const ZPoint& grid); // true if the grid coordinate has a piece on the same side (black or white)
-    bool    Opponent(char c, const ZPoint& grid); // true if an opponent is on the grid location
-    bool    GetMoves(char c, const ZPoint& src, tMoveList& moves);
+    bool            LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture);
+    bool            SameSide(char c, const ZPoint& grid); // true if the grid coordinate has a piece on the same side (black or white)
+    bool            Opponent(char c, const ZPoint& grid); // true if an opponent is on the grid location
+    bool            GetMoves(char c, const ZPoint& src, tMoveList& moves, tMoveList& attackSquares);
 
-    void    IsOneOfMoves(const ZPoint& src, const tMoveList& moves, bool& bIncluded, bool& bCapture);
-    uint8_t UnderAttack(bool bByWhyte, const ZPoint& grid); // returns number of pieces attacking a square
+    void            IsOneOfMoves(const ZPoint& src, const tMoveList& moves, bool& bIncluded, bool& bCapture);
+    uint8_t         UnderAttack(bool bByWhite, const ZPoint& grid); // returns number of pieces attacking a square
+    bool            IsKingInCheck(bool bWhite, const ZPoint& atLocation);   // returns true if the king is (or would be) in check at a location
+    bool            IsKingInCheck(bool bWhite); // is king currently in check at his current position
+
+    bool            WhitesTurn() { return mbWhitesTurn; }
+    void            SetWhitesTurn(bool bWhitesTurn) { mbWhitesTurn = bWhitesTurn; }
+    ZPoint          GetEnPassantSquare() { return mEnPassantSquare; }
+    uint32_t        GetHalfMovesSinceLastCaptureOrPawnAdvance() { return mHalfMovesSinceLastCaptureOrPawnAdvance; }
+    uint32_t        GetMoveNumber() { return mFullMoveNumber; }
+    uint32_t        GetCastlingFlags() { return mCastlingFlags; }
+
 
 
     std::string     ToPosition(const ZPoint& grid);
@@ -124,15 +133,21 @@ private:
     void    DrawPalette();
     void    UpdateSize();
 
+    void    UpdateWatchPanel();
+
     ZPoint  ScreenToGrid(int64_t x, int64_t y);
     ZPoint  ScreenToSquareOffset(int64_t x, int64_t y);
 
     char    ScreenToPalettePiece(int64_t x, int64_t y);
 
+    void    LoadRandomPosition();
+
+
     ZRect   SquareArea(const ZPoint& grid);
     uint32_t SquareColor(const ZPoint& grid);
 
     ZDynamicFont*   mpSymbolicFont;
+
 
     int64_t         mnPieceHeight;
     bool            mbOutline;
@@ -161,5 +176,10 @@ private:
     ZRect       mrDraggingPiece;
     char        mDraggingPiece;
     ZPoint      mDraggingSourceGrid;
+
+    // watch panel
+    std::string msDebugStatus;
+    std::string msFEN;
+
 
 };

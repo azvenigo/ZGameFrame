@@ -299,3 +299,15 @@ bool EndsWith(const string& sConsider, const string& ends)
 {
 	return sConsider.substr(sConsider.length() - ends.length()) == ends;
 }
+
+std::string SanitizeAscii(const std::string& sText)
+{
+    std::string sSanitized(sText);
+    
+    for (size_t i = 0; i < sSanitized.length(); i++)
+    {
+        if (sSanitized[i] > 127)
+            sSanitized[i] = '_';
+    }
+    return sSanitized;
+}

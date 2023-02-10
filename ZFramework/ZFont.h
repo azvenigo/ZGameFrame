@@ -182,11 +182,11 @@ protected:
 	bool                    DrawText_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip);
 	bool                    DrawText_Gradient_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, uint32_t nCol2, ZRect* pClip);
 
-    void                    BuildGradient(uint32_t nColor1, uint32_t nColor2);
+    void                    BuildGradient(uint32_t nColor1, uint32_t nColor2, std::vector<uint32_t>& gradient);
    
     virtual void            DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY);
     virtual void            DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
-    virtual void            DrawCharGradient(ZBuffer* pBuffer, char c, int64_t nX, int64_t nY, ZRect* pClip);
+    virtual void            DrawCharGradient(ZBuffer* pBuffer, char c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
 
     void                    FindKerning(char c1, char c2);
 
@@ -197,7 +197,7 @@ protected:
 
 	sCharDescriptor         mCharDescriptors[kMaxChars];  // lower 128 ascii chars
 	bool                    mbInitted;
-	std::vector<uint32_t>	mColorGradient;
+//	std::vector<uint32_t>	mColorGradient;
 };
 
 
@@ -237,7 +237,7 @@ protected:
     // overloads from ZFont that will generate glyphs if needed
     virtual void        DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY);
     virtual void        DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
-    virtual void        DrawCharGradient(ZBuffer* pBuffer, char c, int64_t nX, int64_t nY, ZRect* pClip);
+    virtual void        DrawCharGradient(ZBuffer* pBuffer, char c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
 
 private:
 
@@ -295,6 +295,7 @@ public:
 
     size_t          GetFontCount() { return mFontMap.size(); }
 
+    bool            SetDefaultFont(const ZFontParams& params);
     ZFontParams&    GetDefaultFontParam() { return mpDefault->GetFontParams(); }
     tZFontPtr       GetDefaultFont() { return mpDefault; }
 

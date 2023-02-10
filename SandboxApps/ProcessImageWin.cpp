@@ -216,7 +216,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
 
     tBufferProps& props = pBuf->GetProps();
 
-    tZFontPtr pSmallFont = gpFontSystem->GetFont(ZFontParams("System", 16, 200, 0, true));
+    tZFontPtr pSmallFont = gpFontSystem->GetFont(ZFontParams("System", 20, 200, 0, true));
     ZFontParams fp(pSmallFont->GetFontParams());
 
     for (auto prop : props)
@@ -225,7 +225,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
 
         sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
         sPropLineXMLNode += " position=MiddleLeft>";
-        sPropLineXMLNode += prop.sName;
+        sPropLineXMLNode += SanitizeAscii(prop.sName);
         sPropLineXMLNode += "</text>";
 
 /*        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
@@ -235,7 +235,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
 
         sPropLineXMLNode += "<text size=0 color=0xff000000 color2=0xff000000 ";
         sPropLineXMLNode += " position=middleRight>";
-        sPropLineXMLNode += prop.sValue.substr(0,16);
+        sPropLineXMLNode += SanitizeAscii(prop.sValue.substr(0,16));
         sPropLineXMLNode += "</text></line>";
 
         mpImageProps->AddTextLine(sPropLineXMLNode, fp, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);

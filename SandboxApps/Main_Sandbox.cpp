@@ -224,6 +224,7 @@ void Sandbox::SandboxInitializeFonts()
 
     std::filesystem::create_directory("font_cache");    // ensure font cache exists...keep in working folder or move elsewhere?
     gpFontSystem->SetCacheFolder("font_cache");
+    gpFontSystem->SetDefaultFont(gDefaultTextFont);
 
     gpFontSystem->Init();
 }

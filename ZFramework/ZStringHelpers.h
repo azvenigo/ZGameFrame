@@ -59,6 +59,8 @@ void        Sprintf(std::string& sOut, const char* format, va_list args);
 bool		StartsWith(const std::string& sConsider, const std::string& starts);
 bool		EndsWith(const std::string& sConsider, const std::string& ends);
 
+std::string SanitizeAscii(const std::string& sText);  // ensures all characters are in the lower 7bit ascii values
+
 std::string GetHoursMinutesSecondsString(int64_t nSeconds);		
 
 // Parsers

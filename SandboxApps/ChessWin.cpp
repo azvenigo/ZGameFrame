@@ -1,9 +1,12 @@
 #include "ChessWin.h"
 #include "Resources.h"
 #include "ZWinControlPanel.h"
+#include "ZWinWatchPanel.h"
 #include "ZStringHelpers.h"
 #include "ZWinFileDialog.h"
+#include "helpers/RandHelpers.h"
 #include <filesystem>
+#include <fstream>
 
 using namespace std;
 
@@ -27,8 +30,7 @@ ZChessWin::ZChessWin()
     mDraggingPiece = 0;
     mDraggingSourceGrid.Set(-1, -1);
     mbCopyKeyEnabled = false;
-    mbEditMode = true;
-    mbViewWhiteOnBottom = true;
+    mbEditMode = false;
     mbShowAttackCount = true;
 }
    
@@ -39,7 +41,7 @@ bool ZChessWin::Init()
     mIdleSleepMS = 10000;
     SetFocus();
 
-    mnPieceHeight = mAreaToDrawTo.Height() / 10;
+    mnPieceHeight = mAreaToDrawTo.Height() / 12;
 
     mLightSquareCol = 0xffeeeed5;
     mDarkSquareCol = 0xff7d945d;
@@ -66,16 +68,29 @@ bool ZChessWin::Init()
     pCP->AddToggle(&mbOutline, "Outline", "type=invalidate;target=chesswin", "type=invalidate;target=chesswin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     pCP->AddToggle(&mbEditMode, "Edit Mode", "type=invalidate;target=chesswin", "type=invalidate;target=chesswin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
-
+    pCP->AddButton("Change Turn", "type=changeturn;target=chesswin", pBtnFont, 0xffffffff, 0xff000000, ZFont::kShadowed);
 
     pCP->AddButton("Clear Board", "type=clearboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     pCP->AddButton("Reset Board", "type=resetboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-    pCP->AddButton("Rotate Board", "type=rotateboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     pCP->AddSpace(panelH/30);
+
     pCP->AddButton("Load Board", "type=loadboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     pCP->AddButton("Save Board", "type=saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
+    pCP->AddSpace(panelH / 30);
+    pCP->AddButton("Random DB Position", "type=randdbboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+
     ChildAdd(pCP);
+
+    ZWinWatchPanel* pPanel = new ZWinWatchPanel();
+    
+    ZRect rWatchPanel(0,0,rControlPanel.Width()*2, rControlPanel.Height()/4);
+    rWatchPanel.OffsetRect(rControlPanel.left - rWatchPanel.Width() - 16, rControlPanel.top + rControlPanel.Height() *3 /4);
+    pPanel->SetArea(rWatchPanel);
+    ChildAdd(pPanel);
+    pPanel->AddItem(WatchType::kString, "Debug:", &msDebugStatus, 0xff000000, 0xffffffff);
+
+    msDebugStatus = "starting test";
 
 
 
@@ -133,6 +148,19 @@ void ZChessWin::UpdateSize()
     InvalidateChildren();
 }
 
+
+void ZChessWin::UpdateWatchPanel()
+{
+    msDebugStatus = "Turn: " + StringHelpers::FromInt(mBoard.GetMoveNumber()) + " ";
+    if (mBoard.WhitesTurn())
+        msDebugStatus += "White's Move";
+    else
+        msDebugStatus += "Black's Move";
+
+    msDebugStatus += mBoard.ToFEN();
+    InvalidateChildren();
+}
+
 bool ZChessWin::OnMouseDownL(int64_t x, int64_t y)
 {
     ZPoint grid(ScreenToGrid(x, y));
@@ -144,22 +172,30 @@ bool ZChessWin::OnMouseDownL(int64_t x, int64_t y)
         char c = mBoard.Piece(grid);
         if (c)
         {
-            mDraggingPiece = c;
-            mDraggingSourceGrid = grid;
-
-            ZPoint squareOffset(ScreenToSquareOffset(x, y));
-            tZBufferPtr pieceImage(mPieceData[c].mpImage);
-
-            // If we've clicked on an opaque pixel
-            if (SetCapture())
+            // only pick up a piece if
+            // 1) In edit mode
+            // 2) In game mode and it's white's turn and picking up white piece
+            // 3) same but for black
+            if (mbEditMode ||  (mBoard.IsWhite(c) && mBoard.WhitesTurn()) || (mBoard.IsBlack(c) && !mBoard.WhitesTurn()))
             {
-                //            OutputDebugLockless("capture x:%d, y:%d\n", mZoomOffset.mX, mZoomOffset.mY);
-                SetMouseDownPos(squareOffset.mX, squareOffset.mX);
-                mpDraggingPiece = pieceImage;
-                mrDraggingPiece.SetRect(pieceImage->GetArea());
-                mrDraggingPiece.OffsetRect(x-mrDraggingPiece.Width()/2, y-mrDraggingPiece.Height()/2);
-                //            mZoomOffsetAtMouseDown = mZoomOffset;
-                return true;
+
+                mDraggingPiece = c;
+                mDraggingSourceGrid = grid;
+
+                ZPoint squareOffset(ScreenToSquareOffset(x, y));
+                tZBufferPtr pieceImage(mPieceData[c].mpImage);
+
+                // If we've clicked on an opaque pixel
+                if (SetCapture())
+                {
+                    //            OutputDebugLockless("capture x:%d, y:%d\n", mZoomOffset.mX, mZoomOffset.mY);
+                    SetMouseDownPos(squareOffset.mX, squareOffset.mX);
+                    mpDraggingPiece = pieceImage;
+                    mrDraggingPiece.SetRect(pieceImage->GetArea());
+                    mrDraggingPiece.OffsetRect(x - mrDraggingPiece.Width() / 2, y - mrDraggingPiece.Height() / 2);
+                    //            mZoomOffsetAtMouseDown = mZoomOffset;
+                    return true;
+                }
             }
 
             return true;
@@ -194,17 +230,22 @@ bool ZChessWin::OnMouseUpL(int64_t x, int64_t y)
             if (mBoard.ValidCoord(dstGrid))
                 mBoard.MovePiece(mDraggingSourceGrid, dstGrid, !mbEditMode);    // moving piece from source to dest
             else
-                mBoard.SetPiece(mDraggingSourceGrid, 0);           // dragging piece off the board
+            {
+                if (mbEditMode)
+                    mBoard.SetPiece(mDraggingSourceGrid, 0);           // dragging piece off the board
+            }
         }
         else
         {
-            mBoard.SetPiece(ScreenToGrid(x, y), mDraggingPiece);   // setting piece from palette
+            if (mbEditMode)
+                mBoard.SetPiece(ScreenToGrid(x, y), mDraggingPiece);   // setting piece from palette
         }
 
         mpDraggingPiece.reset();
         mDraggingPiece = 0;
         mDraggingSourceGrid.Set(-1, -1);
         ReleaseCapture();
+        UpdateWatchPanel();
         Invalidate();
     }
     return ZWin::OnMouseUpL(x, y);
@@ -341,9 +382,11 @@ void ZChessWin::DrawPalette()
 void ZChessWin::DrawBoard()
 {
     tMoveList legalMoves;
+    tMoveList attackSquares;
     if (mDraggingPiece)
-        mBoard.GetMoves(mDraggingPiece, mDraggingSourceGrid, legalMoves);
+        mBoard.GetMoves(mDraggingPiece, mDraggingSourceGrid, legalMoves, attackSquares);
 
+    tZFontPtr defaultFont(gpFontSystem->GetDefaultFont());
 
     for (int y = 0; y < 8; y++)
     {
@@ -351,20 +394,10 @@ void ZChessWin::DrawBoard()
         {
             ZPoint grid(x, y);
 
-            char c;
-            if (mbViewWhiteOnBottom)
-            {
-                c = mBoard.Piece(grid);
-            }
-            else
-            {
-                ZPoint useGrid(7 - x, 7 - y);
-                c = mBoard.Piece(useGrid);   // drawing top to bottom using pieces on the rotated board
-            }
-
+            char c = mBoard.Piece(grid);
 
             uint32_t nSquareColor = SquareColor(grid);
-            if (mDraggingPiece)
+            if (mDraggingPiece && !mbEditMode)
             {
                 bool bIncluded = false;
                 bool bCapture = false;
@@ -382,9 +415,16 @@ void ZChessWin::DrawBoard()
 
             if (mbShowAttackCount)
             {
+
                 string sCount;
-                Sprintf(sCount, "%d,%d", mBoard.UnderAttack(true, grid), mBoard.UnderAttack(false, grid));
-                gpFontSystem->GetDefaultFont()->DrawText(mpTransformTexture.get(), sCount, SquareArea(grid));
+                Sprintf(sCount, "%d", mBoard.UnderAttack(true, grid));
+                ZRect rText(SquareArea(grid));
+                defaultFont->DrawText(mpTransformTexture.get(), sCount, rText, 0xffffffff, 0xffffffff);
+
+                rText.OffsetRect(0, defaultFont->FontHeight());
+
+                Sprintf(sCount, "%d",mBoard.UnderAttack(false, grid));
+                defaultFont->DrawText(mpTransformTexture.get(), sCount, rText, 0xff000000, 0xff000000);
             }
 
 
@@ -399,6 +439,36 @@ void ZChessWin::DrawBoard()
             }
         }
     }
+
+    ZRect rMoveLabel;
+    tZFontPtr pLabelFont = gpFontSystem->GetFont(gDefaultTitleFont);
+    uint32_t nLabelPadding = pLabelFont->GetFontParams().nHeight;
+    if (mBoard.WhitesTurn())
+    {
+        rMoveLabel.SetRect(SquareArea(ZPoint(0, 7)));
+        rMoveLabel.OffsetRect(-rMoveLabel.Width()-nLabelPadding*2, 0);
+        string sLabel("White's Move");
+        if (mBoard.IsKingInCheck(true))
+            sLabel = "White is in Check";
+
+        rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
+        rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
+        mpTransformTexture->Fill(rMoveLabel, 0xffffffff);
+        pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, 0xff000000, 0xff000000, ZFont::kMiddleCenter);
+    }
+    else
+    {
+        rMoveLabel.SetRect(SquareArea(ZPoint(0, 0)));
+        rMoveLabel.OffsetRect(-rMoveLabel.Width()- nLabelPadding*2, 0);
+        string sLabel("Black's Move");
+        if (mBoard.IsKingInCheck(false))
+            sLabel = "Black is in Check";
+        rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
+        rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
+        mpTransformTexture->Fill(rMoveLabel, 0xff000000);
+        pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, 0xffffffff, 0xffffffff, ZFont::kMiddleCenter);
+    }
+
 }
 
 
@@ -443,11 +513,14 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         InvalidateChildren();
         return true;
     }
-    else if (sType == "rotateboard")
+    else if (sType == "changeturn")
     {
-//        RotateBoard();
-        mbViewWhiteOnBottom = !mbViewWhiteOnBottom;
-        InvalidateChildren();
+        if (mbEditMode)
+        {
+            // Flip who's turn
+            mBoard.SetWhitesTurn(!mBoard.WhitesTurn());
+            InvalidateChildren();
+        }
         return true;
     }
     else if (sType == "loadboard")
@@ -476,8 +549,53 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         }
         return true;
     }
+    else if (sType == "randdbboard")
+    {
+        LoadRandomPosition();
+        return true;
+    }
 
     return ZWin::HandleMessage(message);
+}
+
+void ZChessWin::LoadRandomPosition()
+{
+    std::filesystem::path filepath("res/position.fendb");
+    size_t nFullSize = std::filesystem::file_size(filepath);
+    size_t nRandOffset = RANDI64(0, (int64_t) nFullSize);
+
+    std::ifstream dbFile(filepath);
+    if (dbFile)
+    {
+        dbFile.seekg(nRandOffset);
+
+        char c = 0;
+        while (dbFile.read(&c, 1) && c != '\n');    // read forward until reaching a newline
+        size_t nStartOffset = dbFile.tellg();
+
+        while (dbFile.read(&c, 1) && c != '\n');    // read forward until reaching a newline
+        size_t nEndOffset = dbFile.tellg();
+
+        dbFile.seekg(nStartOffset);
+        size_t nFENSize = nEndOffset - nStartOffset-2;
+
+        if (nFENSize < 16 || nFENSize > 128)
+        {
+            ZDEBUG_OUT("ERROR: unreasonable FEN size:%d", nFENSize);
+            return;
+        }
+       
+        char* pBuf = new char[nFENSize];
+        dbFile.read(pBuf, nFENSize);
+        string sFEN(pBuf, nFENSize);
+
+        mBoard.FromFEN(sFEN);
+        delete[] pBuf;
+        InvalidateChildren();
+    }
+
+
+
 }
 
 bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline)
@@ -656,6 +774,32 @@ bool ChessBoard::Opponent(char c, const ZPoint& grid)
     return !SameSide(c, grid);
 }
 
+bool ChessBoard::IsKingInCheck(bool bWhite, const ZPoint& atLocation)
+{
+    if (bWhite)
+        return mSquaresUnderAttackByBlack[atLocation.mY][atLocation.mX];
+    return mSquaresUnderAttackByWhite[atLocation.mY][atLocation.mX];
+}
+
+bool ChessBoard::IsKingInCheck(bool bWhite)
+{
+    // Find the king in question
+    ZPoint grid;
+    for (int y = 0; y < 8; y++)
+    {
+        for (int x = 0; x < 8; x++)
+        {
+            if ((mBoard[y][x] == 'K' && bWhite) || (mBoard[y][x] == 'k' && !bWhite))
+            {
+                grid.Set(x, y);
+                break;
+            }
+        }
+    }
+
+    return IsKingInCheck(bWhite, grid); // Is the king in check currently at his location?
+}
+
 
 bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture)
 {
@@ -671,8 +815,30 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture)
         return false;
 
     tMoveList legalMoves;
-    GetMoves(s, src, legalMoves);
+    tMoveList attackMoves;
+    GetMoves(s, src, legalMoves, attackMoves);
     bool bLegal = false;
+
+    // test whether the king is in check after the move
+    ChessBoard afterMove(*this);    // copy the board
+    afterMove.MovePiece(src, dst, false);   
+    if (afterMove.IsKingInCheck(mbWhitesTurn))
+        return false;
+
+
+
+
+
+    // white king may not move into check
+    if (s == 'K' && IsKingInCheck(true, dst))
+        return false;
+
+    // black king may not move into check
+    if (s == 'k' && IsKingInCheck(false, dst))
+        return false;
+
+
+
     IsOneOfMoves(dst, legalMoves, bLegal, bCapture);
 
     return bLegal;
@@ -697,6 +863,7 @@ void ChessBoard::ComputeSquaresUnderAttack()
     memset(mSquaresUnderAttackByWhite, 0, sizeof(mSquaresUnderAttackByWhite));
 
     tMoveList moves;
+    tMoveList attackSquares;
     for (int y = 0; y < 8; y++)
     {
         for (int x = 0; x < 8; x++)
@@ -705,17 +872,17 @@ void ChessBoard::ComputeSquaresUnderAttack()
             char c = Piece(grid);
             if (c)
             {
-                if (GetMoves(c, grid, moves))
+                if (GetMoves(c, grid, moves, attackSquares))
                 {
                     if (IsWhite(c))
                     {
-                        for (auto move : moves)
-                            mSquaresUnderAttackByWhite[grid.mY][grid.mX]++;
+                        for (auto square : attackSquares)
+                            mSquaresUnderAttackByWhite[square.mGrid.mY][square.mGrid.mX]++;
                     }
                     else
                     {
-                        for (auto move : moves)
-                            mSquaresUnderAttackByBlack[grid.mY][grid.mX]++;
+                        for (auto square : attackSquares)
+                            mSquaresUnderAttackByBlack[square.mGrid.mY][square.mGrid.mX]++;
                     }
                 }
             }
@@ -724,12 +891,13 @@ void ChessBoard::ComputeSquaresUnderAttack()
 }
 
 
-bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
+bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves, tMoveList& attackSquares)
 {
     if (c == 0 || !ValidCoord(src))
         return false;
 
     moves.clear();
+    attackSquares.clear();
 
     if (c == 'P')
     {
@@ -737,10 +905,18 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(ZPoint(src.mX, 4));             // two up
         if (src.mY > 0 && Empty(src.mX, src.mY-1))
             moves.push_back(ZPoint(src.mX, src.mY-1));     // one up if not on the last row
-        if (src.mX > 0 && Opponent(c, ZPoint(src.mX -1, src.mY -1)))
-            moves.push_back(sMove(src.mX -1, src.mY-1, true));     // capture left
-        if (src.mX < 7 && Opponent(c, ZPoint(src.mX+1, src.mY -1)))
-            moves.push_back(sMove(src.mX+1, src.mY-1, true));     // capture right
+        if (src.mX > 0)
+        {
+            attackSquares.push_back(sMove(src.mX - 1, src.mY - 1, true));
+            if (Opponent(c, ZPoint(src.mX - 1, src.mY - 1)) || mEnPassantSquare == ZPoint(src.mX - 1, src.mY - 1))
+                moves.push_back(sMove(src.mX - 1, src.mY - 1, true));     // capture left
+        }
+        if (src.mX < 7)
+        {
+            attackSquares.push_back(sMove(src.mX + 1, src.mY - 1, true));
+            if (Opponent(c, ZPoint(src.mX + 1, src.mY - 1)) || mEnPassantSquare == ZPoint(src.mX + 1, src.mY - 1))
+                moves.push_back(sMove(src.mX + 1, src.mY - 1, true));     // capture right
+        }
     }
     if (c == 'p')
     {
@@ -748,10 +924,18 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(ZPoint(src.mX, 3));            // two down
         if (src.mY < 7 && Empty(src.mX, src.mY + 1))
             moves.push_back(ZPoint(src.mX, src.mY + 1));     // one down if not on the last row
-        if (src.mX > 0 && Opponent(c, ZPoint(src.mX + 1, src.mY + 1)))
-            moves.push_back(sMove(src.mX + 1, src.mY + 1, true));     // capture left
-        if (src.mX < 7 && Opponent(c, ZPoint(src.mX - 1, src.mY + 1)))
-            moves.push_back(sMove(src.mX - 1, src.mY + 1, true));     // capture right
+        if (src.mX > 0)
+        {
+            attackSquares.push_back(sMove(src.mX + 1, src.mY + 1, true));
+            if (Opponent(c, ZPoint(src.mX + 1, src.mY + 1)) || mEnPassantSquare == ZPoint(src.mX + 1, src.mY + 1))
+                moves.push_back(sMove(src.mX + 1, src.mY + 1, true));     // capture left
+        }
+        if (src.mX < 7)
+        {
+            attackSquares.push_back(sMove(src.mX - 1, src.mY + 1, true));
+            if (Opponent(c, ZPoint(src.mX - 1, src.mY + 1)) || mEnPassantSquare == ZPoint(src.mX - 1, src.mY + 1))
+                moves.push_back(sMove(src.mX - 1, src.mY + 1, true));     // capture right
+        }
     }
     else if (c == 'r' || c == 'R')
     {
@@ -763,11 +947,14 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
+
         } while (ValidCoord(checkGrid));
 
         // run right
@@ -778,11 +965,13 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
         } while (ValidCoord(checkGrid));
 
         // run up
@@ -793,11 +982,13 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
 
         } while (ValidCoord(checkGrid));
 
@@ -809,11 +1000,13 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
         } while (ValidCoord(checkGrid));
     }
     else if (c == 'b' || c == 'B')
@@ -827,11 +1020,13 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
         } while (ValidCoord(checkGrid));
 
         // run up right
@@ -843,11 +1038,13 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
         } while (ValidCoord(checkGrid));
 
         // run down left
@@ -859,11 +1056,13 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
 
         } while (ValidCoord(checkGrid));
 
@@ -876,11 +1075,13 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
         } while (ValidCoord(checkGrid));
     }
     else if (c == 'n' || c == 'N')
@@ -893,6 +1094,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // up up right
         checkGrid = src;
@@ -902,6 +1105,7 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
 
         // left left up
         checkGrid = src;
@@ -911,6 +1115,7 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
 
         // right right up
         checkGrid = src;
@@ -920,6 +1125,7 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
 
         // down down right
         checkGrid = src;
@@ -929,6 +1135,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // down down left
         checkGrid = src;
@@ -938,6 +1146,7 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
 
 
         // left left down
@@ -948,6 +1157,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // right right down
         checkGrid = src;
@@ -957,9 +1168,7 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
-
-
-
+        attackSquares.push_back(sMove(checkGrid, true));
     }
     else if (c == 'q' || c == 'Q')
     {
@@ -972,11 +1181,15 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
+
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
+
         } while (ValidCoord(checkGrid));
 
         // run up right
@@ -988,11 +1201,15 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
+
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
+
         } while (ValidCoord(checkGrid));
 
         // run down left
@@ -1004,11 +1221,15 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
+
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
+
 
         } while (ValidCoord(checkGrid));
 
@@ -1021,11 +1242,15 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
+
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
+
         } while (ValidCoord(checkGrid));
 
         // run left
@@ -1036,11 +1261,15 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
+
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
+
         } while (ValidCoord(checkGrid));
 
         // run right
@@ -1051,11 +1280,15 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
+
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
+
         } while (ValidCoord(checkGrid));
 
         // run up
@@ -1066,11 +1299,14 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
+
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
 
         } while (ValidCoord(checkGrid));
 
@@ -1082,11 +1318,15 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             if (Opponent(c, checkGrid))
             {
                 moves.push_back(sMove(checkGrid, true));
+                attackSquares.push_back(sMove(checkGrid, true));
+
                 break;
             }
             else if (!Empty(checkGrid))
                 break;
             moves.push_back(sMove(checkGrid));
+            attackSquares.push_back(sMove(checkGrid, true));
+
         } while (ValidCoord(checkGrid));
     }
     else if (c == 'k' || c == 'K')
@@ -1098,6 +1338,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // down
         checkGrid = src;
@@ -1106,6 +1348,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // left
         checkGrid = src;
@@ -1114,6 +1358,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // right
         checkGrid = src;
@@ -1122,6 +1368,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // left up
         checkGrid = src;
@@ -1131,6 +1379,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // right up
         checkGrid = src;
@@ -1140,6 +1390,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // left down
         checkGrid = src;
@@ -1149,6 +1401,8 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
 
         // right down
         checkGrid = src;
@@ -1158,18 +1412,9 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves)
             moves.push_back(sMove(checkGrid, true));
         else if (Empty(checkGrid))
             moves.push_back(sMove(checkGrid));
+        attackSquares.push_back(sMove(checkGrid, true));
+
     }
-
-
-
-
-
-
-
-
-
-
-
 
     return true;
 }
@@ -1294,7 +1539,7 @@ bool ChessBoard::FromFEN(const string& sFEN)
 {
     ClearBoard();
     int nIndex = 0;
-    for (int y = 7; y >= 0; y--)
+    for (int y = 0; y < 8; y++)
     {
         int x = 0;
         while (x < 8)
@@ -1305,6 +1550,11 @@ bool ChessBoard::FromFEN(const string& sFEN)
             else
             {
                 mBoard[y][x] = c;
+                if (c == '/')
+                {
+                    int stophere = 5;
+                }
+                ZASSERT(c == 'q' || c == 'Q' || c == 'k' || c == 'K' || c == 'n' || c == 'N' || c == 'R' || c == 'r' || c == 'b' || c == 'B' || c == 'p' || c == 'P');
                 x++;
             }
 
@@ -1366,21 +1616,9 @@ bool ChessBoard::FromFEN(const string& sFEN)
 
     mFullMoveNumber = StringHelpers::ToInt(sFEN.substr(nIndex));      // last value
 
+    ComputeSquaresUnderAttack();
 
     return false;
 }
 
-
-/*void ChessBoard::RotateBoard()
-{
-    for (int y = 0; y < 4; y++)
-    {
-        for (int x = 0; x < 8; x++)
-        {
-            char c = mBoard[y][x];
-            mBoard[y][x] = mBoard[7 - y][7 - x];
-            mBoard[7 - y][7 - x] = c;
-        }
-    }
-}*/
 

@@ -126,7 +126,7 @@ bool ZFont::LoadFont(const string& sFilename)
     memcpy(&mFontParams.bStrikeOut, pData, sizeof(mFontParams.bStrikeOut));
     pData += sizeof(mFontParams.bStrikeOut);
 
-	mColorGradient.resize(mFontParams.nHeight);
+//	mColorGradient.resize(mFontParams.nHeight);
 
     // facename length & content
     int16_t nFacenameLength = *((uint16_t*) pData);
@@ -396,13 +396,14 @@ inline bool ZFont::DrawText_Gradient_Helper(ZBuffer* pBuffer, const string& sTex
 	if (rClipDest.Width() < 1 || rClipDest.Height() < 1)
 		return true;
 
-	BuildGradient(nCol, nCol2);
+    std::vector<uint32_t> gradient;
+	BuildGradient(nCol, nCol2, gradient);
 
 	// Draw the text clipped
     const uint8_t* pChar = (uint8_t*)sText.data();
     for (; pChar < (uint8_t*)sText.data() + sText.length(); pChar++)
     {
-		DrawCharGradient(pBuffer, *pChar, nX, nY, (ZRect*) &rClipDest);
+		DrawCharGradient(pBuffer, *pChar, gradient, nX, nY, (ZRect*) &rClipDest);
 
         if (mFontParams.nFixedWidth > 0)
             nX += mFontParams.nFixedWidth;
@@ -556,7 +557,7 @@ void ZFont::DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX,
 
 
 inline 
-void ZFont::DrawCharGradient(ZBuffer* pBuffer, char c, int64_t nX, int64_t nY, ZRect* pClip)
+void ZFont::DrawCharGradient(ZBuffer* pBuffer, char c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip)
 {
 	ZASSERT(pBuffer);
     if (c <= 32)        // no visible chars below this
@@ -608,7 +609,7 @@ void ZFont::DrawCharGradient(ZBuffer* pBuffer, char c, int64_t nX, int64_t nY, Z
 			while (nNumPixels > 0)
 			{
                 if (rClip.PtInRect(nDestX, nDestY))
-                    *pDest = pBuffer->AlphaBlend_AddAlpha(mColorGradient[nScanLine], *pDest, nAlpha);
+                    *pDest = pBuffer->AlphaBlend_AddAlpha(gradient[nScanLine], *pDest, nAlpha);
 
 				// Advance the destination, wrapping around if necessary
 				pDest++;
@@ -871,17 +872,17 @@ int64_t ZFont::CalculateWordsThatFitOnLine(int64_t nLineWidth, const char* pChar
 }*/
 
 
-void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2)
+void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2, std::vector<uint32_t>& gradient)
 {
     ZASSERT(mFontParams.nHeight > 1);
-    mColorGradient.resize(mFontParams.nHeight);
+    gradient.resize(mFontParams.nHeight);
     //	CEASSERT(mColorGradient.size() == mFontParams.nHeight);
         // If the gradient is already set, don't bother
-    if (mColorGradient[0] == nColor1 && mColorGradient[mFontParams.nHeight - 1] == nColor2)
+    if (gradient[0] == nColor1 && gradient[mFontParams.nHeight - 1] == nColor2)
         return;
     //ZDEBUG_OUT("Building gradient for colors %x - %x mFontParams.nHeight:%d", nColor1, nColor2, mFontParams.nHeight);
-    mColorGradient[0] = nColor1;
-    mColorGradient[mFontParams.nHeight - 1] = nColor2;
+    gradient[0] = nColor1;
+    gradient[mFontParams.nHeight - 1] = nColor2;
     for (int64_t i = 1; i < mFontParams.nHeight - 1; i++)
     {
         double fRange = 10.0 * (((double)(i - 1) - (double)(mFontParams.nHeight - 3) / 2.0) / (double)mFontParams.nHeight);
@@ -892,7 +893,7 @@ void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2)
             fArcTanTransition = 1.0;
         int64_t nInverseAlpha = (int64_t)(255.0 * fArcTanTransition);
         int64_t nAlpha = 255 - nInverseAlpha;
-        mColorGradient[i] = ARGB(
+        gradient[i] = ARGB(
             (uint8_t)(((ARGB_A(nColor1) * nAlpha + ARGB_A(nColor2) * nInverseAlpha)) >> 8),
             (uint8_t)(((ARGB_R(nColor1) * nAlpha + ARGB_R(nColor2) * nInverseAlpha)) >> 8),
             (uint8_t)(((ARGB_G(nColor1) * nAlpha + ARGB_G(nColor2) * nInverseAlpha)) >> 8),
@@ -1513,12 +1514,12 @@ void ZDynamicFont::DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int6
     return ZFont::DrawCharClipped(pBuffer, c, nCol, nX, nY, pClip);
 }
 
-void ZDynamicFont::DrawCharGradient(ZBuffer* pBuffer, char c, int64_t nX, int64_t nY, ZRect* pClip)
+void ZDynamicFont::DrawCharGradient(ZBuffer* pBuffer, char c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip)
 {
     if (mCharDescriptors[c].nCharWidth == 0)   // generate glyph if not already generated
         GenerateGlyph(c);
 
-    return ZFont::DrawCharGradient(pBuffer, c, nX, nY, pClip);
+    return ZFont::DrawCharGradient(pBuffer, c, gradient, nX, nY, pClip);
 }
 
 
@@ -1550,9 +1551,6 @@ bool ZFontSystem::Init()
     ::sort(gWindowsFontFacenames.begin(), gWindowsFontFacenames.end());
 #endif
 
-    ZFontParams default("Arial", 12);
-    mpDefault = CreateFont(default);
-
     return true;
 }
 
@@ -1563,6 +1561,13 @@ void ZFontSystem::Shutdown()
 #endif
     mFontMap.clear();
 }
+
+bool ZFontSystem::SetDefaultFont(const ZFontParams& params)
+{
+    mpDefault = CreateFont(params);
+    return true;
+}
+
 
 bool ZFontSystem::SetCacheFolder(const std::string& sFolderPath)
 {
