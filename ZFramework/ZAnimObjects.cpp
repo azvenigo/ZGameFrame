@@ -116,7 +116,7 @@ void ZAnimObject_TextMover::SetText(const string& sText, uint32_t nColor, uint32
 	int64_t nY = (int64_t) mfY;
 
 	// Now calculate (or recalculate) our area
-	mrArea.SetRect(nX, nY, nX + mpFont->StringWidth(msText), nY + mpFont->FontHeight());
+	mrArea.SetRect(nX, nY, nX + mpFont->StringWidth(msText), nY + mpFont->Height());
 }
 
 void ZAnimObject_TextMover::SetLocation(int64_t nX, int64_t nY)
@@ -124,7 +124,7 @@ void ZAnimObject_TextMover::SetLocation(int64_t nX, int64_t nY)
 	mfX = (double) nX;
 	mfY = (double) nY;
 
-	mrArea.SetRect(nX, nY, nX + mpFont->StringWidth(msText), nY + mpFont->FontHeight());
+	mrArea.SetRect(nX, nY, nX + mpFont->StringWidth(msText), nY + mpFont->Height());
 }
 
 void ZAnimObject_TextMover::SetPixelsPerSecond(double fDX, double fDY)
@@ -380,7 +380,7 @@ void ZAnimObject_TextPulser::SetText(const string& sText, uint32_t nColor, tZFon
 	ZASSERT(mpFont);
 
 	// Now calculate (or recalculate) our area
-	mrArea.bottom = mrArea.top + mpFont->FontHeight();
+	mrArea.bottom = mrArea.top + mpFont->Height();
 	mrArea.left   = mrArea.left + mpFont->StringWidth(msText);
 }
 

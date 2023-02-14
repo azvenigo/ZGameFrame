@@ -5,6 +5,7 @@
 #include "LifeWin.h"
 #include "ZImageWin.h"
 #include "ProcessImageWin.h"
+#include "ZWinDebugConsole.h"
 #include "ZSliderWin.h"
 #include "FloatLinesWin.h"
 #include "TextTestWin.h"
@@ -20,6 +21,7 @@ using namespace std;
 ZRect                   grFullArea;
 ZMainWin*               gpMainWin;
 ZWinControlPanel*       gpControlPanel;
+ZWinDebugConsole*       gpDebugConsole;
 ZGraphicSystem          gGraphicSystem;
 ZGraphicSystem*         gpGraphicSystem = &gGraphicSystem;
 ZRasterizer             gRasterizer;
@@ -31,6 +33,12 @@ int64_t                 gnFramesPerSecond = 0;
 ZFontSystem*            gpFontSystem = nullptr;
 std::list<string>       gDebugOutQueue;
 std::mutex              gDebugOutMutex;
+std::list<std::string>  gDebugOutHistory;
+std::mutex              gDebugOutHistoryMutex;
+size_t                  gDebugHistoryMaxSize = 512;
+size_t                  gDebugHistoryCounter = 0;
+
+
 ZMessageSystem          gMessageSystem;
 ZTickManager            gTickManager;
 ZAnimator               gAnimator;
@@ -88,11 +96,18 @@ void Sandbox::InitControlPanel()
 
 
     gpMainWin->ChildAdd(gpControlPanel);
+
+
+    gpDebugConsole = new ZWinDebugConsole();
+    gpDebugConsole->SetArea(ZRect(grFullArea.left, grFullArea.top, grFullArea.right, grFullArea.Height() / 2));
+    gpMainWin->ChildAdd(gpDebugConsole);
+
 }
 
-void Sandbox::SandboxDeleteAllButControlPanel()
+void Sandbox::SandboxDeleteAllButControlPanelAndDebugConsole()
 {
     gpMainWin->ChildRemove(gpControlPanel);
+    gpMainWin->ChildRemove(gpDebugConsole);
     gpMainWin->ChildDeleteAll();
 }
 
@@ -101,7 +116,7 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 {
     assert(gpControlPanel);     // needs to exist before this
 
-    SandboxDeleteAllButControlPanel();
+    SandboxDeleteAllButControlPanelAndDebugConsole();
 
     gRegistry["sandbox"]["mode"] = (int32_t)mode;
    
@@ -188,6 +203,7 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
     }
 
     gpMainWin->ChildAdd(gpControlPanel);
+    gpMainWin->ChildAdd(gpDebugConsole);
 }
 
 
@@ -198,6 +214,7 @@ public:
 	MainAppMessageTarget()
 	{
 		gMessageSystem.RegisterTarget(this);
+        gMessageSystem.AddNotification("toggleconsole", this);
 	}
 
 	string GetTargetName() { return "MainAppMessageTarget"; }
@@ -208,6 +225,13 @@ public:
 		{
             SandboxInitChildWindows((Sandbox::eSandboxMode) StringHelpers::ToInt(message.GetParam("mode")));
 		}
+        else if (sType == "toggleconsole")
+        {
+            if (gpDebugConsole->IsVisible())
+                gpDebugConsole->Hide();
+            else
+                gpDebugConsole->Show();
+        }
 
 		return true;
 	}

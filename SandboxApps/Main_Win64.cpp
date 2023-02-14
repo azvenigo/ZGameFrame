@@ -6,6 +6,7 @@
 #include "Main_Sandbox.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
+#include "ZStdDebug.h"
 
 using namespace std;
 
@@ -34,6 +35,8 @@ float                   gfMouseMultX = 1.0f;
 float                   gfMouseMultY = 1.0f;
 
 std::string             gsRegistryFile;
+ZDebug                  gDebug;
+
 
 
 int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -131,7 +134,8 @@ int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 				}
 			}
 
-            FlushDebugOutQueue();
+            gDebug.Flush();
+//            FlushDebugOutQueue();
 
             uint64_t nNewTime = gTimer.GetUSSinceEpoch();
             uint64_t nTimeSinceLastLoop = nNewTime - nTimeStamp;
@@ -150,7 +154,8 @@ int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 
     Sandbox::SandboxShutdown();
-    FlushDebugOutQueue();
+    gDebug.Flush();
+//    FlushDebugOutQueue();
 
     gRegistry.Save(gsRegistryFile);
     return (int) msg.wParam;
@@ -367,9 +372,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_CHAR:
 		{
-			ZMessage message("chardown");
-			message.SetParam("code", StringHelpers::FromInt(wParam));
-			gMessageSystem.Post(message);
+            if (wParam == '`')
+            {
+                gMessageSystem.Post(ZMessage("toggleconsole"));
+            }
+            else
+            {
+                ZMessage message("chardown");
+                message.SetParam("code", StringHelpers::FromInt(wParam));
+                gMessageSystem.Post(message);
+            }
 		}
 	case WM_KEYDOWN:
 		{

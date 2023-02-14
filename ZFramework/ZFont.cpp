@@ -1487,7 +1487,7 @@ bool ZDynamicFont::RetrieveKerningPairs()
 
             mCharDescriptors[cFirst].kerningArray[cSecond] = nKern;
 //            ZDEBUG_OUT("kerning %c:%c = %d\n", cFirst, cSecond, nKern);
-            FlushDebugOutQueue();
+            //FlushDebugOutQueue();
         }
     }
 

@@ -172,4 +172,4 @@ void cDebugTimer::Exit()
 #endif
 
 #define TIME_SECTION_START(name) uint64_t InlineSectionStartTime = gTimer.GetUSSinceEpoch();
-#define TIME_SECTION_END(name) uint64_t InlineSectionEndTime = gTimer.GetUSSinceEpoch(); OutputDebug("Time Section %s took: %lld us\n", #name, InlineSectionEndTime - InlineSectionStartTime);
+#define TIME_SECTION_END(name) uint64_t InlineSectionEndTime = gTimer.GetUSSinceEpoch();  ZDEBUG_OUT("Time Section ", #name, " took: ", InlineSectionEndTime - InlineSectionStartTime,"us\n");

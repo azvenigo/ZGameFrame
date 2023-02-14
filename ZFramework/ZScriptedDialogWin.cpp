@@ -134,7 +134,7 @@ bool ZScriptedDialogWin::Init()
 			ZWinSizablePushBtn* pBtn = *it;
 
             tZFontPtr pFont = pBtn->GetFont();
-			int64_t nFontSize = pFont->FontHeight();
+			int64_t nFontSize = pFont->Height();
 //			CEASSERT(nFontSize < kMaxFonts);
 
 			ZRect rButtonArea(nXPos, nYPos, nXPos + nLargestCaptionSize + nFontSize*kPadding*2, nYPos + kButtonMeasure);

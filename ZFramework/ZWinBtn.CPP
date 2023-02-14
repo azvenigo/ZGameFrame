@@ -164,14 +164,14 @@ bool  ZWinPushBtn::Paint()
 	// Now draw the caption
 	if (sText.length() > 0)
 	{
-		int64_t nHeightOffset = mAreaToDrawTo.top + (mArea.Height() - mpFont->FontHeight())/2;
+		int64_t nHeightOffset = mAreaToDrawTo.top + (mArea.Height() - mpFont->Height())/2;
 		int64_t nWidthOffset = mAreaToDrawTo.left + (mAreaToDrawTo.Width() - mpFont->StringWidth(sText))/2;
 
 		ZRect rText(nWidthOffset, nHeightOffset, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
 
 		if (mDrawState == kDown)
 		{
-			int64_t nOffset = max((int) mpFont->FontHeight()/16, (int) 1);
+			int64_t nOffset = max((int) mpFont->Height()/16, (int) 1);
 			rText.OffsetRect(nOffset,nOffset);
 		}
 
@@ -485,7 +485,7 @@ bool ZWinSizablePushBtn::Paint()
 
 
 		// Offset for text and shadow is based on font size.....but at least of 1
-		int64_t nOffset = max((int) mpFont->FontHeight()/16, (int) 1);
+		int64_t nOffset = max((int) mpFont->Height()/16, (int) 1);
 		if (mDrawState == kDown)
 			rText.OffsetRect(nOffset,nOffset);
 

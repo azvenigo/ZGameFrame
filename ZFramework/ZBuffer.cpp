@@ -90,7 +90,8 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 	Bitmap bitmap(StringHelpers::string2wstring(sFilename).c_str());
     if (bitmap.GetLastStatus() != Status::Ok)
     {
-        OutputDebugLockless("ZBuffer::LoadBuffer failed to load %s. Status:%d\n", sFilename.c_str(), bitmap.GetLastStatus());
+        //OutputDebugImmediate("ZBuffer::LoadBuffer failed to load %s. Status:%d\n", sFilename.c_str(), bitmap.GetLastStatus());
+        ZDEBUG_OUT("ZBuffer::LoadBuffer failed to load ", sFilename, " status:", bitmap.GetLastStatus());
         return false;
     }
 
@@ -106,7 +107,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
     PropertyItem* pPropBuffer = (PropertyItem*)malloc(nPropertySize);
     bitmap.GetAllPropertyItems(nPropertySize, nPropertyCount, pPropBuffer);
 
-    OutputDebugLockless("Properties for image:%s\n", sFilename.c_str());
+    ZDEBUG_OUT("Properties for image:", sFilename);
     for (size_t i = 0; i < nPropertyCount; i++)
     {
         PropertyItem* pi = &pPropBuffer[i];
@@ -115,7 +116,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
             auto orientation = *((uint16_t*)pi->value);
             if (orientation != 1)
             {
-                OutputDebugLockless("Rotating image. Orientation property:%d\n", orientation);
+                ZDEBUG_OUT("Rotating image. Orientation property:", orientation);
 
                 switch (orientation)
                 {
@@ -153,7 +154,8 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
         prop.sValue = GDIHelpers::ValueStringByType(pi->type, pi->value, nLength);
         mBufferProps.push_back(prop);
 
-        OutputDebugLockless("%d:%s\n", i, GDIHelpers::PropertyItemToString(&pPropBuffer[i]).c_str());
+//        OutputDebugImmediate("%d:%s\n", i, GDIHelpers::PropertyItemToString(&pPropBuffer[i]).c_str());
+        ZDEBUG_OUT_LOCKLESS(i, ":", GDIHelpers::PropertyItemToString(&pPropBuffer[i]));
     }
     
 
@@ -205,7 +207,7 @@ int GetEncoderClsid(const string& sFilename, CLSID* pClsid)
         wsFormat = L"image/tiff";
     else
     {
-        OutputDebugLockless("Unsupported extension for filename:%s\n", sFilename.c_str());
+        ZDEBUG_OUT("Unsupported extension for filename:", sFilename);
         return -1;
     }
 

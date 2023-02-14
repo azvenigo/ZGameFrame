@@ -278,12 +278,12 @@ bool TextTestWin::Paint()
 
 
 
-    rText.SetRect(32, 32+ nLines*mpFont->FontHeight(), mAreaToDrawTo.right * 4 / 5,mAreaToDrawTo.bottom);
+    rText.SetRect(32, 32+ nLines*mpFont->Height(), mAreaToDrawTo.right * 4 / 5,mAreaToDrawTo.bottom);
 
     
-    Sprintf(sTemp, "Font: %s Size:%d", mpFont->GetFontParams().sFacename.c_str(), mpFont->FontHeight());
+    Sprintf(sTemp, "Font: %s Size:%d", mpFont->GetFontParams().sFacename.c_str(), mpFont->Height());
     mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp.c_str(), rText, 0xFF880044, 0xFF000000);
-    rText.OffsetRect(0, mpFont->FontHeight()*2);
+    rText.OffsetRect(0, mpFont->Height()*2);
 
     string sSampleText("The quick brown fox jumped over the lazy dog.\nA Relic is Relish of Radishes! Show me the $$$$");
     for (int i = 0; i < 2 && rText.top < mAreaToDrawTo.bottom; i++)
@@ -300,7 +300,7 @@ bool TextTestWin::Paint()
             mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, nCol1, nCol2, ZFont::kTopLeft, ZFont::kEmbossed);
 
         int64_t nLines = mpFont->CalculateNumberOfLines(rText.Width(), sSampleText.data(), sSampleText.length());
-        rText.OffsetRect(0, mpFont->FontHeight() * nLines);
+        rText.OffsetRect(0, mpFont->Height() * nLines);
     }
 
 

@@ -492,12 +492,13 @@ void cProcessImageWin::Process_FloatColorSandbox()
     for (auto a : floatAreas)
     {
 #ifdef PRINT_EM
-        OutputDebugLockless("r[%d,%d,%d,%d] = argb[%f,%f,%f,%f]\n", a.rArea.left, a.rArea.top, a.rArea.right, a.rArea.bottom, a.fCol.a, a.fCol.r, a.fCol.g, a.fCol.b);
+//        ZOUT_LOCKLESS("r[%d,%d,%d,%d] = argb[%f,%f,%f,%f]\n", a.rArea.left, a.rArea.top, a.rArea.right, a.rArea.bottom, a.fCol.a, a.fCol.r, a.fCol.g, a.fCol.b);
+        ZOUT_LOCKLESS("r[", a.rArea.left, ",", a.rArea.top, ",", a.rArea.right, ",", a.rArea.bottom, "] = argb[", a.fCol.a, ",", a.fCol.r, ",", a.fCol.g, ",", a.fCol.b, "]");
 #endif
         newBuffer.AddRect(a.rArea, -a.fCol);
     }
 
-    OutputDebugLockless("Rects:%d, Memory:%d\n", floatAreas.size(), floatAreas.size() * sizeof(cFloatAreaDescriptor));
+    ZOUT_LOCKLESS("Rects:", floatAreas.size(), ", Memory:", floatAreas.size() * sizeof(cFloatAreaDescriptor));
 
 //    mpResultBuffer.get()->Blt(&mFloatColorBuffer.GetBuffer(), rArea, rArea);
     mpResultBuffer.get()->Blt(newBuffer.GetBuffer().get(), rArea, rArea);
@@ -1110,7 +1111,8 @@ void cProcessImageWin::ResetResultsBuffer()
 
     if (!mpResultBuffer || mpResultBuffer->GetArea().Width() != mrIntersectionWorkArea.Width() || mpResultBuffer->GetArea().Height() != mrIntersectionWorkArea.Height())
     {
-        OutputDebugLockless("new mpResultBuffer. old:0x%x\n", (void*)mpResultBuffer.get());
+//        OutputDebugImmediate("new mpResultBuffer. old:0x%x\n", (void*)mpResultBuffer.get());
+        ZDEBUG_OUT_LOCKLESS("new mpResultBuffer. old:0x", std::hex, (void*)mpResultBuffer.get(), std::dec);
         mpResultBuffer.reset(new ZBuffer());
         mpResultBuffer->Init(mrIntersectionWorkArea.Width(), mrIntersectionWorkArea.Height());
     }
@@ -1244,7 +1246,7 @@ bool cProcessImageWin::BlurBox(int64_t x, int64_t y)
     int64_t nResultX = ((x - mrResultImageDest.left) * rResultImageRect.Width()) / mrResultImageDest.Width();
     int64_t nResultY = ((y - mrResultImageDest.top) * rResultImageRect.Height()) / mrResultImageDest.Height();
 
-    OutputDebugLockless("nResultX:%d, nResultY:%d\n", nResultX, nResultY);
+    ZDEBUG_OUT("nResultX:", nResultX, ", nResultY:", nResultY);
 
     if (rResultImageRect.PtInRect(nResultX - kDist, nResultY - kDist) &&
         rResultImageRect.PtInRect(nResultX + kDist, nResultY - kDist) &&

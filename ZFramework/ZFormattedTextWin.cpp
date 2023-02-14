@@ -334,7 +334,7 @@ bool ZFormattedTextWin::Paint()
                 tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
 				ZRect rText = pFont->GetOutputRect(rLine, entry.sText.data(), entry.sText.length(), entry.position);
 
-				int64_t nShadowOffset = max((int) pFont->FontHeight()/16, (int) 1);
+				int64_t nShadowOffset = max((int) pFont->Height()/16, (int) 1);
 
 				pFont->DrawText(mpTransformTexture.get(), entry.sText, rText, entry.nColor, entry.nColor2, entry.style, &rClip);
 
@@ -378,7 +378,7 @@ int64_t ZFormattedTextWin::GetLineHeight(tTextLine& textLine)
     tZFontPtr pLargestFont(gpFontSystem->GetFont(largestFont));
     assert(pLargestFont);
 
-    return pLargestFont->FontHeight();
+    return pLargestFont->Height();
 }
 
 void ZFormattedTextWin::CalculateFullDocumentHeight()

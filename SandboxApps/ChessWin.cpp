@@ -168,6 +168,8 @@ bool ZChessWin::OnMouseDownL(int64_t x, int64_t y)
     // In a valid grid coordinate?
     if (mBoard.ValidCoord(grid))
     {
+        ZDEBUG_OUT("Square clicked gridX:%d gridY:%d\n", grid.mX, grid.mY);
+
         // Is there a piece on this square?
         char c = mBoard.Piece(grid);
         if (c)
@@ -200,7 +202,6 @@ bool ZChessWin::OnMouseDownL(int64_t x, int64_t y)
 
             return true;
         }
-        ZDEBUG_OUT("Square clicked gridX:%d gridY:%d\n", grid.mX, grid.mY);
 
     }
     else if (mbEditMode && mrPaletteArea.PtInRect(x, y))
@@ -421,7 +422,7 @@ void ZChessWin::DrawBoard()
                 ZRect rText(SquareArea(grid));
                 defaultFont->DrawText(mpTransformTexture.get(), sCount, rText, 0xffffffff, 0xffffffff);
 
-                rText.OffsetRect(0, defaultFont->FontHeight());
+                rText.OffsetRect(0, defaultFont->Height());
 
                 Sprintf(sCount, "%d",mBoard.UnderAttack(false, grid));
                 defaultFont->DrawText(mpTransformTexture.get(), sCount, rText, 0xff000000, 0xff000000);
@@ -442,7 +443,7 @@ void ZChessWin::DrawBoard()
 
     ZRect rMoveLabel;
     tZFontPtr pLabelFont = gpFontSystem->GetFont(gDefaultTitleFont);
-    uint32_t nLabelPadding = pLabelFont->GetFontParams().nHeight;
+    uint32_t nLabelPadding = pLabelFont->Height();
     if (mBoard.WhitesTurn())
     {
         rMoveLabel.SetRect(SquareArea(ZPoint(0, 7)));
@@ -684,20 +685,20 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
     {
         if (mbWhitesTurn && !IsWhite(c))
         {
-            ZDEBUG_OUT("Error: White's turn.\n");
+            ZWARNING("Error: White's turn.\n");
             return false;
         }
 
         if (!mbWhitesTurn && IsWhite(c))
         {
-            ZDEBUG_OUT("Error: Black's turn.\n");
+            ZWARNING("Error: Black's turn.\n");
             return false;
         }
 
         bool bIsCapture = false;
         if (!LegalMove(gridSrc, gridDst, bIsCapture))
         {
-            ZDEBUG_OUT("Error: Illegal move.\n");
+            ZWARNING("Error: Illegal move.\n");
             return false;
         }
 
@@ -823,7 +824,10 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture)
     ChessBoard afterMove(*this);    // copy the board
     afterMove.MovePiece(src, dst, false);   
     if (afterMove.IsKingInCheck(mbWhitesTurn))
+    {
+        ZWARNING("Illegal move. King would be in check");
         return false;
+    }
 
 
 

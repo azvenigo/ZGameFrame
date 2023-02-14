@@ -2,6 +2,7 @@
 
 #include "ZStdTypes.h"
 #include "ZRasterizer.h"
+#include "ZBuffer.h"
 
 
 class ZTransformation

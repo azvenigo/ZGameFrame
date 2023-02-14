@@ -167,7 +167,7 @@ public:
 	int64_t         CharWidth(char c);
     void            SetEnableKerning(bool bEnable) { mbEnableKerning = bEnable; }
     void            SetTracking(int64_t nTracking) { mFontParams.nTracking = nTracking; }
-	int64_t         FontHeight() { return mFontParams.nHeight; }
+	int64_t         Height() { return mFontParams.nHeight; }
     int32_t         GetSpaceBetweenChars(char c1, char c2);
 
 

@@ -7,6 +7,7 @@
 #include "ZWinControlPanel.h"
 #include "ZWinBtn.H"
 #include "Resources.h"
+#include "ZStdDebug.h"
 
 extern ZAnimator gAnimator;
 using namespace std;
@@ -282,7 +283,7 @@ void ZImageWin::LoadImage(const string& sName)
 void ZImageWin::SetArea(const ZRect& newArea)
 {
     mbVisible = false;
-//    OutputDebugLockless("SetArea %s [%d,%d,%d,%d\n", msWinName.c_str(), newArea.left, newArea.top, newArea.right, newArea.bottom);
+//    OutputDebugImmediate("SetArea %s [%d,%d,%d,%d\n", msWinName.c_str(), newArea.left, newArea.top, newArea.right, newArea.bottom);
     ZWin::SetArea(newArea);
 
     if (mpPanel)
@@ -372,7 +373,8 @@ bool ZImageWin::Paint()
 
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
-    OutputDebugLockless("painting %s", msWinName.c_str());
+    ZOUT_LOCKLESS("painting ", msWinName);
+//    OutputDebugImmediate("painting %s", msWinName.c_str());
 
     ZRect rDest(mpTransformTexture.get()->GetArea());
 

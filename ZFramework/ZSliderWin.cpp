@@ -260,7 +260,7 @@ bool ZSliderWin::Paint()
 
     mpTransformTexture.get()->BltEdge(mpBufSliderThumb.get(), mrEdgeThumb, rThumb);
 
-	if (mbDrawValue)
+	if (mbDrawValue && mpFont)
 	{
 		if (!mbMouseOverDrawOnly || (mbMouseOverDrawOnly && (gpMouseOverWin == this || gpCaptureWin == this)))
 		{

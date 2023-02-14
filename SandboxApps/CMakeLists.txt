@@ -96,6 +96,8 @@ set(COMMON_FILES
 ../ZFramework/ZWinFileDialog.h
 ../ZFramework/ZWinWatchPanel.cpp
 ../ZFramework/ZWinWatchPanel.h
+../ZFramework/ZWinDebugConsole.cpp
+../ZFramework/ZWinDebugConsole.h
 ../ZFramework/ZXMLNode.cpp
 ../ZFramework/ZXMLNode.h
 ../ZFramework/ZZipAPI.cpp

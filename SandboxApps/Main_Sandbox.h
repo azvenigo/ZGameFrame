@@ -14,6 +14,7 @@
 #include "ZAnimator.h"
 #include "ZRandom.h"
 #include "ZWinControlPanel.h"
+#include "ZWinDebugConsole.h"
 
 
 
@@ -23,6 +24,7 @@ using namespace std;
 extern ZRect                grFullArea;
 extern ZMainWin*            gpMainWin;
 extern ZWinControlPanel*    gpControlPanel;
+extern ZWinDebugConsole*    gpDebugConsole;
 extern ZGraphicSystem       gGraphicSystem;
 extern ZGraphicSystem*      gpGraphicSystem;
 extern ZRasterizer          gRasterizer;
@@ -60,7 +62,7 @@ namespace Sandbox
 
     void SandboxShutdown();
     void InitControlPanel();
-    void SandboxDeleteAllButControlPanel();
+    void SandboxDeleteAllButControlPanelAndDebugConsole();
     void SandboxInitChildWindows(eSandboxMode mode);
     void SandboxInitializeFonts();
     bool SandboxInitialize();

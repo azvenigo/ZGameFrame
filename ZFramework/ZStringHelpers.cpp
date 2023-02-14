@@ -306,7 +306,7 @@ std::string SanitizeAscii(const std::string& sText)
     
     for (size_t i = 0; i < sSanitized.length(); i++)
     {
-        if (sSanitized[i] > 127)
+        if (sSanitized[i] > 127 || sSanitized[i] < 0)
             sSanitized[i] = '_';
     }
     return sSanitized;
