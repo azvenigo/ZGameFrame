@@ -75,12 +75,13 @@ bool ZWin::Init()
 		if (mArea.Width() > 0 && mArea.Height() > 0)
 		{
 			ZTransformable::Init(mAreaAbsolute);
-			TransformIn();
 		}
 
 		gMessageSystem.RegisterTarget(this);
 
         Paint();        // TBD this may be desired since our texture may be requested before the threadproc has a chance to call paint
+
+        TransformIn();
 
 		mbShutdownFlag = false;
 		mThread = std::thread(&WindowThreadProc, (void*)this);
@@ -137,7 +138,8 @@ void ZWin::TransformIn()
 {
 	if (mTransformIn != kNone)
 	{
-		ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
+        ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mpTransformTexture.get());
+        ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
 		ZTransformation end(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
 
 		switch (mTransformIn)
@@ -150,8 +152,10 @@ void ZWin::TransformIn()
 		}
 
 
-		StartTransformation(start);
-		AddTransformation(end, mnTransformInTime);
+        pImage->StartTransformation(start);
+        pImage->AddTransformation(end, mnTransformInTime);
+        pImage->SetDestination(mpParentWin->mpTransformTexture);
+        gAnimator.AddObject(pImage);
 	}
 }
 
@@ -222,7 +226,7 @@ bool  ZWin::SetParentWin(ZWin* pNewParent)
 	return true;
 }
 
-bool ZWin::ChildAdd(ZWin* child)
+bool ZWin::ChildAdd(ZWin* child, bool bAutoShow)
 {
 	ZASSERT(child);
 //	ZDEBUG_OUT("ChildAdd:%d %s\n", (uint32_t) child, child->GetFullWinName().c_str());
@@ -243,7 +247,8 @@ bool ZWin::ChildAdd(ZWin* child)
 		return false;
 	}
 
-	child->Show();
+    if (bAutoShow)
+	    child->Show();
 
 	return true;
 }

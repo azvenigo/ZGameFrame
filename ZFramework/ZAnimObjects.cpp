@@ -4,6 +4,7 @@
 #include "ZTimer.h"
 #include "ZStdDebug.h"
 #include "ZGraphicSystem.h"
+#include "ZScreenBuffer.h"
 #include "ZTransformable.h"
 #include "math.h"
 #include "ZStringHelpers.h"
@@ -21,7 +22,7 @@ ZAnimObject::ZAnimObject()
 {
 	mState = kNone;
 	mnTimeStamp = gTimer.GetElapsedTime();
-	mpContext = NULL;
+	//mpContext = NULL;
 }
 
 ZAnimObject::~ZAnimObject()
@@ -45,7 +46,7 @@ ZAnimObject_TextMover::ZAnimObject_TextMover(tZFontPtr pFont) : ZAnimObject()
 }
 
 
-bool ZAnimObject_TextMover::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
+bool ZAnimObject_TextMover::Paint()
 {
 	uint64_t nCurrentTime = gTimer.GetElapsedTime();
 	int64_t nDeltaTime = nCurrentTime - mnTimeStamp;
@@ -65,7 +66,7 @@ bool ZAnimObject_TextMover::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 
 	mrArea.SetRect(nX, nY, nX + nWidth, nY + nHeight);
 
-	ZRect rBufferArea(pBufferToDrawTo->GetArea());
+	ZRect rBufferArea(mpDestination->GetArea());
 
 	if (!rBufferArea.Overlaps(&mrArea))    // Have we moved off screen?
 	{
@@ -93,13 +94,13 @@ bool ZAnimObject_TextMover::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 
 		uint32_t nCol = ARGB((uint8_t) nAlpha, ARGB_R(mnColor), ARGB_G(mnColor), ARGB_B(mnColor));
 		uint32_t nCol2 = ARGB((uint8_t) nAlpha, ARGB_R(mnColor2), ARGB_G(mnColor2), ARGB_B(mnColor2));
-		mpFont->DrawText(pBufferToDrawTo, msText, mrArea, nCol, nCol2, drawStyle, pClip);
+		mpFont->DrawText(mpDestination.get(), msText, mrArea, nCol, nCol2, drawStyle);
 
 		return true;
 	}
 
 	// Plain Draw
-	mpFont->DrawText(pBufferToDrawTo, msText, mrArea, mnColor, mnColor, drawStyle, pClip);
+	mpFont->DrawText(mpDestination.get(), msText, mrArea, mnColor, mnColor, drawStyle);
 
 	return true;
 }
@@ -158,12 +159,13 @@ ZCEAnimObject_Sparkler::ZCEAnimObject_Sparkler() : ZAnimObject()
 	mnSourceColor = 0xffffffff;
 }
 
-bool ZCEAnimObject_Sparkler::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
+bool ZCEAnimObject_Sparkler::Paint()
 {
 	ProcessSparkles();
 
-	uint32_t* pDest = pBufferToDrawTo->GetPixels();
-	int64_t  nStride = pBufferToDrawTo->GetArea().Width();
+	uint32_t* pDest = mpDestination->GetPixels();
+	int64_t  nStride = mpDestination->GetArea().Width();
+    ZRect* pClip = &mpDestination->GetArea();
 	for (tSparkleList::iterator it = mSparkleList.begin(); it != mSparkleList.end(); it++)
 	{
 		sSparkle& sparkle = *it;
@@ -182,35 +184,35 @@ bool ZCEAnimObject_Sparkler::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 			{
 				uint32_t* pBits = pDest + nY * nStride + nX;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = pBufferToDrawTo->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
+				*pBits = mpDestination->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX+1, nY))
 			{
 				uint32_t* pBits = pDest + nY * nStride + nX+1;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = pBufferToDrawTo->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
+				*pBits = mpDestination->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX-1, nY))
 			{
 				uint32_t* pBits = pDest + nY * nStride + nX-1;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = pBufferToDrawTo->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
+				*pBits = mpDestination->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX, nY-1))
 			{
 				uint32_t* pBits = pDest + ((nY-1) * nStride) + nX;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = pBufferToDrawTo->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
+				*pBits = mpDestination->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX, nY+1))
 			{
 				uint32_t* pBits = pDest + ((nY+1) * nStride) + nX;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = pBufferToDrawTo->AlphaBlend_AddAlpha(0x8800FFFF, *pBits, nB1);
+				*pBits = mpDestination->AlphaBlend_AddAlpha(0x8800FFFF, *pBits, nB1);
 			}
 
 			fBrightness *= 0.998f;
@@ -351,9 +353,9 @@ ZAnimObject_TextPulser::ZAnimObject_TextPulser() : ZAnimObject()
 	mbShadow = false;
 }
 
-bool ZAnimObject_TextPulser::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
+bool ZAnimObject_TextPulser::Paint()
 {
-	ZRect rBufferArea(pBufferToDrawTo->GetArea());
+	ZRect rBufferArea(mpDestination->GetArea());
 
 	double pulse = 0.5 * (1.0 + (double) sin(((double) gTimer.GetElapsedTime()) / mfPeriod));
 	int64_t nAlpha = (int64_t) ((double) mnMinAlpha + ((double)mnMaxAlpha - (double)mnMinAlpha) * pulse );
@@ -363,7 +365,7 @@ bool ZAnimObject_TextPulser::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 	if (mbShadow)
 		style = ZFont::kShadowed;
 
-	mpFont->DrawTextParagraph(pBufferToDrawTo, msText, mrArea, nCol, nCol, ZFont::kMiddleCenter, style, pClip);
+	mpFont->DrawTextParagraph(mpDestination.get(), msText, mrArea, nCol, nCol, ZFont::kMiddleCenter, style);
 
 	return true;
 
@@ -424,7 +426,7 @@ void ZAnimObject_BitmapShatterer::SetBitmapToShatter(ZBuffer* pBufferToShatter, 
 	mState = kAnimating;
 }
 
-bool ZAnimObject_BitmapShatterer::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
+bool ZAnimObject_BitmapShatterer::Paint()
 {
 	for (tShatterQuadList::iterator it = mShatterQuadList.begin(); it != mShatterQuadList.end(); it++)
 	{
@@ -445,10 +447,11 @@ bool ZAnimObject_BitmapShatterer::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 			transformedQuad.mVertices[i].mY = fCenterY + transformedQuad.fScale*(x*sinAngle + y*cosAngle);
 		}
 
-		mRasterizer.RasterizeWithAlpha(pBufferToDrawTo, mpTexture.get(), transformedQuad.mVertices, pClip, 128);
+        ZRect* pClip = &mpDestination->GetArea();
+		mRasterizer.RasterizeWithAlpha(mpDestination.get(), mpTexture.get(), transformedQuad.mVertices, pClip, 128);
 	}
 
-	Process(pBufferToDrawTo->GetArea());
+	Process(mpDestination->GetArea());
 
 	return true;
 }
@@ -877,7 +880,7 @@ ZAnimObject_Transformer::~ZAnimObject_Transformer()
 }
 
 
-bool ZAnimObject_Transformer::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
+bool ZAnimObject_Transformer::Paint()
 {
 	if (mpTransformer)
 	{
@@ -887,7 +890,7 @@ bool ZAnimObject_Transformer::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 			mpTransformer = NULL;
 		}
 		else
-			mpTransformer->TransformDraw(pBufferToDrawTo, pClip);
+			mpTransformer->TransformDraw(mpDestination.get(), &mpDestination->GetArea());
 	}
 	return true;
 }
@@ -914,14 +917,19 @@ ZAnimObject_TransformingImage::~ZAnimObject_TransformingImage()
 {
 }
 
-bool ZAnimObject_TransformingImage::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
+bool ZAnimObject_TransformingImage::Paint()
 {
 	if (mTransformState == ZTransformable::kFinished)
 	{
 		mState = ZAnimObject::kFinished;
 	}
-	else
-		TransformDraw(pBufferToDrawTo, pClip);
+    else
+    {
+        TransformDraw(mpDestination.get(), &mpDestination->GetArea());
+    }
+
+    gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpDestination.get(), mrArea, mrArea);
+
 
 	return true;
 }
@@ -943,14 +951,14 @@ ZAnimObject_TransformingText::~ZAnimObject_TransformingText()
 {
 }
 
-bool ZAnimObject_TransformingText::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
+bool ZAnimObject_TransformingText::Paint()
 {
 	if (mTransformState == ZTransformable::kFinished)
 	{
 		mState = ZAnimObject::kFinished;
 	}
 	else
-		TransformDraw(pBufferToDrawTo, pClip);
+        TransformDraw(mpDestination.get(), &mpDestination->GetArea());
 
 	return true;
 }

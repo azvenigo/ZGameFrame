@@ -7,6 +7,7 @@
 #include "helpers/RandHelpers.h"
 #include <filesystem>
 #include <fstream>
+#include "ZTimer.h"
 
 using namespace std;
 
@@ -178,7 +179,20 @@ bool ZChessWin::OnMouseDownL(int64_t x, int64_t y)
             // 1) In edit mode
             // 2) In game mode and it's white's turn and picking up white piece
             // 3) same but for black
-            if (mbEditMode ||  (mBoard.IsWhite(c) && mBoard.WhitesTurn()) || (mBoard.IsBlack(c) && !mBoard.WhitesTurn()))
+            bool bPickUpPiece = false;
+
+            if (mbEditMode)
+            {
+                bPickUpPiece = true;    // pick up piece always in edit mode
+            }
+            else if (!mBoard.IsCheckmate()) // if game mode, only pick up piece if not checkmate
+            {
+                if (mBoard.IsWhite(c) && mBoard.WhitesTurn() || (mBoard.IsBlack(c) && !mBoard.WhitesTurn()))    // pick up the white piece on white's turn and vice versa
+                    bPickUpPiece = true;
+            }
+
+
+            if (bPickUpPiece)
             {
 
                 mDraggingPiece = c;
@@ -449,8 +463,13 @@ void ZChessWin::DrawBoard()
         rMoveLabel.SetRect(SquareArea(ZPoint(0, 7)));
         rMoveLabel.OffsetRect(-rMoveLabel.Width()-nLabelPadding*2, 0);
         string sLabel("White's Move");
-        if (mBoard.IsKingInCheck(true))
-            sLabel = "White is in Check";
+        if (!mbEditMode && mBoard.IsKingInCheck(true))
+        {
+            if (mBoard.IsCheckmate())
+                sLabel = "Checkmate";
+            else
+                sLabel = "White is in Check";
+        }
 
         rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
         rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
@@ -462,8 +481,13 @@ void ZChessWin::DrawBoard()
         rMoveLabel.SetRect(SquareArea(ZPoint(0, 0)));
         rMoveLabel.OffsetRect(-rMoveLabel.Width()- nLabelPadding*2, 0);
         string sLabel("Black's Move");
-        if (mBoard.IsKingInCheck(false))
-            sLabel = "Black is in Check";
+        if (!mbEditMode && mBoard.IsKingInCheck(false))
+        {
+            if (mBoard.IsCheckmate())
+                sLabel = "Checkmate";
+            else
+                sLabel = "Black is in Check";
+        }
         rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
         rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
         mpTransformTexture->Fill(rMoveLabel, 0xff000000);
@@ -561,7 +585,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
 
 void ZChessWin::LoadRandomPosition()
 {
-    std::filesystem::path filepath("res/position.fendb");
+    std::filesystem::path filepath("res/randpositions.fendb");
     size_t nFullSize = std::filesystem::file_size(filepath);
     size_t nRandOffset = RANDI64(0, (int64_t) nFullSize);
 
@@ -711,12 +735,22 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
 
         if (mbWhitesTurn)
             mFullMoveNumber++;
+
+        mBoard[gridDst.mY][gridDst.mX] = c;
+        mBoard[gridSrc.mY][gridSrc.mX] = 0;
+        ComputeSquaresUnderAttack();
+        ComputeCheckAndMate();
+    }
+    else
+    {
+        mBoard[gridDst.mY][gridDst.mX] = c;
+        mBoard[gridSrc.mY][gridSrc.mX] = 0;
+        ComputeSquaresUnderAttack();
+        mbCheck = false;
+        mbCheckMate = false;
     }
 
 
-    mBoard[gridDst.mY][gridDst.mX] = c;
-    mBoard[gridSrc.mY][gridSrc.mX] = 0;
-    ComputeSquaresUnderAttack();
     return true;
 }
 
@@ -730,6 +764,7 @@ bool ChessBoard::SetPiece(const ZPoint& gridDst, char c)
 
     mBoard[gridDst.mY][gridDst.mX] = c;
     ComputeSquaresUnderAttack();
+    ComputeCheckAndMate();
     return true;
 }
 
@@ -742,6 +777,8 @@ void ChessBoard::ResetBoard()
     mEnPassantSquare.Set(-1, -1);
     mHalfMovesSinceLastCaptureOrPawnAdvance = 0;
     mFullMoveNumber = 1;
+    mbCheck = false;
+    mbCheckMate = false;
     ComputeSquaresUnderAttack();
 }
 
@@ -802,6 +839,7 @@ bool ChessBoard::IsKingInCheck(bool bWhite)
 }
 
 
+
 bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture)
 {
     if (!ValidCoord(src))
@@ -830,9 +868,6 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture)
     }
 
 
-
-
-
     // white king may not move into check
     if (s == 'K' && IsKingInCheck(true, dst))
         return false;
@@ -840,7 +875,6 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture)
     // black king may not move into check
     if (s == 'k' && IsKingInCheck(false, dst))
         return false;
-
 
 
     IsOneOfMoves(dst, legalMoves, bLegal, bCapture);
@@ -893,6 +927,50 @@ void ChessBoard::ComputeSquaresUnderAttack()
         }
     }
 }
+
+void ChessBoard::ComputeCheckAndMate()
+{
+    int64_t nStart = gTimer.GetUSSinceEpoch();
+    mbCheck = false;
+    mbCheckMate = false;
+    if (IsKingInCheck(mbWhitesTurn))
+    {
+        mbCheck = true;
+
+        // look for any possible moves
+        ZPoint grid;
+        for (int y = 0; y < 8; y++)
+        {
+            for (int x = 0; x < 8; x++)
+            {
+                char c = mBoard[y][x];
+                if (IsWhite(c) == mbWhitesTurn)
+                {
+                    tMoveList legalMoves;
+                    tMoveList attackMoves;
+                    grid.Set(x, y);
+                    GetMoves(c, grid, legalMoves, attackMoves);
+                    for (auto move : legalMoves)
+                    {
+                        ChessBoard afterMove(*this);
+                        afterMove.MovePiece(grid, move.mGrid, false);
+                        if (!afterMove.IsKingInCheck(mbWhitesTurn))       // if king is no longer in check after the move, we're done
+                        {
+                            int64_t nEnd = gTimer.GetUSSinceEpoch();
+                            ZOUT("ComputeCheckAndMate time:", nEnd - nStart);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        mbCheckMate = true;
+    }
+    int64_t nEnd = gTimer.GetUSSinceEpoch();
+    ZOUT("ComputeCheckAndMate time:", nEnd - nStart);
+}
+
 
 
 bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves, tMoveList& attackSquares)
@@ -1621,6 +1699,7 @@ bool ChessBoard::FromFEN(const string& sFEN)
     mFullMoveNumber = StringHelpers::ToInt(sFEN.substr(nIndex));      // last value
 
     ComputeSquaresUnderAttack();
+    ComputeCheckAndMate();
 
     return false;
 }

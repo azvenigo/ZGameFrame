@@ -153,7 +153,7 @@ bool ZFont::LoadFont(const string& sFilename)
         pData += kMaxChars * sizeof(uint16_t);
 	}
 
-    ZOUT("Loaded %s in %lldus.\n", sFilename.c_str(), gTimer.GetUSSinceEpoch()-nStartTime);
+    ZOUT("Loaded ", sFilename, " in ", gTimer.GetUSSinceEpoch()-nStartTime, "us");
 
     mbInitted = true;
 	return true;
@@ -165,7 +165,7 @@ bool ZFont::SaveFont(const string& sFilename)
 
     if (!fontFile.is_open())
     {
-        ZOUT("Failed to open file \"%s\"\n", sFilename.c_str());
+        ZOUT("Failed to open file \"", sFilename, "\"\n");
         return false;
     }
 

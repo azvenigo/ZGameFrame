@@ -97,7 +97,7 @@ int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 						int64_t nEndTime = gTimer.GetUSSinceEpoch();
 
-						ZOUT("Computing visibility took time:%lld us. Rects:%d\n", nEndTime - nStartTime, pScreenBuffer->GetVisibilityCount());
+//						ZOUT("Computing visibility took time:%lld us. Rects:%d\n", nEndTime - nStartTime, pScreenBuffer->GetVisibilityCount());
 					}
 
 
@@ -105,7 +105,9 @@ int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                     static int64_t nTotalFrames = 0;
 
 
-					int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
+                    bool bAnimatorActive = gAnimator.Paint();
+                   
+                    int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
 					int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
 					int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
 					static char  buf[512];
@@ -117,7 +119,6 @@ int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 //				    ZOUT("render took time:%lld us. Rects:%d/%d. Total Frames:%d, avg frame time:%lld us\n", nEndRenderVisible - nStartRenderVisible, nRenderedCount, pScreenBuffer->GetVisibilityCount(), nTotalFrames, (nTotalRenderTime/nTotalFrames));
 
 
-					bool bAnimatorActive = gAnimator.Paint(pScreenBuffer, &pScreenBuffer->GetArea());
                     pScreenBuffer->EndRender();
 					InvalidateRect(gpGraphicSystem->GetMainHWND(), NULL, false);
 

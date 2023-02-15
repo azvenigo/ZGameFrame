@@ -105,7 +105,7 @@ void ZWinDebugConsole::UpdateScrollbar()
         {
             mpSliderWin = new ZSliderWin(&mnSliderVal);
             mpSliderWin->Init(gSliderThumbVertical, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
-            mpSliderWin->SetArea(ZRect(mArea.Width() - 16, 0, mArea.Width(), mArea.Height()));
+            mpSliderWin->SetArea(ZRect(mArea.Width() - 32, 0, mArea.Width(), mArea.Height()));
             ChildAdd(mpSliderWin);
         }
 

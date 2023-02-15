@@ -50,7 +50,7 @@ public:
 	virtual	ZWin*		GetParentWin() const { return mpParentWin; }
 	virtual	bool		SetParentWin(ZWin*);
 	
-	virtual	bool		ChildAdd(ZWin* child);
+	virtual	bool		ChildAdd(ZWin* child, bool bAutoShow = true);
 	virtual	bool		ChildRemove(ZWin* child);
 	virtual	bool		ChildDelete(ZWin*	child);
 	virtual	void		ChildDeleteAll();

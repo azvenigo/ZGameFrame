@@ -66,6 +66,8 @@ public:
     bool            IsKingInCheck(bool bWhite, const ZPoint& atLocation);   // returns true if the king is (or would be) in check at a location
     bool            IsKingInCheck(bool bWhite); // is king currently in check at his current position
 
+    bool            IsCheckmate() { return mbCheckMate; }
+
     bool            WhitesTurn() { return mbWhitesTurn; }
     void            SetWhitesTurn(bool bWhitesTurn) { mbWhitesTurn = bWhitesTurn; }
     ZPoint          GetEnPassantSquare() { return mEnPassantSquare; }
@@ -82,10 +84,13 @@ public:
     bool            FromFEN(const std::string& sFEN);
 
 protected:
-    void    ComputeSquaresUnderAttack();
+    void            ComputeSquaresUnderAttack();
+    void            ComputeCheckAndMate();
 
     char    mBoard[8][8];
     bool    mbWhitesTurn;
+    bool    mbCheck;
+    bool    mbCheckMate;
     uint8_t mCastlingFlags;
     ZPoint  mEnPassantSquare;
     uint32_t mHalfMovesSinceLastCaptureOrPawnAdvance;
@@ -93,6 +98,7 @@ protected:
 
     uint8_t mSquaresUnderAttackByWhite[8][8];
     uint8_t mSquaresUnderAttackByBlack[8][8];
+
 };
 
 class ChessPiece

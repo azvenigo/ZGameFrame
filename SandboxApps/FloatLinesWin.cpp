@@ -649,7 +649,7 @@ bool cFloatLinesWin::Paint()
         }
     }
 
-    mAnimator.Paint(mpTransformTexture.get(), &mAreaToDrawTo);
+    mAnimator.Paint();
 
     ZWin::Paint();
     mbInvalid = true;

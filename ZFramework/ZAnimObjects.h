@@ -23,7 +23,7 @@ public:
 									ZAnimObject();
    virtual							~ZAnimObject();
 
-   virtual bool                  	Paint(ZBuffer* /*pBufferToDrawTo*/, ZRect* /*pClip*/) { return false; }
+   virtual bool                  	Paint() { return false; }
    virtual eCEAnimObject_State   	GetState() { return mState; }
    virtual void                  	SetState(eCEAnimObject_State state) { mState = state; }
    virtual ZRect&                	GetArea() { return mrArea; }
@@ -32,10 +32,13 @@ public:
    virtual void						SetContext(void* pContext) { mpContext = pContext; }
    virtual void*					GetContext() { return mpContext; }
 
+   virtual void                     SetDestination(tZBufferPtr pDestination) { mpDestination = pDestination; }
+
 protected:
    eCEAnimObject_State  			mState;
    ZRect                			mrArea;
    int64_t               			mnTimeStamp;
+   tZBufferPtr                      mpDestination;
    void*							mpContext;			// Contextual owner.
 };
 
@@ -46,7 +49,7 @@ public:
    // cCEAnimObject
    ZAnimObject_TextMover(tZFontPtr pFont);
 
-   virtual bool		Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
+   virtual bool		Paint();
 
    // cCEAnimObject_TextMover
    void           	SetText(const std::string& sText, uint32_t nColor, uint32_t nColor2, bool bShadow = false);
@@ -93,7 +96,7 @@ public:
    // cCEAnimObject
    ZCEAnimObject_Sparkler();
 
-   virtual bool		Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
+   virtual bool		Paint();
 
    // ZCEAnimObject_Sparkler 
    void           	SetSource(tZBufferPtr pSource, const ZRect& rBounds, uint32_t nSourceColor);
@@ -122,7 +125,7 @@ public:
    // cCEAnimObject
    ZAnimObject_TextPulser();
 
-   virtual bool Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
+   virtual bool Paint();
 
    // cCEAnimObject_TextPulser
    void			SetText(const std::string& sText, uint32_t nColor, tZFontPtr pFont, bool bShadow = false);
@@ -146,7 +149,7 @@ public:
 	ZAnimObject_Transformer(ZTransformable* pTransformer);
 	virtual ~ZAnimObject_Transformer();
 
-	virtual bool  Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
+	virtual bool  Paint();
 
 protected:
 	ZTransformable* mpTransformer;
@@ -159,7 +162,7 @@ public:
 	ZAnimObject_TransformingImage(ZBuffer* pBuffer, ZRect* pArea = NULL);
 	virtual ~ZAnimObject_TransformingImage();
 
-	virtual bool  Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
+	virtual bool  Paint();
 };
 
 // TransformingText
@@ -169,7 +172,7 @@ public:
 	ZAnimObject_TransformingText(const std::string& sText, const ZRect& rArea, ZFont* pFont, uint32_t nColor, uint32_t nColor2, ZFont::ePosition nPosition, ZFont::eStyle nStyle);
 	virtual ~ZAnimObject_TransformingText();
 
-	virtual bool  Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
+	virtual bool  Paint();
 };
 
 
@@ -216,7 +219,7 @@ class ZAnimObject_BitmapShatterer : public ZAnimObject
 public:
 					ZAnimObject_BitmapShatterer();
    virtual			~ZAnimObject_BitmapShatterer();
-   virtual bool		Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
+   virtual bool		Paint();
 
    void				SetBitmapToShatter(ZBuffer* pBufferToShatter, ZRect& rSrc, ZRect& rStartingDst, int64_t nSubdivisions);
 

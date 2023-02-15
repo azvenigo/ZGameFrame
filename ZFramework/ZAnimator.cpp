@@ -24,7 +24,7 @@ ZAnimator::~ZAnimator()
    }   
 }
 
-bool ZAnimator::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
+bool ZAnimator::Paint()
 {
    tAnimObjectList::iterator it;
 
@@ -33,7 +33,7 @@ bool ZAnimator::Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip)
    {
       ZAnimObject* pObject = *it;
       if (pObject->GetState() != ZAnimObject::kHidden)
-         pObject->Paint(pBufferToDrawTo, pClip);
+         pObject->Paint();
    }
 
    // Remove any objects that are in kFinished state

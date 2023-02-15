@@ -15,7 +15,7 @@ public:
    ZAnimator();
    ~ZAnimator();
 
-   bool Paint(ZBuffer* pBufferToDrawTo, ZRect* pClip);
+   bool Paint();
    bool AddObject(ZAnimObject* pObject, void* pContext = NULL);     // Once the object is added, the cCEAnimator is the owner and will delete the object when necessary
    bool KillObject(ZAnimObject* pObject);    // Manually kill the object
    bool KillContextObjects(void* pContext);

@@ -203,7 +203,7 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
     }
 
     gpMainWin->ChildAdd(gpControlPanel);
-    gpMainWin->ChildAdd(gpDebugConsole);
+    gpMainWin->ChildAdd(gpDebugConsole, false);
 }
 
 
@@ -228,7 +228,9 @@ public:
         else if (sType == "toggleconsole")
         {
             if (gpDebugConsole->IsVisible())
+            {
                 gpDebugConsole->Hide();
+            }
             else
                 gpDebugConsole->Show();
         }
