@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "ZRasterizer.h"
 #include "ZBuffer.h"
 

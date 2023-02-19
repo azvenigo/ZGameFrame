@@ -55,7 +55,7 @@ bool ZTransformation::operator==(const ZTransformation& trans)
 string ZTransformation::ToString()
 {
 	string sRaw;
-    sRaw = StringHelpers::FromInt(mPosition.mX) + "," + StringHelpers::FromInt(mPosition.mY) + "," + StringHelpers::FromDouble(mScale) + "," + StringHelpers::FromDouble(mRotation) + "," + StringHelpers::FromInt(mnTimestamp) + "," + StringHelpers::FromInt(mnAlpha) + ",\"" + msCompletionMessage + "\"";
+    sRaw = StringHelpers::FromInt(mPosition.x) + "," + StringHelpers::FromInt(mPosition.y) + "," + StringHelpers::FromDouble(mScale) + "," + StringHelpers::FromDouble(mRotation) + "," + StringHelpers::FromInt(mnTimestamp) + "," + StringHelpers::FromInt(mnAlpha) + ",\"" + msCompletionMessage + "\"";
 
 	return sRaw;
 }
@@ -64,10 +64,10 @@ void ZTransformation::FromString(string sRaw)
 {
 	string sTemp;
     StringHelpers::SplitToken(sTemp, sRaw, ",");
-	mPosition.mX = StringHelpers::ToInt(sTemp);
+	mPosition.x = StringHelpers::ToInt(sTemp);
 
     StringHelpers::SplitToken(sTemp, sRaw, ",");
-	mPosition.mY = StringHelpers::ToInt(sTemp);
+	mPosition.y = StringHelpers::ToInt(sTemp);
 
     StringHelpers::SplitToken(sTemp, sRaw, ",");
 	mScale		= StringHelpers::ToDouble(sTemp);
@@ -108,17 +108,17 @@ ZTransformable::ZTransformable()
 	mbFirstTransformation = false;
 	mVerts.resize(4);
 
-	mVerts[0].mU = 0.0;
-	mVerts[0].mV = 0.0;
+	mVerts[0].u = 0.0;
+	mVerts[0].v = 0.0;
 
-	mVerts[1].mU = 1.0;
-	mVerts[1].mV = 0.0;
+	mVerts[1].u = 1.0;
+	mVerts[1].v = 0.0;
 
-	mVerts[2].mU = 1.0;
-	mVerts[2].mV = 1.0;
+	mVerts[2].u = 1.0;
+	mVerts[2].v = 1.0;
 
-	mVerts[3].mU = 0.0;
-	mVerts[3].mV = 1.0;
+	mVerts[3].u = 0.0;
+	mVerts[3].v = 1.0;
 }
 
 ZTransformable::~ZTransformable()
@@ -304,8 +304,8 @@ bool ZTransformable::Tick()
 
 //		double fT = fArcTanTransition;
 //		double fT = ((double) mCurTransform.mnTimestamp - (double) mStartTransform.mnTimestamp) / ((double) mEndTransform.mnTimestamp - (double) mStartTransform.mnTimestamp);
-		mCurTransform.mPosition.mX = (int64_t) ((double)mStartTransform.mPosition.mX + (double) (mEndTransform.mPosition.mX -mStartTransform.mPosition.mX) * fT);
-		mCurTransform.mPosition.mY = (int64_t) ((double)mStartTransform.mPosition.mY + (double) (mEndTransform.mPosition.mY -mStartTransform.mPosition.mY) * fT);
+		mCurTransform.mPosition.x = (int64_t) ((double)mStartTransform.mPosition.x + (double) (mEndTransform.mPosition.x -mStartTransform.mPosition.x) * fT);
+		mCurTransform.mPosition.y = (int64_t) ((double)mStartTransform.mPosition.y + (double) (mEndTransform.mPosition.y -mStartTransform.mPosition.y) * fT);
 		mCurTransform.mRotation = mStartTransform.mRotation + (mEndTransform.mRotation-mStartTransform.mRotation) * fT;
 		mCurTransform.mScale = mStartTransform.mScale + (mEndTransform.mScale-mStartTransform.mScale) * fT;
 		mCurTransform.mnAlpha = (uint32_t) (mStartTransform.mnAlpha + (mEndTransform.mnAlpha-mStartTransform.mnAlpha) * fT);
@@ -327,26 +327,26 @@ void ZTransformable::UpdateVertsAndBounds()
 	mBounds.bottom = MININT32;
 
 	ZRect rArea = mpTransformTexture.get()->GetArea();
-	mVerts[0].mX = (double) mCurTransform.mPosition.mX;
-	mVerts[0].mY = (double)mCurTransform.mPosition.mY;
+	mVerts[0].x = (double) mCurTransform.mPosition.x;
+	mVerts[0].y = (double)mCurTransform.mPosition.y;
 
-	mVerts[1].mX = (double)mCurTransform.mPosition.mX + rArea.Width();
-	mVerts[1].mY = (double)mCurTransform.mPosition.mY;
+	mVerts[1].x = (double)mCurTransform.mPosition.x + rArea.Width();
+	mVerts[1].y = (double)mCurTransform.mPosition.y;
 
-	mVerts[2].mX = (double)mCurTransform.mPosition.mX + rArea.Width();
-	mVerts[2].mY = (double)mCurTransform.mPosition.mY + rArea.Height();
+	mVerts[2].x = (double)mCurTransform.mPosition.x + rArea.Width();
+	mVerts[2].y = (double)mCurTransform.mPosition.y + rArea.Height();
 
-	mVerts[3].mX = (double)mCurTransform.mPosition.mX;
-	mVerts[3].mY = (double)mCurTransform.mPosition.mY + rArea.Height();
+	mVerts[3].x = (double)mCurTransform.mPosition.x;
+	mVerts[3].y = (double)mCurTransform.mPosition.y + rArea.Height();
 
-	double centerX = (double)mCurTransform.mPosition.mX + rArea.Width()/2;
-	double centerY = (double)mCurTransform.mPosition.mY + rArea.Height()/2;
+	double centerX = (double)mCurTransform.mPosition.x + rArea.Width()/2;
+	double centerY = (double)mCurTransform.mPosition.y + rArea.Height()/2;
 
 	for (int i = 0; i < 4; i++)
 	{
-		TransformPoint(mVerts[i].mX, mVerts[i].mY, centerX, centerY, mCurTransform.mRotation, mCurTransform.mScale);
-		int64_t nX = (int64_t) mVerts[i].mX;
-		int64_t nY = (int64_t) mVerts[i].mY;
+		TransformPoint(mVerts[i].x, mVerts[i].y, centerX, centerY, mCurTransform.mRotation, mCurTransform.mScale);
+		int64_t nX = (int64_t) mVerts[i].x;
+		int64_t nY = (int64_t) mVerts[i].y;
 		if (mBounds.left > nX)
 			mBounds.left = nX;
 		if (mBounds.right < nX)
@@ -368,8 +368,8 @@ bool ZTransformable::TransformDraw(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 	if (mCurTransform.mRotation == 0.0 && mCurTransform.mScale == 1.0)
 	{
 		ZRect rSource = mpTransformTexture.get()->GetArea();
-		int64_t nDestX = mCurTransform.mPosition.mX;
-		int64_t nDestY = mCurTransform.mPosition.mY;
+		int64_t nDestX = mCurTransform.mPosition.x;
+		int64_t nDestY = mCurTransform.mPosition.y;
 		ZRect rFinalDest(nDestX, nDestY, nDestX + rSource.Width(), nDestY + rSource.Height());
 		pBufferToDrawTo->BltAlpha(mpTransformTexture.get(), rSource, rFinalDest, mCurTransform.mnAlpha, pClip);
 	}

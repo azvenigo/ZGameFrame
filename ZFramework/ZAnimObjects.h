@@ -187,10 +187,10 @@ public:
 		mVertices.resize(4);
 		for (int i = 0; i < 4; i++)
 		{
-			mVertices[i].mX = 0.0f;
-			mVertices[i].mY = 0.0f;
-			mVertices[i].mU = 0.0f;
-			mVertices[i].mV = 0.0f;
+			mVertices[i].x = 0.0f;
+			mVertices[i].y = 0.0f;
+			mVertices[i].u = 0.0f;
+			mVertices[i].v = 0.0f;
 		}
 
 		fdX = 0.0f;

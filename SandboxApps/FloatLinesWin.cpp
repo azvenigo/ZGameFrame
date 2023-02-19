@@ -1,6 +1,6 @@
 #include "FloatLinesWin.h"
 #include "ZBuffer.h"
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "ZMessageSystem.h"
 #include "ZAnimObjects.h"
 #include "ZGraphicSystem.h"
@@ -137,16 +137,16 @@ void ZLine::Process()
         if (mbGravityV1)
         {
             CHECKLIMITS;
-            mfdY1 += sin((double)mfX1 / 100.0) * (gravityPoint.mY - mfY1) / fV1AttractionForceDivisor;
-            mfdX1 += sin((double)mfY1 / 100.0) * (gravityPoint.mX - mfX1) / fV1AttractionForceDivisor;
+            mfdY1 += sin((double)mfX1 / 100.0) * (gravityPoint.y - mfY1) / fV1AttractionForceDivisor;
+            mfdX1 += sin((double)mfY1 / 100.0) * (gravityPoint.x - mfX1) / fV1AttractionForceDivisor;
             CHECKLIMITS;
         }
 
         if (mbGravityV2)
         {
             CHECKLIMITS;
-            mfdY2 += sin((double)mfX2 / 100.0) * (gravityPoint.mY - mfY2) / fV2AttractionForceDivisor;
-            mfdX2 += sin((double)mfY2 / 100.0) * (gravityPoint.mX - mfX2) / fV2AttractionForceDivisor;
+            mfdY2 += sin((double)mfX2 / 100.0) * (gravityPoint.y - mfY2) / fV2AttractionForceDivisor;
+            mfdX2 += sin((double)mfY2 / 100.0) * (gravityPoint.x - mfX2) / fV2AttractionForceDivisor;
             CHECKLIMITS;
         }
 
@@ -172,16 +172,16 @@ void ZLine::Process()
         if (mbGravityV1)
         {
             CHECKLIMITS;
-            mfdY1 += (gravityPoint.mY - mfY1) / fV1AttractionForceDivisor;
-            mfdX1 += (gravityPoint.mX - mfX1) / fV1AttractionForceDivisor;
+            mfdY1 += (gravityPoint.y - mfY1) / fV1AttractionForceDivisor;
+            mfdX1 += (gravityPoint.x - mfX1) / fV1AttractionForceDivisor;
             CHECKLIMITS;
         }
 
         if (mbGravityV2)
         {
             CHECKLIMITS;
-            mfdY2 += (gravityPoint.mY - mfY2) / fV2AttractionForceDivisor;
-            mfdX2 += (gravityPoint.mX - mfX2) / fV2AttractionForceDivisor;
+            mfdY2 += (gravityPoint.y - mfY2) / fV2AttractionForceDivisor;
+            mfdX2 += (gravityPoint.x - mfX2) / fV2AttractionForceDivisor;
             CHECKLIMITS;
         }
 

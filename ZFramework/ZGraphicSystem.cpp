@@ -1,7 +1,7 @@
 #include "ZGraphicSystem.h"
 #include "ZBuffer.h"
 #include "ZScreenBuffer.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 
 #ifdef _WIN64
 #include <GdiPlus.h>

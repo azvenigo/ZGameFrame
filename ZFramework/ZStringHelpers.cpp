@@ -1,5 +1,5 @@
 #include "ZStringHelpers.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 #include <string>
 #include <locale>
 #include <fstream>
@@ -32,8 +32,8 @@ string PointToString(const ZPoint& pointValue)
 {
 	std::vector<int64_t> intArray;
 	intArray.reserve(2);
-	intArray.push_back(pointValue.mX);
-	intArray.push_back(pointValue.mY);
+	intArray.push_back(pointValue.x);
+	intArray.push_back(pointValue.y);
 
 	return Int64ArrayToString(intArray);
 }

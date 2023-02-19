@@ -2,8 +2,8 @@
 
 //#define USE_D3D
 
-#include "ZStdTypes.h"
-#include "ZStdDebug.h"
+#include "ZTypes.h"
+#include "ZDebug.h"
 #include "ZBuffer.h"
 
 //#ifdef _WIN64

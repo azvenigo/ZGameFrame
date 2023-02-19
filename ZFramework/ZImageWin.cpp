@@ -7,7 +7,7 @@
 #include "ZWinControlPanel.h"
 #include "ZWinBtn.H"
 #include "Resources.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 
 extern ZAnimator gAnimator;
 using namespace std;
@@ -156,7 +156,7 @@ bool ZImageWin::OnMouseDownL(int64_t x, int64_t y)
     {
         if (SetCapture())
         {
-//            OutputDebugLockless("capture x:%d, y:%d\n", mZoomOffset.mX, mZoomOffset.mY);
+//            OutputDebugLockless("capture x:%d, y:%d\n", mZoomOffset.x, mZoomOffset.y);
             SetMouseDownPos(mImageArea.left-x, mImageArea.top-y);
 //            mZoomOffsetAtMouseDown = mZoomOffset;
             return true;
@@ -179,8 +179,8 @@ bool ZImageWin::OnMouseMove(int64_t x, int64_t y)
 
     if (AmCapturing())
     {
-        int32_t dX = (int32_t) (x+mMouseDownOffset.mX);
-        int32_t dY = (int32_t) (y+mMouseDownOffset.mY);
+        int32_t dX = (int32_t) (x+mMouseDownOffset.x);
+        int32_t dY = (int32_t) (y+mMouseDownOffset.y);
         ScrollTo(dX, dY);
     }
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ZBuffer.h"
-#include "ZStdTypes.h"
-#include "ZStdDebug.h"
+#include "ZTypes.h"
+#include "ZDebug.h"
 #include <vector>
 
 

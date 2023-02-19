@@ -1,6 +1,6 @@
 #include "ZMessageSystem.h"
 #include "helpers/StringHelpers.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 #include "ZXMLNode.h"
 #include <algorithm>
 

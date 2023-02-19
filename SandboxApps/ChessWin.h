@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "ZWin.h"
 #include "ZFont.h"
 #include <list>
@@ -48,7 +48,7 @@ public:
     char            Piece(const ZPoint& grid);
     bool            Empty(const ZPoint& grid);
     bool            Empty(int64_t x, int64_t y) { return Empty(ZPoint(x, y)); }
-    static bool     ValidCoord(const ZPoint& l) { return (l.mX >= 0 && l.mX < 8 && l.mY >= 0 && l.mY < 8); }
+    static bool     ValidCoord(const ZPoint& l) { return (l.x >= 0 && l.x < 8 && l.y >= 0 && l.y < 8); }
 
     bool            MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bGameMove = true); // if bGameMove is false, this is simply manipulating the board outside of a game
     bool            SetPiece(const ZPoint& gridDst, char c);

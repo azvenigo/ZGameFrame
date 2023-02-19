@@ -1,6 +1,6 @@
 #include "ZSliderWin.h"
 #include "ZBuffer.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 #include "ZGraphicSystem.h"
 #include "ZStringHelpers.h"
 

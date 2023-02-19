@@ -1,5 +1,5 @@
 #include "ZCompression.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 #include "ZTimer.h"
 #include "ZAssert.h"
 

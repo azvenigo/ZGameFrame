@@ -2,7 +2,7 @@
 
 #include "ZWin.h"
 #include "ZBuffer.h"
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "ZAnimObjects.h"
 #include "ZWinControlPanel.h"
 class ZImageWin : public ZWin

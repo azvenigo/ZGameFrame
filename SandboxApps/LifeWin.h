@@ -1,7 +1,7 @@
 #ifndef LIFEWIN_H
 #define LIFEWIN_H
 
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "ZWin.h"
 #include "ZFont.h"
 #include "ZTimer.h"

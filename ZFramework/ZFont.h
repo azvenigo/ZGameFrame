@@ -2,8 +2,8 @@
 
 #include "ZBuffer.h"
 #include <string>
-#include "ZStdTypes.h"
-#include "ZStdDebug.h"
+#include "ZTypes.h"
+#include "ZDebug.h"
 #include <vector>
 #include "json/json.hpp"
 

@@ -2,7 +2,7 @@
 #include "ZBuffer.h"
 #include "ZFont.h"
 #include "ZTimer.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 #include "ZGraphicSystem.h"
 #include "ZScreenBuffer.h"
 #include "ZTransformable.h"
@@ -178,8 +178,8 @@ bool ZCEAnimObject_Sparkler::Paint()
 			//         Uint8 nColG = (Uint8) ((fBrightness) * 255.0f);
 			//         uint16_t nCol = mpBufferToDrawTo->ConvertRGB(255, nColG, 0);        // ramps from yellow to red as fBrightness decreases
 
-			int64_t nX = (int64_t) point.mX;
-			int64_t nY = (int64_t) point.mY;
+			int64_t nX = (int64_t) point.x;
+			int64_t nY = (int64_t) point.y;
 			if (pClip->PtInRect(nX, nY))
 			{
 				uint32_t* pBits = pDest + nY * nStride + nX;
@@ -252,13 +252,13 @@ void ZCEAnimObject_Sparkler::CreateSparkle()
 		uint32_t nSourceCol = mpSourceBuffer->GetPixel(nRandX, nRandY);
 		if ((nSourceCol & 0x00ffffff) == (mnSourceColor & 0x00ffffff))
 		{
-			newSparklePoint.mX = (double) nRandX;
-			newSparklePoint.mY = (double) nRandY;
+			newSparklePoint.x = (double) nRandX;
+			newSparklePoint.y = (double) nRandY;
 			break;
 		}
 	}
 
-	if (newSparklePoint.mX < 0)
+	if (newSparklePoint.x < 0)
 	{
 		ZDEBUG_OUT("Couldn't find a sparkle point.");
 		return;
@@ -433,18 +433,18 @@ bool ZAnimObject_BitmapShatterer::Paint()
 		cShatterQuad& quad = *it;
 		cShatterQuad transformedQuad = quad;
 
-		double fCenterX = (quad.mVertices[0].mX + quad.mVertices[1].mX)/2.0f;
-		double fCenterY = (quad.mVertices[0].mY + quad.mVertices[2].mY)/2.0f;
+		double fCenterX = (quad.mVertices[0].x + quad.mVertices[1].x)/2.0f;
+		double fCenterY = (quad.mVertices[0].y + quad.mVertices[2].y)/2.0f;
 
 		for (int64_t i = 0; i < 4; i++)
 		{
-			const double x(quad.mVertices[i].mX - fCenterX);
-			const double y(quad.mVertices[i].mY - fCenterY);
+			const double x(quad.mVertices[i].x - fCenterX);
+			const double y(quad.mVertices[i].y - fCenterY);
 			const double cosAngle(::cos(quad.fRotation));
 			const double sinAngle(::sin(quad.fRotation));
 
-			transformedQuad.mVertices[i].mX = fCenterX + transformedQuad.fScale*(x*cosAngle - y*sinAngle);
-			transformedQuad.mVertices[i].mY = fCenterY + transformedQuad.fScale*(x*sinAngle + y*cosAngle);
+			transformedQuad.mVertices[i].x = fCenterX + transformedQuad.fScale*(x*cosAngle - y*sinAngle);
+			transformedQuad.mVertices[i].y = fCenterY + transformedQuad.fScale*(x*sinAngle + y*cosAngle);
 		}
 
         ZRect* pClip = &mpDestination->GetArea();
@@ -499,8 +499,8 @@ void ZAnimObject_BitmapShatterer::Process(ZRect& rBoundingArea)
 
 			for (int64_t i = 0; i < 4; i++)
 			{
-				quad.mVertices[i].mX += quad.fdX * fTimeScale;
-				quad.mVertices[i].mY += quad.fdY * fTimeScale;
+				quad.mVertices[i].x += quad.fdX * fTimeScale;
+				quad.mVertices[i].y += quad.fdY * fTimeScale;
 			}
 		}
 		else
@@ -542,25 +542,25 @@ void ZAnimObject_BitmapShatterer::CreateShatterListFromBuffer(ZBuffer* pBuffer, 
 			double fURight = (x+1) * fUQuad;
 
 			cShatterQuad newPixel;
-			newPixel.mVertices[0].mX = mrArea.left + x * fQuadWidth;
-			newPixel.mVertices[0].mY = mrArea.top + y * fQuadHeight;
-			newPixel.mVertices[0].mU = fULeft;
-			newPixel.mVertices[0].mV = fVTop;
+			newPixel.mVertices[0].x = mrArea.left + x * fQuadWidth;
+			newPixel.mVertices[0].y = mrArea.top + y * fQuadHeight;
+			newPixel.mVertices[0].u = fULeft;
+			newPixel.mVertices[0].v = fVTop;
 
-			newPixel.mVertices[1].mX = mrArea.left + (x+1) * fQuadWidth;
-			newPixel.mVertices[1].mY = mrArea.top + y * fQuadHeight;
-			newPixel.mVertices[1].mU = fURight;
-			newPixel.mVertices[1].mV = fVTop;
+			newPixel.mVertices[1].x = mrArea.left + (x+1) * fQuadWidth;
+			newPixel.mVertices[1].y = mrArea.top + y * fQuadHeight;
+			newPixel.mVertices[1].u = fURight;
+			newPixel.mVertices[1].v = fVTop;
 
-			newPixel.mVertices[2].mX = mrArea.left + (x+1) * fQuadWidth;
-			newPixel.mVertices[2].mY = mrArea.top + (y+1) * fQuadHeight;
-			newPixel.mVertices[2].mU = fURight;
-			newPixel.mVertices[2].mV = fVBottom;
+			newPixel.mVertices[2].x = mrArea.left + (x+1) * fQuadWidth;
+			newPixel.mVertices[2].y = mrArea.top + (y+1) * fQuadHeight;
+			newPixel.mVertices[2].u = fURight;
+			newPixel.mVertices[2].v = fVBottom;
 
-			newPixel.mVertices[3].mX = mrArea.left + x * fQuadWidth;
-			newPixel.mVertices[3].mY = mrArea.top + (y+1) * fQuadHeight;
-			newPixel.mVertices[3].mU = fULeft;
-			newPixel.mVertices[3].mV = fVBottom;
+			newPixel.mVertices[3].x = mrArea.left + x * fQuadWidth;
+			newPixel.mVertices[3].y = mrArea.top + (y+1) * fQuadHeight;
+			newPixel.mVertices[3].u = fULeft;
+			newPixel.mVertices[3].v = fVBottom;
 
 			mShatterQuadList.push_back(newPixel);
 		}

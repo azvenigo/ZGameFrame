@@ -4,7 +4,7 @@
 #include "ZFont.h"
 #include <list>
 #include "ZSliderWin.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 
 typedef std::list<std::string> tStringList;
 

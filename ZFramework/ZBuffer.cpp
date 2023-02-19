@@ -770,17 +770,17 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, eBltEdgeMidd
             tUVVertexArray middleVerts;
             gRasterizer.RectToVerts(rdM, middleVerts);
 
-            middleVerts[0].mU = (double)rEdgeRect.left / (double) w;
-            middleVerts[0].mV = (double)rEdgeRect.top / (double)h;
+            middleVerts[0].u = (double)rEdgeRect.left / (double) w;
+            middleVerts[0].v = (double)rEdgeRect.top / (double)h;
 
-            middleVerts[1].mU = (double)rEdgeRect.right / (double)w;
-            middleVerts[1].mV = (double)rEdgeRect.top / (double)h;
+            middleVerts[1].u = (double)rEdgeRect.right / (double)w;
+            middleVerts[1].v = (double)rEdgeRect.top / (double)h;
 
-            middleVerts[2].mU = (double)rEdgeRect.right / (double)w;
-            middleVerts[2].mV = (double)rEdgeRect.bottom / (double)h;
+            middleVerts[2].u = (double)rEdgeRect.right / (double)w;
+            middleVerts[2].v = (double)rEdgeRect.bottom / (double)h;
 
-            middleVerts[3].mU = (double)rEdgeRect.left / (double)w;
-            middleVerts[3].mV = (double)rEdgeRect.bottom / (double)h;
+            middleVerts[3].u = (double)rEdgeRect.left / (double)w;
+            middleVerts[3].v = (double)rEdgeRect.bottom / (double)h;
 
             gRasterizer.Rasterize(this, pSrc, middleVerts, &rClip);
         }
@@ -792,9 +792,9 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, eBltEdgeMidd
 inline
 bool ZBuffer::FloatScanLineIntersection(double fScanLine, const ZColorVertex& v1, const ZColorVertex& v2, double& fIntersection, double& fR, double& fG, double& fB, double& fA)
 {
-	if (v1.mY == v2.mY || v1.mX == v2.mX)	
+	if (v1.y == v2.y || v1.x == v2.x)	
 	{
-		fIntersection = v1.mX;
+		fIntersection = v1.x;
 		fA = (double) (v1.mColor >> 24);
 		fR = (double) ((v1.mColor & 0x00ff0000) >> 16);
 		fG = (double) ((v1.mColor & 0x0000ff00) >> 8);
@@ -803,10 +803,10 @@ bool ZBuffer::FloatScanLineIntersection(double fScanLine, const ZColorVertex& v1
 	}
 
 	// Calculate line intersection
-	double fM = (double)((v1.mY - v2.mY)/(v1.mX - v2.mX)); // slope
-	fIntersection = (v2.mX + (fScanLine-v2.mY)/fM);
+	double fM = (double)((v1.y - v2.y)/(v1.x - v2.x)); // slope
+	fIntersection = (v2.x + (fScanLine-v2.y)/fM);
 
-	double fT = (fScanLine - v1.mY) / (v2.mY - v1.mY);  // how far along line (0.0 - 1.0)
+	double fT = (fScanLine - v1.y) / (v2.y - v1.y);  // how far along line (0.0 - 1.0)
 
 	// Calculate color at intersection
 	int64_t nA1 = (v1.mColor) >> 24;
@@ -868,10 +868,10 @@ void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRec
 
 	ZRect rLineRect;
 
-	rLineRect.top = (int64_t) min(v1.mY, v2.mY);
-	rLineRect.bottom = (int64_t) max(v1.mY, v2.mY);
-	rLineRect.left = (int64_t) min(v1.mX - kfThickness/2.0f, v2.mX - kfThickness/2.0f);
-	rLineRect.right = (int64_t) max(v1.mX + kfThickness/2.0f, v2.mX + kfThickness/2.0f);
+	rLineRect.top = (int64_t) min(v1.y, v2.y);
+	rLineRect.bottom = (int64_t) max(v1.y, v2.y);
+	rLineRect.left = (int64_t) min(v1.x - kfThickness/2.0f, v2.x - kfThickness/2.0f);
+	rLineRect.right = (int64_t) max(v1.x + kfThickness/2.0f, v2.x + kfThickness/2.0f);
 
 	rLineRect.IntersectRect(/*&rLineRect, */&rDest);
 
@@ -886,7 +886,7 @@ void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRec
 	double fA;
 
 	double fPrevScanLineIntersection;
-	if (!FloatScanLineIntersection(fScanLine, v1, v2, fPrevScanLineIntersection, fR, fG, fB, fA) && v1.mY == v2.mY)
+	if (!FloatScanLineIntersection(fScanLine, v1, v2, fPrevScanLineIntersection, fR, fG, fB, fA) && v1.y == v2.y)
 	{
 		// Horizontal line is a special case:
 		uint32_t* pDest = pSurface + rLineRect.top * nStride + rLineRect.left;
@@ -918,13 +918,13 @@ void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRec
 
 inline void TransformPoint(ZFPoint& pt, const ZFPoint& ptOrigin, double angle, double fScale)
 {
-	const double x(pt.mX - ptOrigin.mX);
-	const double y(pt.mY - ptOrigin.mY);
+	const double x(pt.x - ptOrigin.x);
+	const double y(pt.y - ptOrigin.y);
 	const double cosAngle((double)::cos(angle));
 	const double sinAngle((double)::sin(angle));
 
-	pt.mX = ptOrigin.mX + fScale*(x*cosAngle - y*sinAngle);
-	pt.mY = ptOrigin.mY + fScale*(x*sinAngle + y*cosAngle);
+	pt.x = ptOrigin.x + fScale*(x*cosAngle - y*sinAngle);
+	pt.y = ptOrigin.y + fScale*(x*sinAngle + y*cosAngle);
 }
 
 bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle, double fScale, ZRect* pClip)
@@ -986,42 +986,42 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 	}
 
 	// For each segment on the rotated rectangle, rasterize the line setting min and max if necessary
-	p[0].mX = (double)rSrc.left;    //Store the four corners of rectSource as four points.
-	p[0].mY = (double)rSrc.top;
+	p[0].x = (double)rSrc.left;    //Store the four corners of rectSource as four points.
+	p[0].y = (double)rSrc.top;
 
-	p[1].mX = (double)rSrc.left;
-	p[1].mY = (double)rSrc.bottom;
+	p[1].x = (double)rSrc.left;
+	p[1].y = (double)rSrc.bottom;
 
-	p[2].mX = (double)rSrc.right;
-	p[2].mY = (double)rSrc.bottom;
+	p[2].x = (double)rSrc.right;
+	p[2].y = (double)rSrc.bottom;
 
-	p[3].mX = (double)rSrc.right;
-	p[3].mY = (double)rSrc.top;
+	p[3].x = (double)rSrc.right;
+	p[3].y = (double)rSrc.top;
 
 	TransformPoint(p[0], center, fAngle, fScale);   //Rotate these points around the center of rectSource.
 	TransformPoint(p[1], center, fAngle, fScale);
 	TransformPoint(p[2], center, fAngle, fScale);
 	TransformPoint(p[3], center, fAngle, fScale);
 
-	p[0].mX += destCenter.mX - center.mX;             //Now translate these points to be relative to destRect, with destRect.left
-	p[0].mY += destCenter.mY - center.mY;             //being 0. As if destRect had it's own coordinate system.
-	p[0].mX += rDst.left - rDstActual.left; //Then translate these points to be relative to destRectActual
-	p[0].mY += rDst.top  - rDstActual.top;  //  (clipped destination rectangle) instead of just destRect.
+	p[0].x += destCenter.x - center.x;             //Now translate these points to be relative to destRect, with destRect.left
+	p[0].y += destCenter.y - center.y;             //being 0. As if destRect had it's own coordinate system.
+	p[0].x += rDst.left - rDstActual.left; //Then translate these points to be relative to destRectActual
+	p[0].y += rDst.top  - rDstActual.top;  //  (clipped destination rectangle) instead of just destRect.
 	//Now it's as if destRectActual had it's own coordinate system.
-	p[1].mX += destCenter.mX - center.mX;
-	p[1].mY += destCenter.mY - center.mY;
-	p[1].mX += rDst.left - rDstActual.left;
-	p[1].mY += rDst.top  - rDstActual.top;
+	p[1].x += destCenter.x - center.x;
+	p[1].y += destCenter.y - center.y;
+	p[1].x += rDst.left - rDstActual.left;
+	p[1].y += rDst.top  - rDstActual.top;
 
-	p[2].mX += destCenter.mX - center.mX;
-	p[2].mY += destCenter.mY - center.mY;
-	p[2].mX += rDst.left - rDstActual.left;
-	p[2].mY += rDst.top  - rDstActual.top;
+	p[2].x += destCenter.x - center.x;
+	p[2].y += destCenter.y - center.y;
+	p[2].x += rDst.left - rDstActual.left;
+	p[2].y += rDst.top  - rDstActual.top;
 
-	p[3].mX += destCenter.mX - center.mX;
-	p[3].mY += destCenter.mY - center.mY;
-	p[3].mX += rDst.left - rDstActual.left;
-	p[3].mY += rDst.top  - rDstActual.top;
+	p[3].x += destCenter.x - center.x;
+	p[3].y += destCenter.y - center.y;
+	p[3].x += rDst.left - rDstActual.left;
+	p[3].y += rDst.top  - rDstActual.top;
 
 	//For each destination scan line from top to bottom, test for 
 	//  intersection against the four segments (edges). When we get done with this
@@ -1035,14 +1035,14 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 		int64_t   xInt;   //x-Intercept of the current line with the beginning of the scan line.
 
 		// segment 0-1 intersection
-		if ((p[0].mY <= i && p[1].mY > i) || //If this scan line vertically is in the same range as the 0-1 line.
-			(p[1].mY <= i && p[0].mY > i))
+		if ((p[0].y <= i && p[1].y > i) || //If this scan line vertically is in the same range as the 0-1 line.
+			(p[1].y <= i && p[0].y > i))
 		{
-			if (p[0].mX == p[1].mX)           //If the 0-1 line is vertical, the possible xIntercept is at x.
-				xInt = (int) p[0].mX;
+			if (p[0].x == p[1].x)           //If the 0-1 line is vertical, the possible xIntercept is at x.
+				xInt = (int) p[0].x;
 			else{
-				m = (double)((p[0].mY - p[1].mY)/(p[0].mX - p[1].mX));       //Calculate the intersection between the current
-				xInt = (int64_t)(p[1].mX + (double(i)-p[1].mY)/m + 1.0F); //line and the current scan-line.
+				m = (double)((p[0].y - p[1].y)/(p[0].x - p[1].x));       //Calculate the intersection between the current
+				xInt = (int64_t)(p[1].x + (double(i)-p[1].y)/m + 1.0F); //line and the current scan-line.
 			} //The p0-p1 line crosses the current 'i' horizontal at x = xInt.
 			if (xInt < spanMin[i]) //If this xIntercept is lower than the previous lowest xIntercept. 
 				spanMin[i] = xInt;  //Since this is the first run through this, the test should always 
@@ -1051,14 +1051,14 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 		}
 
 		// segment 1-2 intersection
-		if ((p[1].mY <= i && p[2].mY > i) ||
-			(p[2].mY <= i && p[1].mY > i))
+		if ((p[1].y <= i && p[2].y > i) ||
+			(p[2].y <= i && p[1].y > i))
 		{
-			if (p[1].mX == p[2].mX)
-				xInt = (int) p[1].mX;
+			if (p[1].x == p[2].x)
+				xInt = (int) p[1].x;
 			else{
-				m = (double)((p[1].mY - p[2].mY)/(p[1].mX - p[2].mX));
-				xInt = (int64_t)(p[2].mX + (double(i)-p[2].mY)/m + 1.0F);
+				m = (double)((p[1].y - p[2].y)/(p[1].x - p[2].x));
+				xInt = (int64_t)(p[2].x + (double(i)-p[2].y)/m + 1.0F);
 			}
 			if (xInt < spanMin[i])
 				spanMin[i] = xInt;
@@ -1067,14 +1067,14 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 		}
 
 		// segment 2-3 intersection
-		if ((p[2].mY <= i && p[3].mY > i) ||
-			(p[3].mY <= i && p[2].mY > i))
+		if ((p[2].y <= i && p[3].y > i) ||
+			(p[3].y <= i && p[2].y > i))
 		{
-			if (p[2].mX == p[3].mX)
-				xInt = (int) p[2].mX;
+			if (p[2].x == p[3].x)
+				xInt = (int) p[2].x;
 			else{
-				m = (double)((p[2].mY - p[3].mY)/(p[2].mX - p[3].mX));
-				xInt = (int64_t)(p[3].mX + (double(i)-p[3].mY)/m + 1.0F);
+				m = (double)((p[2].y - p[3].y)/(p[2].x - p[3].x));
+				xInt = (int64_t)(p[3].x + (double(i)-p[3].y)/m + 1.0F);
 			}
 			if (xInt < spanMin[i])
 				spanMin[i] = xInt;
@@ -1083,14 +1083,14 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 		}
 
 		// segment 3-0 intersection
-		if ((p[3].mY <= i && p[0].mY > i) ||
-			(p[0].mY <= i && p[3].mY > i))
+		if ((p[3].y <= i && p[0].y > i) ||
+			(p[0].y <= i && p[3].y > i))
 		{
-			if (p[3].mX == p[0].mX)   // vertical line
-				xInt = (int) p[0].mX;
+			if (p[3].x == p[0].x)   // vertical line
+				xInt = (int) p[0].x;
 			else{
-				m = (double)((p[3].mY - p[0].mY)/(p[3].mX - p[0].mX));
-				xInt = (int64_t)(p[0].mX + (double(i)-p[0].mY)/m + 1.0F);
+				m = (double)((p[3].y - p[0].y)/(p[3].x - p[0].x));
+				xInt = (int64_t)(p[0].x + (double(i)-p[0].y)/m + 1.0F);
 			}
 			if (xInt < spanMin[i])
 				spanMin[i] = xInt;
@@ -1111,23 +1111,23 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 
 	for(i=0; i<numRows; i++)
 	{
-		tP.mX = spanMin[i] + (rDstActual.left-rDst.left) - destCenter.mX + center.mX; //Find first texture pixel in the source buffer. We do this by
-		tP.mY = (rDstActual.top + i) - rDst.top  - destCenter.mY + center.mY; //first taking the position of this pixel in the destination
+		tP.x = spanMin[i] + (rDstActual.left-rDst.left) - destCenter.x + center.x; //Find first texture pixel in the source buffer. We do this by
+		tP.y = (rDstActual.top + i) - rDst.top  - destCenter.y + center.y; //first taking the position of this pixel in the destination
 		TransformPoint(tP, center, -fAngle, fScale);                                      //buffer and then translating and rotating it back to its 
 		pCurrentDestBits = pDestBits+rDstActual.left+spanMin[i];               //position in the source buffer.
 
-		tP.mX += 0.0015f; //This is rather important because there is a slight chance that due to rounding errors
-		tP.mY += 0.0015f; // the texel value will be just slightly below zero. During integer rounding, the value
+		tP.x += 0.0015f; //This is rather important because there is a slight chance that due to rounding errors
+		tP.y += 0.0015f; // the texel value will be just slightly below zero. During integer rounding, the value
 		// would round from -0.1 down to -1. This would be bad and cause crashes. 
 		//Without these checks, you get rare crashes. Trust me, it happened. 
 
 		for(int64_t lx=spanMin[i], lxEnd=spanMax[i]; lx<lxEnd; lx++)
 		{
-			nCurrentColor = *(pSrcBits + ((int64_t) tP.mX) + ((int64_t)tP.mY)*strideSrcDiv2);
+			nCurrentColor = *(pSrcBits + ((int64_t) tP.x) + ((int64_t)tP.y)*strideSrcDiv2);
 			//*pCurrentDestBits = AlphaBlend_Col2Alpha(nCurrentColor, *pCurrentDestBits, 1.0f);
 			*pCurrentDestBits = nCurrentColor;
-			tP.mX += dTex.mX;
-			tP.mY += dTex.mY;
+			tP.x += dTex.x;
+			tP.y += dTex.y;
 			pCurrentDestBits++;
 		}
 		pDestBits += strideDiv2;

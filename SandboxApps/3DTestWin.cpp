@@ -3,7 +3,7 @@
 #include "ZRandom.h"
 #include "ZFont.h"
 #include "ZRasterizer.h"
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "Z3DMath.h"
 #include <cmath> 
 #include <limits>
@@ -1173,14 +1173,14 @@ void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection,
 /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
             continue;*/
 
-        screenVerts[i].mX = mAreaToDrawTo.Width()/2 + (int64_t)(vertProjected.x * mnRenderSize *10);
-        screenVerts[i].mY = mAreaToDrawTo.Height()/2 + (int64_t)(vertProjected.y * mnRenderSize *10);
+        screenVerts[i].x = mAreaToDrawTo.Width()/2 + (int64_t)(vertProjected.x * mnRenderSize *10);
+        screenVerts[i].y = mAreaToDrawTo.Height()/2 + (int64_t)(vertProjected.y * mnRenderSize *10);
 
         screenVerts[i].mColor = nCol;
     }
 
-    Vec3f planeX(screenVerts[1].mX- screenVerts[0].mX, screenVerts[1].mY - screenVerts[0].mY, 1);
-    Vec3f planeY(screenVerts[0].mX - screenVerts[3].mX, screenVerts[0].mY - screenVerts[3].mY, 1);
+    Vec3f planeX(screenVerts[1].x- screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
+    Vec3f planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
     Vec3f normal = planeX.crossProduct(planeY);
     if (normal.z > 0)
         return;
@@ -1206,28 +1206,28 @@ void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection,
         /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
                     continue;*/
 
-        screenVerts[i].mX = mAreaToDrawTo.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10);
-        screenVerts[i].mY = mAreaToDrawTo.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10);
+        screenVerts[i].x = mAreaToDrawTo.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10);
+        screenVerts[i].y = mAreaToDrawTo.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10);
     }
 
-    Vec3f planeX(screenVerts[1].mX - screenVerts[0].mX, screenVerts[1].mY - screenVerts[0].mY, 1);
-    Vec3f planeY(screenVerts[0].mX - screenVerts[3].mX, screenVerts[0].mY - screenVerts[3].mY, 1);
+    Vec3f planeX(screenVerts[1].x - screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
+    Vec3f planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
     Vec3f normal = planeX.crossProduct(planeY);
     if (normal.z > 0)
         return;
 
 
-    screenVerts[0].mU = 0.0;
-    screenVerts[0].mV = 0.0;
+    screenVerts[0].u = 0.0;
+    screenVerts[0].v = 0.0;
 
-    screenVerts[1].mU = 1.0;
-    screenVerts[1].mV = 0.0;
+    screenVerts[1].u = 1.0;
+    screenVerts[1].v = 0.0;
 
-    screenVerts[2].mU = 1.0;
-    screenVerts[2].mV = 1.0;
+    screenVerts[2].u = 1.0;
+    screenVerts[2].v = 1.0;
 
-    screenVerts[3].mU = 0.0;
-    screenVerts[3].mV = 1.0;
+    screenVerts[3].u = 0.0;
+    screenVerts[3].v = 1.0;
 
     gRasterizer.Rasterize(mpTransformTexture.get(), pTexture.get(), screenVerts);
 }

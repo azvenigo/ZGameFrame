@@ -1,4 +1,4 @@
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 #include "ZXMLNode.h"
 #include "ZStringHelpers.h"
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 

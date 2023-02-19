@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ZXMLNode.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 
 
 class ZPreferences

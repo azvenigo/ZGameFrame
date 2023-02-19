@@ -22,61 +22,61 @@ class tPoint
 public:
 	tPoint() 
 	{ 
-		mX = T{}; 
-		mY = T{}; 
+		x = T{}; 
+		y = T{}; 
 	}
-	tPoint(T x, T y) 
+	tPoint(T _x, T _y) 
 	{ 
-		mX = x; 
-		mY = y; 
+		x = _x; 
+		y = _y; 
 	}
 	tPoint(const tPoint& rhs) 
 	{ 
-		mX = rhs.mX; 
-		mY = rhs.mY; 
+		x = rhs.x; 
+		y = rhs.y; 
 	}
 
-	void Set(T x, T y) 
+	void Set(T _x, T _y) 
 	{ 
-		mX = x; 
-		mY = y; 
+		x = _x; 
+		y = _y; 
 	}
-	void Offset(T x, T y) 
+	void Offset(T _x, T _y) 
 	{ 
-		mX += x; 
-		mY += y; 
+		x += _x; 
+		y += _y; 
 	};
 	void operator+=(tPoint& p) 
 	{ 
-		mX += p.mX; 
-		mY += p.mY; 
+		x += p.x; 
+		y += p.y; 
 	}
 	void operator-=(tPoint& p) 
 	{ 
-		mX -= p.mX; 
-		mY -= p.mY; 
+		x -= p.x; 
+		y -= p.y; 
 	}
 
 	tPoint operator-() const 
 	{ 
-		return tPoint(-mX, -mY); 
+		return tPoint(-x, -y); 
 	}
 	tPoint operator+(const tPoint& p) const 
 	{ 
-		return tPoint(mX + p.mX, mY + p.mY); 
+		return tPoint(x + p.x, y + p.y); 
 	};
 
 	bool operator==(const tPoint& p) const
 	{ 
-		return (mX == p.mX && mY == p.mY); 
+		return (x == p.x && y == p.y); 
 	}
 	bool operator!=(const tPoint& p) const
 	{ 
-		return (mX != p.mX || mY != p.mY); 
+		return (x != p.x || y != p.y); 
 	}
 
-	T mX;
-	T mY;
+	T x;
+	T y;
 };
 
 
@@ -178,17 +178,17 @@ public:
 	{ 
 		mColor = col; 
 	}
-    tColorVertex(const tColorVertex& rhs) : tPoint<T>(rhs.mX,rhs.mY)
+    tColorVertex(const tColorVertex& rhs) : tPoint<T>(rhs.x,rhs.y)
 	{ 
 		mColor = rhs.mColor; 
 	}
     tColorVertex operator-() const
 	{ 
-		return tColorVertex(-tPoint<T>::mX, -tPoint<T>::mY, mColor);
+		return tColorVertex(-tPoint<T>::x, -tPoint<T>::y, mColor);
 	}
     tColorVertex operator+(tColorVertex& v) const
 	{ 
-		return tColorVertex(tPoint<T>::mX + v.mX, tPoint<T>::mY + v.mY, mColor);
+		return tColorVertex(tPoint<T>::x + v.x, tPoint<T>::y + v.y, mColor);
 	}
 
 	uint32_t mColor;
@@ -200,30 +200,30 @@ template<typename T> class tUVVertex : public tPoint<T>
 public:
     tUVVertex() : tPoint<T>()
     {
-        mU = 0;
-        mV = 0;
+        u = 0;
+        v = 0;
     }
-    tUVVertex(T x, T y, T u, T v) : tPoint<T>(x, y)
+    tUVVertex(T _x, T _y, T _u, T _v) : tPoint<T>(_x, _y)
     {
-        mU = u;
-        mV = v;
+        u = u;
+        v = v;
     }
-    tUVVertex(const tUVVertex& rhs) : tPoint<T>(rhs.mX, rhs.mY)
+    tUVVertex(const tUVVertex& rhs) : tPoint<T>(rhs.x, rhs.y)
     {
-        mU = rhs.mU;
-        mV = rhs.mV;
+        u = rhs.u;
+        v = rhs.v;
     }
     tUVVertex operator-() const
     {
-        return tUVVertex(-tPoint<T>::mX, -tPoint<T>::mY, mU, mV);
+        return tUVVertex(-tPoint<T>::x, -tPoint<T>::y, u, v);
     }
-    tUVVertex operator+(tUVVertex& v) const
+    tUVVertex operator+(tUVVertex& _v) const
     {
-        return tUVVertex(tPoint<T>::mX + v.mX, tPoint<T>::mY + v.mY, mU, mV);
+        return tUVVertex(tPoint<T>::x + v.x, tPoint<T>::y + v.y, u, v);
     }
 
-    T  mU;
-    T  mV;
+    T  u;
+    T  v;
 };
 
 typedef tUVVertex<double> ZUVVertex;
@@ -291,7 +291,7 @@ public:
     // Queries
     bool PtInRect(tPoint<T>& p) const
 	{
-		return (p.mX >= left && p.mY >= top && p.mX < right&& p.mY < bottom);
+		return (p.x >= left && p.y >= top && p.x < right&& p.y < bottom);
 	}
     bool PtInRect(T x, T y) const
 	{
@@ -348,8 +348,8 @@ public:
 	}
     void MoveRect(ZPoint& p)
 	{
-		int64_t nOffsetX = (p.mX - left);
-		int64_t nOffsetY = (p.mY - top);
+		int64_t nOffsetX = (p.x - left);
+		int64_t nOffsetY = (p.y - top);
 
 		left += nOffsetX;
 		right += nOffsetX;
@@ -365,7 +365,7 @@ public:
 	}
     void OffsetRect(ZPoint& p)
 	{
-		OffsetRect(p.mX, p.mY);
+		OffsetRect(p.x, p.y);
 	}
     void NormalizeRect()
 	{
@@ -448,11 +448,11 @@ public:
 
     void operator+=(tPoint<T>& p)
 	{
-		OffsetRect(p.mX, p.mY);
+		OffsetRect(p.x, p.y);
 	}
     void operator-=(tPoint<T>& p)
 	{
-		OffsetRect(-p.mX, -p.mY);
+		OffsetRect(-p.x, -p.y);
 	}
     void operator&=(const tRect& r)
 	{

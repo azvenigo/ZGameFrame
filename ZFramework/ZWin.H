@@ -1,7 +1,7 @@
 #pragma once
 
 #include <list>
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "ZMessageSystem.h"
 #include "ZTransformable.h"
 #include <mutex>
@@ -232,14 +232,14 @@ bool ZWin::IsPointInWindowScreenCoordinates(int64_t screenX, int64_t screenY)
 inline
 void ZWin::GetMouseDownPos(int64_t& mouseX, int64_t& mouseY) 
 {
-    mouseX = mMouseDownOffset.mX;
-    mouseY = mMouseDownOffset.mY;
+    mouseX = mMouseDownOffset.x;
+    mouseY = mMouseDownOffset.y;
 }
 
 inline
 void ZWin::SetMouseDownPos(int64_t mouseX, int64_t mouseY) {   
-	mMouseDownOffset.mX = mouseX;
-	mMouseDownOffset.mY = mouseY;
+	mMouseDownOffset.x = mouseX;
+	mMouseDownOffset.y = mouseY;
 }
 
 inline

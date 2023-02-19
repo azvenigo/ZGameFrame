@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "ZWin.h"
 #include "ZWinBtn.h"
 #include "ZTimer.h"

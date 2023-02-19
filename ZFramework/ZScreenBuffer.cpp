@@ -1,6 +1,6 @@
 #include "ZScreenBuffer.h"
 #include "ZGraphicSystem.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 #include "ZRasterizer.h"
 #include "ZTimer.h"
 #include "ZStringHelpers.h"
@@ -252,18 +252,18 @@ int32_t ZScreenBuffer::RenderVisibleRects()
             bmpInfo.bmiHeader.biWidth = (LONG)rTexture.Width();
             bmpInfo.bmiHeader.biHeight = (LONG)-rTexture.Height();
 
-            DWORD nStartScanline = (DWORD)sr.mSourcePt.mY;
+            DWORD nStartScanline = (DWORD)sr.mSourcePt.y;
             DWORD nScanLines = (DWORD)sr.mrDest.Height();
 
-            void* pBits = sr.mpSourceBuffer->GetPixels() + sr.mSourcePt.mY * rTexture.Width();
+            void* pBits = sr.mpSourceBuffer->GetPixels() + sr.mSourcePt.y * rTexture.Width();
 
             int nRet = SetDIBitsToDevice(mDC,       // HDC
                 (DWORD)sr.mrDest.left,                 // Dest X
                 (DWORD)sr.mrDest.top,                  // Dest Y
                 (DWORD)sr.mrDest.Width(),            // Dest Width
                 (DWORD)sr.mrDest.Height(),           // Dest Height
-                (DWORD)sr.mSourcePt.mX,               // Src X
-                (DWORD)sr.mSourcePt.mY,                // Src Y
+                (DWORD)sr.mSourcePt.x,               // Src X
+                (DWORD)sr.mSourcePt.y,                // Src Y
                 nStartScanline,                                  // Start Scanline
                 nScanLines,           // Num Scanlines
                 pBits,       // * pixels
@@ -423,7 +423,7 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
 					ZRect rTL(rDest.left, rDest.top, rDest.left + lw, rDest.top + th);
 					ZPoint sourcePt(oldRect.mSourcePt);
 					newList.emplace_back(ZScreenRect(oldRect.mpSourceBuffer, rTL, sourcePt));
-					DebugVisibilityOutput("rTL:(%d,%d,%d,%d) sourcePt:(%d,%d)", rTL.left, rTL.top, rTL.right, rTL.bottom, sourcePt.mX, sourcePt.mY);
+					DebugVisibilityOutput("rTL:(%d,%d,%d,%d) sourcePt:(%d,%d)", rTL.left, rTL.top, rTL.right, rTL.bottom, sourcePt.x, sourcePt.y);
 
 				}
 
@@ -431,18 +431,18 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
 				{
 					// L
 					ZRect rL(rDest.left, rOverlap.top, rDest.left + lw, rOverlap.bottom);
-					ZPoint sourcePt(oldRect.mSourcePt.mX, oldRect.mSourcePt.mY+th);
+					ZPoint sourcePt(oldRect.mSourcePt.x, oldRect.mSourcePt.y+th);
 					newList.emplace_back(ZScreenRect(oldRect.mpSourceBuffer, rL, sourcePt));
-					DebugVisibilityOutput("rL:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rL.left, rL.top, rL.right, rL.bottom, sourcePt.mX, sourcePt.mY);
+					DebugVisibilityOutput("rL:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rL.left, rL.top, rL.right, rL.bottom, sourcePt.x, sourcePt.y);
 				}
 
 				if (bh != 0)
 				{
 					// BL
 					ZRect rBL(rDest.left, rOverlap.bottom, rOverlap.left, rDest.bottom);
-					ZPoint sourcePt(oldRect.mSourcePt.mX, oldRect.mSourcePt.mY+th+mh);
+					ZPoint sourcePt(oldRect.mSourcePt.x, oldRect.mSourcePt.y+th+mh);
 					newList.emplace_back(ZScreenRect(oldRect.mpSourceBuffer, rBL, sourcePt));
-					DebugVisibilityOutput("rBL:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rBL.left, rBL.top, rBL.right, rBL.bottom, sourcePt.mX, sourcePt.mY);
+					DebugVisibilityOutput("rBL:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rBL.left, rBL.top, rBL.right, rBL.bottom, sourcePt.x, sourcePt.y);
 				}
 			}
 
@@ -452,18 +452,18 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
 				{
 					// T
 					ZRect rT(rOverlap.left, rDest.top, rOverlap.right, rDest.top + th);
-					ZPoint sourcePt(oldRect.mSourcePt.mX+lw, oldRect.mSourcePt.mY);
+					ZPoint sourcePt(oldRect.mSourcePt.x+lw, oldRect.mSourcePt.y);
 					newList.emplace_back(ZScreenRect(oldRect.mpSourceBuffer, rT, sourcePt));
-					DebugVisibilityOutput("rT:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rT.left, rT.top, rT.right, rT.bottom, sourcePt.mX, sourcePt.mY);
+					DebugVisibilityOutput("rT:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rT.left, rT.top, rT.right, rT.bottom, sourcePt.x, sourcePt.y);
 				}
 
 				if (bh != 0)
 				{
 					// B
 					ZRect rB(rOverlap.left, rOverlap.bottom, rOverlap.right, rDest.bottom);
-					ZPoint sourcePt(oldRect.mSourcePt.mX+lw, oldRect.mSourcePt.mY+th+mh);
+					ZPoint sourcePt(oldRect.mSourcePt.x+lw, oldRect.mSourcePt.y+th+mh);
 					newList.emplace_back(ZScreenRect(oldRect.mpSourceBuffer, rB, sourcePt));
-					DebugVisibilityOutput("rB:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rB.left, rB.top, rB.right, rB.bottom, sourcePt.mX, sourcePt.mY);
+					DebugVisibilityOutput("rB:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rB.left, rB.top, rB.right, rB.bottom, sourcePt.x, sourcePt.y);
 				}
 			}
 
@@ -473,27 +473,27 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
 				{
 					// TR
 					ZRect rTR(rOverlap.right, rDest.top, rDest.right, rOverlap.top);
-					ZPoint sourcePt(oldRect.mSourcePt.mX+lw+mw, oldRect.mSourcePt.mY);
+					ZPoint sourcePt(oldRect.mSourcePt.x+lw+mw, oldRect.mSourcePt.y);
 					newList.emplace_back(ZScreenRect(oldRect.mpSourceBuffer, rTR, sourcePt));
-					DebugVisibilityOutput("rTR:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rTR.left, rTR.top, rTR.right, rTR.bottom, sourcePt.mX, sourcePt.mY);
+					DebugVisibilityOutput("rTR:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rTR.left, rTR.top, rTR.right, rTR.bottom, sourcePt.x, sourcePt.y);
 				}
 
 				if (mh != 0)
 				{
 					// R
 					ZRect rR(rOverlap.right, rOverlap.top, rDest.right, rOverlap.bottom);
-					ZPoint sourcePt(oldRect.mSourcePt.mX+lw+mw, oldRect.mSourcePt.mY+th);
+					ZPoint sourcePt(oldRect.mSourcePt.x+lw+mw, oldRect.mSourcePt.y+th);
 					newList.emplace_back(ZScreenRect(oldRect.mpSourceBuffer, rR, sourcePt));
-					DebugVisibilityOutput("rR:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rR.left, rR.top, rR.right, rR.bottom, sourcePt.mX, sourcePt.mY);
+					DebugVisibilityOutput("rR:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rR.left, rR.top, rR.right, rR.bottom, sourcePt.x, sourcePt.y);
 				}
 
 				if (bh != 0)
 				{
 					// BR
 					ZRect rBR(rOverlap.right, rOverlap.bottom, rDest.right, rDest.bottom);
-					ZPoint sourcePt(oldRect.mSourcePt.mX+lw+mw, oldRect.mSourcePt.mY+th+mh);
+					ZPoint sourcePt(oldRect.mSourcePt.x+lw+mw, oldRect.mSourcePt.y+th+mh);
 					newList.emplace_back(ZScreenRect(oldRect.mpSourceBuffer, rBR, sourcePt));
-					DebugVisibilityOutput("rBR:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rBR.left, rBR.top, rBR.right, rBR.bottom, sourcePt.mX, sourcePt.mY);
+					DebugVisibilityOutput("rBR:(%d,%d,%d,%d) sourcePt:(%d,%d)\n", rBR.left, rBR.top, rBR.right, rBR.bottom, sourcePt.x, sourcePt.y);
 				}
 			}
 		}

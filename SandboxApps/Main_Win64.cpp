@@ -6,7 +6,7 @@
 #include "Main_Sandbox.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 
 using namespace std;
 
@@ -315,9 +315,9 @@ void CheckMouseForHover()
 
 	if (!gbMouseHoverPosted && nCurTime - gnLastMouseMoveTime > kMouseHoverInitialTime)
 	{
-		ZWin* pMouseOverWin = gpMainWin->GetChildWindowByPoint(gLastMouseMove.mX, gLastMouseMove.mY);
+		ZWin* pMouseOverWin = gpMainWin->GetChildWindowByPoint(gLastMouseMove.x, gLastMouseMove.y);
 		if (pMouseOverWin)
-			pMouseOverWin->OnMouseHover((int64_t) ((float) gLastMouseMove.mX / gfMouseMultX), (int64_t) ((float) gLastMouseMove.mY / gfMouseMultY));
+			pMouseOverWin->OnMouseHover((int64_t) ((float) gLastMouseMove.x / gfMouseMultX), (int64_t) ((float) gLastMouseMove.y / gfMouseMultY));
 
 		gbMouseHoverPosted = true;
 	}
@@ -325,7 +325,7 @@ void CheckMouseForHover()
 
 void CheckForMouseOverNewWindow()
 {
-	ZWin* pMouseOverWin = gpMainWin->GetChildWindowByPoint(gLastMouseMove.mX, gLastMouseMove.mY);
+	ZWin* pMouseOverWin = gpMainWin->GetChildWindowByPoint(gLastMouseMove.x, gLastMouseMove.y);
 
 	// Check whether a "cursor out" message needs to be sent.  (i.e. a previous window had the cursor over it but no longer)
 	if (gpMouseOverWin != pMouseOverWin)
@@ -526,7 +526,7 @@ void Window_OnMouseMove(UINT nX, UINT nY)
 #endif
 	}
 
-    if (gLastMouseMove.mX != nX || gLastMouseMove.mY != nY)
+    if (gLastMouseMove.x != nX || gLastMouseMove.y != nY)
     {
         gLastMouseMove.Set(nX, nY);
         gnLastMouseMoveTime = gTimer.GetElapsedTime();

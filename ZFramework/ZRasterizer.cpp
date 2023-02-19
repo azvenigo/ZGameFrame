@@ -1,5 +1,5 @@
 #include "ZRasterizer.h"
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 
 uint64_t	ZRasterizer::mnProcessedVertices;	// for debugging
 uint64_t	ZRasterizer::mnDrawnPixels;
@@ -17,31 +17,31 @@ static char THIS_FILE[] = __FILE__;
 bool ZRasterizer::FindScanlineIntersection(double fScanY, ZUVVertex& v1, ZUVVertex& v2, ZUVVertex& vIntersection)
 {
 	// if the segment is entirely above or below the scanline, no intersection
-	if (v1.mY < fScanY && v2.mY < fScanY ||
-		v1.mY > fScanY && v2.mY > fScanY)
+	if (v1.y < fScanY && v2.y < fScanY ||
+		v1.y > fScanY && v2.y > fScanY)
 		return false;
 
 	// If the line is horizontal
-	if (v1.mY == v2.mY)
+	if (v1.y == v2.y)
 		return false;
 
-	vIntersection.mY = fScanY;
+	vIntersection.y = fScanY;
 
 	// if the line is vertical
-	if (v1.mX == v2.mX)
+	if (v1.x == v2.x)
 	{
-		vIntersection.mX = v1.mX;
+		vIntersection.x = v1.x;
 	}
 	else
 	{
-		double fSlope = (double)((v1.mY - v2.mY)/(v1.mX - v2.mX));       //Calculate the intersection between the current
-		vIntersection.mX = (v2.mX + (fScanY-v2.mY)/fSlope); //line and the current scan-line.
+		double fSlope = (double)((v1.y - v2.y)/(v1.x - v2.x));       //Calculate the intersection between the current
+		vIntersection.x = (v2.x + (fScanY-v2.y)/fSlope); //line and the current scan-line.
 	}
 
-	double fT = (vIntersection.mY - v1.mY)/(v2.mY - v1.mY);
+	double fT = (vIntersection.y - v1.y)/(v2.y - v1.y);
 
-	vIntersection.mU = v1.mU + (v2.mU - v1.mU)*fT;
-	vIntersection.mV = v1.mV + (v2.mV - v1.mV)*fT;
+	vIntersection.u = v1.u + (v2.u - v1.u)*fT;
+	vIntersection.v = v1.v + (v2.v - v1.v)*fT;
 
 	return true;
 }
@@ -49,28 +49,28 @@ bool ZRasterizer::FindScanlineIntersection(double fScanY, ZUVVertex& v1, ZUVVert
 bool ZRasterizer::FindScanlineIntersection(double fScanY, ZColorVertex& v1, ZColorVertex& v2, ZColorVertex& vIntersection)
 {
     // if the segment is entirely above or below the scanline, no intersection
-    if (v1.mY < fScanY && v2.mY < fScanY ||
-        v1.mY > fScanY && v2.mY > fScanY)
+    if (v1.y < fScanY && v2.y < fScanY ||
+        v1.y > fScanY && v2.y > fScanY)
         return false;
 
     // If the line is horizontal
-    if (v1.mY == v2.mY)
+    if (v1.y == v2.y)
         return false;
 
-    vIntersection.mY = fScanY;
+    vIntersection.y = fScanY;
 
     // if the line is vertical
-    if (v1.mX == v2.mX)
+    if (v1.x == v2.x)
     {
-        vIntersection.mX = v1.mX;
+        vIntersection.x = v1.x;
     }
     else
     {
-        double fSlope = (double)((v1.mY - v2.mY) / (v1.mX - v2.mX));       //Calculate the intersection between the current
-        vIntersection.mX = (v2.mX + (fScanY - v2.mY) / fSlope); //line and the current scan-line.
+        double fSlope = (double)((v1.y - v2.y) / (v1.x - v2.x));       //Calculate the intersection between the current
+        vIntersection.x = (v2.x + (fScanY - v2.y) / fSlope); //line and the current scan-line.
     }
 
-    double fT = (vIntersection.mY - v1.mY) / (v2.mY - v1.mY);
+    double fT = (vIntersection.y - v1.y) / (v2.y - v1.y);
 
     double fA1 = (double)ARGB_A(v1.mColor);
     double fR1 = (double)ARGB_R(v1.mColor);
@@ -109,7 +109,7 @@ inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, tColorVertexA
     {
         ZColorVertex& vertex = vertexArray[nVertexIndex];
 
-        int64_t nY = (int64_t)(vertex.mY + 0.5);
+        int64_t nY = (int64_t)(vertex.y + 0.5);
         if (nY <= nTopScanline)
             nTopScanline = nY;
         if (nY > nBottomScanline)
@@ -142,7 +142,7 @@ inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, tUVVertexArra
 	{
 		ZUVVertex& vertex = vertexArray[nVertexIndex];
 
-		int64_t nY = (int64_t) (vertex.mY + 0.5);
+		int64_t nY = (int64_t) (vertex.y + 0.5);
 		if (nY <= nTopScanline)
 			nTopScanline = nY;
 		if (nY > nBottomScanline)
@@ -161,11 +161,11 @@ inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, tUVVertexArra
 inline void ZRasterizer::SetupScanline(double fScanLine, double& fClipLeft, double& fClipRight, ZUVVertex& scanLineMin, ZUVVertex& scanLineMax, tUVVertexArray& vertexArray, double& fScanLineLength, double& fTextureU, double& fTextureV, double& fTextureDX, double& fTextureDV)
 {
 	// Calculate min and max intersection on the scanline.
-	scanLineMin.mX = fClipRight;
-	scanLineMin.mY = fScanLine;
+	scanLineMin.x = fClipRight;
+	scanLineMin.y = fScanLine;
 
-	scanLineMax.mX = fClipLeft;
-	scanLineMax.mY = fScanLine;
+	scanLineMax.x = fClipLeft;
+	scanLineMax.y = fScanLine;
 
 	int64_t nNumVertices = vertexArray.size();
 
@@ -184,16 +184,16 @@ inline void ZRasterizer::SetupScanline(double fScanLine, double& fClipLeft, doub
 		{
 			// If the linesegment intersects the scanline && it's < curMin set the curMin vertex to the intersection
 			// calculate how far along the linesegment the intersection, and lerp the texture coords along that linesegment
-			if (vIntersection.mX < scanLineMin.mX)
+			if (vIntersection.x < scanLineMin.x)
 				scanLineMin = vIntersection;
 			// if the linesegment intersects the scanline && it's > curMax set the curMax vertex to the intersection
 			// calculate how far along the linesegment the intersection and lerp the texture coords along that line segment
-			if (vIntersection.mX > scanLineMax.mX)
+			if (vIntersection.x > scanLineMax.x)
 				scanLineMax = vIntersection;
 		}
-		else if (v1.mY == v2.mY && (int64_t) v1.mY == (int64_t) fScanLine)
+		else if (v1.y == v2.y && (int64_t) v1.y == (int64_t) fScanLine)
 		{
-			if (v1.mX < v2.mX)
+			if (v1.x < v2.x)
 			{
 				scanLineMin = v1;
 				scanLineMax = v2;
@@ -207,46 +207,46 @@ inline void ZRasterizer::SetupScanline(double fScanLine, double& fClipLeft, doub
 	}
 
 	// Clip left?
-	if (scanLineMin.mX < fClipLeft)
+	if (scanLineMin.x < fClipLeft)
 	{
-		double fAmountToClip = fClipLeft - scanLineMin.mX;
-		double fT = (scanLineMax.mX - scanLineMin.mX)/fAmountToClip;
+		double fAmountToClip = fClipLeft - scanLineMin.x;
+		double fT = (scanLineMax.x - scanLineMin.x)/fAmountToClip;
 
-		scanLineMin.mX = fClipLeft;
-		scanLineMin.mU = scanLineMin.mU + (scanLineMax.mU-scanLineMin.mU)/fT;
-		scanLineMin.mV = scanLineMin.mV + (scanLineMax.mV-scanLineMin.mV)/fT;
+		scanLineMin.x = fClipLeft;
+		scanLineMin.u = scanLineMin.u + (scanLineMax.u-scanLineMin.u)/fT;
+		scanLineMin.v = scanLineMin.v + (scanLineMax.v-scanLineMin.v)/fT;
 	}
 
 	// Clip right?
-	if (scanLineMax.mX > fClipRight)
+	if (scanLineMax.x > fClipRight)
 	{
-		double fAmountToClip = scanLineMax.mX - fClipRight;
-		double fT = (scanLineMax.mX - scanLineMin.mX)/fAmountToClip;
+		double fAmountToClip = scanLineMax.x - fClipRight;
+		double fT = (scanLineMax.x - scanLineMin.x)/fAmountToClip;
 
-		scanLineMax.mX = fClipRight;
-		scanLineMax.mU = scanLineMax.mU - (scanLineMax.mU-scanLineMin.mU)/fT;
-		scanLineMax.mV = scanLineMax.mV - (scanLineMax.mV-scanLineMin.mV)/fT;
+		scanLineMax.x = fClipRight;
+		scanLineMax.u = scanLineMax.u - (scanLineMax.u-scanLineMin.u)/fT;
+		scanLineMax.v = scanLineMax.v - (scanLineMax.v-scanLineMin.v)/fT;
 	}
 
 
 	// Calculate the texture walker based on lerp from curMin to curMax
-	fScanLineLength = ((double) scanLineMax.mX - (double) scanLineMin.mX);
+	fScanLineLength = ((double) scanLineMax.x - (double) scanLineMin.x);
 
-	fTextureU = scanLineMin.mU;
-	fTextureV = scanLineMin.mV;
-	fTextureDX = (scanLineMax.mU - scanLineMin.mU)/fScanLineLength;
-	fTextureDV = (scanLineMax.mV - scanLineMin.mV)/fScanLineLength;
+	fTextureU = scanLineMin.u;
+	fTextureV = scanLineMin.v;
+	fTextureDX = (scanLineMax.u - scanLineMin.u)/fScanLineLength;
+	fTextureDV = (scanLineMax.v - scanLineMin.v)/fScanLineLength;
 }
 
 
 inline void ZRasterizer::SetupScanline(double fScanLine, double& fClipLeft, double& fClipRight, ZColorVertex& scanLineMin, ZColorVertex& scanLineMax, tColorVertexArray& vertexArray, double& fScanLineLength, double& fA, double& fR, double& fG, double& fB, double& fDA, double& fDR, double& fDG, double& fDB)
 {
     // Calculate min and max intersection on the scanline.
-    scanLineMin.mX = fClipRight;
-    scanLineMin.mY = fScanLine;
+    scanLineMin.x = fClipRight;
+    scanLineMin.y = fScanLine;
 
-    scanLineMax.mX = fClipLeft;
-    scanLineMax.mY = fScanLine;
+    scanLineMax.x = fClipLeft;
+    scanLineMax.y = fScanLine;
 
     double fA1 = (double)ARGB_A(scanLineMin.mColor);
     double fR1 = (double)ARGB_R(scanLineMin.mColor);
@@ -278,16 +278,16 @@ inline void ZRasterizer::SetupScanline(double fScanLine, double& fClipLeft, doub
         {
             // If the linesegment intersects the scanline && it's < curMin set the curMin vertex to the intersection
             // calculate how far along the linesegment the intersection, and lerp the texture coords along that linesegment
-            if (vIntersection.mX < scanLineMin.mX)
+            if (vIntersection.x < scanLineMin.x)
                 scanLineMin = vIntersection;
             // if the linesegment intersects the scanline && it's > curMax set the curMax vertex to the intersection
             // calculate how far along the linesegment the intersection and lerp the texture coords along that line segment
-            if (vIntersection.mX > scanLineMax.mX)
+            if (vIntersection.x > scanLineMax.x)
                 scanLineMax = vIntersection;
         }
-        else if (v1.mY == v2.mY && (int64_t)v1.mY == (int64_t)fScanLine)
+        else if (v1.y == v2.y && (int64_t)v1.y == (int64_t)fScanLine)
         {
-            if (v1.mX < v2.mX)
+            if (v1.x < v2.x)
             {
                 scanLineMin = v1;
                 scanLineMax = v2;
@@ -301,14 +301,14 @@ inline void ZRasterizer::SetupScanline(double fScanLine, double& fClipLeft, doub
     }
 
     // Clip left?
-    if (scanLineMin.mX < fClipLeft)
+    if (scanLineMin.x < fClipLeft)
     {
-        double fAmountToClip = fClipLeft - scanLineMin.mX;
-        double fT = (scanLineMax.mX - scanLineMin.mX) / fAmountToClip;
+        double fAmountToClip = fClipLeft - scanLineMin.x;
+        double fT = (scanLineMax.x - scanLineMin.x) / fAmountToClip;
 
-        scanLineMin.mX = fClipLeft;
-//        scanLineMin.mU = scanLineMin.mU + (scanLineMax.mU - scanLineMin.mU) / fT;
-//        scanLineMin.mV = scanLineMin.mV + (scanLineMax.mV - scanLineMin.mV) / fT;
+        scanLineMin.x = fClipLeft;
+//        scanLineMin.u = scanLineMin.u + (scanLineMax.u - scanLineMin.u) / fT;
+//        scanLineMin.v = scanLineMin.v + (scanLineMax.v - scanLineMin.v) / fT;
 
         double fA = fA1 + (fA2 - fA1) / fT;
         double fR = fR1 + (fR2 - fR1) / fT;
@@ -319,14 +319,14 @@ inline void ZRasterizer::SetupScanline(double fScanLine, double& fClipLeft, doub
     }
 
     // Clip right?
-    if (scanLineMax.mX > fClipRight)
+    if (scanLineMax.x > fClipRight)
     {
-        double fAmountToClip = scanLineMax.mX - fClipRight;
-        double fT = (scanLineMax.mX - scanLineMin.mX) / fAmountToClip;
+        double fAmountToClip = scanLineMax.x - fClipRight;
+        double fT = (scanLineMax.x - scanLineMin.x) / fAmountToClip;
 
-        scanLineMax.mX = fClipRight;
-//        scanLineMax.mU = scanLineMax.mU - (scanLineMax.mU - scanLineMin.mU) / fT;
-//        scanLineMax.mV = scanLineMax.mV - (scanLineMax.mV - scanLineMin.mV) / fT;
+        scanLineMax.x = fClipRight;
+//        scanLineMax.u = scanLineMax.u - (scanLineMax.u - scanLineMin.u) / fT;
+//        scanLineMax.v = scanLineMax.v - (scanLineMax.v - scanLineMin.v) / fT;
 
         double fA = fA2 - (fA2 - fA1) / fT;
         double fR = fR2 - (fR2 - fR1) / fT;
@@ -339,17 +339,17 @@ inline void ZRasterizer::SetupScanline(double fScanLine, double& fClipLeft, doub
 
 
     // Calculate the color walker based on lerp from curMin to curMax
-    fScanLineLength = ((double)scanLineMax.mX - (double)scanLineMin.mX);
+    fScanLineLength = ((double)scanLineMax.x - (double)scanLineMin.x);
 
-    //    fTextureU = scanLineMin.mU;
-    //    fTextureV = scanLineMin.mV;
+    //    fTextureU = scanLineMin.u;
+    //    fTextureV = scanLineMin.v;
     fA = (double)ARGB_A(scanLineMin.mColor);
     fR = (double)ARGB_R(scanLineMin.mColor);
     fG = (double)ARGB_G(scanLineMin.mColor);
     fB = (double)ARGB_B(scanLineMin.mColor);
 
-    //fTextureDX = (scanLineMax.mU - scanLineMin.mU) / fScanLineLength;
-    //fTextureDV = (scanLineMax.mV - scanLineMin.mV) / fScanLineLength;
+    //fTextureDX = (scanLineMax.u - scanLineMin.u) / fScanLineLength;
+    //fTextureDV = (scanLineMax.v - scanLineMin.v) / fScanLineLength;
     fDA = ((double)ARGB_A(scanLineMax.mColor) - (double)ARGB_A(scanLineMin.mColor)) / fScanLineLength;
     fDR = ((double)ARGB_R(scanLineMax.mColor) - (double)ARGB_R(scanLineMin.mColor)) / fScanLineLength;
     fDG = ((double)ARGB_G(scanLineMax.mColor) - (double)ARGB_G(scanLineMin.mColor)) / fScanLineLength;
@@ -389,8 +389,8 @@ bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, t
 		SetupScanline((double) nScanLine, fClipLeft, fClipRight, scanLineMin, scanLineMax, vertexArray, fScanLineLength, fTextureU, fTextureV, fTextureDX, fTextureDV);
 
 		// Rasterize the scanline using textureWalker as the source color
-		int64_t nStartX = (int64_t) scanLineMin.mX;
-		int64_t nScanLinePixels = (int64_t) scanLineMax.mX - (int64_t) scanLineMin.mX;
+		int64_t nStartX = (int64_t) scanLineMin.x;
+		int64_t nScanLinePixels = (int64_t) scanLineMax.x - (int64_t) scanLineMin.x;
 		uint32_t* pDestPixels = pDestination->GetPixels() + nScanLine*nDestStride + nStartX;
 
 
@@ -451,8 +451,8 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexA
 		SetupScanline((double) nScanLine, fClipLeft, fClipRight, scanLineMin, scanLineMax, vertexArray, fScanLineLength, fTextureU, fTextureV, fTextureDX, fTextureDV);
 
 		// Rasterize the scanline using textureWalker as the source color
-		int64_t nStartX = (int64_t) scanLineMin.mX;
-		int64_t nScanLinePixels = (int64_t) scanLineMax.mX - (int64_t) scanLineMin.mX;
+		int64_t nStartX = (int64_t) scanLineMin.x;
+		int64_t nScanLinePixels = (int64_t) scanLineMax.x - (int64_t) scanLineMin.x;
 		uint32_t* pDestPixels = pDestination->GetPixels() + nScanLine*nDestStride + nStartX;
 
 		ZASSERT(nStartX + nScanLinePixels <= rDest.right);
@@ -500,8 +500,8 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, tColorVertexArray& vertexArra
         SetupScanline((double)nScanLine, fClipLeft, fClipRight, scanLineMin, scanLineMax, vertexArray, fScanLineLength, fA, fR, fG, fB, fDA, fDR, fDG, fDB);
 
         // Rasterize the scanline using textureWalker as the source color
-        int64_t nStartX = (int64_t)scanLineMin.mX;
-        int64_t nScanLinePixels = (int64_t)scanLineMax.mX - (int64_t)scanLineMin.mX;
+        int64_t nStartX = (int64_t)scanLineMin.x;
+        int64_t nScanLinePixels = (int64_t)scanLineMax.x - (int64_t)scanLineMin.x;
         uint32_t* pDestPixels = pDestination->GetPixels() + nScanLine * nDestStride + nStartX;
 
         ZASSERT(nStartX + nScanLinePixels <= rDest.right);
@@ -530,8 +530,8 @@ ZRect ZRasterizer::GetBoundingRect(tUVVertexArray& vertexArray)
 	ZRect rBounds(MAXINT64, MAXINT64, MININT64, MININT64);
 	for (uint32_t nIndex = 0; nIndex < vertexArray.size(); nIndex++)
 	{
-		int64_t nVertX = (int64_t) vertexArray[nIndex].mX;
-		int64_t nVertY = (int64_t) vertexArray[nIndex].mY;
+		int64_t nVertX = (int64_t) vertexArray[nIndex].x;
+		int64_t nVertY = (int64_t) vertexArray[nIndex].y;
 		if (rBounds.left > nVertX)
 			rBounds.left = nVertX;
 		if (rBounds.right < nVertX)
@@ -549,40 +549,40 @@ void ZRasterizer::RectToVerts(const ZRect& r, tUVVertexArray& vertexArray)
 {
     vertexArray.resize(4);
 
-    vertexArray[0].mX = (double) r.left;
-    vertexArray[0].mY = (double) r.top;
-    vertexArray[0].mU = 0.0;
-    vertexArray[0].mV = 0.0;
+    vertexArray[0].x = (double) r.left;
+    vertexArray[0].y = (double) r.top;
+    vertexArray[0].u = 0.0;
+    vertexArray[0].v = 0.0;
 
 
-    vertexArray[1].mX = (double) r.right;
-    vertexArray[1].mY = (double) r.top;
-    vertexArray[1].mU = 1.0;
-    vertexArray[1].mV = 0.0;
+    vertexArray[1].x = (double) r.right;
+    vertexArray[1].y = (double) r.top;
+    vertexArray[1].u = 1.0;
+    vertexArray[1].v = 0.0;
 
-    vertexArray[2].mX = (double) r.right;
-    vertexArray[2].mY = (double) r.bottom;
-    vertexArray[2].mU = 1.0;
-    vertexArray[2].mV = 1.0;
+    vertexArray[2].x = (double) r.right;
+    vertexArray[2].y = (double) r.bottom;
+    vertexArray[2].u = 1.0;
+    vertexArray[2].v = 1.0;
 
-    vertexArray[3].mX = (double) r.left;
-    vertexArray[3].mY = (double) r.bottom;
-    vertexArray[3].mU = 0.0;
-    vertexArray[3].mV = 1.0;
+    vertexArray[3].x = (double) r.left;
+    vertexArray[3].y = (double) r.bottom;
+    vertexArray[3].u = 0.0;
+    vertexArray[3].v = 1.0;
 }
 void ZRasterizer::RectToVerts(const ZRect& r, tColorVertexArray& vertexArray)
 {
     vertexArray.resize(4);
 
-    vertexArray[0].mX = (double)r.left;
-    vertexArray[0].mY = (double)r.top;
+    vertexArray[0].x = (double)r.left;
+    vertexArray[0].y = (double)r.top;
 
-    vertexArray[1].mX = (double)r.right;
-    vertexArray[1].mY = (double)r.top;
+    vertexArray[1].x = (double)r.right;
+    vertexArray[1].y = (double)r.top;
 
-    vertexArray[2].mX = (double)r.right;
-    vertexArray[2].mY = (double)r.bottom;
+    vertexArray[2].x = (double)r.right;
+    vertexArray[2].y = (double)r.bottom;
 
-    vertexArray[3].mX = (double)r.left;
-    vertexArray[3].mY = (double)r.bottom;
+    vertexArray[3].x = (double)r.left;
+    vertexArray[3].y = (double)r.bottom;
 }

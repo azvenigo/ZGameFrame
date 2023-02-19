@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include <string>
 #include "ZStringHelpers.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 #include <chrono>
 
 

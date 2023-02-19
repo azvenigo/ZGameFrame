@@ -2,7 +2,7 @@
 #define CEANIMATOR_H
 
 #include <list>
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "ZAnimObjects.h"
 
 class ZBuffer;

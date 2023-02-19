@@ -76,8 +76,8 @@ set(COMMON_FILES
 ../ZFramework/ZScriptedDialogWin.h
 ../ZFramework/ZSliderWin.cpp
 ../ZFramework/ZSliderWin.h
-../ZFramework/ZStdDebug.h
-../ZFramework/ZStdTypes.h
+../ZFramework/ZDebug.h
+../ZFramework/ZTypes.h
 ../ZFramework/Z3DMath.h
 ../ZFramework/ZStringHelpers.cpp
 ../ZFramework/ZStringHelpers.h

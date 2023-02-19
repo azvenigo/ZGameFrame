@@ -1,6 +1,6 @@
 #include "ZWin.H"
 #include "ZBuffer.h"
-#include "ZStdDebug.h"
+#include "ZDebug.h"
 #include "ZGraphicSystem.h"
 #include "helpers/StringHelpers.h"
 #include "ZAnimObjects.h"
@@ -96,7 +96,7 @@ bool ZWin::Shutdown()
 	if (mbInitted)
 	{
         Hide();
-        const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+//        const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
 		mbShutdownFlag = true;
 		mThread.join();
@@ -148,10 +148,10 @@ void ZWin::TransformIn()
 		switch (mTransformIn)
 		{
 		case kFade:			start.mnAlpha = 0;					break;
-		case kSlideLeft:	start.mPosition.mX += mArea.Width();		break;
-		case kSlideRight:	start.mPosition.mX -= mArea.Width();		break;
-		case kSlideUp:		start.mPosition.mY += mArea.Height();		break;
-		case kSlideDown:	start.mPosition.mY -= mArea.Height();		break;
+		case kSlideLeft:	start.mPosition.x += mArea.Width();		break;
+		case kSlideRight:	start.mPosition.x -= mArea.Width();		break;
+		case kSlideUp:		start.mPosition.y += mArea.Height();		break;
+		case kSlideDown:	start.mPosition.y -= mArea.Height();		break;
 		}
 
 
@@ -174,10 +174,10 @@ void ZWin::TransformOut()
 		switch (mTransformOut)
 		{
 		case kFade:			trans.mnAlpha = 0;					break;
-		case kSlideLeft:	trans.mPosition.mX -= mArea.Width();		break;
-		case kSlideRight:	trans.mPosition.mX += mArea.Width();		break;
-		case kSlideUp:		trans.mPosition.mY -= mArea.Height();		break;
-		case kSlideDown:	trans.mPosition.mY += mArea.Height();		break;
+		case kSlideLeft:	trans.mPosition.x -= mArea.Width();		break;
+		case kSlideRight:	trans.mPosition.x += mArea.Width();		break;
+		case kSlideUp:		trans.mPosition.y -= mArea.Height();		break;
+		case kSlideDown:	trans.mPosition.y += mArea.Height();		break;
 		}
 
 		pImage->AddTransformation(trans,mnTransformOutTime);
@@ -251,7 +251,9 @@ bool ZWin::ChildAdd(ZWin* child, bool bAutoShow)
 	}
 
     if (bAutoShow)
-	    child->Show();
+        child->Show();
+    else
+        child->Hide();
 
 	return true;
 }

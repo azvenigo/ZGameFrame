@@ -1,6 +1,6 @@
 #include "ProcessImageWin.h"
 #include "ZBuffer.h"
-#include "ZStdTypes.h"
+#include "ZTypes.h"
 #include "ZMessageSystem.h"
 #include "ZAnimObjects.h"
 #include "ZGraphicSystem.h"

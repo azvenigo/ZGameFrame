@@ -76,7 +76,7 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->AddButton("LifeWin",        "type=initchildwindows;mode=5;target=MainAppMessageTarget", pBtnFont);
-    gpControlPanel->AddSlider(&gnLifeGridSize, 1, 100, 5, "type=initchildwindows;mode=16;target=MainAppMessageTarget", true, false);
+    gpControlPanel->AddSlider(&gnLifeGridSize, 1, 100, 5, "type=initchildwindows;mode=5;target=MainAppMessageTarget", true, false);
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
 
     gpControlPanel->AddButton("ImageProcessor", "type=initchildwindows;mode=4;target=MainAppMessageTarget", pBtnFont);
@@ -100,7 +100,7 @@ void Sandbox::InitControlPanel()
 
     gpDebugConsole = new ZWinDebugConsole();
     gpDebugConsole->SetArea(ZRect(grFullArea.left, grFullArea.top, grFullArea.right, grFullArea.Height() / 2));
-    gpMainWin->ChildAdd(gpDebugConsole);
+    gpMainWin->ChildAdd(gpDebugConsole, false);
 
 }
 
