@@ -111,6 +111,14 @@ void ZFormattedTextWin::SetArea(const ZRect& newArea)
 	UpdateScrollbar();
 }
 
+void ZFormattedTextWin::SetScrollable(bool bScrollable) 
+{ 
+    mbScrollable = bScrollable;
+    if (mbScrollable)
+        UpdateScrollbar();
+}
+
+
 bool ZFormattedTextWin::OnMouseDownL(int64_t x, int64_t y)
 {
 	ZRect rEdgeSrc(3,5,21,61);
@@ -153,7 +161,7 @@ bool ZFormattedTextWin::OnMouseDownL(int64_t x, int64_t y)
 				sTextEntry& entry = *lineIt;
 
                 tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
-				ZRect rText = pFont->GetOutputRect(rLine, entry.sText.data(), entry.sText.length(), entry.position);
+				ZRect rText = pFont->GetOutputRect(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.position);
 				if (rText.PtInRect(nMouseX, nMouseY))
 				{
 					if (!entry.sLink.empty())
@@ -332,7 +340,7 @@ bool ZFormattedTextWin::Paint()
 				sTextEntry& entry = *lineIt;
 
                 tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
-				ZRect rText = pFont->GetOutputRect(rLine, entry.sText.data(), entry.sText.length(), entry.position);
+				ZRect rText = pFont->GetOutputRect(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.position);
 
 				int64_t nShadowOffset = max((int) pFont->Height()/16, (int) 1);
 
@@ -462,7 +470,7 @@ void ZFormattedTextWin::AddTextLine(string sLine, ZFontParams fontParams, uint32
 		{
             tZFontPtr pFont(gpFontSystem->GetFont(fontParams));
             assert(pFont);
-			int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrTextArea.Width(), sLine.data(), sLine.length());
+			int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrTextArea.Width(), (uint8_t*)sLine.data(), sLine.length());
 
 			sTextEntry textEntry;
 			textEntry.sText		= sLine.substr(0, nChars);

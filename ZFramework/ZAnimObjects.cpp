@@ -938,7 +938,7 @@ bool ZAnimObject_TransformingImage::Paint()
 
 ZAnimObject_TransformingText::ZAnimObject_TransformingText(const string& sText, const ZRect& rArea, ZFont* pFont, uint32_t nColor, uint32_t nColor2, ZFont::ePosition nPosition, ZFont::eStyle nStyle)
 {
-	ZRect rAdjustedArea = pFont->GetOutputRect(rArea, sText.data(), sText.length(), nPosition);
+	ZRect rAdjustedArea = pFont->GetOutputRect(rArea, (uint8_t*) sText.data(), sText.length(), nPosition);
 	ZTransformable::Init(rAdjustedArea);
     mpTransformTexture.get()->Fill(mpTransformTexture.get()->GetArea(), 0x00000000);
 	pFont->DrawText(mpTransformTexture.get(), sText.data(), mpTransformTexture.get()->GetArea(), nColor, nColor2, nStyle);

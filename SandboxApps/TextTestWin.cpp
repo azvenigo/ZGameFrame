@@ -270,7 +270,7 @@ bool TextTestWin::Paint()
     sTemp = msText + '|';
 
     assert(mpFont);
-    int32_t nLines = (int32_t) (mpFont->CalculateNumberOfLines(rText.Width(), sTemp.data(), sTemp.length()));
+    int32_t nLines = (int32_t) (mpFont->CalculateNumberOfLines(rText.Width(), (uint8_t*)sTemp.data(), sTemp.length()));
     
     mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp, rText, 0xFF000000, 0xFF000000);
 
@@ -299,7 +299,7 @@ bool TextTestWin::Paint()
         else
             mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, nCol1, nCol2, ZFont::kTopLeft, ZFont::kEmbossed);
 
-        int64_t nLines = mpFont->CalculateNumberOfLines(rText.Width(), sSampleText.data(), sSampleText.length());
+        int64_t nLines = mpFont->CalculateNumberOfLines(rText.Width(), (uint8_t*)sSampleText.data(), sSampleText.length());
         rText.OffsetRect(0, mpFont->Height() * nLines);
     }
 

@@ -404,7 +404,7 @@ bool ZImageWin::Paint()
     {
         assert(mpCaptionFont);
 
-        ZRect rCaption(mpCaptionFont->GetOutputRect(mAreaToDrawTo, msCaption.data(), msCaption.length(), mCaptionPos));
+        ZRect rCaption(mpCaptionFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), msCaption.length(), mCaptionPos));
         mpCaptionFont->DrawText(mpTransformTexture.get(), msCaption, rCaption, mnCaptionCol, mnCaptionCol);
     }
 
@@ -417,7 +417,7 @@ bool ZImageWin::Paint()
             string sZoom;
             Sprintf(sZoom, "%d%%", (int32_t)(mfZoom * 100.0));
 
-            ZRect rZoomCaption(mpZoomCaptionFont->GetOutputRect(mAreaToDrawTo, sZoom.data(), sZoom.length(), mZoomCaptionPos));
+            ZRect rZoomCaption(mpZoomCaptionFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)sZoom.data(), sZoom.length(), mZoomCaptionPos));
             mpZoomCaptionFont->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, mZoomCaptionColor, mZoomCaptionColor);
         }
     }

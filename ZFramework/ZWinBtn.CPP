@@ -479,7 +479,7 @@ bool ZWinSizablePushBtn::Paint()
 	int64_t nStrlen = msCaption.length();
 	if (nStrlen > 0)
 	{
-		ZRect rText(mpFont->GetOutputRect(mAreaToDrawTo, msCaption.data(), nStrlen, ZFont::kMiddleCenter));
+		ZRect rText(mpFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), nStrlen, ZFont::kMiddleCenter));
 
 		string sCaptionToDraw(msCaption);
 

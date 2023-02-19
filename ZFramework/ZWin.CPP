@@ -95,6 +95,9 @@ bool ZWin::Shutdown()
 {
 	if (mbInitted)
 	{
+        Hide();
+        const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+
 		mbShutdownFlag = true;
 		mThread.join();
 

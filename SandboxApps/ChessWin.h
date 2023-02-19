@@ -48,7 +48,7 @@ public:
     char            Piece(const ZPoint& grid);
     bool            Empty(const ZPoint& grid);
     bool            Empty(int64_t x, int64_t y) { return Empty(ZPoint(x, y)); }
-    bool            ValidCoord(const ZPoint& l) { return (l.mX >= 0 && l.mX < 8 && l.mY >= 0 && l.mY < 8); }
+    static bool     ValidCoord(const ZPoint& l) { return (l.mX >= 0 && l.mX < 8 && l.mY >= 0 && l.mY < 8); }
 
     bool            MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bGameMove = true); // if bGameMove is false, this is simply manipulating the board outside of a game
     bool            SetPiece(const ZPoint& gridDst, char c);
@@ -60,6 +60,8 @@ public:
     bool            SameSide(char c, const ZPoint& grid); // true if the grid coordinate has a piece on the same side (black or white)
     bool            Opponent(char c, const ZPoint& grid); // true if an opponent is on the grid location
     bool            GetMoves(char c, const ZPoint& src, tMoveList& moves, tMoveList& attackSquares);
+
+    bool            IsPromotingMove(const ZPoint& src, const ZPoint& dst);
 
     void            IsOneOfMoves(const ZPoint& src, const tMoveList& moves, bool& bIncluded, bool& bCapture);
     uint8_t         UnderAttack(bool bByWhite, const ZPoint& grid); // returns number of pieces attacking a square
@@ -104,12 +106,38 @@ protected:
 class ChessPiece
 {
 public:
+    ChessPiece()
+    {
+    }
+
+    ~ChessPiece()
+    {
+    }
+
 
     bool    GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline);
 
 
     tZBufferPtr mpImage;
 };
+
+class ZPiecePromotionWin : public ZWin
+{
+public:
+    ZPiecePromotionWin() : mpPieceData(nullptr) {}
+
+    bool    Init(ChessPiece* pPieceData, ZPoint grid);
+    bool    OnMouseDownL(int64_t x, int64_t y);
+
+    bool    Paint();
+
+private:
+    char        mPromotionPieces[8] = { 'Q', 'R', 'N', 'B', 'q', 'r', 'n', 'b' };
+
+    ChessPiece* mpPieceData; // keyed by ascii chars for pieces, 'r', 'Q', 'P', etc.
+    ZPoint      mGrid;
+};
+
 
 class ZChessWin : public ZWin
 {
@@ -141,6 +169,8 @@ private:
 
     void    UpdateWatchPanel();
 
+    void    ShowPromotingWin(const ZPoint& grid);
+
     ZPoint  ScreenToGrid(int64_t x, int64_t y);
     ZPoint  ScreenToSquareOffset(int64_t x, int64_t y);
 
@@ -156,9 +186,7 @@ private:
 
 
     int64_t         mnPieceHeight;
-    bool            mbOutline;
     bool            mbEditMode;
-    bool            mbCopyKeyEnabled;
     bool            mbViewWhiteOnBottom;
     bool            mbShowAttackCount;
 
@@ -182,6 +210,8 @@ private:
     ZRect       mrDraggingPiece;
     char        mDraggingPiece;
     ZPoint      mDraggingSourceGrid;
+
+    ZPiecePromotionWin* mpPiecePromotionWin;
 
     // watch panel
     std::string msDebugStatus;

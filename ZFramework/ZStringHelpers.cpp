@@ -300,7 +300,7 @@ bool EndsWith(const string& sConsider, const string& ends)
 	return sConsider.substr(sConsider.length() - ends.length()) == ends;
 }
 
-std::string SanitizeAscii(const std::string& sText)
+/*std::string SanitizeAscii(const std::string& sText)
 {
     std::string sSanitized(sText);
     
@@ -310,4 +310,4 @@ std::string SanitizeAscii(const std::string& sText)
             sSanitized[i] = '_';
     }
     return sSanitized;
-}
+}*/

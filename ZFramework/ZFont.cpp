@@ -217,7 +217,7 @@ bool ZFont::SaveFont(const string& sFilename)
     return true;
 }
 
-int32_t ZFont::GetSpaceBetweenChars(char c1, char c2)
+int32_t ZFont::GetSpaceBetweenChars(uint8_t c1, uint8_t c2)
 {
     if (mbEnableKerning)
     {
@@ -418,7 +418,7 @@ inline bool ZFont::DrawText_Gradient_Helper(ZBuffer* pBuffer, const string& sTex
 
 
 inline 
-void ZFont::DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY)
+void ZFont::DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY)
 {
 	ZASSERT(pBuffer);
     if (c <= 32)        // no visible chars below this
@@ -478,7 +478,7 @@ void ZFont::DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, 
 }
 
 inline 
-void ZFont::DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip)
+void ZFont::DrawCharClipped(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip)
 {
 	ZASSERT(pBuffer);
     if (c <= 32)        // no visible chars below this
@@ -557,7 +557,7 @@ void ZFont::DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX,
 
 
 inline 
-void ZFont::DrawCharGradient(ZBuffer* pBuffer, char c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip)
+void ZFont::DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip)
 {
 	ZASSERT(pBuffer);
     if (c <= 32)        // no visible chars below this
@@ -633,9 +633,9 @@ void ZFont::DrawCharGradient(ZBuffer* pBuffer, char c, std::vector<uint32_t>& gr
 
 // This function helps format text by returning a rectangle where the text should be output
 // It will not clip, however... That should be done by the caller if necessary
-ZRect ZFont::GetOutputRect(ZRect rArea, const char* pChars, size_t nNumChars, ePosition position, int64_t nPadding)
+ZRect ZFont::GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ePosition position, int64_t nPadding)
 {
-	ZRect rText(0,0, StringWidth(string(pChars,nNumChars)), mFontParams.nHeight);
+	ZRect rText(0,0, StringWidth(string((char*)pChars,nNumChars)), mFontParams.nHeight);
 	rArea.DeflateRect(nPadding, nPadding);
 
 	int64_t nXCenter = rArea.left + (rArea.Width()  - rText.Width())/2;
@@ -681,7 +681,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 {
 	ZRect rTextLine(rAreaToDrawTo);
 
-	int64_t nLines = CalculateNumberOfLines(rAreaToDrawTo.Width(), sText.data(), sText.length());
+	int64_t nLines = CalculateNumberOfLines(rAreaToDrawTo.Width(), (uint8_t*)sText.data(), sText.length());
 	ePosition lineStyle = kBottomLeft;
 
 	// Calculate the top line 
@@ -726,9 +726,9 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 
     while (pChars < pEnd && rTextLine.top < rTextLine.bottom)
 	{
-        int64_t nLettersToDraw = CalculateWordsThatFitOnLine(rTextLine.Width(), pChars, pEnd-pChars);
+        int64_t nLettersToDraw = CalculateWordsThatFitOnLine(rTextLine.Width(), (uint8_t*) pChars, pEnd-pChars);
        
-        ZRect rAdjustedLine(GetOutputRect(rTextLine, pChars, nLettersToDraw, lineStyle));
+        ZRect rAdjustedLine(GetOutputRect(rTextLine, (uint8_t*)pChars, nLettersToDraw, lineStyle));
         if (rAdjustedLine.bottom > rAreaToDrawTo.top && rAdjustedLine.top < rAreaToDrawTo.bottom)       // only draw if line is within rAreaToDrawTo
 		    DrawText(pBuffer, string(pChars, nLettersToDraw), rAdjustedLine, nCol, nCol2, style, pClip);
 
@@ -741,7 +741,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 	return nCharsDrawn == sText.length();
 }
 
-int64_t ZFont::CharWidth(char c) 
+int64_t ZFont::CharWidth(uint8_t c)
 { 
     if (c > 0)
         return mCharDescriptors[c].nCharWidth; 
@@ -750,12 +750,12 @@ int64_t ZFont::CharWidth(char c)
 }
 
 
-int64_t ZFont::CalculateNumberOfLines(int64_t nLineWidth, const char* pChars, size_t nNumChars)
+int64_t ZFont::CalculateNumberOfLines(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars)
 {
 	ZASSERT(pChars);
 
 	int64_t nLines = 0;
-	char* pEnd = (char*) pChars + nNumChars;
+    uint8_t* pEnd = (uint8_t*) pChars + nNumChars;
 	while (pChars < pEnd)
 	{
 		int64_t nLettersToDraw = CalculateWordsThatFitOnLine(nLineWidth, pChars, pEnd-pChars);
@@ -767,14 +767,14 @@ int64_t ZFont::CalculateNumberOfLines(int64_t nLineWidth, const char* pChars, si
 }
 
 
-int64_t ZFont::CalculateLettersThatFitOnLine(int64_t nLineWidth, const char* pChars, size_t nNumChars)
+int64_t ZFont::CalculateLettersThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars)
 {
 	size_t nChars = 0;
 	int64_t nWidthSoFar = 0;
 
 	while (nChars < nNumChars)
 	{
-        char c = *(pChars + nChars);
+        uint8_t c = *(pChars + nChars);
         if(c >= 0)
 		    nWidthSoFar += (int64_t) mCharDescriptors[c].nCharWidth + 1 + GetSpaceBetweenChars(*pChars, *(pChars+1));
 
@@ -795,13 +795,13 @@ int64_t ZFont::CalculateLettersThatFitOnLine(int64_t nLineWidth, const char* pCh
 
 
 // Take into account line break character '\n'
-int64_t ZFont::CalculateWordsThatFitOnLine(int64_t nLineWidth, const char* pChars, size_t nNumChars)
+int64_t ZFont::CalculateWordsThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars)
 {
 	ZASSERT(pChars);
 	ZASSERT(nLineWidth > 0)
 
 	int64_t nNumLettersThatFit = 0;
-	char* pCurChar = (char*) pChars;
+    uint8_t* pCurChar = (uint8_t*) pChars;
 	bool bNextLineFound = false;
 
 	bool bLoop = true;
@@ -823,7 +823,7 @@ int64_t ZFont::CalculateWordsThatFitOnLine(int64_t nLineWidth, const char* pChar
 			pCurChar++;
 
 		// If it doesn't fit on the line.... return the previous number of letters that fit
-		if (StringWidth(string(pChars, (pCurChar - pChars))) > nLineWidth)
+		if (StringWidth(string((char*)pChars, (pCurChar - pChars))) > nLineWidth)
 		{
 			if (nNumLettersThatFit > 0)
 				return nNumLettersThatFit;
@@ -903,7 +903,7 @@ void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2, std::vector<uint32
 }
 
 
-void ZFont::FindKerning(char c1, char c2)
+void ZFont::FindKerning(uint8_t c1, uint8_t c2)
 {
     // if either char is a number do not kern
     if ((c1 >= '0' && c1 <= '9') || (c2 >= '0' && c2 <= '9') || c1 == '_' || c2 == '_' || c1 == '\'' || c2 == '\'')
@@ -1134,8 +1134,8 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
 
     if (bInitGlyphs)
     {
-        for (char c = 32; c <= 126; c++)        // 33 '!' through 126 '~' are the visible chars
-            GenerateGlyph(c);
+        for (int32_t c = 32; c <= kMaxChars; c++) 
+            GenerateGlyph((uint8_t)c);
     }
 
     if (bKearn && mFontParams.nFixedWidth == 0)
@@ -1144,9 +1144,9 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
         if (!RetrieveKerningPairs())    // try and retrieve built in kerning pairs
         {
             // none available. manually compute 
-            for (char c1 = 33; c1 <= 126; c1++)        // 33 '!' through 126 '~' are the visible chars
+            for (uint8_t c1 = 33; c1 <= 127; c1++)
             {
-                for (char c2 = 33; c2 <= 126; c2++)        // 33 '!' through 126 '~' are the visible chars
+                for (uint8_t c2 = 33; c2 <= 127; c2++)
                     FindKerning(c1, c2);
             }
         }
@@ -1236,7 +1236,7 @@ ZRect ZDynamicFont::FindCharExtents()
 }
 
 
-bool ZDynamicFont::ExtractChar(char c)
+bool ZDynamicFont::ExtractChar(uint8_t c)
 {
     // Special case
  /*   if (c < 'A' || c > 'Z')
@@ -1286,15 +1286,15 @@ bool ZDynamicFont::ExtractChar(char c)
     //ZDEBUG_OUT("\nExtracting %ld:'%c' width:%ld - extents(%ld,%ld,%ld,%ld) offsets:", c, c, mCharDescriptors[c].nCharWidth, rExtents.left, rExtents.top, rExtents.right, rExtents.bottom);
 
 
-    unsigned char nPen = 0;
-    unsigned char nOffset = 0;
+    uint8_t nPen = 0;
+    uint8_t nOffset = 0;
 
     for (int64_t y = 0; y <= rExtents.bottom; y++)
     {
         for (int64_t x = rExtents.left; x <= rExtents.right; x++)
         {
             uint32_t nCol = (uint32_t) *((uint32_t*)mpBits + y * mrScratchArea.right + x);
-            unsigned char nBright = 255-nCol&0x000000ff;
+            uint8_t nBright = 255-nCol&0x000000ff;
 
 
             if (nPen != nBright)
@@ -1351,7 +1351,7 @@ int32_t ZDynamicFont::FindWidestCharacterWidth()
 {
     int32_t nWidest = 0;
 
-    std::list<char> charsToTest = { 'W', 'M', '@', '_' };
+    std::list<uint8_t> charsToTest = { 'W', 'M', '@', '_' };
 
     for (auto c : charsToTest)
     {
@@ -1380,7 +1380,7 @@ int32_t ZDynamicFont::FindWidestNumberWidth()
 {
     int32_t nWidest = 0;
 
-    for (char c = '0'; c <= '9'; c++)
+    for (uint8_t c = '0'; c <= '9'; c++)
     {
         RECT r;
         r.left = 0;
@@ -1404,7 +1404,7 @@ int32_t ZDynamicFont::FindWidestNumberWidth()
 }
 
 
-bool ZDynamicFont::GenerateGlyph(char c)
+bool ZDynamicFont::GenerateGlyph(uint8_t c)
 {
     if (c <= 0)
         return false;
@@ -1434,7 +1434,7 @@ bool ZDynamicFont::GenerateGlyph(char c)
     return true;
 }
 
-bool ZDynamicFont::GenerateSymbolicGlyph(char c, uint32_t symbol)
+bool ZDynamicFont::GenerateSymbolicGlyph(uint8_t c, uint32_t symbol)
 {
     if (c <= 0)
         return false;
@@ -1477,11 +1477,10 @@ bool ZDynamicFont::RetrieveKerningPairs()
 
     for (int64_t i = 0; i < nPairs; i++)
     {
-        char cFirst = (char) pKerningPairArray[i].wFirst;
-        char cSecond = (char) pKerningPairArray[i].wSecond;
+        uint8_t cFirst = (uint8_t) pKerningPairArray[i].wFirst;
+        uint8_t cSecond = (uint8_t) pKerningPairArray[i].wSecond;
         int16_t nKern = pKerningPairArray[i].iKernAmount-2;
 
-        // only pairs in the ascii set 0 - 127
         if (cFirst > 0 && cSecond > 0)
         {
 
@@ -1498,7 +1497,7 @@ bool ZDynamicFont::RetrieveKerningPairs()
 
 
 
-void ZDynamicFont::DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY)
+void ZDynamicFont::DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY)
 {
     if (mCharDescriptors[c].nCharWidth == 0)   // generate glyph if not already generated
         GenerateGlyph(c);
@@ -1506,7 +1505,7 @@ void ZDynamicFont::DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64
     return ZFont::DrawCharNoClip(pBuffer, c, nCol, nX, nY);
 }
 
-void ZDynamicFont::DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip)
+void ZDynamicFont::DrawCharClipped(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip)
 {
     if (mCharDescriptors[c].nCharWidth == 0)   // generate glyph if not already generated
         GenerateGlyph(c);
@@ -1514,7 +1513,7 @@ void ZDynamicFont::DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int6
     return ZFont::DrawCharClipped(pBuffer, c, nCol, nX, nY, pClip);
 }
 
-void ZDynamicFont::DrawCharGradient(ZBuffer* pBuffer, char c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip)
+void ZDynamicFont::DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip)
 {
     if (mCharDescriptors[c].nCharWidth == 0)   // generate glyph if not already generated
         GenerateGlyph(c);

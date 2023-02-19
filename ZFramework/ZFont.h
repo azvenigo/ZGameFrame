@@ -11,7 +11,7 @@
 #include <windowsx.h>       // for dynamic font glyph generation
 #endif
 
-const int32_t kMaxChars = 128;  // lower ascii 0-127
+const int32_t kMaxChars = 256;
 
 
 // Data is in this format:
@@ -164,19 +164,19 @@ public:
     bool            DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, eStyle style = kNormal, ZRect* pClip = NULL);
     bool            DrawTextParagraph(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, ePosition paragraphPosition = kTopLeft, eStyle style = kNormal, ZRect* pClip = NULL);
 
-	int64_t         CharWidth(char c);
+	int64_t         CharWidth(uint8_t c);
     void            SetEnableKerning(bool bEnable) { mbEnableKerning = bEnable; }
     void            SetTracking(int64_t nTracking) { mFontParams.nTracking = nTracking; }
 	int64_t         Height() { return mFontParams.nHeight; }
-    int32_t         GetSpaceBetweenChars(char c1, char c2);
+    int32_t         GetSpaceBetweenChars(uint8_t c1, uint8_t c2);
 
 
 	int64_t         StringWidth(const std::string& sText);
-	int64_t         CalculateWordsThatFitOnLine(int64_t nLineWidth, const char* pChars, size_t nNumChars);  // returns the number of characters that should be drawn on this line, breaking at words
-	int64_t         CalculateLettersThatFitOnLine(int64_t nLineWidth, const char* pChars, size_t nNumChars);	// returns the number of characters that fit on that line
-	int64_t         CalculateNumberOfLines(int64_t nLineWidth, const char* pChars, size_t nNumChars);	// returns the number of lines required to draw text
+	int64_t         CalculateWordsThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);  // returns the number of characters that should be drawn on this line, breaking at words
+	int64_t         CalculateLettersThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);	// returns the number of characters that fit on that line
+	int64_t         CalculateNumberOfLines(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);	// returns the number of lines required to draw text
 
-	ZRect           GetOutputRect(ZRect rArea, const char* pChars, size_t nNumChars, ePosition position, int64_t nPadding = 0);
+	ZRect           GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ePosition position, int64_t nPadding = 0);
 
 protected:
 	bool                    DrawText_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip);
@@ -184,11 +184,11 @@ protected:
 
     void                    BuildGradient(uint32_t nColor1, uint32_t nColor2, std::vector<uint32_t>& gradient);
    
-    virtual void            DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY);
-    virtual void            DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
-    virtual void            DrawCharGradient(ZBuffer* pBuffer, char c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
+    virtual void            DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY);
+    virtual void            DrawCharClipped(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
+    virtual void            DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
 
-    void                    FindKerning(char c1, char c2);
+    void                    FindKerning(uint8_t c1, uint8_t c2);
 
 //    std::string             msFilename;
 //	uint32_t                mnFontHeight;
@@ -231,19 +231,19 @@ public:
     bool                Init(const ZFontParams& params, bool bInitGlyphs = true, bool bKearn = true);
     bool                SaveFont(const std::string& sFilename);  // overload to first ensure all glyphs have been generated
 
-    bool                GenerateSymbolicGlyph(char c, uint32_t symbol);
+    bool                GenerateSymbolicGlyph(uint8_t c, uint32_t symbol);
 
 protected:
     // overloads from ZFont that will generate glyphs if needed
-    virtual void        DrawCharNoClip(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY);
-    virtual void        DrawCharClipped(ZBuffer* pBuffer, char c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
-    virtual void        DrawCharGradient(ZBuffer* pBuffer, char c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
+    virtual void        DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY);
+    virtual void        DrawCharClipped(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
+    virtual void        DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
 
 private:
 
-    bool                GenerateGlyph(char c);
+    bool                GenerateGlyph(uint8_t c);
 
-    bool                ExtractChar(char c);
+    bool                ExtractChar(uint8_t c);
     int32_t             FindWidestNumberWidth();
     int32_t             FindWidestCharacterWidth();
     bool                RetrieveKerningPairs();

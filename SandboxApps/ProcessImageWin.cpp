@@ -225,7 +225,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
 
         sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
         sPropLineXMLNode += " position=MiddleLeft>";
-        sPropLineXMLNode += SanitizeAscii(prop.sName);
+        sPropLineXMLNode += prop.sName;
         sPropLineXMLNode += "</text>";
 
 /*        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
@@ -235,7 +235,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
 
         sPropLineXMLNode += "<text size=0 color=0xff000000 color2=0xff000000 ";
         sPropLineXMLNode += " position=middleRight>";
-        sPropLineXMLNode += SanitizeAscii(prop.sValue.substr(0,16));
+        sPropLineXMLNode += prop.sValue.substr(0,16);
         sPropLineXMLNode += "</text></line>";
 
         mpImageProps->AddTextLine(sPropLineXMLNode, fp, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);

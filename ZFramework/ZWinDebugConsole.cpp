@@ -180,7 +180,7 @@ bool ZWinDebugConsole::Paint()
         while (nOffset < msg.sLine.length())
         {
             ZRect rLine(mrTextArea.left, nCurLineBottom - nLines * mFont->Height(), mrTextArea.right, nCurLineBottom);
-            string sPartial(SanitizeAscii(msg.sLine.substr(nOffset, nCharsPerLine)));
+            string sPartial(msg.sLine.substr(nOffset, nCharsPerLine));
             mFont->DrawTextA(mpTransformTexture.get(), sPartial, rLine, msg.nLevel, msg.nLevel);
             nOffset += sPartial.length();
             rLine.top += nHeight;
