@@ -432,6 +432,8 @@ void ZChessWin::DrawBoard()
 
     tZFontPtr defaultFont(gpFontSystem->GetDefaultFont());
 
+    ZPoint enPassantSquare = mBoard.GetEnPassantSquare();
+
     for (int y = 0; y < 8; y++)
     {
         for (int x = 0; x < 8; x++)
@@ -454,6 +456,10 @@ void ZChessWin::DrawBoard()
                         nSquareColor = 0xff008800;
                 }
             }
+
+            if (grid == enPassantSquare)
+                nSquareColor = 0xff8888ff;
+
 
             mpTransformTexture->Fill(SquareArea(grid), nSquareColor);
 
@@ -792,6 +798,22 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
             mHalfMovesSinceLastCaptureOrPawnAdvance = 0;
         else
             mHalfMovesSinceLastCaptureOrPawnAdvance++;
+
+
+        if (bIsCapture && c == 'p' && gridDst == mEnPassantSquare)
+            mBoard[mEnPassantSquare.y - 1][mEnPassantSquare.x] = 0;   
+        if (bIsCapture && c == 'P' && gridDst == mEnPassantSquare)
+            mBoard[mEnPassantSquare.y + 1][mEnPassantSquare.x] = 0;
+
+
+        mEnPassantSquare.Set(-1, -1);
+        // check for pawn moving two spaces for setting en passant
+        if (c == 'p' && gridSrc.y == 1 && gridDst.y == 3)
+            mEnPassantSquare.Set(gridDst.x, 2);
+        if (c == 'P' && gridSrc.y == 6 && gridDst.y == 4)
+            mEnPassantSquare.Set(gridDst.x, 5);
+
+
 
         mbWhitesTurn = !mbWhitesTurn;
 
