@@ -41,6 +41,28 @@ public:
         kAll = kWhiteKingSide|kWhiteQueenSide|kBlackKingSide|kBlackQueenSide
     };
 
+    const bool kBlack = false;
+    const bool kWhite = true;
+
+
+    // Named squares by position
+    const ZPoint kA1 = { 0, 7 }; const ZPoint kA2 = { 0, 6 }; const ZPoint kA3 = { 0, 5 }; const ZPoint kA4 = { 0, 4 }; const ZPoint kA5 = { 0, 3 }; const ZPoint kA6 = { 0, 2 }; const ZPoint kA7 = { 0, 1 }; const ZPoint kA8 = { 0, 0 };
+    const ZPoint kB1 = { 1, 7 }; const ZPoint kB2 = { 1, 6 }; const ZPoint kB3 = { 1, 5 }; const ZPoint kB4 = { 1, 4 }; const ZPoint kB5 = { 1, 3 }; const ZPoint kB6 = { 1, 2 }; const ZPoint kB7 = { 1, 1 }; const ZPoint kB8 = { 1, 0 };
+    const ZPoint kC1 = { 2, 7 }; const ZPoint kC2 = { 2, 6 }; const ZPoint kC3 = { 2, 5 }; const ZPoint kC4 = { 2, 4 }; const ZPoint kC5 = { 2, 3 }; const ZPoint kC6 = { 2, 2 }; const ZPoint kC7 = { 2, 1 }; const ZPoint kC8 = { 2, 0 };
+    const ZPoint kD1 = { 3, 7 }; const ZPoint kD2 = { 3, 6 }; const ZPoint kD3 = { 3, 5 }; const ZPoint kD4 = { 3, 4 }; const ZPoint kD5 = { 3, 3 }; const ZPoint kD6 = { 3, 2 }; const ZPoint kD7 = { 3, 1 }; const ZPoint kD8 = { 3, 0 };
+    const ZPoint kE1 = { 4, 7 }; const ZPoint kE2 = { 4, 6 }; const ZPoint kE3 = { 4, 5 }; const ZPoint kE4 = { 4, 4 }; const ZPoint kE5 = { 4, 3 }; const ZPoint kE6 = { 4, 2 }; const ZPoint kE7 = { 4, 1 }; const ZPoint kE8 = { 4, 0 };
+    const ZPoint kF1 = { 5, 7 }; const ZPoint kF2 = { 5, 6 }; const ZPoint kF3 = { 5, 5 }; const ZPoint kF4 = { 5, 4 }; const ZPoint kF5 = { 5, 3 }; const ZPoint kF6 = { 5, 2 }; const ZPoint kF7 = { 5, 1 }; const ZPoint kF8 = { 5, 0 };
+    const ZPoint kG1 = { 6, 7 }; const ZPoint kG2 = { 6, 6 }; const ZPoint kG3 = { 6, 5 }; const ZPoint kG4 = { 6, 4 }; const ZPoint kG5 = { 6, 3 }; const ZPoint kG6 = { 6, 2 }; const ZPoint kG7 = { 6, 1 }; const ZPoint kG8 = { 6, 0 };
+    const ZPoint kH1 = { 7, 7 }; const ZPoint kH2 = { 7, 6 }; const ZPoint kH3 = { 7, 5 }; const ZPoint kH4 = { 7, 4 }; const ZPoint kH5 = { 7, 3 }; const ZPoint kH6 = { 7, 2 }; const ZPoint kH7 = { 7, 1 }; const ZPoint kH8 = { 7, 0 };
+
+    const ZPoint kWhiteKingHome = { kE1 };
+    const ZPoint kWhiteQueenHome = { kD1 };
+
+    const ZPoint kBlackQueenHome = { kD8 };
+    const ZPoint kBlackKingHome = { kE8 };
+
+
+
     ChessBoard() { ResetBoard(); }
     void            ResetBoard();
     void            ClearBoard();

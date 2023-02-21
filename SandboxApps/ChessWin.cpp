@@ -540,6 +540,14 @@ bool ZChessWin::OnChar(char key)
     case VK_ESCAPE:
         gMessageSystem.Post("quit_app_confirmed");
         break;
+    case 'e':
+        mbEditMode = !mbEditMode;
+        Invalidate();
+        break;
+    case 't':
+        mBoard.SetWhitesTurn(!mBoard.WhitesTurn());
+        Invalidate();
+        break;
     }
 
     Invalidate();
@@ -682,7 +690,7 @@ void ZChessWin::ShowPromotingWin(const ZPoint& grid)
     mpPiecePromotionWin = new ZPiecePromotionWin();
 
     ZRect rArea(SquareArea(grid));
-    rArea.left -= mnPieceHeight * 1.5;
+    rArea.left -= mnPieceHeight * (int64_t)1.5;
     rArea.right = rArea.left + mnPieceHeight * 4;
 
     mpPiecePromotionWin->SetArea(rArea);
@@ -713,7 +721,7 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
 
     if (bOutline)
     {
-        int32_t nOffset = nSize / 64;
+        int64_t nOffset = nSize / 64;
         ZRect rOutline(rSquare);
         rOutline.OffsetRect(-nOffset, -nOffset);
         pFont->DrawTextParagraph(mpImage.get(), s, rOutline, nOutline, nOutline, ZFont::kMiddleCenter, ZFont::kNormal);
@@ -799,13 +807,60 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
         else
             mHalfMovesSinceLastCaptureOrPawnAdvance++;
 
+        // castling
+        if (c == 'K')
+            mCastlingFlags &= ~(kWhiteKingSide|kWhiteQueenSide); // since white king is moving, no more castling
 
+        if (c == 'k')
+            mCastlingFlags &= ~(kBlackKingSide|kBlackQueenSide); // since black king is moving, no more castling
+
+        if (c == 'R' && gridSrc == kA1)
+            mCastlingFlags &= ~kWhiteQueenSide;     // queenside rook moving, no more castling this side
+        if (c == 'R' && gridSrc == kH1)
+            mCastlingFlags &= ~kWhiteKingSide;     // queenside rook moving, no more castling this side
+
+        if (c == 'r' && gridSrc == kA8)
+            mCastlingFlags &= ~kBlackQueenSide;     // queenside rook moving, no more castling this side
+        if (c == 'r' && gridSrc == kH8)
+            mCastlingFlags &= ~kBlackKingSide;     // queenside rook moving, no more castling this side
+
+        if (c == 'K' && gridSrc == kWhiteKingHome)   // white castling
+        {
+            if (gridDst == kC1)
+            {
+                // move rook
+                MovePiece(kA1, kD1, false);
+            }
+            else if (gridDst == kG1)
+            {
+                // move rook
+                MovePiece(kH1, kF1, false);
+            }
+        }
+
+        if (c == 'k' && gridSrc == kBlackKingHome)   // white castling
+        {
+            if (gridDst == kC8)
+            {
+                // move rook
+                MovePiece(kA8, kD8, false);
+            }
+            else if (gridDst == kG8)
+            {
+                // move rook
+                MovePiece(kH8, kF8, false);
+            }
+        }
+
+
+
+        // En passant capture?
         if (bIsCapture && c == 'p' && gridDst == mEnPassantSquare)
             mBoard[mEnPassantSquare.y - 1][mEnPassantSquare.x] = 0;   
         if (bIsCapture && c == 'P' && gridDst == mEnPassantSquare)
             mBoard[mEnPassantSquare.y + 1][mEnPassantSquare.x] = 0;
 
-
+        // Creation of en passant square
         mEnPassantSquare.Set(-1, -1);
         // check for pawn moving two spaces for setting en passant
         if (c == 'p' && gridSrc.y == 1 && gridDst.y == 3)
@@ -959,6 +1014,48 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst, bool& bCapture)
     // black king may not move into check
     if (s == 'k' && IsKingInCheck(false, dst))
         return false;
+
+    // Castling
+    if (s == 'K' && dst == kG1)
+    {
+        if (!(mCastlingFlags & kWhiteKingSide))      // White kingside disabled?
+            return false;
+        if (IsKingInCheck(kWhite))                    // cannot castle out of check
+            return false;
+        if (IsKingInCheck(kWhite, kF1))       // cannot move across check
+            return false;
+    }
+    if (s == 'K' && dst == kC1)
+    {
+        if (!(mCastlingFlags & kWhiteQueenSide))      // white queenside disabled?
+            return false;
+        if (IsKingInCheck(kWhite))                    // cannot castle out of check
+            return false;
+        if (IsKingInCheck(kWhite, kD1) || IsKingInCheck(kWhite, kC1))       // cannot move across check
+            return false;
+    }
+
+
+    if (s == 'k' && dst == kG8)
+    {
+        if (!(mCastlingFlags & kBlackKingSide))      // black kingside disabled?
+            return false;
+        if (IsKingInCheck(kBlack))                    // cannot castle out of check
+            return false;
+        if (IsKingInCheck(kBlack, kF8))       // cannot move across check
+            return false;
+    }
+    if (s == 'k' && dst == kC8)
+    {
+        if (!(mCastlingFlags & kBlackQueenSide))      // black queenside disabled?
+            return false;
+        if (IsKingInCheck(kBlack))                    // cannot castle out of check
+            return false;
+        if (IsKingInCheck(kBlack, kD8) || IsKingInCheck(kBlack, kC8))       // cannot move across check
+            return false;
+    }
+
+
 
 
     IsOneOfMoves(dst, legalMoves, bLegal, bCapture);
@@ -1601,6 +1698,30 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves, tMoveList
             AddMove(moves, sMove(checkGrid));
         AddMove(attackSquares, sMove(checkGrid, true));
 
+        // White Castling
+        if (src == kWhiteKingHome && Empty(kF1) && Empty(kG1))
+        {
+            AddMove(moves, sMove(kG1));  // castling kingside
+        }
+
+        if (src == kWhiteKingHome && Empty(kB1) && Empty(kC1) && Empty(kD1))
+        {
+            AddMove(moves, sMove(kC1));  // castling queenside
+        }
+
+        // Black Castling
+        if (src == kBlackKingHome && Empty(kF8) && Empty(kG8))
+        {
+            AddMove(moves, sMove(kG8));  // castling kingside
+        }
+
+        if (src == kBlackKingHome && Empty(kB8) && Empty(kC8) && Empty(kD8))
+        {
+            AddMove(moves, sMove(kC8));  // castling queenside
+        }
+
+
+
     }
 
     return true;
@@ -1737,10 +1858,6 @@ bool ChessBoard::FromFEN(const string& sFEN)
             else
             {
                 mBoard[y][x] = c;
-                if (c == '/')
-                {
-                    int stophere = 5;
-                }
                 ZASSERT(c == 'q' || c == 'Q' || c == 'k' || c == 'K' || c == 'n' || c == 'N' || c == 'R' || c == 'r' || c == 'b' || c == 'B' || c == 'p' || c == 'P');
                 x++;
             }
@@ -1785,23 +1902,23 @@ bool ChessBoard::FromFEN(const string& sFEN)
         }
     }
 
-    nIndex += sCastling.length()+1;
+    nIndex += (int)sCastling.length()+1;
 
     // en passant field
     nNextSpace = sFEN.find(' ', nIndex);
     string sEnPassant(sFEN.substr(nIndex, nNextSpace - nIndex));
 
     mEnPassantSquare = FromPosition(sEnPassant);
-    nIndex += sEnPassant.length()+1;
+    nIndex += (int)sEnPassant.length()+1;
 
     // half move since last capture or pawn move
     nNextSpace = sFEN.find(' ', nIndex);
     string sHalfMoves(sFEN.substr(nIndex, nNextSpace - nIndex));
 
-    mHalfMovesSinceLastCaptureOrPawnAdvance = StringHelpers::ToInt(sHalfMoves);
-    nIndex += sHalfMoves.length()+1;
+    mHalfMovesSinceLastCaptureOrPawnAdvance = (uint32_t)StringHelpers::ToInt(sHalfMoves);
+    nIndex += (int)sHalfMoves.length()+1;
 
-    mFullMoveNumber = StringHelpers::ToInt(sFEN.substr(nIndex));      // last value
+    mFullMoveNumber = (uint32_t)StringHelpers::ToInt(sFEN.substr(nIndex));      // last value
 
     ComputeSquaresUnderAttack();
     ComputeCheckAndMate();
@@ -1826,8 +1943,8 @@ bool ZPiecePromotionWin::Init(ChessPiece* pPieceData, ZPoint grid)
 
 bool ZPiecePromotionWin::OnMouseDownL(int64_t x, int64_t y)
 {
-    int nPieceWidth = mAreaToDrawTo.Width() / 4;
-    int nPiece = x/nPieceWidth;
+    int64_t nPieceWidth = mAreaToDrawTo.Width() / 4;
+    int64_t nPiece = x/nPieceWidth;
     if (!mGrid.y == 0) // promotion on 0 rank is by black
         nPiece += 4;
 
@@ -1848,7 +1965,7 @@ bool ZPiecePromotionWin::Paint()
     mpTransformTexture->Fill(mAreaToDrawTo, 0xff4444ff);
 
     ZRect rPalettePiece(mAreaToDrawTo);
-    int32_t nPieceHeight = mAreaToDrawTo.Width() / 4;
+    int32_t nPieceHeight = (int32_t)mAreaToDrawTo.Width() / 4;
     rPalettePiece.right = mAreaToDrawTo.left + nPieceHeight;
 
     int nBasePieceIndex = 0;
