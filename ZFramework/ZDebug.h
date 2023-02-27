@@ -120,7 +120,10 @@ extern ZDebug gDebug;
 #define ZOUT_LOCKLESS(...) gDebug.ImmediateOut(sDbgMsg::kDefault, __VA_ARGS__)
 
 #define ZWARNING(...) gDebug.AddRow(sDbgMsg::kWarning, __VA_ARGS__)
-#define ZWARNING_LOCKLESS(...) gDebug.ImmediateOut(sDbgMsg::kDefault, __VA_ARGS__)
+#define ZWARNING_LOCKLESS(...) gDebug.ImmediateOut(sDbgMsg::kWarning, __VA_ARGS__)
+
+#define ZERROR(...) gDebug.AddRow(sDbgMsg::kError, __VA_ARGS__)
+#define ZERROR_LOCKLESS(...) gDebug.ImmediateOut(sDbgMsg::kError, __VA_ARGS__)
 
 
 #ifdef _DEBUG
