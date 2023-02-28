@@ -1017,8 +1017,7 @@ bool cProcessImageWin::Init()
 
     mpImageProps = new ZFormattedTextWin();
     mpImageProps->SetArea(rImageProps);
-    mpImageProps->SetFill(0xff888888);
-    mpImageProps->AddTextLine("testline\nand more", gDefaultTextFont, 0xff000000, 0xff000000);
+    mpImageProps->SetFill(gDefaultTextAreaFill);
 
     pWP->ChildAdd(mpImageProps);
 

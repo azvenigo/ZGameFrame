@@ -109,9 +109,13 @@ public:
 
         if (nHeight < rhs.nHeight)
             return true;
+        else if (nHeight > rhs.nHeight)
+            return false;
 
         if (nWeight < rhs.nWeight)
             return true;
+        else if (nWeight > rhs.nWeight)
+            return false;
 
         return false;
     }

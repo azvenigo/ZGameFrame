@@ -52,6 +52,9 @@ public:
         mHistory.push_back(sDbgMsg(sLine, level));
         mHistoryCounter++;
         TrimHistory();
+
+        const std::lock_guard<std::mutex> lock(mOutQueueMutex);
+        mOutQueue.push_back(sLine);
     }
 
     template <typename S, typename...SMore>
@@ -73,11 +76,11 @@ public:
         const std::lock_guard<std::mutex> lock(mOutQueueMutex);
         for (auto s : mOutQueue)
         {
-#ifdef _WIN64
-            OutputDebugStringA(s.c_str());
-#else
+//#ifdef _WIN64
+            //OutputDebugStringA(s.c_str());
+//#else
             std::cout << s.c_str();
-#endif
+//#endif
         }
 
         mHistoryCounter++;

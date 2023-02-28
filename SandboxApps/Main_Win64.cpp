@@ -38,67 +38,67 @@ std::string             gsRegistryFile;
 ZDebug                  gDebug;
 
 
-
-int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int main(int argc, char* argv[])
 {
-	MSG msg;
-	memset(&msg, 0, sizeof(msg));
+    HINSTANCE hInstance = GetModuleHandle(nullptr);
+    MSG msg;
+    memset(&msg, 0, sizeof(msg));
 
-	// Perform application initialization:
-	if (!WinInitInstance(hInstance, nCmdShow))
-	{
-		return FALSE;
-	}
-    
-	uint64_t nTimeStamp = 0;
+    // Perform application initialization:
+    if (!WinInitInstance(hInstance, SW_SHOWNORMAL))
+    {
+        return FALSE;
+    }
 
-	// Main message loop:
-	while (msg.message != WM_QUIT && !gbApplicationExiting) 
-	{
-		if (gbPaused)
-		{
-			gMessageSystem.Process();  // Process messages internally even when paused
+    uint64_t nTimeStamp = 0;
 
-			GetMessage(&msg, NULL, 0, 0);
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		else
-		{
-			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) 
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-		}
+    // Main message loop:
+    while (msg.message != WM_QUIT && !gbApplicationExiting)
+    {
+        if (gbPaused)
+        {
+            gMessageSystem.Process();  // Process messages internally even when paused
 
-		if (!gbPaused && !gbApplicationExiting ) 
-		{
-           
+            GetMessage(&msg, NULL, 0, 0);
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+        else
+        {
+            if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+
+        if (!gbPaused && !gbApplicationExiting)
+        {
+
             gMessageSystem.Process();
-			gTickManager.Tick();
+            gTickManager.Tick();
 
-			if (!gbApplicationExiting)  // have to check again because the state may have changed during the messagesystem process
-			{
-				CheckMouseForHover();
+            if (!gbApplicationExiting)  // have to check again because the state may have changed during the messagesystem process
+            {
+                CheckMouseForHover();
 
-				ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
-				if (pScreenBuffer)
-				{
+                ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
+                if (pScreenBuffer)
+                {
                     // Copy to our window surface
                     pScreenBuffer->BeginRender();
 
-					if (pScreenBuffer->DoesVisibilityNeedComputing())
-					{
-						int64_t nStartTime = gTimer.GetUSSinceEpoch();
-						pScreenBuffer->SetVisibilityComputingFlag(false);
-						pScreenBuffer->ResetVisibilityList();
-						gpMainWin->ComputeVisibility();
+                    if (pScreenBuffer->DoesVisibilityNeedComputing())
+                    {
+                        int64_t nStartTime = gTimer.GetUSSinceEpoch();
+                        pScreenBuffer->SetVisibilityComputingFlag(false);
+                        pScreenBuffer->ResetVisibilityList();
+                        gpMainWin->ComputeVisibility();
 
-						int64_t nEndTime = gTimer.GetUSSinceEpoch();
+                        int64_t nEndTime = gTimer.GetUSSinceEpoch();
 
-//						ZOUT("Computing visibility took time:%lld us. Rects:%d\n", nEndTime - nStartTime, pScreenBuffer->GetVisibilityCount());
-					}
+                        //						ZOUT("Computing visibility took time:%lld us. Rects:%d\n", nEndTime - nStartTime, pScreenBuffer->GetVisibilityCount());
+                    }
 
 
                     static int64_t nTotalRenderTime = 0;
@@ -106,61 +106,62 @@ int WINAPI WinMain(	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 
                     bool bAnimatorActive = gAnimator.Paint();
-                   
-                    int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
-					int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
-					int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
-					static char  buf[512];
 
-                    int64_t nDelta = nEndRenderVisible-nStartRenderVisible;
+                    int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
+                    int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
+                    int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
+                    static char  buf[512];
+
+                    int64_t nDelta = nEndRenderVisible - nStartRenderVisible;
                     nTotalRenderTime += nDelta;
                     nTotalFrames += 1;
 
-//				    ZOUT("render took time:%lld us. Rects:%d/%d. Total Frames:%d, avg frame time:%lld us\n", nEndRenderVisible - nStartRenderVisible, nRenderedCount, pScreenBuffer->GetVisibilityCount(), nTotalFrames, (nTotalRenderTime/nTotalFrames));
+                    //				    ZOUT("render took time:%lld us. Rects:%d/%d. Total Frames:%d, avg frame time:%lld us\n", nEndRenderVisible - nStartRenderVisible, nRenderedCount, pScreenBuffer->GetVisibilityCount(), nTotalFrames, (nTotalRenderTime/nTotalFrames));
 
 
                     pScreenBuffer->EndRender();
-					InvalidateRect(gpGraphicSystem->GetMainHWND(), NULL, false);
+                    InvalidateRect(gpGraphicSystem->GetMainHWND(), NULL, false);
 
-				}
+                }
 
-				if (gbGraphicSystemResetNeeded && !gbPaused)
-				{
-					ZDEBUG_OUT("calling HandleModeChanges\n");
+                if (gbGraphicSystemResetNeeded && !gbPaused)
+                {
+                    ZDEBUG_OUT("calling HandleModeChanges\n");
 
-					if (gpGraphicSystem->HandleModeChanges())
-					{
-						gbGraphicSystemResetNeeded = false;
-					}
-				}
-			}
+                    if (gpGraphicSystem->HandleModeChanges())
+                    {
+                        gbGraphicSystemResetNeeded = false;
+                    }
+                }
+            }
 
             gDebug.Flush();
-//            FlushDebugOutQueue();
+            //            FlushDebugOutQueue();
 
             uint64_t nNewTime = gTimer.GetUSSinceEpoch();
             uint64_t nTimeSinceLastLoop = nNewTime - nTimeStamp;
-//            ZOUT("US since last loop:%lld\n", nTimeSinceLastLoop);
+            //            ZOUT("US since last loop:%lld\n", nTimeSinceLastLoop);
             nTimeStamp = nNewTime;
 
             if (nTimeSinceLastLoop < kMinUSBetweenLoops)
             {
-                uint64_t nUSToSleep = kMinUSBetweenLoops-nTimeSinceLastLoop;
-//                ZOUT("Maintaining min frame time. Sleeping for %lldus.\n", nUSToSleep);
+                uint64_t nUSToSleep = kMinUSBetweenLoops - nTimeSinceLastLoop;
+                //                ZOUT("Maintaining min frame time. Sleeping for %lldus.\n", nUSToSleep);
                 std::this_thread::sleep_for(std::chrono::microseconds(nUSToSleep));
-//                nTimeStamp = gTimer.GetUSSinceEpoch();
+                //                nTimeStamp = gTimer.GetUSSinceEpoch();
             }
-		}
+        }
     }
 
 
     Sandbox::SandboxShutdown();
     gDebug.Flush();
-//    FlushDebugOutQueue();
+    //    FlushDebugOutQueue();
 
     gRegistry.Save(gsRegistryFile);
-    return (int) msg.wParam;
+    return 0;
 }
+
 
 //#define GENERATE_FRAMEWORK_FONTS
 #ifdef GENERATE_FRAMEWORK_FONTS

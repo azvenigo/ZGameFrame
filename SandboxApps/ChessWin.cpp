@@ -4,7 +4,9 @@
 #include "ZWinWatchPanel.h"
 #include "ZStringHelpers.h"
 #include "ZWinFileDialog.h"
+#include "ZWinBtn.H"
 #include "helpers/RandHelpers.h"
+#include "helpers/LoggingHelpers.h"
 #include <filesystem>
 #include <fstream>
 #include "ZTimer.h"
@@ -22,6 +24,312 @@ char     mResetBoard[8][8] =
     {'P','P','P','P','P','P','P','P'},
     {'R','N','B','Q','K','B','N','R'}
 };
+
+
+bool Contains(const std::string& sText, const std::string& sSubstring)
+{
+    return sText.find(sSubstring) != string::npos;
+}
+
+
+ZPGNWin::ZPGNWin()
+{
+    msWinName = "pgnwin";
+    mbAcceptsCursorMessages = true;
+    mIdleSleepMS = 10000;
+    mFillColor = gDefaultDialogFill;
+}
+
+bool ZPGNWin::Init()
+{
+    mFont.sFacename = "Verdana";
+    mFont.nHeight = 30;
+    mFont.nWeight = 200;
+
+    mBoldFont = mFont;
+    mBoldFont.nWeight = 800;
+
+
+    ZRect rGameTags(gDefaultSpacer, gDefaultSpacer, mAreaToDrawTo.Width() - gDefaultSpacer, mAreaToDrawTo.Height() / 3 - gDefaultSpacer);
+
+    mpGameTagsWin = new ZFormattedTextWin();
+    mpGameTagsWin->SetArea(rGameTags);
+    mpGameTagsWin->SetFill(gDefaultTextAreaFill);
+    mpGameTagsWin->SetDrawBorder();
+    mpGameTagsWin->AddTextLine("testline\nand more", gDefaultTextFont, 0xff000000, 0xff000000);
+
+    ChildAdd(mpGameTagsWin); 
+
+
+
+    ZWinSizablePushBtn* pBtn;
+
+    size_t nButtonSlots = 10;
+    size_t nButtonSize = (mAreaToDrawTo.Width() - gDefaultSpacer *2) / nButtonSlots;
+
+    ZRect rButton(0, 0, nButtonSize, nButtonSize);
+    rButton.OffsetRect(gDefaultSpacer, mAreaToDrawTo.Height() - gDefaultSpacer - rButton.Height()); 
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption(")"); // wingdings 3 to the beggining
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight));
+    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetStyle(ZFont::kNormal);
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage("type=beginning;target=pgnwin");
+    ChildAdd(pBtn);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("v"); // back one
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight));
+    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetStyle(ZFont::kNormal);
+    rButton.OffsetRect(rButton.Width(), 0);
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage("type=backone;target=pgnwin");
+    ChildAdd(pBtn);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("w"); // forward one
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight));
+    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetStyle(ZFont::kNormal);
+    rButton.OffsetRect(rButton.Width(), 0);
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage("type=forwardone;target=pgnwin");
+    ChildAdd(pBtn);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("*"); // to end
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight));
+    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetStyle(ZFont::kNormal);
+    rButton.OffsetRect(rButton.Width(), 0);
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage("type=end;target=pgnwin");
+    ChildAdd(pBtn);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("1"); // open file
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight));
+    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetStyle(ZFont::kNormal);
+    rButton.OffsetRect(rButton.Width() *2, 0);
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage("type=loadgame;target=chesswin");
+    ChildAdd(pBtn);
+
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("<"); // save file
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight));
+    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetStyle(ZFont::kNormal);
+    rButton.OffsetRect(rButton.Width(), 0);
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage("type=savegame;target=chesswin");
+    ChildAdd(pBtn);
+
+    ZRect rMoves(rGameTags.left, rGameTags.bottom + gDefaultSpacer, rGameTags.right, rButton.top - gDefaultSpacer * 2);
+
+    mpMovesWin = new ZFormattedTextWin();
+    mpMovesWin->SetArea(rMoves);
+    mpMovesWin->SetFill(0xff444444);
+    mpMovesWin->SetDrawBorder();
+    mpMovesWin->AddTextLine("testline\nand more", gDefaultTextFont, 0xff000000, 0xff000000);
+
+    ChildAdd(mpMovesWin);
+
+    mCurrentHalfMoveNumber = 0;
+
+    return ZWin::Init();
+}
+
+bool ZPGNWin::Shutdown()
+{
+
+    return ZWin::Shutdown();
+}
+
+
+bool ZPGNWin::Process()
+{
+    return ZWin::Process();
+}
+
+bool ZPGNWin::Paint()
+{
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    if (!mbInvalid)
+        return true;
+
+    mpTransformTexture->Fill(mAreaToDrawTo, mFillColor);
+
+
+    return ZWin::Paint();
+}
+
+bool ZPGNWin::FromPGN(ZChessPGN& pgn)
+{
+    mPGN = pgn;
+    mCurrentHalfMoveNumber = mPGN.GetHalfMoveCount()-1;
+
+    UpdateView();
+    InvalidateChildren();
+
+    return true;
+}
+
+bool ZPGNWin::Clear()
+{
+    if (mpGameTagsWin)
+        mpGameTagsWin->Clear();
+    if (mpMovesWin)
+        mpMovesWin->Clear();
+    InvalidateChildren();
+    return true;
+}
+
+
+void ZPGNWin::UpdateView()
+{
+    mpGameTagsWin->Clear();
+
+    string sTag;
+    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kEventTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kEventTag) + "</text></line>";
+    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+
+    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kSiteTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kSiteTag) + "</text></line>";
+    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+
+    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kDateTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kDateTag) + "</text></line>";
+    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+
+    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kRoundTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kRoundTag) + "</text></line>";
+    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+
+    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kWhiteTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kWhiteTag) + "</text></line>";
+    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+
+    if (!mPGN.GetTag(kWhiteELO).empty())
+    {
+        sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kWhiteELO + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kWhiteELO) + "</text></line>";
+        mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+    }
+
+    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kBlackTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kBlackTag) + "</text></line>";
+    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+
+    if (!mPGN.GetTag(kBlackELO).empty())
+    {
+        sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kBlackELO + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kBlackELO) + "</text></line>";
+        mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+    }
+
+
+
+    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kResultTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kResultTag) + "</text></line>";
+    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+
+    mpGameTagsWin->SetScrollable();
+
+    mpMovesWin->Clear();
+
+    for (int nHalfMove = 2; nHalfMove < mPGN.GetHalfMoveCount(); nHalfMove+=2)   // start at 2 as first two halfmoves are blank entry move
+    {
+        int nMove = (nHalfMove+1) / 2;
+        ZPGNSANEntry& move = mPGN.mMoves[nMove];
+
+        string sMoveLine;
+        if (mCurrentHalfMoveNumber > 0 && (mCurrentHalfMoveNumber == nHalfMove || mCurrentHalfMoveNumber == nHalfMove-1))
+        {
+            ZDEBUG_OUT("UpdateView: mCurrentHalfMoveNumber:", mCurrentHalfMoveNumber, ", nMove:", nMove, "\n");
+            if ((mCurrentHalfMoveNumber+1) % 2 == 0)
+            {
+                // highlight white
+                sMoveLine = "<line wrap=0><text size=0 color=0xff0088ff color2=0xff0088ff position=MiddleLeft link=type=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". [" + move.whiteAction + "]</text>";
+                sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=type=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">" + move.blackAction + "</text></line>";
+            }
+            else
+            {
+                // highlight black
+                sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=type=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
+                sMoveLine += "<text size=0 color=0xff0088ff color2=0xff0088ff position=middleRight link=type=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">[" + move.blackAction + "]</text></line>";
+            }
+            mpMovesWin->AddTextLine(sMoveLine, mBoldFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+        }
+        else
+        {
+
+            sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=type=setmove;target=pgnwin;halfmove="+ StringHelpers::FromInt(nHalfMove-1) +">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
+            sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=type=setmove;target=pgnwin;halfmove="+StringHelpers::FromInt(nHalfMove)+">" + move.blackAction + "</text></line>";
+            mpMovesWin->AddTextLine(sMoveLine, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+        }
+
+    }
+    mpMovesWin->InvalidateChildren();
+    mpMovesWin->SetScrollable();
+    mpMovesWin->ScrollTo(mFont.nHeight * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
+
+}
+
+
+bool ZPGNWin::SetHalfMove(int64_t nHalfMove)
+{
+    if (nHalfMove >= 0 && nHalfMove < mPGN.GetMoveCount() * 2)
+    {
+        mCurrentHalfMoveNumber = nHalfMove;
+        string sMessage;
+        Sprintf(sMessage, "type=sethistoryindex;target=chesswin;halfmove=%d", mCurrentHalfMoveNumber);
+        gMessageSystem.Post(sMessage);
+        UpdateView();
+        return true;
+    }    
+
+    return false;
+}
+
+
+bool ZPGNWin::HandleMessage(const ZMessage& message)
+{
+    string sType = message.GetType();
+
+    if (sType == "end")
+    {
+        SetHalfMove(mPGN.GetHalfMoveCount()); 
+        return true;
+    }
+    else if (sType == "backone")
+    {
+        SetHalfMove(mCurrentHalfMoveNumber - 1);
+        return true;
+    }
+    else if (sType == "forwardone")
+    {
+        SetHalfMove(mCurrentHalfMoveNumber + 1);
+        return true;
+    }
+    else if (sType == "beginning")
+    {
+        SetHalfMove(0);
+        return true;
+    }
+    else if (sType == "setmove")
+    {
+        SetHalfMove(StringHelpers::ToInt(message.GetParam("halfmove")));
+        return true;
+    }
+
+
+    return ZWin::HandleMessage(message);
+}
+
 
 ZChessWin::ZChessWin()
 {
@@ -76,16 +384,13 @@ bool ZChessWin::Init()
     pCP->AddButton("Load Position", "type=loadboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     pCP->AddButton("Save Position", "type=saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
-    pCP->AddButton("Load Game", "type=loadgame;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-    pCP->AddButton("Save Game", "type=savegame;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-
-
     pCP->AddSpace(panelH / 30);
     pCP->AddButton("Random DB Position", "type=randdbboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
     ChildAdd(pCP);
 
-    ZWinWatchPanel* pPanel = new ZWinWatchPanel();
+
+/*    ZWinWatchPanel* pPanel = new ZWinWatchPanel();
     
     ZRect rWatchPanel(0,0,rControlPanel.Width()*2, rControlPanel.Height()/4);
     rWatchPanel.OffsetRect(rControlPanel.left - rWatchPanel.Width() - 16, rControlPanel.top + rControlPanel.Height() *3 /4);
@@ -94,6 +399,13 @@ bool ZChessWin::Init()
     pPanel->AddItem(WatchType::kString, "Debug:", &msDebugStatus, 0xff000000, 0xffffffff);
 
     msDebugStatus = "starting test";
+    */
+
+    mpPGNWin = new ZPGNWin();
+    ZRect rPGNPanel(0, 0, rControlPanel.Width() * 2, rControlPanel.Height());
+    rPGNPanel.OffsetRect(rControlPanel.left - rPGNPanel.Width() - gDefaultSpacer, rControlPanel.top );
+    mpPGNWin->SetArea(rPGNPanel);
+    ChildAdd(mpPGNWin);
 
 
 
@@ -412,7 +724,7 @@ char ZChessWin::ScreenToPalettePiece(int64_t x, int64_t y)
 
 void ZChessWin::DrawPalette()
 {
-    mpTransformTexture->Fill(mrPaletteArea, 0xff888888);
+    mpTransformTexture->Fill(mrPaletteArea, gDefaultTextAreaFill);
 
     ZRect rPalettePiece(mrPaletteArea);
     rPalettePiece.bottom = mrPaletteArea.top + mnPalettePieceHeight;
@@ -447,11 +759,9 @@ void ZChessWin::DrawBoard()
             char c = mBoard.Piece(grid);
 
             uint32_t nSquareColor = SquareColor(grid);
-            if (mDraggingPiece && !mbEditMode)
+/*            if (mDraggingPiece && !mbEditMode)
             {
-                bool bIncluded = false;
-                mBoard.IsOneOfMoves(grid, legalMoves, bIncluded);
-                if (bIncluded)
+                if (mBoard.IsOneOfMoves(grid, legalMoves))
                 {
                     if (mBoard.Opponent(c, grid))
                         nSquareColor = 0xff880000;
@@ -461,7 +771,11 @@ void ZChessWin::DrawBoard()
             }
 
             if (grid == enPassantSquare)
-                nSquareColor = 0xff8888ff;
+                nSquareColor = 0xff8888ff;*/
+
+            sMove lastMove = mBoard.GetLastMove();
+            if (grid == lastMove.mSrc || grid == lastMove.mDest)
+                nSquareColor = 0xff0088ff;
 
 
             mpTransformTexture->Fill(SquareArea(grid), nSquareColor);
@@ -630,13 +944,17 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             {
                 ZChessPGN pgn;
                 if (pgn.ParsePGN(sPGN))
+                {
+                    FromPGN(pgn);
                     InvalidateChildren();
+                }
             }
         }
         return true;
     }
     else if (sType == "savegame")
     {
+        return true;
     }
     else if (sType == "randdbboard")
     {
@@ -652,13 +970,26 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             ZPoint grid;
             grid.x = StringHelpers::ToInt(message.GetParam("x"));
             grid.y = StringHelpers::ToInt(message.GetParam("y"));
-            mBoard.SetPiece(grid, c);
-            mBoard.SetWhitesTurn(!mBoard.WhitesTurn());
+            mBoard.PromotePiece(mDraggingSourceGrid, grid, c);
         }
 
         ChildDelete(mpPiecePromotionWin);
         mpPiecePromotionWin = nullptr;
         InvalidateChildren();
+        return true;
+    }
+    else if (sType == "sethistoryindex")
+    {
+        int64_t nHalfMove = StringHelpers::ToInt(message.GetParam("halfmove"));
+        if (nHalfMove >= 0 && nHalfMove < mHistory.size())
+        {
+            mBoard = mHistory[nHalfMove];
+            InvalidateChildren();
+        }
+        else
+        {
+            ZERROR("ERROR: Couldn't load board from history halfmove:", nHalfMove,  " entries:" , mHistory.size());
+        }
         return true;
     }
 
@@ -895,6 +1226,9 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
 
         mbWhitesTurn = !mbWhitesTurn;
 
+        mLastMove.mSrc = gridSrc;
+        mLastMove.mDest = gridDst;
+
         if (mbWhitesTurn)
             mFullMoveNumber++;
 
@@ -915,6 +1249,16 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
 
     return true;
 }
+
+bool ChessBoard::PromotePiece(const ZPoint& gridSrc, const ZPoint& gridDst, char promotedPiece)
+{
+    SetPiece(gridSrc, 0);
+    SetPiece(gridDst, promotedPiece);
+    SetWhitesTurn(!WhitesTurn());
+
+    return true;
+}
+
 
 bool ChessBoard::SetPiece(const ZPoint& gridDst, char c)
 {
@@ -937,6 +1281,8 @@ void ChessBoard::ResetBoard()
     mbWhitesTurn = true;
     mCastlingFlags = eCastlingFlags::kAll;
     mEnPassantSquare.Set(-1, -1);
+    mLastMove.mSrc.Set(-1, -1);
+    mLastMove.mDest.Set(-1, -1);
     mHalfMovesSinceLastCaptureOrPawnAdvance = 0;
     mFullMoveNumber = 1;
     mbCheck = false;
@@ -946,6 +1292,9 @@ void ChessBoard::ResetBoard()
 
 void ChessBoard::ClearBoard()
 {
+    mLastMove.mSrc.Set(-1, -1);
+    mLastMove.mDest.Set(-1, -1);
+    mEnPassantSquare.Set(-1, -1);
     memset(mBoard, 0, sizeof(mBoard));
     memset(mSquaresUnderAttackByBlack, 0, sizeof(mSquaresUnderAttackByBlack));
     memset(mSquaresUnderAttackByWhite, 0, sizeof(mSquaresUnderAttackByWhite));
@@ -1018,7 +1367,6 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst)
     tMoveList legalMoves;
     tMoveList attackMoves;
     GetMoves(s, src, legalMoves, attackMoves);
-    bool bLegal = false;
 
     // test whether the king is in check after the move
     ChessBoard afterMove(*this);    // copy the board
@@ -1039,7 +1387,7 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst)
         return false;
 
     // Castling
-    if (s == 'K' && dst == kG1)
+    if (s == 'K' && src == kE1 && dst == kG1)
     {
         if (!(mCastlingFlags & kWhiteKingSide))      // White kingside disabled?
             return false;
@@ -1048,7 +1396,7 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst)
         if (IsKingInCheck(kWhite, kF1))       // cannot move across check
             return false;
     }
-    if (s == 'K' && dst == kC1)
+    if (s == 'K' && src == kE1 && dst == kC1)
     {
         if (!(mCastlingFlags & kWhiteQueenSide))      // white queenside disabled?
             return false;
@@ -1059,7 +1407,7 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst)
     }
 
 
-    if (s == 'k' && dst == kG8)
+    if (s == 'k' && src == kE8 && dst == kG8)
     {
         if (!(mCastlingFlags & kBlackKingSide))      // black kingside disabled?
             return false;
@@ -1068,7 +1416,7 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst)
         if (IsKingInCheck(kBlack, kF8))       // cannot move across check
             return false;
     }
-    if (s == 'k' && dst == kC8)
+    if (s == 'k' && src == kE8 && dst == kC8)
     {
         if (!(mCastlingFlags & kBlackQueenSide))      // black queenside disabled?
             return false;
@@ -1078,10 +1426,7 @@ bool ChessBoard::LegalMove(const ZPoint& src, const ZPoint& dst)
             return false;
     }
 
-
-    IsOneOfMoves(dst, legalMoves, bLegal);
-
-    return bLegal;
+    return IsOneOfMoves(dst, legalMoves);
 }
 
 bool ChessBoard::IsPromotingMove(const ZPoint& src, const ZPoint& dst)
@@ -1722,18 +2067,48 @@ bool ChessBoard::GetMoves(char c, const ZPoint& src, tMoveList& moves, tMoveList
     return true;
 }
 
-void ChessBoard::IsOneOfMoves(const ZPoint& dst, const tMoveList& moves, bool& bIncluded)
+bool ChessBoard::GetMovesThatSatisfy(char piece, bool bAttack, const ZPoint& endSquare, tMoveList& moves)
+{
+    for (int y = 0; y < 8; y++)
+    {
+        for (int x = 0; x < 8;x++)
+        {
+            char c = mBoard[y][x];
+            if (c == piece)
+            {
+                tMoveList pieceMoves;
+                tMoveList pieceAttacks;
+                ZPoint src(x, y);
+                GetMoves(c, src, pieceMoves, pieceAttacks);
+
+                if (bAttack && IsOneOfMoves(endSquare, pieceAttacks))
+                {
+                    moves.push_back(sMove(src, endSquare));
+                }
+
+                if (!bAttack && IsOneOfMoves(endSquare, pieceMoves))
+                {
+                    moves.push_back(sMove(src, endSquare));
+                }
+            }
+        }
+    }
+
+    return !moves.empty();
+}
+
+
+bool ChessBoard::IsOneOfMoves(const ZPoint& dst, const tMoveList& moves)
 {
     for (auto m : moves)
     {
         if (m.mDest == dst)
         {
-            bIncluded = true;
-            return;
+            return true;
         }
     }
 
-    bIncluded = false;
+    return false;
 }
 
 string ChessBoard::ToPosition(const ZPoint& grid)
@@ -1839,8 +2214,6 @@ string ChessBoard::ToFEN()
 
 bool ChessBoard::FromFEN(const string& sFEN)
 {
-    int n = sizeof(ChessBoard);
-
     ClearBoard();
     int nIndex = 0;
     for (int y = 0; y < 8; y++)
@@ -1921,6 +2294,112 @@ bool ChessBoard::FromFEN(const string& sFEN)
 
     return false;
 }
+
+bool ZChessWin::FromPGN(ZChessPGN& pgn)
+{
+    mHistory.clear();
+    mBoard.ResetBoard();
+
+    mHistory.push_back(mBoard); // initial board
+    
+    mpPGNWin->FromPGN(pgn);
+
+    size_t nMove = 1;
+    bool bDone = false;
+    while (!bDone && nMove < pgn.GetMoveCount())
+    {
+        ZPGNSANEntry& move = pgn.mMoves[nMove];
+
+        if (move.IsGameResult(kWhite))
+        {
+            cout << "Final result:" << pgn.GetTag(kResultTag) << "\n";
+            bDone = true;
+            break;
+        }
+        else
+        {
+            cout << "Before move - w:[" << move.whiteAction << "] b:" << move.blackAction << "\n";
+            mBoard.DebugDump();
+
+            ZPoint dst = move.DestFromAction(kWhite);
+            ZASSERT(mBoard.ValidCoord(dst));
+
+            ZPoint src = move.ResolveSourceFromAction(kWhite, mBoard);
+            ZASSERT(mBoard.ValidCoord(src));
+
+            bool bRet;
+
+            char promotion = move.IsPromotion(kWhite);
+            if (promotion)
+                bRet = mBoard.PromotePiece(src, dst, promotion);
+            else
+                bRet = mBoard.MovePiece(src, dst, true);
+            ZASSERT(bRet);
+
+            mHistory.push_back(mBoard);
+
+            if (move.IsGameResult(kBlack))
+            {
+                cout << "Final result:" << pgn.GetTag(kResultTag) << "\n";
+                bDone = true;
+                break;
+            }
+            else
+            {
+
+                cout << "Before move - w:" << move.whiteAction << " b:[" << move.blackAction << "]\n";
+                mBoard.DebugDump();
+
+                ZPoint dst = move.DestFromAction(kBlack);
+                ZASSERT(mBoard.ValidCoord(dst));
+
+                ZPoint src = move.ResolveSourceFromAction(kBlack, mBoard);
+                ZASSERT(mBoard.ValidCoord(src));
+
+                char promotion = move.IsPromotion(kBlack);
+                if (promotion)
+                    bRet = mBoard.PromotePiece(src, dst, promotion);
+                else
+                    bRet = mBoard.MovePiece(src, dst, true);
+                ZASSERT(bRet);
+
+                mHistory.push_back(mBoard);
+            }
+        }
+
+        nMove++;
+    }
+
+    return true;
+}
+
+void ChessBoard::DebugDump()
+{
+    TableOutput table;
+    table.SetSeparator(' ', 1);
+
+    table.AddRow(' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
+    for (int y = 0; y < 8; y++)
+    {
+        int nFile = 8 - y;
+
+        char c[8];
+        for (int x = 0; x < 8; x++)
+        {
+            if (mBoard[y][x] == 0)
+                c[x] = ' ';
+            else
+                c[x] = mBoard[y][x];
+        }
+
+
+        table.AddRow(nFile, c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+    }
+
+    cout << "move:" << mFullMoveNumber << "\n";
+    cout << table << std::flush;
+}
+
 
 bool ZPiecePromotionWin::Init(ChessPiece* pPieceData, ZPoint grid)
 {
@@ -2124,7 +2603,7 @@ ZPoint ZPGNSANEntry::LocationFromText(const std::string& sSquare)
         if (c >= 'a' && c <= 'h')
             ret.x = c - 'a';
         else if (c >= '1' && c <= '8')
-            ret.y = c - '1';
+            ret.y = 7-(c - '1');
     }
     else if (sSquare.length() == 2)
     {
@@ -2135,7 +2614,7 @@ ZPoint ZPGNSANEntry::LocationFromText(const std::string& sSquare)
 
         c = sSquare[1];
         ZASSERT(c >= '1' && c <= '8');
-        ret.y = c - '1';
+        ret.y = 7-(c - '1');            // point coordinates are top to bottom.....tbd, align with board rank instead
         ZASSERT(ret.x >= 0 && ret.x <= 7 && ret.y >= 0 && ret.y <= 7);
     }
     else 
@@ -2146,9 +2625,125 @@ ZPoint ZPGNSANEntry::LocationFromText(const std::string& sSquare)
     return ret;
 }
 
-bool Contains(const std::string& sText, const std::string& sSubstring)
+
+ZPoint ZPGNSANEntry::ResolveSourceFromAction(bool bWhite, ChessBoard& board)
 {
-    return sText.find(sSubstring) != string::npos;
+    string action;
+
+    // castling actions
+    if (bWhite)
+    {
+        action = whiteAction;
+        if (action == "O-O" || action == "O-O-O")
+            return kE1;
+    }
+    else
+    {
+        action = blackAction;
+        if (action == "O-O" || action == "O-O-O")
+            return kE8;
+    }
+
+    bool bAttack = Contains(action, "+");
+
+    char c = PieceFromAction(bWhite);
+    ZASSERT(c == 'q' || c == 'Q' || c == 'k' || c == 'K' || c == 'n' || c == 'N' || c == 'R' || c == 'r' || c == 'b' || c == 'B' || c == 'p' || c == 'P');
+
+
+    ZPoint dest = DestFromAction(bWhite);
+
+    tMoveList possibleMoves;
+
+    bool bRet = board.GetMovesThatSatisfy(c, bAttack, dest, possibleMoves);
+
+    ZASSERT(bRet);
+
+    if (possibleMoves.size() == 1)
+    {
+        ZASSERT((*possibleMoves.begin()).mDest == dest);
+        return (*possibleMoves.begin()).mSrc;
+    }
+
+    // more than one requires disambiguation
+
+    string sDisambiguation = DisambiguationChars(bWhite);
+    ZASSERT(sDisambiguation.length() == 2);
+    char c1 = sDisambiguation[0];
+    char c2 = sDisambiguation[1];
+
+    if (c1 >= 'a' && c1 <= 'h') // rule one, disambiguation by file
+    {
+        int nFileNumber = c1 - 'a';
+        for (auto move : possibleMoves)
+        {
+            if (move.mSrc.x == nFileNumber)
+                return move.mSrc;
+        }
+    }
+    else if (c1 >= '1' && c1 <= '8') // rule two, disambiguation by rank
+    {
+        int nRankNumber = 7 - (c1 - '1');
+        for (auto move : possibleMoves)
+        {
+            if (move.mSrc.y == nRankNumber)
+                return move.mSrc;
+        }
+    }
+    else // rule three, disambiguate by square name
+    {
+        ZPoint square = LocationFromText(sDisambiguation);
+        for (auto move : possibleMoves)
+        {
+            if (move.mSrc == square)
+                return move.mSrc;
+        }
+    }
+
+    int stophere = 5;
+    return ZPoint(-1, -1);
+}
+
+ZPoint ZPGNSANEntry::DestFromAction(bool bWhite)
+{
+    if (bWhite)
+    {
+        // castling actions
+        if (whiteAction == "O-O")
+            return kG1;
+        if (whiteAction == "O-O-O")
+            return kC1;
+
+        // promotion
+        size_t nEqualsIndex = whiteAction.find("=");
+        if (nEqualsIndex != string::npos)
+            return LocationFromText(whiteAction.substr(nEqualsIndex - 2, 2));   // in a promotion the last two squares before equals is the location
+
+        // check
+        if (whiteAction[whiteAction.length() - 1] == '+')
+            return LocationFromText(whiteAction.substr(whiteAction.length() - 3, 2));     // destination will be last two chars before +
+
+        return LocationFromText(whiteAction.substr(whiteAction.length() - 2, 2)); // destination will be last two chars
+
+    }
+
+    // black
+
+    // castling options
+    if (blackAction == "O-O")
+        return kG8;
+    if (blackAction == "O-O-O")
+        return kC8;
+
+    // promotion
+    size_t nEqualsIndex = blackAction.find("=");
+    if (nEqualsIndex != string::npos)
+        return LocationFromText(blackAction.substr(nEqualsIndex - 2, 2));   // in a promotion the last two squares before equals is the location
+
+    // check
+    if (blackAction[blackAction.length() - 1] == '+')
+        return LocationFromText(blackAction.substr(blackAction.length() - 3, 2));     // destination will be last two chars before +
+
+    return LocationFromText(blackAction.substr(blackAction.length() - 2, 2)); // destination will be last two chars
 }
 
 
@@ -2175,6 +2770,28 @@ bool ZPGNSANEntry::ParseLine(const std::string& sSANLine)
     blackAction = sSANLine.substr(nStartOfBlackText, nEndOfBlackText - nStartOfBlackText);
 
     return true;
+}
+
+
+char ZPGNSANEntry::IsPromotion(bool bWhite)
+{
+    if (bWhite)
+    {
+        size_t nEqualsIndex = whiteAction.find('=');
+        if (nEqualsIndex == string::npos)
+            return 0;
+        return whiteAction[nEqualsIndex + 1];
+    }
+    else
+    {
+        size_t nEqualsIndex = blackAction.find('=');
+        if (nEqualsIndex == string::npos)
+            return 0;
+
+        return blackAction[nEqualsIndex + 1] - 'Q' + 'q';   // to lowercase
+    }
+
+    return 0;
 }
 
 
@@ -2206,12 +2823,82 @@ eCastlingFlags ZPGNSANEntry::IsCastle(bool bWhite)
     return eCastlingFlags::kNone;
 }
 
-bool ZPGNSANEntry::GetMove(bool bWhite, ZPoint& src, ZPoint& dst)
+bool ZPGNSANEntry::IsGameResult(bool bWhite)
 {
+    string action;
+
     if (bWhite)
+        action = whiteAction;
+    else
+        action = blackAction;
+
+    return action == "1-0" || action == "0-1" || action == "1/2-1/2";
+}
+
+
+char ZPGNSANEntry::PieceFromAction(bool bWhite)
+{
+    string action;
+
+    if (bWhite)
+        action = whiteAction;
+    else
+        action = blackAction;
+
+    if (action.empty())
+        return 0;
+
+    char c = action[0];
+    if (c == 'Q' || c == 'K' || c == 'N' || c == 'R' || c == 'B' || c == 'P')
     {
+        if (bWhite)
+            return c;
+        return c - 'A' + 'a';       // convert to lowercase for black
     }
+
+
+    ZASSERT(c >= 'a' && c <= 'h');  // better be a file
+    if (bWhite)
+        return 'P';
+
+    return 'p';
+}
+
+string ZPGNSANEntry::DisambiguationChars(bool bWhite)
+{
+    string action;
+
+    if (bWhite)
+        action = whiteAction;
+    else
+        action = blackAction;
+
+    if (action.empty())
+        return "";
+
+    char c = action[0];
+    if (c == 'Q' || c == 'K' || c == 'N' || c == 'R' || c == 'B' || c == 'P' ||
+        c == 'q' || c == 'k' || c == 'n' || c == 'r' || c == 'b' || c == 'p')
+    {
+        return action.substr(1, 2);     // two characters following the piece name
+    }
+
+    return action.substr(0, 2);     // if no piece specified pawn assumed
+}
+
+
+/*
+bool ZPGNSANEntry::GetMove(bool bWhite, const ChessBoard& board, ZPoint& src, ZPoint& dst)
+{
+    string sAction;
+
+    if (bWhite)
+        sAction = whiteAction;
+    else
+        sAction = blackAction;
+
+    char piece = PieceFromAction(bWhite, sAction);
 
     return true;
 }
-
+*/

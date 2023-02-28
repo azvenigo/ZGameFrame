@@ -3,13 +3,14 @@
 #include "ZTypes.h"
 #include "ZWin.h"
 #include "ZFont.h"
+#include "ZFormattedTextWin.h"
 #include <list>
 
 /////////////////////////////////////////////////////////////////////////
 // 
 struct sMove
 {
-    sMove(ZPoint src, ZPoint dest)
+    sMove(ZPoint src = {}, ZPoint dest = {})
     {
         mSrc = src;
         mDest = dest;
@@ -72,7 +73,10 @@ public:
     static bool     ValidCoord(const ZPoint& l) { return (l.x >= 0 && l.x < 8 && l.y >= 0 && l.y < 8); }
 
     bool            MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bGameMove = true); // if bGameMove is false, this is simply manipulating the board outside of a game
+    bool            PromotePiece(const ZPoint& gridSrc, const ZPoint& gridDst, char promotedPiece);
     bool            SetPiece(const ZPoint& gridDst, char c);
+
+    sMove           GetLastMove() { return mLastMove; }
 
     bool            IsBlack(char c) { return  (c == 'q' || c == 'k' || c == 'r' || c == 'n' || c == 'b' || c == 'p'); }
     bool            IsWhite(char c) { return  (c == 'Q' || c == 'K' || c == 'R' || c == 'N' || c == 'B' || c == 'P'); }
@@ -82,9 +86,11 @@ public:
     bool            Opponent(char c, const ZPoint& grid); // true if an opponent is on the grid location
     bool            GetMoves(char c, const ZPoint& src, tMoveList& moves, tMoveList& attackSquares);
 
+    bool            GetMovesThatSatisfy(char piece, bool bAttack, const ZPoint& endsquare, tMoveList& moves);       // given a piece and a target square, find all moves that satisfy the condition
+
     bool            IsPromotingMove(const ZPoint& src, const ZPoint& dst);
 
-    void            IsOneOfMoves(const ZPoint& dst, const tMoveList& moves, bool& bIncluded);
+    bool            IsOneOfMoves(const ZPoint& endSquare, const tMoveList& moves);
     uint8_t         UnderAttack(bool bByWhite, const ZPoint& grid); // returns number of pieces attacking a square
     bool            IsKingInCheck(bool bWhite, const ZPoint& atLocation);   // returns true if the king is (or would be) in check at a location
     bool            IsKingInCheck(bool bWhite); // is king currently in check at his current position
@@ -106,21 +112,25 @@ public:
     std::string     ToFEN();   // converts board position to FEN format
     bool            FromFEN(const std::string& sFEN);
 
+    void            DebugDump();
+
 protected:
     void            ComputeSquaresUnderAttack();
     void            ComputeCheckAndMate();
 
-    char    mBoard[8][8];
-    bool    mbWhitesTurn;
-    bool    mbCheck;
-    bool    mbCheckMate;
-    uint8_t mCastlingFlags;
-    ZPoint  mEnPassantSquare;
-    uint32_t mHalfMovesSinceLastCaptureOrPawnAdvance;
-    uint32_t mFullMoveNumber;
+    char            mBoard[8][8];
+    bool            mbWhitesTurn;
+    bool            mbCheck;
+    bool            mbCheckMate;
+    uint8_t         mCastlingFlags;
+    ZPoint          mEnPassantSquare;
+    uint32_t        mHalfMovesSinceLastCaptureOrPawnAdvance;
+    uint32_t        mFullMoveNumber;
 
-    uint8_t mSquaresUnderAttackByWhite[8][8];
-    uint8_t mSquaresUnderAttackByBlack[8][8];
+    sMove           mLastMove;
+
+    uint8_t         mSquaresUnderAttackByWhite[8][8];
+    uint8_t         mSquaresUnderAttackByBlack[8][8];
 
 };
 
@@ -173,12 +183,21 @@ public:
 
     bool            ParseLine(const std::string& sSANLine);
 
+
+    char            PieceFromAction(bool bWhite);
+    std::string     DisambiguationChars(bool bWhite);
+
+    ZPoint          ResolveSourceFromAction(bool bWhite, ChessBoard& board);      // may require disambiguation
+    ZPoint          DestFromAction(bool bWhite);
+
     ZPoint          LocationFromText(const std::string& sSquare);
 
 
+    bool            IsGameResult(bool bWhite);
     bool            IsCheck(bool bWhite);
     eCastlingFlags  IsCastle(bool bWhite);
-    bool            GetMove(bool bWhite, ZPoint& src, ZPoint& dst);
+    char            IsPromotion(bool bWhite);
+    bool            GetMove(bool bWhite, const ChessBoard& board, ZPoint& src, ZPoint& dst);
 
     uint32_t        movenumber;
     std::string     whiteAction;
@@ -188,23 +207,25 @@ public:
 private:
 };
 
+
+const std::string kEventTag = { "Event" };
+const std::string kSiteTag = { "Site" };
+const std::string kDateTag = { "Date" };
+const std::string kRoundTag = { "Round" };
+const std::string kWhiteTag = { "White" };
+const std::string kBlackTag = { "Black" };
+const std::string kWhiteELO = { "WhiteElo" };
+const std::string kBlackELO = { "BlackElo" };
+const std::string kResultTag = { "Result" };
+const std::string kECOTag = { "ECO" };
+const std::string kTimeControlTag = { "TimeControl" };
+const std::string kWhiteClockTag = { "WhiteClock" };
+const std::string kBlackClockTag = { "BlackClock" };
+const std::string kClockTag = { "Clock" };
+
 class ZChessPGN
 {
 public:
-
-    const std::string kEventTag = { "Event" };
-    const std::string kSiteTag  = { "Site" };
-    const std::string kDateTag = { "Date" };
-    const std::string kRoundTag = { "Round" };
-    const std::string kWhiteTag = { "White" };
-    const std::string kBlackTag = { "Black" };
-    const std::string kResultTag = { "Result" };
-    const std::string kECOTag = { "ECO" };
-    const std::string kTimeControlTag = { "TimeControl" };
-    const std::string kWhiteClockTag = { "WhiteClock" };
-    const std::string kBlackClockTag = { "BlackClock" };
-    const std::string kClockTag = { "Clock" };
-
     ZChessPGN() {}
 
 
@@ -218,10 +239,42 @@ public:
 
 
     size_t GetMoveCount() { return mMoves.size(); }
+    size_t GetHalfMoveCount() { return (mMoves.size()-1) * 2 - (int)WhiteWins(); }  // if white wins, there's one less half move
 
     std::unordered_map<std::string, std::string> mTags;
     std::vector<ZPGNSANEntry> mMoves;
 
+};
+
+class ZPGNWin : public ZWin
+{
+public:
+    ZPGNWin();
+
+    bool    Init();
+    bool    Shutdown();
+
+    bool    Process();
+    bool    Paint();
+    bool    HandleMessage(const ZMessage& message);
+
+    bool    FromPGN(ZChessPGN& pgn);
+    bool    Clear();
+
+    bool    SetHalfMove(int64_t nHalfMove);
+
+private:
+
+    void    UpdateView();
+
+    ZFormattedTextWin* mpGameTagsWin;
+    ZFormattedTextWin* mpMovesWin;
+
+    uint32_t    mFillColor;
+    int64_t  mCurrentHalfMoveNumber;
+    ZFontParams mFont;
+    ZFontParams mBoldFont;
+    ZChessPGN mPGN;
 };
 
 
@@ -263,6 +316,8 @@ private:
     char    ScreenToPalettePiece(int64_t x, int64_t y);
 
     void    LoadRandomPosition();
+    bool    FromPGN(class ZChessPGN& pgn);
+
 
 
     ZRect   SquareArea(const ZPoint& grid);
@@ -298,6 +353,11 @@ private:
     ZPoint      mDraggingSourceGrid;
 
     ZPiecePromotionWin* mpPiecePromotionWin;
+    ZPGNWin* mpPGNWin;
+
+    std::vector<ChessBoard>   mHistory;   // boards for each move in pgn history, etc.
+
+
 
     // watch panel
     std::string msDebugStatus;

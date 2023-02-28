@@ -17,11 +17,13 @@ tZBufferPtr		gStandardButtonDownEdgeImage;
 
 ZRect			grTextArea;
 uint32_t        gDefaultDialogFill(0xff575757);
+uint32_t        gDefaultTextAreaFill(0xff888888);
+uint32_t        gDefaultSpacer(16);
 
-ZRect			grSliderBgEdge(16, 16, 48, 48);
+ZRect			grSliderBgEdge(gDefaultSpacer, gDefaultSpacer, gDefaultSpacer*3, gDefaultSpacer*3);
 ZRect			grSliderThumbEdge(9, 8, 43, 44);
 //ZRect			grDimRectEdge(4, 4, 102, 103);
-ZRect			grDimRectEdge(16, 16, 48, 48);
+ZRect			grDimRectEdge(gDefaultSpacer, gDefaultSpacer, gDefaultSpacer*3, gDefaultSpacer*3);
 ZRect			grStandardButtonEdge(5, 5, 50, 50);
 
 ZRect           grControlPanelArea;
@@ -47,6 +49,8 @@ bool cResources::Init(const string& sDefaultResourcePath)
 	bool bResult = true;
 
     // Adjust font sizes based on screen resolution
+    gDefaultSpacer = grFullArea.Height() / 125;
+
     gDefaultButtonFont.nHeight = grFullArea.Height() / 72;
     gDefaultTitleFont.nHeight = grFullArea.Height() / 54;
     gDefaultTextFont.nHeight = grFullArea.Height() / 108;
@@ -76,7 +80,7 @@ bool cResources::Init(const string& sDefaultResourcePath)
     bResult &= AddResource(sDefaultResourcePath+"slider_bg.png", gDimRectBackground);
     assert(bResult);
 
-	grTextArea.SetRect(16, 16, grFullArea.right - 48, grFullArea.bottom - 96);
+	grTextArea.SetRect(gDefaultSpacer, gDefaultSpacer, grFullArea.right - gDefaultSpacer*3, grFullArea.bottom - gDefaultSpacer*6);
 
 
     int64_t controlW = grFullArea.Width() / 10;

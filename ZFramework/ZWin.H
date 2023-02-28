@@ -93,8 +93,8 @@ public:
 	virtual void		Hide();
 	virtual bool		IsVisible();
 	
-    std::string&				GetWinName() { return msWinName; }
-    std::string				GetFullWinName();		// returns the fully qualified name all the way up the parental chain.  Example: A.B.C.D or main.quitdialog.ok
+    std::string&        GetWinName() { return msWinName; }
+    std::string         GetFullWinName();		// returns the fully qualified name all the way up the parental chain.  Example: A.B.C.D or main.quitdialog.ok
 	void				SetWinName(const std::string& sWinName);
 	const ZPoint&		GetLastMouseMove();
 	

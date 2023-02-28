@@ -12,6 +12,11 @@ class ZBuffer;
 
 // Default configuration
 extern uint32_t     gDefaultDialogFill;
+extern uint32_t     gDefaultTextAreaFill;
+
+
+// Resolution Dependent
+extern uint32_t     gDefaultSpacer;
 
 
 // Application
