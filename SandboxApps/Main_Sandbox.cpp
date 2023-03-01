@@ -10,7 +10,7 @@
 #include "FloatLinesWin.h"
 #include "TextTestWin.h"
 #include "3DTestWin.h"
-#include "ChessWin.h"
+#include "ZChessWin.h"
 #include "Resources.h"
 
 

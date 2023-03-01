@@ -28,7 +28,8 @@ LifeWin.h LifeWin.cpp
 3DTestWin.h 3DTestWin.cpp 
 ProcessImageWin.h ProcessImageWin.cpp 
 TextTestWin.h TextTestWin.cpp
-ChessWin.h ChessWin.cpp
+ZChess.h ZChess.cpp
+ZChessWin.h ZChessWin.cpp
 Main_Sandbox.h Main_Sandbox.cpp Main_Win64.cpp 
 teapotdata.h
 )
@@ -159,7 +160,7 @@ source_group(Common FILES ${COMMON_FILES})
 if(MSVC)
     # ignore pdb not found
     set(EXTRA_FLAGS "/W3 /MP")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE /ignore:4099")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_compile_definitions(JSON_NOEXCEPTION)
     set(TARGET_PROPS  PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:SandboxApps>")
