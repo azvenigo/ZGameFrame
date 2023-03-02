@@ -34,11 +34,14 @@ public:
 
    virtual void                     SetDestination(tZBufferPtr pDestination) { mpDestination = pDestination; }
 
+   virtual void                     SetCompletionMessage(const std::string& sMessage) { msCompletionMessage = sMessage; }
+
 protected:
    eCEAnimObject_State  			mState;
    ZRect                			mrArea;
    int64_t               			mnTimeStamp;
    tZBufferPtr                      mpDestination;
+   std::string                      msCompletionMessage; // posted when object is deleted
    void*							mpContext;			// Contextual owner.
 };
 

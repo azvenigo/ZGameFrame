@@ -5,6 +5,7 @@
 #include "ZDebug.h"
 #include "ZGraphicSystem.h"
 #include "ZScreenBuffer.h"
+#include "ZMessageSystem.h"
 #include "ZTransformable.h"
 #include "math.h"
 #include "ZStringHelpers.h"
@@ -27,6 +28,8 @@ ZAnimObject::ZAnimObject()
 
 ZAnimObject::~ZAnimObject()
 {
+    if (!msCompletionMessage.empty())
+        gMessageSystem.Post(msCompletionMessage);
 }
 
 // cCEAnimObject

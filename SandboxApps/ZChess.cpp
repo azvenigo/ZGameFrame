@@ -194,6 +194,8 @@ bool ChessBoard::PromotePiece(const ZPoint& gridSrc, const ZPoint& gridDst, char
 {
     SetPiece(gridSrc, 0);
     SetPiece(gridDst, promotedPiece);
+    mLastMove.mSrc = gridSrc;
+    mLastMove.mDest = gridDst;
     SetWhitesTurn(!WhitesTurn());
 
     return true;

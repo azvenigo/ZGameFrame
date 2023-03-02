@@ -182,5 +182,6 @@ private:
     std::string msDebugStatus;
     std::string msFEN;
 
-
+    class ZAnimator* mpAnimator;
+    ZPoint mHiddenSquare;   // square that is not to be drawn because it is animating
 };

@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <fstream>
 #include "ZTimer.h"
+#include "ZAnimator.h"
+#include "ZAnimObjects.h"
 
 using namespace std;
 
@@ -53,10 +55,8 @@ bool ZChoosePGNWin::Init()
     mpGamesList->SetArea(rGameTags);
     mpGamesList->SetFill(gDefaultTextAreaFill);
     mpGamesList->SetDrawBorder();
-
-
-
     ChildAdd(mpGamesList);
+
     return ZWin::Init();
 }
 
@@ -434,6 +434,7 @@ ZChessWin::ZChessWin()
     mpSymbolicFont = nullptr;
     mDraggingPiece = 0;
     mDraggingSourceGrid.Set(-1, -1);
+    mHiddenSquare.Set(-1, -1);
     mbEditMode = false;
     mbShowAttackCount = true;
     mpPiecePromotionWin = nullptr;
@@ -505,7 +506,7 @@ bool ZChessWin::Init()
     mpPGNWin->SetArea(rPGNPanel);
     ChildAdd(mpPGNWin);
 
-
+    mpAnimator = new ZAnimator();
 
 
     return ZWin::Init();
@@ -751,6 +752,11 @@ bool ZChessWin::OnKeyUp(uint32_t key)
 
 bool ZChessWin::Process()
 {
+    if (mpAnimator && mpAnimator->HasActiveObjects())
+    {
+        Invalidate();
+    }
+
     return ZWin::Process();
 }
 
@@ -767,6 +773,9 @@ bool ZChessWin::Paint()
         mpTransformTexture->Blt(mpDraggingPiece.get(), mpDraggingPiece->GetArea(), mrDraggingPiece);
     else if (mbEditMode)
         DrawPalette();
+
+    if (mpAnimator && mpAnimator->HasActiveObjects())
+        mpAnimator->Paint();
 
     return ZWin::Paint();
 }
@@ -893,6 +902,9 @@ void ZChessWin::DrawBoard()
             }
 
 
+
+            if (grid == mHiddenSquare)  // do not draw piece while animation playing
+                continue;
 
 
             if (c)
@@ -1096,12 +1108,35 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         if (nHalfMove >= 0 && nHalfMove < mHistory.size())
         {
             mBoard = mHistory[nHalfMove];
+
+            sMove move = mBoard.GetLastMove();
+
+            if (mBoard.ValidCoord(move.mSrc) && mBoard.ValidCoord(move.mDest))
+            {
+                ZRect rSrcSquareArea = SquareArea(move.mSrc);
+                ZRect rDstSquareArea = SquareArea(move.mDest);
+
+                ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mPieceData[mBoard.Piece(move.mDest)].mpImage.get());
+                pImage->StartTransformation(ZTransformation(ZPoint(rSrcSquareArea.left, rSrcSquareArea.top)));
+                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 350);
+                pImage->SetDestination(mpTransformTexture);
+                pImage->SetCompletionMessage("type=hidesquare;x=-1;y=-1;target=chesswin");  // clear the hidden square on completion
+                mHiddenSquare = move.mDest;
+                mpAnimator->AddObject(pImage);
+            }
+
             InvalidateChildren();
         }
         else
         {
             ZERROR("ERROR: Couldn't load board from history halfmove:", nHalfMove,  " entries:" , mHistory.size());
         }
+        return true;
+    }
+    else if (sType == "hidesquare")
+    {
+        mHiddenSquare.Set(StringHelpers::ToInt(message.GetParam("x")), StringHelpers::ToInt(message.GetParam("y")));
+        Invalidate();
         return true;
     }
 
