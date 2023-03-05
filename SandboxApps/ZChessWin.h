@@ -112,7 +112,7 @@ public:
     bool    OnKeyUp(uint32_t key);
 
 
-    bool    SetDemoMode(bool bDemo) { mbDemoMode = bDemo; } // load random game and play through it
+    void    SetDemoMode(bool bDemo) { mbDemoMode = bDemo; } // load random game and play through it
 
     bool    Process();
     bool    Paint();
@@ -125,8 +125,6 @@ private:
     void    DrawBoard();
     void    DrawPalette();
     void    UpdateSize();
-
-    void    UpdateWatchPanel();
 
     void    ShowPromotingWin(const ZPoint& grid);
 

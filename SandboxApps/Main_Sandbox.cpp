@@ -218,6 +218,7 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
     {
         ZChessWin* pWin = new ZChessWin();
         pWin->SetArea(grFullArea);
+        pWin->SetDemoMode(true);
         gpMainWin->ChildAdd(pWin);
     }
 

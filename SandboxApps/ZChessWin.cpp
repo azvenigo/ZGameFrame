@@ -16,6 +16,9 @@
 using namespace std;
 
 
+const int64_t kUSBetweenMoves = 1000000;
+
+
 ZChoosePGNWin::ZChoosePGNWin()
 {
     msWinName = "choosepgnwin";
@@ -421,6 +424,7 @@ ZChessWin::ZChessWin()
     mbEditMode = false;
     mbShowAttackCount = true;
     mpPiecePromotionWin = nullptr;
+    mpPGNWin = nullptr;
     mpChoosePGNWin = nullptr;
     mbDemoMode = false;
     mnDemoModeNextMoveTimeStamp = 0;
@@ -447,50 +451,47 @@ bool ZChessWin::Init()
     ZRect rControlPanel(grFullArea.right - panelW, grFullArea.bottom - panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
 
 
-    ZWinControlPanel* pCP = new ZWinControlPanel();
-    pCP->SetArea(rControlPanel);
+    if (mbDemoMode)
+        LoadRandomGame();
 
-    tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
+    if (!mbDemoMode)
+    {
 
-    pCP->Init();
+        ZWinControlPanel* pCP = new ZWinControlPanel();
+        pCP->SetArea(rControlPanel);
 
-    pCP->AddCaption("Piece Height", gDefaultTitleFont);
-    pCP->AddSlider(&mnPieceHeight, 1, 26, 10, "type=updatesize;target=chesswin", true, false, pBtnFont);
-    //    pCP->AddSpace(16);
-    pCP->AddToggle(&mbEditMode, "Edit Mode", "type=invalidate;target=chesswin", "type=invalidate;target=chesswin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
 
-    pCP->AddButton("Change Turn", "type=changeturn;target=chesswin", pBtnFont, 0xffffffff, 0xff000000, ZFont::kShadowed);
+        pCP->Init();
 
-    pCP->AddButton("Clear Board", "type=clearboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-    pCP->AddButton("Reset Board", "type=resetboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-    pCP->AddSpace(panelH/30);
+        pCP->AddCaption("Piece Height", gDefaultTitleFont);
+        pCP->AddSlider(&mnPieceHeight, 1, 26, 10, "type=updatesize;target=chesswin", true, false, pBtnFont);
+        //    pCP->AddSpace(16);
+        pCP->AddToggle(&mbEditMode, "Edit Mode", "type=invalidate;target=chesswin", "type=invalidate;target=chesswin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
-    pCP->AddButton("Load Position", "type=loadboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-    pCP->AddButton("Save Position", "type=saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Change Turn", "type=changeturn;target=chesswin", pBtnFont, 0xffffffff, 0xff000000, ZFont::kShadowed);
 
-    pCP->AddSpace(panelH / 30);
-    pCP->AddButton("Load Random Game", "type=randgame;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-    pCP->AddToggle(&mbDemoMode, "Demo Mode", "type=invalidate;target=chesswin", "type=invalidate;target=chesswin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Clear Board", "type=clearboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Reset Board", "type=resetboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddSpace(panelH / 30);
 
-    ChildAdd(pCP);
+        pCP->AddButton("Load Position", "type=loadboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Save Position", "type=saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+
+        pCP->AddSpace(panelH / 30);
+        pCP->AddButton("Load Random Game", "type=randgame;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddToggle(&mbDemoMode, "Demo Mode", "type=invalidate;target=chesswin", "type=invalidate;target=chesswin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+
+        ChildAdd(pCP);
 
 
-/*    ZWinWatchPanel* pPanel = new ZWinWatchPanel();
-    
-    ZRect rWatchPanel(0,0,rControlPanel.Width()*2, rControlPanel.Height()/4);
-    rWatchPanel.OffsetRect(rControlPanel.left - rWatchPanel.Width() - 16, rControlPanel.top + rControlPanel.Height() *3 /4);
-    pPanel->SetArea(rWatchPanel);
-    ChildAdd(pPanel);
-    pPanel->AddItem(WatchType::kString, "Debug:", &msDebugStatus, 0xff000000, 0xffffffff);
+        mpPGNWin = new ZPGNWin();
+        ZRect rPGNPanel(0, 0, rControlPanel.Width() * 1.5, rControlPanel.Height());
+        rPGNPanel.OffsetRect(rControlPanel.left - rPGNPanel.Width() - gDefaultSpacer, rControlPanel.top);
+        mpPGNWin->SetArea(rPGNPanel);
+        ChildAdd(mpPGNWin);
+    }
 
-    msDebugStatus = "starting test";
-    */
-
-    mpPGNWin = new ZPGNWin();
-    ZRect rPGNPanel(0, 0, rControlPanel.Width() * 1.5, rControlPanel.Height());
-    rPGNPanel.OffsetRect(rControlPanel.left - rPGNPanel.Width() - gDefaultSpacer, rControlPanel.top );
-    mpPGNWin->SetArea(rPGNPanel);
-    ChildAdd(mpPGNWin);
 
     mpAnimator = new ZAnimator();
 
@@ -545,19 +546,6 @@ void ZChessWin::UpdateSize()
 
     mrPaletteArea.SetRect(mrBoardArea.right, mrBoardArea.top, mrBoardArea.right + mnPalettePieceHeight, mrBoardArea.bottom);
 
-    InvalidateChildren();
-}
-
-
-void ZChessWin::UpdateWatchPanel()
-{
-    msDebugStatus = "Turn: " + StringHelpers::FromInt(mBoard.GetMoveNumber()) + " ";
-    if (mBoard.WhitesTurn())
-        msDebugStatus += "White's Move";
-    else
-        msDebugStatus += "Black's Move";
-
-    msDebugStatus += mBoard.ToFEN();
     InvalidateChildren();
 }
 
@@ -702,7 +690,6 @@ bool ZChessWin::OnMouseUpL(int64_t x, int64_t y)
         mDraggingPiece = 0;
         mDraggingSourceGrid.Set(-1, -1);
         ReleaseCapture();
-        UpdateWatchPanel();
         Invalidate();
     }
     return ZWin::OnMouseUpL(x, y);
@@ -736,7 +723,6 @@ bool ZChessWin::OnKeyUp(uint32_t key)
 }
 
 
-const int64_t kUSBetweenMoves = 1000000;
 bool ZChessWin::Process()
 {
     if (mpAnimator)
@@ -923,43 +909,49 @@ void ZChessWin::DrawBoard()
         }
     }
 
-    ZRect rMoveLabel;
-    tZFontPtr pLabelFont = gpFontSystem->GetFont(gDefaultTitleFont);
-    uint32_t nLabelPadding = (uint32_t) pLabelFont->Height();
-    if (mBoard.WhitesTurn())
-    {
-        rMoveLabel.SetRect(SquareArea(ZPoint(0, 7)));
-        rMoveLabel.OffsetRect(-rMoveLabel.Width()-nLabelPadding*2, 0);
-        string sLabel("White's Move");
-        if (!mbEditMode && mBoard.IsKingInCheck(true))
-        {
-            if (mBoard.IsCheckmate())
-                sLabel = "Checkmate";
-            else
-                sLabel = "White is in Check";
-        }
 
-        rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
-        rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
-        mpTransformTexture->Fill(rMoveLabel, 0xffffffff);
-        pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, 0xff000000, 0xff000000, ZFont::kMiddleCenter);
-    }
-    else
+
+    // Draw labels if not in demo mode
+    if (!mbDemoMode)
     {
-        rMoveLabel.SetRect(SquareArea(ZPoint(0, 0)));
-        rMoveLabel.OffsetRect(-rMoveLabel.Width()- nLabelPadding*2, 0);
-        string sLabel("Black's Move");
-        if (!mbEditMode && mBoard.IsKingInCheck(false))
+        ZRect rMoveLabel;
+        tZFontPtr pLabelFont = gpFontSystem->GetFont(gDefaultTitleFont);
+        uint32_t nLabelPadding = (uint32_t)pLabelFont->Height();
+        if (mBoard.WhitesTurn())
         {
-            if (mBoard.IsCheckmate())
-                sLabel = "Checkmate";
-            else
-                sLabel = "Black is in Check";
+            rMoveLabel.SetRect(SquareArea(ZPoint(0, 7)));
+            rMoveLabel.OffsetRect(-rMoveLabel.Width() - nLabelPadding * 2, 0);
+            string sLabel("White's Move");
+            if (!mbEditMode && mBoard.IsKingInCheck(true))
+            {
+                if (mBoard.IsCheckmate())
+                    sLabel = "Checkmate";
+                else
+                    sLabel = "White is in Check";
+            }
+
+            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
+            rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
+            mpTransformTexture->Fill(rMoveLabel, 0xffffffff);
+            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, 0xff000000, 0xff000000, ZFont::kMiddleCenter);
         }
-        rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
-        rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
-        mpTransformTexture->Fill(rMoveLabel, 0xff000000);
-        pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, 0xffffffff, 0xffffffff, ZFont::kMiddleCenter);
+        else
+        {
+            rMoveLabel.SetRect(SquareArea(ZPoint(0, 0)));
+            rMoveLabel.OffsetRect(-rMoveLabel.Width() - nLabelPadding * 2, 0);
+            string sLabel("Black's Move");
+            if (!mbEditMode && mBoard.IsKingInCheck(false))
+            {
+                if (mBoard.IsCheckmate())
+                    sLabel = "Checkmate";
+                else
+                    sLabel = "Black is in Check";
+            }
+            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
+            rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
+            mpTransformTexture->Fill(rMoveLabel, 0xff000000);
+            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, 0xffffffff, 0xffffffff, ZFont::kMiddleCenter);
+        }
     }
 
 }
@@ -1111,9 +1103,12 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     else if (sType == "sethistoryindex")
     {
         int64_t nHalfMove = StringHelpers::ToInt(message.GetParam("halfmove"));
-        if (nHalfMove >= 0 && nHalfMove < mHistory.size())
+        const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
+        if (nHalfMove >= 0)
         {
-            const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
+            if (nHalfMove >= mHistory.size())
+                nHalfMove = mHistory.size() - 1;
+
             mBoard = mHistory[nHalfMove];
 
             sMove move = mBoard.GetLastMove();
@@ -1126,12 +1121,10 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
                 ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mPieceData[mBoard.Piece(move.mDest)].mpImage.get());
                 pImage->StartTransformation(ZTransformation(ZPoint(rSrcSquareArea.left, rSrcSquareArea.top)));
 
-                int nTransformTime = 350;
-                if (mbDemoMode)
-                    nTransformTime = 500;
-
+                int nTransformTime = (kUSBetweenMoves/1000) / 2;
+                ;
                 pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, "type=hidesquare;x=-1;y=-1;target=chesswin"), nTransformTime);
-                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 100);
+                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 17);    // 17ms to at least cover 60fps
                 pImage->SetDestination(mpTransformTexture);
                 //pImage->SetCompletionMessage("type=hidesquare;x=-1;y=-1;target=chesswin");  // clear the hidden square on completion
                 mHiddenSquare = move.mDest;
@@ -1319,7 +1312,8 @@ bool ZChessWin::FromPGN(ZChessPGN& pgn)
     ChessBoard board;
     mHistory.push_back(board); // initial board
     
-    mpPGNWin->FromPGN(pgn);
+    if (mpPGNWin)
+        mpPGNWin->FromPGN(pgn);
 
     size_t nMove = 1;
     bool bDone = false;
@@ -1360,7 +1354,8 @@ bool ZChessWin::FromPGN(ZChessPGN& pgn)
                 mHistory[mHistory.size() - 1].SetResult(pgn.GetTag("Result"));
 
                 cout << "Final result:" << pgn.GetTag("Result") << "\n";
-                mpPGNWin->SetHalfMove(0);
+                if (mpPGNWin)
+                    mpPGNWin->SetHalfMove(0);
 
                 bDone = true;
                 break;
@@ -1431,7 +1426,7 @@ bool ZPiecePromotionWin::Paint()
     if (!mbInvalid)
         return true;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, 0xff4444ff);
+//    mpTransformTexture->Fill(mAreaToDrawTo, 0xff4444ff);
 
     ZRect rPalettePiece(mAreaToDrawTo);
     int32_t nPieceHeight = (int32_t)mAreaToDrawTo.Width() / 4;
