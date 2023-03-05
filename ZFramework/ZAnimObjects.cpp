@@ -23,16 +23,12 @@ ZAnimObject::ZAnimObject()
 {
 	mState = kNone;
 	mnTimeStamp = gTimer.GetElapsedTime();
-	//mpContext = NULL;
 }
 
 ZAnimObject::~ZAnimObject()
 {
-    if (!msCompletionMessage.empty())
-        gMessageSystem.Post(msCompletionMessage);
 }
 
-// cCEAnimObject
 ZAnimObject_TextMover::ZAnimObject_TextMover(tZFontPtr pFont) : ZAnimObject()
 {
 	mpFont = pFont;

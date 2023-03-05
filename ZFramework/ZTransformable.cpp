@@ -212,9 +212,13 @@ bool ZTransformable::Tick()
 			{
 				mbFirstTransformation = mStartTransform.mPosition == mEndTransform.mPosition;
 				// Begin a transformation from the current to the next in the list
+
 				mStartTransform = mCurTransform;
 
-				mEndTransform = *(mTransformationList.begin());
+                if (!mEndTransform.msCompletionMessage.empty())
+                    gMessageSystem.Post(mEndTransform.msCompletionMessage);
+
+                mEndTransform = *(mTransformationList.begin());
 				mTransformationList.pop_front();
 			}
 		}
@@ -267,7 +271,7 @@ bool ZTransformable::Tick()
 		//ZDEBUG_OUT("fCurrent:%f fFull:%f  fRange:%f  fT:%f\n", fCurrent, fFullTime, fRange, fT);
 		if (fT < -0.0)
 			fT = 0.0;
-		else if (fT > 1.0)
+		else if (fT >= 1.0)
 			fT = 1.0;
 
 /*		for (double fTest = 0.0; fTest < 1.0; fTest += 0.02)
@@ -386,7 +390,6 @@ void ZTransformable::StartTransformation(const ZTransformation& start)
 	mStartTransform = start;
 	mStartTransform.mnTimestamp = gTimer.GetElapsedTime();
 	mbFirstTransformation = true;
-
 	mCurTransform = mStartTransform;
 	mEndTransform = mStartTransform;
 
@@ -405,8 +408,9 @@ void ZTransformable::AddTransformation(ZTransformation trans, int64_t nDuration)
 
 void ZTransformable::SetTransform(const ZTransformation& newTransform) 
 { 
-	mEndTransform = newTransform;
-	mCurTransform = newTransform; 
+    mEndTransform = newTransform;
+    mCurTransform = newTransform; 
+
 	UpdateVertsAndBounds(); 
 }
 
@@ -417,8 +421,6 @@ void ZTransformable::EndTransformation()
 	mEndTransform = mCurTransform;
 	mTransformationList.clear();
 	mTransformState = kFinished;
-	if (!mEndTransform.msCompletionMessage.empty())
-		gMessageSystem.Post(mEndTransform.msCompletionMessage);
 }
 
 void ZTransformable::DoTransformation(const string& sRaw)

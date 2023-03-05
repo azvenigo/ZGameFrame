@@ -50,6 +50,8 @@ public:
     bool    Process();
     bool    OnChar(char key);
 
+    void    SetControlPanelEnabled(bool bEnabled = true) { mbControlPanelEnabled = bEnabled; }
+
     void    RenderPoly(std::vector<Z3D::Vec3f>& worldVerts, Z3D::Matrix44f& mtxProjection, Z3D::Matrix44f& mtxWorldToCamera, uint32_t nCol);
     void    RenderPoly(std::vector<Z3D::Vec3f>& worldVerts, Z3D::Matrix44f& mtxProjection, Z3D::Matrix44f& mtxWorldToCamera, tZBufferPtr pTexture);
     bool	HandleMessage(const ZMessage& message);
@@ -63,6 +65,7 @@ private:
     Z3D::Matrix44f mWorldToObject;
 
     tZBufferPtr mpTexture;
+    bool mbControlPanelEnabled;
 
 #ifdef RENDER_TEAPOT
     tZBufferPtr mpTeapotRender;

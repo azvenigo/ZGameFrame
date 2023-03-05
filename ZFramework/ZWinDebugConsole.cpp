@@ -95,6 +95,7 @@ void ZWinDebugConsole::UpdateScrollbar()
 	int64_t nFullTextHeight = gDebug.mHistory.size();
 
     mrTextArea.SetRect(mAreaToDrawTo);
+    mrTextArea.DeflateRect(gDefaultSpacer, gDefaultSpacer);
     mrTextArea.right -= 16;
 
     size_t nVisible = GetVisibleLines();

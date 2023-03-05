@@ -115,7 +115,7 @@ bool ZChoosePGNWin::ListGamesFromPGN(string& sFilename, string& sPGNFile)
 
 
 
-            size_t nEndPGNContent = sPGNFile.find("[Event", nEndRound);        // find next event
+            size_t nEndPGNContent = sPGNFile.find("[Event ", nEndRound);        // find next event
             if (nEndPGNContent == string::npos)
                 nEndPGNContent = sPGNFile.length();     // clip at end
 
@@ -152,11 +152,14 @@ ZPGNWin::ZPGNWin()
 
 bool ZPGNWin::Init()
 {
-    mFont.sFacename = "Verdana";
-    mFont.nHeight = 30;
-    mFont.nWeight = 200;
+    mMoveFont.sFacename = "Verdana";
+    mMoveFont.nHeight = 40;
+    mMoveFont.nWeight = 200;
 
-    mBoldFont = mFont;
+    mTagsFont.sFacename = "Verdana";
+    mTagsFont.nHeight = 20;
+
+    mBoldFont = mMoveFont;
     mBoldFont.nWeight = 800;
 
 
@@ -299,48 +302,26 @@ void ZPGNWin::UpdateView()
     mpGameTagsWin->Clear();
 
     string sTag;
-    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kEventTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kEventTag) + "</text></line>";
-    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
 
-    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kSiteTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kSiteTag) + "</text></line>";
-    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
-
-    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kDateTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kDateTag) + "</text></line>";
-    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
-
-    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kRoundTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kRoundTag) + "</text></line>";
-    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
-
-    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kWhiteTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kWhiteTag) + "</text></line>";
-    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
-
-    if (!mPGN.GetTag(kWhiteELO).empty())
+    const int knTags = sizeof(pgnTags)/sizeof(string);
+    for (int nTagIndex = 0; nTagIndex < knTags; nTagIndex++)
     {
-        sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kWhiteELO + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kWhiteELO) + "</text></line>";
-        mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+        string sValue = mPGN.GetTag(pgnTags[nTagIndex]);
+        
+        if (!sValue.empty())
+        {
+            sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + pgnTags[nTagIndex] + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + sValue + "</text></line>";
+            mpGameTagsWin->AddTextLine(sTag, mTagsFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+        }
     }
-
-    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kBlackTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kBlackTag) + "</text></line>";
-    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
-
-    if (!mPGN.GetTag(kBlackELO).empty())
-    {
-        sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kBlackELO + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kBlackELO) + "</text></line>";
-        mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
-    }
-
-
-
-    sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + kResultTag + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + mPGN.GetTag(kResultTag) + "</text></line>";
-    mpGameTagsWin->AddTextLine(sTag, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
 
     mpGameTagsWin->SetScrollable();
 
     mpMovesWin->Clear();
 
-    for (int nHalfMove = 2; nHalfMove < mPGN.GetHalfMoveCount(); nHalfMove+=2)   // start at 2 as first two halfmoves are blank entry move
+    int nHalfMove = 2;
+    for (int nMove = 1; nMove < mPGN.mMoves.size(); nMove++)   // start at 2 as first two halfmoves are blank entry move
     {
-        int nMove = (nHalfMove+1) / 2;
         ZPGNSANEntry& move = mPGN.mMoves[nMove];
 
         string sMoveLine;
@@ -366,20 +347,22 @@ void ZPGNWin::UpdateView()
 
             sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=type=setmove;target=pgnwin;halfmove="+ StringHelpers::FromInt(nHalfMove-1) +">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
             sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=type=setmove;target=pgnwin;halfmove="+StringHelpers::FromInt(nHalfMove)+">" + move.blackAction + "</text></line>";
-            mpMovesWin->AddTextLine(sMoveLine, mFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+            mpMovesWin->AddTextLine(sMoveLine, mMoveFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
         }
 
+        nHalfMove += 2;
     }
     mpMovesWin->InvalidateChildren();
     mpMovesWin->SetScrollable();
-    mpMovesWin->ScrollTo(mFont.nHeight * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
+    mpMovesWin->SetUnderlineLinks(false);
+    mpMovesWin->ScrollTo(mMoveFont.nHeight * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
 
 }
 
 
 bool ZPGNWin::SetHalfMove(int64_t nHalfMove)
 {
-    if (nHalfMove >= 0 && nHalfMove < mPGN.GetMoveCount() * 2)
+    if (nHalfMove >= 0 && nHalfMove < mPGN.GetHalfMoveCount())
     {
         mCurrentHalfMoveNumber = nHalfMove;
         string sMessage;
@@ -399,7 +382,7 @@ bool ZPGNWin::HandleMessage(const ZMessage& message)
 
     if (sType == "end")
     {
-        SetHalfMove(mPGN.GetHalfMoveCount()); 
+        SetHalfMove(mPGN.GetHalfMoveCount()-1); 
         return true;
     }
     else if (sType == "backone")
@@ -439,6 +422,8 @@ ZChessWin::ZChessWin()
     mbShowAttackCount = true;
     mpPiecePromotionWin = nullptr;
     mpChoosePGNWin = nullptr;
+    mbDemoMode = false;
+    mnDemoModeNextMoveTimeStamp = 0;
 }
    
 bool ZChessWin::Init()
@@ -484,7 +469,8 @@ bool ZChessWin::Init()
     pCP->AddButton("Save Position", "type=saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
     pCP->AddSpace(panelH / 30);
-    pCP->AddButton("Random DB Position", "type=randdbboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddButton("Load Random Game", "type=randgame;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbDemoMode, "Demo Mode", "type=invalidate;target=chesswin", "type=invalidate;target=chesswin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
     ChildAdd(pCP);
 
@@ -750,12 +736,32 @@ bool ZChessWin::OnKeyUp(uint32_t key)
 }
 
 
+const int64_t kUSBetweenMoves = 1000000;
 bool ZChessWin::Process()
 {
-    if (mpAnimator && mpAnimator->HasActiveObjects())
+    if (mpAnimator)
     {
-        Invalidate();
+        if (mpAnimator->HasActiveObjects())
+            Invalidate();
+
+        if (mbDemoMode && gTimer.GetUSSinceEpoch() > mnDemoModeNextMoveTimeStamp)
+        {
+            const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
+            if (mHistory.size() > 0 && mHistory[mHistory.size() - 1].GetHalfMoveNumber() == mBoard.GetHalfMoveNumber())
+            {
+                LoadRandomGame();
+            }
+            else
+            {
+                ZDEBUG_OUT("Setting halfmove:", mBoard.GetHalfMoveNumber() + 1);
+                mnDemoModeNextMoveTimeStamp = gTimer.GetUSSinceEpoch() + kUSBetweenMoves;
+                string sMessage;
+                Sprintf(sMessage, "type=sethistoryindex;target=chesswin;halfmove=%d", mBoard.GetHalfMoveNumber());
+                gMessageSystem.Post(sMessage);
+            }
+        }
     }
+
 
     return ZWin::Process();
 }
@@ -1080,9 +1086,9 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     {
         return true;
     }
-    else if (sType == "randdbboard")
+    else if (sType == "randgame")
     {
-        LoadRandomPosition();
+        LoadRandomGame();
         return true;
     }
     else if (sType == "promote")
@@ -1107,6 +1113,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         int64_t nHalfMove = StringHelpers::ToInt(message.GetParam("halfmove"));
         if (nHalfMove >= 0 && nHalfMove < mHistory.size())
         {
+            const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
             mBoard = mHistory[nHalfMove];
 
             sMove move = mBoard.GetLastMove();
@@ -1118,9 +1125,15 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
 
                 ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mPieceData[mBoard.Piece(move.mDest)].mpImage.get());
                 pImage->StartTransformation(ZTransformation(ZPoint(rSrcSquareArea.left, rSrcSquareArea.top)));
-                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 350);
+
+                int nTransformTime = 350;
+                if (mbDemoMode)
+                    nTransformTime = 500;
+
+                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, "type=hidesquare;x=-1;y=-1;target=chesswin"), nTransformTime);
+                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 100);
                 pImage->SetDestination(mpTransformTexture);
-                pImage->SetCompletionMessage("type=hidesquare;x=-1;y=-1;target=chesswin");  // clear the hidden square on completion
+                //pImage->SetCompletionMessage("type=hidesquare;x=-1;y=-1;target=chesswin");  // clear the hidden square on completion
                 mHiddenSquare = move.mDest;
                 mpAnimator->AddObject(pImage);
             }
@@ -1145,15 +1158,21 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
 
 bool ZChessWin::LoadPGN(string sFilename)
 {
+    if (std::filesystem::file_size(sFilename) > 10 * 1024 * 1024)
+    {
+        ZERROR("ERROR: File ", sFilename, " exceeds maximum allowable 10MiB");
+        return false;
+    }
+
     ZOUT("Loading PGN file:", sFilename);
     string sPGN;
     if (ReadStringFromFile(sFilename, sPGN))
     {
-        size_t nEventIndex = sPGN.find("[Event", 0);
+        size_t nEventIndex = sPGN.find("[Event ", 0);
         if (nEventIndex == string::npos)
             return false;
 
-        size_t nSecondEventIndex = sPGN.find("[Event", nEventIndex + 6);
+        size_t nSecondEventIndex = sPGN.find("[Event ", nEventIndex + 7);
         if (nSecondEventIndex != string::npos)
         {
             // show choose pgn window
@@ -1189,38 +1208,45 @@ bool ZChessWin::LoadPGN(string sFilename)
 }
 
 
-void ZChessWin::LoadRandomPosition()
+void ZChessWin::LoadRandomGame()
 {
-    std::filesystem::path filepath("res/randpositions.fendb");
+    std::filesystem::path filepath("res/twic1241.pgn");
     size_t nFullSize = std::filesystem::file_size(filepath);
-    size_t nRandOffset = RANDI64(0, (int64_t) nFullSize);
+    size_t nRandOffset = RANDI64(0, (int64_t) nFullSize - 1024);
 
-    std::ifstream dbFile(filepath);
+    int64_t nStartOffset = -1;
+    int64_t nEndOffset = -1;
+
+    std::ifstream dbFile(filepath, ios::binary);
     if (dbFile)
     {
         dbFile.seekg(nRandOffset);
-
-        char c = 0;
-        while (dbFile.read(&c, 1) && c != '\n');    // read forward until reaching a newline
-        size_t nStartOffset = dbFile.tellg();
-
-        while (dbFile.read(&c, 1) && c != '\n');    // read forward until reaching a newline
-        size_t nEndOffset = dbFile.tellg();
-
-        dbFile.seekg(nStartOffset);
-        size_t nFENSize = nEndOffset - nStartOffset-2;
-
-        if (nFENSize < 16 || nFENSize > 128)
+        string sLine;
+        while (std::getline(dbFile, sLine) && (nStartOffset == -1 || nEndOffset == -1))
         {
-            ZDEBUG_OUT("ERROR: unreasonable FEN size:%d", nFENSize);
-            return;
+            size_t nFind = sLine.find("[Event ");
+            if (nFind != string::npos)
+            {
+                if (nStartOffset == -1)
+                    nStartOffset = ((int64_t)dbFile.tellg() - (sLine.length() + 1));
+                else if (nEndOffset == -1)
+                    nEndOffset = ((int64_t)dbFile.tellg() - (sLine.length() + 1));
+            }
         }
-       
-        char* pBuf = new char[nFENSize];
-        dbFile.read(pBuf, nFENSize);
-        string sFEN(pBuf, nFENSize);
 
-        mBoard.FromFEN(sFEN);
+        size_t nPGNSize = nEndOffset - nStartOffset;
+        dbFile.seekg(nStartOffset);
+        char* pBuf = new char[nPGNSize];
+        dbFile.read(pBuf, nPGNSize);
+        string sPGN(pBuf, nPGNSize);
+
+        ZChessPGN pgn;
+        if (pgn.ParsePGN(sPGN))
+        {
+            FromPGN(pgn);
+            InvalidateChildren();
+        }
+
         delete[] pBuf;
         InvalidateChildren();
     }
@@ -1287,10 +1313,11 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
 
 bool ZChessWin::FromPGN(ZChessPGN& pgn)
 {
+    const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
     mHistory.clear();
-    mBoard.ResetBoard();
 
-    mHistory.push_back(mBoard); // initial board
+    ChessBoard board;
+    mHistory.push_back(board); // initial board
     
     mpPGNWin->FromPGN(pgn);
 
@@ -1302,35 +1329,39 @@ bool ZChessWin::FromPGN(ZChessPGN& pgn)
 
         if (move.IsGameResult(kWhite))
         {
-            cout << "Final result:" << pgn.GetTag(kResultTag) << "\n";
+            cout << "Final result:" << pgn.GetTag("Result") << "\n";
             bDone = true;
             break;
         }
         else
         {
-            //cout << "Before move - w:[" << move.whiteAction << "] b:" << move.blackAction << "\n";
-            //mBoard.DebugDump();
+            cout << "Before move - w:[" << move.whiteAction << "] b:" << move.blackAction << "\n";
+            board.DebugDump();
 
             ZPoint dst = move.DestFromAction(kWhite);
-            ZASSERT(mBoard.ValidCoord(dst));
+            ZASSERT(board.ValidCoord(dst));
 
-            ZPoint src = move.ResolveSourceFromAction(kWhite, mBoard);
-            ZASSERT(mBoard.ValidCoord(src));
+            ZPoint src = move.ResolveSourceFromAction(kWhite, board);
+            ZASSERT(board.ValidCoord(src));
 
             bool bRet;
 
             char promotion = move.IsPromotion(kWhite);
             if (promotion)
-                bRet = mBoard.PromotePiece(src, dst, promotion);
+                bRet = board.PromotePiece(src, dst, promotion);
             else
-                bRet = mBoard.MovePiece(src, dst, true);
+                bRet = board.MovePiece(src, dst, true);
             ZASSERT(bRet);
 
-            mHistory.push_back(mBoard);
+            mHistory.push_back(board);
 
             if (move.IsGameResult(kBlack))
             {
-                cout << "Final result:" << pgn.GetTag(kResultTag) << "\n";
+                mHistory[mHistory.size() - 1].SetResult(pgn.GetTag("Result"));
+
+                cout << "Final result:" << pgn.GetTag("Result") << "\n";
+                mpPGNWin->SetHalfMove(0);
+
                 bDone = true;
                 break;
             }
@@ -1338,22 +1369,22 @@ bool ZChessWin::FromPGN(ZChessPGN& pgn)
             {
 
                 //cout << "Before move - w:" << move.whiteAction << " b:[" << move.blackAction << "]\n";
-                //mBoard.DebugDump();
+                //board.DebugDump();
 
                 ZPoint dst = move.DestFromAction(kBlack);
-                ZASSERT(mBoard.ValidCoord(dst));
+                ZASSERT(board.ValidCoord(dst));
 
-                ZPoint src = move.ResolveSourceFromAction(kBlack, mBoard);
-                ZASSERT(mBoard.ValidCoord(src));
+                ZPoint src = move.ResolveSourceFromAction(kBlack, board);
+                ZASSERT(board.ValidCoord(src));
 
                 char promotion = move.IsPromotion(kBlack);
                 if (promotion)
-                    bRet = mBoard.PromotePiece(src, dst, promotion);
+                    bRet = board.PromotePiece(src, dst, promotion);
                 else
-                    bRet = mBoard.MovePiece(src, dst, true);
+                    bRet = board.MovePiece(src, dst, true);
                 ZASSERT(bRet);
 
-                mHistory.push_back(mBoard);
+                mHistory.push_back(board);
             }
         }
 

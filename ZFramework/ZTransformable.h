@@ -22,7 +22,7 @@ public:
 	double				mRotation;
 	uint32_t			mnAlpha;
 	int64_t				mnTimestamp;
-    std::string				msCompletionMessage;
+    std::string         msCompletionMessage;
 };
 
 //typedef std::list<cCETransformation> tTransformationList;

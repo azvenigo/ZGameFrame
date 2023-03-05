@@ -89,7 +89,8 @@ private:
 
     uint32_t    mFillColor;
     int64_t  mCurrentHalfMoveNumber;
-    ZFontParams mFont;
+    ZFontParams mMoveFont;
+    ZFontParams mTagsFont;
     ZFontParams mBoldFont;
     ZChessPGN mPGN;
 };
@@ -110,6 +111,8 @@ public:
     bool    OnKeyDown(uint32_t key);
     bool    OnKeyUp(uint32_t key);
 
+
+    bool    SetDemoMode(bool bDemo) { mbDemoMode = bDemo; } // load random game and play through it
 
     bool    Process();
     bool    Paint();
@@ -132,7 +135,7 @@ private:
 
     char    ScreenToPalettePiece(int64_t x, int64_t y);
 
-    void    LoadRandomPosition();
+    void    LoadRandomGame();
     bool    LoadPGN(std::string sFilename);
     bool    FromPGN(class ZChessPGN& pgn);
 
@@ -142,6 +145,9 @@ private:
     uint32_t SquareColor(const ZPoint& grid);
 
     ZDynamicFont*   mpSymbolicFont;
+
+    bool            mbDemoMode;
+    int64_t         mnDemoModeNextMoveTimeStamp;
 
 
     int64_t         mnPieceHeight;
@@ -162,19 +168,20 @@ private:
     ZRect mrPaletteArea;
 
 
-    ChessPiece mPieceData[128]; // keyed by ascii chars for pieces, 'r', 'Q', 'P', etc.
-    ChessBoard mBoard;
+    ChessPiece              mPieceData[128]; // keyed by ascii chars for pieces, 'r', 'Q', 'P', etc.
+    ChessBoard              mBoard;
 
-    tZBufferPtr mpDraggingPiece;
-    ZRect       mrDraggingPiece;
-    char        mDraggingPiece;
-    ZPoint      mDraggingSourceGrid;
+    tZBufferPtr             mpDraggingPiece;
+    ZRect                   mrDraggingPiece;
+    char                    mDraggingPiece;
+    ZPoint                  mDraggingSourceGrid;
 
-    ZPiecePromotionWin* mpPiecePromotionWin;
+    ZPiecePromotionWin*     mpPiecePromotionWin;
     ZPGNWin* mpPGNWin;
-    ZChoosePGNWin* mpChoosePGNWin;
+    ZChoosePGNWin*          mpChoosePGNWin;
 
-    std::vector<ChessBoard>   mHistory;   // boards for each move in pgn history, etc.
+    std::vector<ChessBoard> mHistory;   // boards for each move in pgn history, etc.
+    std::recursive_mutex    mHistoryMutex;
 
 
 

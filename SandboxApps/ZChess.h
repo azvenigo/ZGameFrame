@@ -101,8 +101,12 @@ public:
     ZPoint          GetEnPassantSquare() { return mEnPassantSquare; }
     uint32_t        GetHalfMovesSinceLastCaptureOrPawnAdvance() { return mHalfMovesSinceLastCaptureOrPawnAdvance; }
     uint32_t        GetMoveNumber() { return mFullMoveNumber; }
+    uint32_t        GetHalfMoveNumber() { return mHalfMoveNumber; }
     uint32_t        GetCastlingFlags() { return mCastlingFlags; }
 
+
+    std::string     GetResult() { return msResult; }
+    void            SetResult(std::string sResult) { msResult = sResult; }
 
 
     std::string     ToPosition(const ZPoint& grid);
@@ -125,8 +129,10 @@ protected:
     ZPoint          mEnPassantSquare;
     uint32_t        mHalfMovesSinceLastCaptureOrPawnAdvance;
     uint32_t        mFullMoveNumber;
+    uint32_t        mHalfMoveNumber;
 
     sMove           mLastMove;
+    std::string     msResult;
 
     uint8_t         mSquaresUnderAttackByWhite[8][8];
     uint8_t         mSquaresUnderAttackByBlack[8][8];
@@ -145,7 +151,7 @@ public:
         annotation  = _annotation;
     }
 
-    bool            ParseLine(const std::string& sSANLine);
+    bool            ParseLine(std::string sSANLine);
 
 
     char            PieceFromAction(bool bWhite);
@@ -172,7 +178,7 @@ private:
 };
 
 
-const std::string kEventTag = { "Event" };
+/*const std::string kEventTag = { "Event" };
 const std::string kSiteTag = { "Site" };
 const std::string kDateTag = { "Date" };
 const std::string kRoundTag = { "Round" };
@@ -182,10 +188,30 @@ const std::string kWhiteELO = { "WhiteElo" };
 const std::string kBlackELO = { "BlackElo" };
 const std::string kResultTag = { "Result" };
 const std::string kECOTag = { "ECO" };
+const std::string kOpeningTag = { "Opening" };
 const std::string kTimeControlTag = { "TimeControl" };
 const std::string kWhiteClockTag = { "WhiteClock" };
 const std::string kBlackClockTag = { "BlackClock" };
-const std::string kClockTag = { "Clock" };
+const std::string kClockTag = { "Clock" };*/
+
+const std::string pgnTags[] = 
+{
+    "Event",
+    "Site",
+    "Date",
+    "Round"
+    "White",
+    "WhiteElo",
+    "Black",
+    "BlackElo",
+    "Result",
+    "ECO",
+    "Opening",
+    "WhiteFideId",
+    "BlackFideId",
+    "EventDate",
+    "EventType"
+};
 
 class ZChessPGN
 {
@@ -195,15 +221,15 @@ public:
 
     bool ParsePGN(const std::string& sPGN);
 
-    bool IsDraw() { return GetTag(kResultTag) == "1/2-1/2"; }
-    bool WhiteWins() { return GetTag(kResultTag) == "1-0"; }
-    bool BlackWins() { return GetTag(kResultTag) == "0-1"; }
+    bool IsDraw() { return GetTag("Result") == "1/2-1/2"; }
+    bool WhiteWins() { return GetTag("Result") == "1-0"; }
+    bool BlackWins() { return GetTag("Result") == "0-1"; }
 
     std::string GetTag(const std::string& sTag);
 
 
     size_t GetMoveCount() { return mMoves.size(); }
-    size_t GetHalfMoveCount() { return (mMoves.size()-1) * 2 - (int)WhiteWins(); }  // if white wins, there's one less half move
+    size_t GetHalfMoveCount();
 
     std::unordered_map<std::string, std::string> mTags;
     std::vector<ZPGNSANEntry> mMoves;

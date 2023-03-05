@@ -92,6 +92,144 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
             ZWARNING("Error: Illegal move.\n");
             return false;
         }
+    }
+
+    bool bIsCapture = Opponent(c, gridDst);
+
+
+    if (bIsCapture || c == 'p' || c == 'P')
+        mHalfMovesSinceLastCaptureOrPawnAdvance = 0;
+    else
+        mHalfMovesSinceLastCaptureOrPawnAdvance++;
+
+    // castling
+    if (c == 'K')
+        mCastlingFlags &= ~(kWhiteKingSide | kWhiteQueenSide); // since white king is moving, no more castling
+
+    if (c == 'k')
+        mCastlingFlags &= ~(kBlackKingSide | kBlackQueenSide); // since black king is moving, no more castling
+
+    if (c == 'R' && gridSrc == kA1)
+        mCastlingFlags &= ~kWhiteQueenSide;     // queenside rook moving, no more castling this side
+    if (c == 'R' && gridSrc == kH1)
+        mCastlingFlags &= ~kWhiteKingSide;     // queenside rook moving, no more castling this side
+
+    if (c == 'r' && gridSrc == kA8)
+        mCastlingFlags &= ~kBlackQueenSide;     // queenside rook moving, no more castling this side
+    if (c == 'r' && gridSrc == kH8)
+        mCastlingFlags &= ~kBlackKingSide;     // queenside rook moving, no more castling this side
+
+    if (c == 'K' && gridSrc == kWhiteKingHome)   // white castling
+    {
+        if (gridDst == kC1)
+        {
+            // move rook
+            MovePiece(kA1, kD1, false);
+        }
+        else if (gridDst == kG1)
+        {
+            // move rook
+            MovePiece(kH1, kF1, false);
+        }
+    }
+
+    if (c == 'k' && gridSrc == kBlackKingHome)   // white castling
+    {
+        if (gridDst == kC8)
+        {
+            // move rook
+            MovePiece(kA8, kD8, false);
+        }
+        else if (gridDst == kG8)
+        {
+            // move rook
+            MovePiece(kH8, kF8, false);
+        }
+    }
+
+
+
+    // En passant capture?
+    if (c == 'p' && gridDst == mEnPassantSquare)
+        mBoard[mEnPassantSquare.y - 1][mEnPassantSquare.x] = 0;
+    if (c == 'P' && gridDst == mEnPassantSquare)
+        mBoard[mEnPassantSquare.y + 1][mEnPassantSquare.x] = 0;
+
+    // Creation of en passant square
+    mEnPassantSquare.Set(-1, -1);
+    // check for pawn moving two spaces for setting en passant
+    if (c == 'p' && gridSrc.y == 1 && gridDst.y == 3)
+        mEnPassantSquare.Set(gridDst.x, 2);
+    if (c == 'P' && gridSrc.y == 6 && gridDst.y == 4)
+        mEnPassantSquare.Set(gridDst.x, 5);
+
+
+
+    mLastMove.mSrc = gridSrc;
+    mLastMove.mDest = gridDst;
+
+
+    mBoard[gridDst.y][gridDst.x] = c;
+    mBoard[gridSrc.y][gridSrc.x] = 0;
+    ComputeSquaresUnderAttack();
+
+    if (bGameMove)
+    {
+        mHalfMoveNumber++;
+        if (!mbWhitesTurn)
+            mFullMoveNumber++;
+
+        mbWhitesTurn = !mbWhitesTurn;
+        ComputeCheckAndMate();
+    }
+
+    return true;
+}
+/*
+
+bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bGameMove)
+{
+    if (!ValidCoord(gridSrc))
+    {
+        ZDEBUG_OUT("Error: MovePiece src invalid:%d,%d\n", gridSrc.x, gridSrc.y);
+        return false;
+    }
+    if (!ValidCoord(gridDst))
+    {
+        ZDEBUG_OUT("Error: MovePiece dst invalid:%d,%d\n", gridDst.x, gridDst.y);
+        return false;
+    }
+
+    if (gridSrc == gridDst)
+        return false;
+
+
+    char c = mBoard[gridSrc.y][gridSrc.x];
+    if (c == 0)
+    {
+        ZDEBUG_OUT("Note: MovePiece src has no piece:%d,%d\n", gridSrc.x, gridSrc.y);
+        return false;
+    }
+
+    if (bGameMove)
+    {
+        if (mbWhitesTurn && !IsWhite(c))
+        {
+            ZWARNING("Error: White's turn.\n");
+            return false;
+        }
+
+        if (!mbWhitesTurn && IsWhite(c))
+        {
+            ZWARNING("Error: Black's turn.\n");
+            return false;
+        }
+
+        if (!LegalMove(gridSrc, gridDst))
+        {
+            ZWARNING("Error: Illegal move.\n");
+            return false;
+        }
 
         bool bIsCapture = Opponent(c, gridDst);
 
@@ -103,10 +241,10 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
 
         // castling
         if (c == 'K')
-            mCastlingFlags &= ~(kWhiteKingSide|kWhiteQueenSide); // since white king is moving, no more castling
+            mCastlingFlags &= ~(kWhiteKingSide | kWhiteQueenSide); // since white king is moving, no more castling
 
         if (c == 'k')
-            mCastlingFlags &= ~(kBlackKingSide|kBlackQueenSide); // since black king is moving, no more castling
+            mCastlingFlags &= ~(kBlackKingSide | kBlackQueenSide); // since black king is moving, no more castling
 
         if (c == 'R' && gridSrc == kA1)
             mCastlingFlags &= ~kWhiteQueenSide;     // queenside rook moving, no more castling this side
@@ -150,7 +288,7 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
 
         // En passant capture?
         if (c == 'p' && gridDst == mEnPassantSquare)
-            mBoard[mEnPassantSquare.y - 1][mEnPassantSquare.x] = 0;   
+            mBoard[mEnPassantSquare.y - 1][mEnPassantSquare.x] = 0;
         if (c == 'P' && gridDst == mEnPassantSquare)
             mBoard[mEnPassantSquare.y + 1][mEnPassantSquare.x] = 0;
 
@@ -169,6 +307,7 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
         mLastMove.mSrc = gridSrc;
         mLastMove.mDest = gridDst;
 
+        mHalfMoveNumber++;
         if (mbWhitesTurn)
             mFullMoveNumber++;
 
@@ -189,7 +328,7 @@ bool ChessBoard::MovePiece(const ZPoint& gridSrc, const ZPoint& gridDst, bool bG
 
     return true;
 }
-
+*/
 bool ChessBoard::PromotePiece(const ZPoint& gridSrc, const ZPoint& gridDst, char promotedPiece)
 {
     SetPiece(gridSrc, 0);
@@ -227,6 +366,7 @@ void ChessBoard::ResetBoard()
     mLastMove.mDest.Set(-1, -1);
     mHalfMovesSinceLastCaptureOrPawnAdvance = 0;
     mFullMoveNumber = 1;
+    mHalfMoveNumber = 1;
     mbCheck = false;
     mbCheckMate = false;
     ComputeSquaresUnderAttack();
@@ -468,6 +608,10 @@ void ChessBoard::ComputeCheckAndMate()
         }
 
         mbCheckMate = true;
+        if (mbWhitesTurn)
+            msResult = "1-0";
+        else
+            msResult = "0-1";
     }
     int64_t nEnd = gTimer.GetUSSinceEpoch();
     ZDEBUG_OUT("ComputeCheckAndMate time:", nEnd - nStart);
@@ -1023,12 +1167,12 @@ bool ChessBoard::GetMovesThatSatisfy(char piece, bool bAttack, const ZPoint& end
                 ZPoint src(x, y);
                 GetMoves(c, src, pieceMoves, pieceAttacks);
 
-                if (bAttack && IsOneOfMoves(endSquare, pieceAttacks))
+                if (bAttack && IsOneOfMoves(endSquare, pieceAttacks) && LegalMove(src, endSquare))
                 {
                     moves.push_back(sMove(src, endSquare));
                 }
 
-                if (!bAttack && IsOneOfMoves(endSquare, pieceMoves))
+                if (!bAttack && IsOneOfMoves(endSquare, pieceMoves) && LegalMove(src, endSquare))
                 {
                     moves.push_back(sMove(src, endSquare));
                 }
@@ -1230,6 +1374,7 @@ bool ChessBoard::FromFEN(const string& sFEN)
     nIndex += (int)sHalfMoves.length()+1;
 
     mFullMoveNumber = (uint32_t)StringHelpers::ToInt(sFEN.substr(nIndex));      // last value
+    mHalfMoveNumber = mFullMoveNumber + (int)!mbWhitesTurn;  // +1 if it's black's turn
 
     ComputeSquaresUnderAttack();
     ComputeCheckAndMate();
@@ -1261,6 +1406,7 @@ void ChessBoard::DebugDump()
     }
 
     cout << "move:" << mFullMoveNumber << "\n";
+    cout << "halfmove:" << mHalfMoveNumber << "\n";
     cout << table << std::flush;
 }
 
@@ -1291,6 +1437,20 @@ size_t FindNextWhitespace(const string& sText, size_t nStart = 0)
         return string::npos;
 
     return pText - (uint8_t*)sText.c_str();
+}
+
+
+size_t ZChessPGN::GetHalfMoveCount() 
+{ 
+    if (mMoves.empty())
+        return 0;
+
+    size_t nHalfMoves = mMoves.size() * 2-1; 
+    string sResult = GetTag("Result");
+    if (mMoves[mMoves.size() - 1].whiteAction == sResult || (mMoves[mMoves.size() - 1].blackAction == sResult))     // if last entry on last move is a result, there's one less half move
+        nHalfMoves--;
+
+    return nHalfMoves;
 }
 
 
@@ -1453,7 +1613,7 @@ ZPoint ZPGNSANEntry::ResolveSourceFromAction(bool bWhite, ChessBoard& board)
             return kE8;
     }
 
-    bool bAttack = Contains(action, "+");
+    bool bAttack = Contains(action, "x");
 
     char c = PieceFromAction(bWhite);
     ZASSERT(c == 'q' || c == 'Q' || c == 'k' || c == 'K' || c == 'n' || c == 'N' || c == 'R' || c == 'r' || c == 'b' || c == 'B' || c == 'p' || c == 'P');
@@ -1531,6 +1691,11 @@ ZPoint ZPGNSANEntry::DestFromAction(bool bWhite)
         if (whiteAction[whiteAction.length() - 1] == '+')
             return LocationFromText(whiteAction.substr(whiteAction.length() - 3, 2));     // destination will be last two chars before +
 
+        // checkmate
+        if (whiteAction[whiteAction.length() - 1] == '#')
+            return LocationFromText(whiteAction.substr(whiteAction.length() - 3, 2));     // destination will be last two chars before #
+
+
         return LocationFromText(whiteAction.substr(whiteAction.length() - 2, 2)); // destination will be last two chars
 
     }
@@ -1552,12 +1717,30 @@ ZPoint ZPGNSANEntry::DestFromAction(bool bWhite)
     if (blackAction[blackAction.length() - 1] == '+')
         return LocationFromText(blackAction.substr(blackAction.length() - 3, 2));     // destination will be last two chars before +
 
+    // checkmate
+    if (blackAction[blackAction.length() - 1] == '#')
+        return LocationFromText(blackAction.substr(blackAction.length() - 3, 2));     // destination will be last two chars before #
+
+
     return LocationFromText(blackAction.substr(blackAction.length() - 2, 2)); // destination will be last two chars
 }
 
 
-bool ZPGNSANEntry::ParseLine(const std::string& sSANLine)
+bool ZPGNSANEntry::ParseLine(std::string sSANLine)
 {
+    // extract commentary if it exists
+    size_t nStartComment = sSANLine.find("{");
+    if (nStartComment != string::npos)
+    {
+        size_t nEndComment = sSANLine.find("}", nStartComment + 1);
+
+        annotation = sSANLine.substr(nStartComment+1, nEndComment - nStartComment);
+
+        sSANLine.erase(nStartComment, nEndComment - nStartComment+1);
+
+    }
+
+
     size_t nMoveEndIndex = sSANLine.find(".", 0);
     if (nMoveEndIndex == string::npos)
     {
@@ -1686,8 +1869,8 @@ string ZPGNSANEntry::DisambiguationChars(bool bWhite)
         return "";
 
     char c = action[0];
-    if (c == 'Q' || c == 'K' || c == 'N' || c == 'R' || c == 'B' || c == 'P' ||
-        c == 'q' || c == 'k' || c == 'n' || c == 'r' || c == 'b' || c == 'p')
+    if (c == 'Q' || c == 'K' || c == 'N' || c == 'R' || c == 'B' || c == 'P'/* ||
+        c == 'q' || c == 'k' || c == 'n' || c == 'r' || c == 'b' || c == 'p'*/)
     {
         return action.substr(1, 2);     // two characters following the piece name
     }

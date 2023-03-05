@@ -34,6 +34,7 @@ public:
 
     virtual void		SetScrollable(bool bScrollable = true);
     virtual void        SetDrawBorder(bool bDraw = true) { mbDrawBorder = bDraw; }
+    virtual void        SetUnderlineLinks(bool bUnderline = true) { mbUnderlineLinks = bUnderline; }
 	virtual void		Clear();
     virtual void        SetFill(uint32_t nCol, bool bEnable = true) { mnFillColor = nCol; mbFillBackground = bEnable; }
 	virtual void		AddTextLine(std::string sLine, ZFontParams fontParams, uint32_t nCol1, uint32_t nCol2, ZFont::eStyle style = ZFont::kNormal, ZFont::ePosition = ZFont::kBottomLeft, bool bWrap = true, const std::string& sLink = "");

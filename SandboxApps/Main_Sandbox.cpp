@@ -42,7 +42,7 @@ size_t                  gDebugHistoryCounter = 0;
 ZMessageSystem          gMessageSystem;
 ZTickManager            gTickManager;
 ZAnimator               gAnimator;
-int64_t                 gnCheckerWindowCount = 49;
+int64_t                 gnCheckerWindowCount = 8;
 int64_t                 gnLifeGridSize = 500;
 ZWin*                   gpCaptureWin = nullptr;
 ZWin*                   gpMouseOverWin = nullptr;
@@ -134,6 +134,8 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 		int64_t nSubWidth = (int64_t) (grFullArea.Width() / (sqrt(gnCheckerWindowCount)));
         int64_t nSubHeight = (int64_t) (nSubWidth / gGraphicSystem.GetAspectRatio());
 
+        int n3DCount = 0;
+
 		for (int64_t y = 0; y < grFullArea.Height(); y += nSubHeight)
 		{
 			for (int64_t x = 0; x < grFullArea.Width(); x += nSubWidth)
@@ -150,10 +152,27 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 				}
 				else
 				{
-					cLifeWin* pWin = new cLifeWin();
-					pWin->SetArea(rSub);
-					pWin->SetGridSize((int64_t) (rSub.Width()/(4.0)), (int64_t) (rSub.Height()/4.0));
-					gpMainWin->ChildAdd(pWin);
+                    if (n3DCount < 5 && RANDI64(0, 10) == 1)
+                    {
+                        n3DCount++;
+                        Z3DTestWin* pWin = new Z3DTestWin();
+                        pWin->SetArea(rSub);
+                        pWin->SetControlPanelEnabled(false);
+
+                        uint32_t nCol1 = RANDU64(0xff000000, 0xffffffff);
+                        uint32_t nCol2 = RANDU64(0xff000000, 0xffffffff);
+
+                        gpMainWin->ChildAdd(pWin);
+                    }
+                    else
+                    {
+                        cLifeWin* pWin = new cLifeWin();
+                        pWin->SetArea(rSub);
+                        pWin->SetGridSize((int64_t)(rSub.Width() / (4.0)), (int64_t)(rSub.Height() / 4.0));
+                        gpMainWin->ChildAdd(pWin);
+                    }
+
+                    
 				}
 			}
 		}
