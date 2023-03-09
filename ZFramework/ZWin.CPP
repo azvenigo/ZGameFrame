@@ -715,7 +715,7 @@ bool ZWin::HandleMessage(const ZMessage& message)
 
 #ifdef _DEBUG
 	// If the message is targeted, this had better be the target window
-	if (message.HasTarget() && message.GetTarget() == GetTargetName())
+	if (message.GetTarget() == GetTargetName())
 	{
 		ZASSERT_MESSAGE(false, string(string("Targeted message:\"") + string(message.ToString()) + string("\" was not handled!")).c_str());
 	}

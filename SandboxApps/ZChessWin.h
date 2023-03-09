@@ -181,6 +181,7 @@ private:
     std::vector<ChessBoard> mHistory;   // boards for each move in pgn history, etc.
     std::recursive_mutex    mHistoryMutex;
 
+    int64_t                 mAutoplayMSBetweenMoves;
 
 
     // watch panel

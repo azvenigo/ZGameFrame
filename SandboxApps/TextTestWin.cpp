@@ -163,7 +163,7 @@ bool TextTestWin::Init()
     for (int i = 0; i < gWindowsFontFacenames.size(); i++)
     {
         string sMessage;
-        Sprintf(sMessage, "link=\"<msg>type=setcustomfont;fontindex=%d;target=TextTestWin</msg>\"", i);
+        Sprintf(sMessage, "link=setcustomfont;fontindex=%d;target=TextTestWin", i);
 
         sDialogScript += "<line wrap=0><text size=2 color=0xffffffff color2=0xffffffff style=normal ";
         sDialogScript += sEncodedFontParams;
@@ -173,10 +173,10 @@ bool TextTestWin::Init()
         sDialogScript += "</text></line>";
     }
     sDialogScript += "</textwin>";
-//    sDialogScript += "<btn size=4 area=0,0,200,30 color=0xff000000 style=normal message=\"<msg>type=kill_window;target=fontselectionwin</msg>\">Done</btn>";
+//    sDialogScript += "<btn size=4 area=0,0,200,30 color=0xff000000 style=normal message=\"<msg>kill_window;target=fontselectionwin</msg>\">Done</btn>";
     sDialogScript += "</scripteddialog>";
 
-//    sDialogScript += "<btn size=4 area=" + RectToString(grBottomRightButton) + " color=0xff000000 color2=0xff000000 style=normal position=middlecenter message=\"<msg>type=kill_window;target=optionswin</msg>\">Done</btn>";
+//    sDialogScript += "<btn size=4 area=" + RectToString(grBottomRightButton) + " color=0xff000000 color2=0xff000000 style=normal position=middlecenter message=\"<msg>kill_window;target=optionswin</msg>\">Done</btn>";
 
 //    ZXMLNode doc;
 //    doc.Init(sDialogScript);
@@ -197,35 +197,35 @@ bool TextTestWin::Init()
 
     tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
 
-//    pCP->AddButton("Custom Font", "type=setcustomfont;target=TextTestWin");
+//    pCP->AddButton("Custom Font", "setcustomfont;target=TextTestWin");
     pCP->AddCaption("Height", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
 
-    pCP->AddSlider(&mCustomFontParams.nHeight, 8, 200, 2, "type=setcustomfont;target=TextTestWin", true, false, pBtnFont);
+    pCP->AddSlider(&mCustomFontParams.nHeight, 8, 200, 2, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
     pCP->AddCaption("Weight", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
-    pCP->AddSlider(&mCustomFontParams.nWeight, 2, 9, 100, "type=setcustomfont;target=TextTestWin", true, false, pBtnFont);
+    pCP->AddSlider(&mCustomFontParams.nWeight, 2, 9, 100, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
     pCP->AddCaption("Tracking", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
-    pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "type=setfonttracking;target=TextTestWin", true, false, pBtnFont);
+    pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "setfonttracking;target=TextTestWin", true, false, pBtnFont);
 
     pCP->AddCaption("Fixed Width", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
-    pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, "type=setcustomfont;target=TextTestWin", true, false, pBtnFont);
+    pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
-    pCP->AddToggle(&mCustomFontParams.bUnderline, "Underline", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bUnderline, "Underline", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
-    pCP->AddToggle(&mCustomFontParams.bStrikeOut, "StrikeOut", "type=setcustomfont;target=TextTestWin", "type=setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bStrikeOut, "StrikeOut", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
 
 
     pCP->AddSpace(16);
 
-    pCP->AddToggle(&mbEnableKerning, "View Kerning", "type=togglekerning;enable=1;target=TextTestWin", "type=togglekerning;enable=0;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbEnableKerning, "View Kerning", "togglekerning;enable=1;target=TextTestWin", "togglekerning;enable=0;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
     pCP->AddSpace(16);
 
-    pCP->AddButton("Load Font", "type=loadfont;target=TextTestWin", pBtnFont, 0xff737373, 0xff737373, ZFont::kEmbossed);
-    pCP->AddButton("Save Font", "type=savefont;target=TextTestWin", pBtnFont, 0xff737373, 0xff737373, ZFont::kEmbossed);
+    pCP->AddButton("Load Font", "loadfont;target=TextTestWin", pBtnFont, 0xff737373, 0xff737373, ZFont::kEmbossed);
+    pCP->AddButton("Save Font", "savefont;target=TextTestWin", pBtnFont, 0xff737373, 0xff737373, ZFont::kEmbossed);
 
     ChildAdd(pCP);
 

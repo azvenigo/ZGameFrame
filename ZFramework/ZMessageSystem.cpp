@@ -20,17 +20,43 @@ ZMessage::ZMessage()
 	gTotalMessageCount++;
 }
 
-ZMessage::ZMessage(const string& sMessage)
+ZMessage::ZMessage(const string& sType, const string& sRawMessage, IMessageTarget* pTarget)
+{
+    mType = sType;
+    gTotalMessageCount++;
+    FromString(sRawMessage);
+    if (pTarget)
+        mTarget = pTarget->GetTargetName();
+}
+
+ZMessage::ZMessage(const std::string& sRaw, class IMessageTarget* pTarget)
+{
+    if (sRaw.find(";") != string::npos)
+    {
+        FromString(sRaw);
+    }
+    else
+        mType = sRaw;
+    if (pTarget)
+        mTarget = pTarget->GetTargetName();
+    gTotalMessageCount++;
+}
+
+
+
+/*ZMessage::ZMessage(const string& sMessage)
 {
 	gTotalMessageCount++;
 	FromString(sMessage);
 	ZASSERT_MESSAGE(HasParam("type"), string("Posted message:\"" + sMessage + "\" has no 'type' field.").c_str());
-};
+};*/
 
-ZMessage::ZMessage(const ZMessage& message)
+ZMessage::ZMessage(const ZMessage& rhs)
 {
 	gTotalMessageCount++;
-	mKeyValueMap = message.mKeyValueMap;
+	mKeyValueMap = rhs.mKeyValueMap;
+    mType = rhs.mType;
+    mTarget = rhs.mTarget;
 }
 
 ZMessage::~ZMessage()
@@ -67,54 +93,61 @@ void ZMessage::FromString(const string& sMessage)
 {
 	mKeyValueMap.clear();
 
-	// If the message has no 'msg=' then we treat the whole string as a single message
-	if (ZXMLNode::FindSubstring(sMessage, "type=") == -1)
-	{
-		mKeyValueMap["type"] = sMessage;
-	}
-	else
-	{
-		string sParse(sMessage);
+	string sParse(sMessage);
+    StringHelpers::SplitToken(mType, sParse, ";");  // first element
 
-		bool bDone = false;
-		while (!bDone)
-		{
-			string sPair;
-			StringHelpers::SplitToken(sPair, sParse, ";");
-			if (!sPair.empty())
-			{
-				string sKey;
-                StringHelpers::SplitToken(sKey, sPair, "=");
-				ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
-				ZASSERT_MESSAGE(!sPair.empty(), "Value is empty!");
-				mKeyValueMap[sKey] = sPair;	// sPair now contains the value;
-			}
-			else
-				bDone = true;
-		}
-
-		// Last key value pair
-		if (!sParse.empty())
+	bool bDone = false;
+	while (!bDone)
+	{
+		string sPair;
+		StringHelpers::SplitToken(sPair, sParse, ";");
+		if (!sPair.empty())
 		{
 			string sKey;
-            StringHelpers::SplitToken(sKey, sParse, "=");
+            StringHelpers::SplitToken(sKey, sPair, "=");
 			ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
-			ZASSERT_MESSAGE(!sParse.empty(), "Value is empty!");
-			mKeyValueMap[sKey] = sParse;	// sParse now contains the value;
-		}
+			ZASSERT_MESSAGE(!sPair.empty(), "Value is empty!");
+            if (sKey == "target")
+                mTarget = sPair;
+            else if (sKey == "type")
+                mType = sPair;
+            else
+                mKeyValueMap[sKey] = StringHelpers::URL_Decode(sPair);	// sParse now contains the value;
+        }
+		else
+			bDone = true;
+	}
+
+	// Last key value pair
+	if (!sParse.empty())
+	{
+		string sKey;
+        StringHelpers::SplitToken(sKey, sParse, "=");
+		ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
+		ZASSERT_MESSAGE(!sParse.empty(), "Value is empty!");
+        if (sKey == "target")
+            mTarget = sParse;
+        else if (sKey == "type")
+            mType = sParse;
+        else
+			mKeyValueMap[sKey] = StringHelpers::URL_Decode(sParse);	// sParse now contains the value;
 	}
 }
 
 string ZMessage::ToString() const
 {
-	string sRaw;
+    string sRaw(mType + ";");
+    if (!mTarget.empty())
+        sRaw += "target=" + mTarget + ";";
+
 	for (tKeyValueMap::const_iterator it = mKeyValueMap.begin(); it != mKeyValueMap.end(); it++)
 	{
-		sRaw += (*it).first + "=" + (*it).second + ";";
+		sRaw += (*it).first + "=" + StringHelpers::URL_Encode((*it).second) + ";";
 	}
 
 	return sRaw.substr(0, sRaw.length()-1);	// return everything but the final ';'
 }
+
 
 
 
@@ -144,10 +177,10 @@ void ZMessageSystem::Process()
 	{
 		ZMessage& msg = *mMessageQueue.begin();
 
-		if (msg.HasTarget())
+        string sTarget(msg.GetTarget());
+		if (!sTarget.empty())
 		{
-            string sTarget(msg.GetTarget().c_str());
-			tNameToMessageTargetMap::iterator it = mNameToMessageTargetMap.find(msg.GetTarget());
+			tNameToMessageTargetMap::iterator it = mNameToMessageTargetMap.find(sTarget);
 			//CEASSERT_MESSAGE(it != mNameToMessageTargetMap.end(), string("Target:\"" + msg.GetTarget() + "\" not registerred in message system!").c_str());
 			if (it != mNameToMessageTargetMap.end())
 			{
@@ -206,7 +239,6 @@ void ZMessageSystem::RemoveNotification(const string& sMessageType, IMessageTarg
 
 void ZMessageSystem::RemoveAllNotifications(IMessageTarget* pTarget)
 {
-//	CEASSERT( _CrtCheckMemory() == TRUE );
 	for (tMessageToMessageTargetsMap::iterator messageTypeIt = mMessageToMessageTargetsMap.begin(); messageTypeIt != mMessageToMessageTargetsMap.end();)
 	{
 		tMessageToMessageTargetsMap::iterator messageTypeItNext = messageTypeIt;
@@ -216,7 +248,6 @@ void ZMessageSystem::RemoveAllNotifications(IMessageTarget* pTarget)
 
 		messageTypeIt = messageTypeItNext;
 	}
-//	CEASSERT( _CrtCheckMemory() == TRUE );
 }
 
 void ZMessageSystem::RegisterTarget(IMessageTarget* pTarget)
@@ -236,34 +267,22 @@ void ZMessageSystem::UnregisterTarget(IMessageTarget* pTarget)
 }
 
 
-void ZMessageSystem::Post(string sRawMessages)
-{
-//	ZDEBUG_OUT("Post - \"%s\"\n", sRawMessages.c_str());
-	// there can be multiple messages surrounded by "<msg>" and "</msg>"
-	string sMessage;
-	while (ZXMLNode::GetField(sRawMessages, "msg", sMessage))
-	{
-			ZMessage msg(sMessage);
-			mMessageQueue.push_back(msg);
-			sRawMessages = sRawMessages.substr((int) sMessage.length() + 11); // 5 for <msg> and 6 for </msg>
-	}
 
-	// post the last message
-	if (!sRawMessages.empty())
-	{
-		if (sRawMessages.substr(0, 5) == "<msg>")
-		{
-			ZASSERT_MESSAGE(sRawMessages.substr(sRawMessages.length()-6) == "</msg", "Message delimiter does not end with \"</msg>\"");
-			sRawMessages = sRawMessages.substr(5, sRawMessages.length()-11);	// -5 for <msg> and -6 for </msg>
-		}
-//		ZMessage msg(sRawMessages);
-		mMessageQueue.emplace_back(sRawMessages);
-	}
+void ZMessageSystem::Post(string sRaw, IMessageTarget* pTarget)
+{
+    mMessageQueue.push_back(std::move(ZMessage(sRaw, pTarget)));
 }
 
-void ZMessageSystem::Post(ZMessage& message)
+
+void ZMessageSystem::Post(ZMessage& msg, IMessageTarget* pTarget)
 {
-	mMessageQueue.push_back(std::move(message));
+    if (pTarget)
+    {
+        ZASSERT(!pTarget->GetTargetName().empty());
+        msg.mTarget = pTarget->GetTargetName();
+    }
+
+    mMessageQueue.push_back(std::move(msg));
 }
 
 string ZMessageSystem::GenerateUniqueTargetName()

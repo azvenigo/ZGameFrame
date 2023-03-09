@@ -16,9 +16,6 @@
 using namespace std;
 
 
-const int64_t kUSBetweenMoves = 1000000;
-
-
 ZChoosePGNWin::ZChoosePGNWin()
 {
     msWinName = "choosepgnwin";
@@ -49,7 +46,8 @@ bool ZChoosePGNWin::Init()
     pBtn->SetColors(0xffffffff, 0xffffffff);
     pBtn->SetStyle(ZFont::kNormal);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage("type=cancelpgnselect;target=chesswin");
+    //pBtn->SetMessage("cancelpgnselect;target=chesswin");
+    pBtn->SetMessage(ZMessage("cancelpgnselect", mpParentWin));
     ChildAdd(pBtn);
 
     ZRect rGameTags(gDefaultSpacer, gDefaultSpacer + mFont.nHeight * 2, mAreaToDrawTo.Width() - gDefaultSpacer, rButton.top - gDefaultSpacer);
@@ -126,7 +124,7 @@ bool ZChoosePGNWin::ListGamesFromPGN(string& sFilename, string& sPGNFile)
 
 
 
-            string sListBoxEntry = "<line wrap=0><text size=0 color=0xff000000 color2=0xff000000 position=MiddleLeft link=type=setpgn;contents="+ StringHelpers::URL_Encode(sPGNContent) +";target=chesswin>" + StringHelpers::FromInt(nCount) + ". " +
+            string sListBoxEntry = "<line wrap=0><text size=0 color=0xff000000 color2=0xff000000 position=MiddleLeft link=setpgn;contents="+ StringHelpers::URL_Encode(sPGNContent) +";target=" + mpParentWin->GetTargetName() + ">" + StringHelpers::FromInt(nCount) + ". " +
                 sDate + "/" + sEventName + "/"+ sSiteName + "/" + sRound +"</text></line>";
             mpGamesList->AddTextLine(sListBoxEntry, mFont, 0xffffffff, 0xffffffff, ZFont::kNormal, ZFont::kBottomRight, false);
 
@@ -192,7 +190,8 @@ bool ZPGNWin::Init()
     pBtn->SetColors(0xffffffff, 0xffffffff);
     pBtn->SetStyle(ZFont::kNormal);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage("type=beginning;target=pgnwin");
+//    pBtn->SetMessage("beginning;target=pgnwin");
+    pBtn->SetMessage(ZMessage("beginning", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
@@ -203,7 +202,8 @@ bool ZPGNWin::Init()
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage("type=backone;target=pgnwin");
+//    pBtn->SetMessage("backone;target=pgnwin");
+    pBtn->SetMessage(ZMessage("backone", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
@@ -214,7 +214,8 @@ bool ZPGNWin::Init()
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage("type=forwardone;target=pgnwin");
+//    pBtn->SetMessage("forwardone;target=pgnwin");
+    pBtn->SetMessage(ZMessage("forwardone", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
@@ -225,7 +226,8 @@ bool ZPGNWin::Init()
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage("type=end;target=pgnwin");
+//    pBtn->SetMessage("end;target=pgnwin");
+    pBtn->SetMessage(ZMessage("end", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
@@ -236,7 +238,8 @@ bool ZPGNWin::Init()
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width() *2, 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage("type=loadgame;target=chesswin");
+//    pBtn->SetMessage("loadgame;target=chesswin");
+    pBtn->SetMessage(ZMessage("loadgame", mpParentWin));
     ChildAdd(pBtn);
 
 
@@ -248,7 +251,8 @@ bool ZPGNWin::Init()
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage("type=savegame;target=chesswin");
+//    pBtn->SetMessage("savegame;target=chesswin");
+    pBtn->SetMessage(ZMessage("savegame", mpParentWin));
     ChildAdd(pBtn);
 
     ZRect rMoves(rGameTags.left, rGameTags.bottom + gDefaultSpacer, rGameTags.right, rButton.top - gDefaultSpacer * 2);
@@ -334,22 +338,22 @@ void ZPGNWin::UpdateView()
             if ((mCurrentHalfMoveNumber+1) % 2 == 0)
             {
                 // highlight white
-                sMoveLine = "<line wrap=0><text size=0 color=0xff0088ff color2=0xff0088ff position=MiddleLeft link=type=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". [" + move.whiteAction + "]</text>";
-                sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=type=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">" + move.blackAction + "</text></line>";
+                sMoveLine = "<line wrap=0><text size=0 color=0xff0088ff color2=0xff0088ff position=MiddleLeft link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". [" + move.whiteAction + "]</text>";
+                sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">" + move.blackAction + "</text></line>";
             }
             else
             {
                 // highlight black
-                sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=type=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
-                sMoveLine += "<text size=0 color=0xff0088ff color2=0xff0088ff position=middleRight link=type=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">[" + move.blackAction + "]</text></line>";
+                sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
+                sMoveLine += "<text size=0 color=0xff0088ff color2=0xff0088ff position=middleRight link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">[" + move.blackAction + "]</text></line>";
             }
             mpMovesWin->AddTextLine(sMoveLine, mBoldFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
         }
         else
         {
 
-            sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=type=setmove;target=pgnwin;halfmove="+ StringHelpers::FromInt(nHalfMove-1) +">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
-            sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=type=setmove;target=pgnwin;halfmove="+StringHelpers::FromInt(nHalfMove)+">" + move.blackAction + "</text></line>";
+            sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=setmove;target=pgnwin;halfmove="+ StringHelpers::FromInt(nHalfMove-1) +">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
+            sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=setmove;target=pgnwin;halfmove="+StringHelpers::FromInt(nHalfMove)+">" + move.blackAction + "</text></line>";
             mpMovesWin->AddTextLine(sMoveLine, mMoveFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
         }
 
@@ -368,9 +372,10 @@ bool ZPGNWin::SetHalfMove(int64_t nHalfMove)
     if (nHalfMove >= 0 && nHalfMove < mPGN.GetHalfMoveCount())
     {
         mCurrentHalfMoveNumber = nHalfMove;
-        string sMessage;
-        Sprintf(sMessage, "type=sethistoryindex;target=chesswin;halfmove=%d", mCurrentHalfMoveNumber);
-        gMessageSystem.Post(sMessage);
+//        string sMessage;
+//        Sprintf(sMessage, "sethistoryindex;target=chesswin;halfmove=%d", mCurrentHalfMoveNumber);
+//        gMessageSystem.Post(sMessage);
+        gMessageSystem.Post("sethistoryindex", mpParentWin, "halfmove", mCurrentHalfMoveNumber);
         UpdateView();
         return true;
     }    
@@ -416,18 +421,20 @@ bool ZPGNWin::HandleMessage(const ZMessage& message)
 
 ZChessWin::ZChessWin()
 {
-    msWinName = "chesswin";
+    msWinName = "chesswin" + gMessageSystem.GenerateUniqueTargetName();
+
     mpSymbolicFont = nullptr;
     mDraggingPiece = 0;
     mDraggingSourceGrid.Set(-1, -1);
     mHiddenSquare.Set(-1, -1);
     mbEditMode = false;
-    mbShowAttackCount = true;
+    mbShowAttackCount = false;
     mpPiecePromotionWin = nullptr;
     mpPGNWin = nullptr;
     mpChoosePGNWin = nullptr;
     mbDemoMode = false;
     mnDemoModeNextMoveTimeStamp = 0;
+    mAutoplayMSBetweenMoves = 1000;
 }
    
 bool ZChessWin::Init()
@@ -462,25 +469,30 @@ bool ZChessWin::Init()
 
         tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
 
+        string invalidateMsg(ZMessage("invalidate", this));
+
         pCP->Init();
 
         pCP->AddCaption("Piece Height", gDefaultTitleFont);
-        pCP->AddSlider(&mnPieceHeight, 1, 26, 10, "type=updatesize;target=chesswin", true, false, pBtnFont);
+        pCP->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, pBtnFont);
         //    pCP->AddSpace(16);
-        pCP->AddToggle(&mbEditMode, "Edit Mode", "type=invalidate;target=chesswin", "type=invalidate;target=chesswin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddToggle(&mbEditMode, "Edit Mode", invalidateMsg, invalidateMsg, "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
-        pCP->AddButton("Change Turn", "type=changeturn;target=chesswin", pBtnFont, 0xffffffff, 0xff000000, ZFont::kShadowed);
+        pCP->AddButton("Change Turn", ZMessage("changeturn", this), pBtnFont, 0xffffffff, 0xff000000, ZFont::kShadowed);
 
-        pCP->AddButton("Clear Board", "type=clearboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddButton("Reset Board", "type=resetboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Clear Board", ZMessage("clearboard", this), pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Reset Board", ZMessage("resetboard", this), pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
         pCP->AddSpace(panelH / 30);
 
-        pCP->AddButton("Load Position", "type=loadboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddButton("Save Position", "type=saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+/*        pCP->AddButton("Load Position", "loadboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Save Position", "saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);*/
 
         pCP->AddSpace(panelH / 30);
-        pCP->AddButton("Load Random Game", "type=randgame;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddToggle(&mbDemoMode, "Demo Mode", "type=invalidate;target=chesswin", "type=invalidate;target=chesswin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Load Random Game", ZMessage("randgame", this), pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg, "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+
+        pCP->AddCaption("Playback Speed", gDefaultTitleFont);
+        pCP->AddSlider(&mAutoplayMSBetweenMoves, 1, 100, 250);
 
         ChildAdd(pCP);
 
@@ -740,10 +752,11 @@ bool ZChessWin::Process()
             else
             {
                 ZDEBUG_OUT("Setting halfmove:", mBoard.GetHalfMoveNumber() + 1);
-                mnDemoModeNextMoveTimeStamp = gTimer.GetUSSinceEpoch() + kUSBetweenMoves;
-                string sMessage;
-                Sprintf(sMessage, "type=sethistoryindex;target=chesswin;halfmove=%d", mBoard.GetHalfMoveNumber());
-                gMessageSystem.Post(sMessage);
+                mnDemoModeNextMoveTimeStamp = gTimer.GetUSSinceEpoch() + (mAutoplayMSBetweenMoves*1000);
+                //string sMessage;
+                //Sprintf(sMessage, "sethistoryindex;target=chesswin;halfmove=%d", mBoard.GetHalfMoveNumber());
+                //gMessageSystem.Post(sMessage);
+                gMessageSystem.Post("sethistoryindex", this, "halfmove", mBoard.GetHalfMoveNumber());
             }
         }
     }
@@ -758,7 +771,7 @@ bool ZChessWin::Paint()
     if (!mbInvalid)
         return true;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, 0xff0000ff);
+    mpTransformTexture->Fill(mAreaToDrawTo, 0xff000000);
     DrawBoard();
 
     if (mpDraggingPiece)
@@ -1018,7 +1031,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         }
         return true;
     }
-    else if (sType == "loadboard")
+/*    else if (sType == "loadboard")
     {
         string sFilename;
         if (ZWinFileDialog::ShowLoadDialog("Forsyth-Edwards Notation", "*.FEN", sFilename))
@@ -1043,7 +1056,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             WriteStringToFile(filepath.string(), mBoard.ToFEN());
         }
         return true;
-    }
+    }*/
     else if (sType == "loadgame")
     {
         string sFilename;
@@ -1085,7 +1098,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "promote")
     {
-        // type=promote;piece=%c;x=%d;y=%d;target=chesswin
+        // promote;piece=%c;x=%d;y=%d;target=chesswin
         if (message.HasParam("piece"))
         {
             char c = message.GetParam("piece")[0];
@@ -1102,6 +1115,12 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "sethistoryindex")
     {
+        if (mHistory.empty())
+        {
+            ZWARNING("No game history");
+            return true;
+        }
+
         int64_t nHalfMove = StringHelpers::ToInt(message.GetParam("halfmove"));
         const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
         if (nHalfMove >= 0)
@@ -1121,12 +1140,14 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
                 ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mPieceData[mBoard.Piece(move.mDest)].mpImage.get());
                 pImage->StartTransformation(ZTransformation(ZPoint(rSrcSquareArea.left, rSrcSquareArea.top)));
 
-                int nTransformTime = (kUSBetweenMoves/1000) / 2;
+                int nTransformTime = (mAutoplayMSBetweenMoves) / 2;
+                if (nTransformTime > 500)
+                    nTransformTime = 500;
                 ;
-                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, "type=hidesquare;x=-1;y=-1;target=chesswin"), nTransformTime);
-                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 17);    // 17ms to at least cover 60fps
+                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, ZMessage("hidesquare;x=-1;y=-1", this)), nTransformTime);
+                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 33);    // 33ms to at least cover 30fps
                 pImage->SetDestination(mpTransformTexture);
-                //pImage->SetCompletionMessage("type=hidesquare;x=-1;y=-1;target=chesswin");  // clear the hidden square on completion
+                //pImage->SetCompletionMessage("hidesquare;x=-1;y=-1;target=chesswin");  // clear the hidden square on completion
                 mHiddenSquare = move.mDest;
                 mpAnimator->AddObject(pImage);
             }
@@ -1412,10 +1433,11 @@ bool ZPiecePromotionWin::OnMouseDownL(int64_t x, int64_t y)
     if (!mDest.y == 0) // promotion on 0 rank is by black
         nPiece += 4;
 
-    string sMessage;
-    Sprintf(sMessage, "type=promote;piece=%c;x=%d;y=%d;target=chesswin", mPromotionPieces[nPiece], mDest.x, mDest.y);
+//    string sMessage;
+//    Sprintf(sMessage, "promote;piece=%c;x=%d;y=%d;target=chesswin", mPromotionPieces[nPiece], mDest.x, mDest.y);
+//    Sprintf(sMessage, "piece=%c;x=%d;y=%d", mPromotionPieces[nPiece], mDest.x, mDest.y);
 
-    gMessageSystem.Post(sMessage);
+    gMessageSystem.Post("promote", mpParentWin, "piece", mPromotionPieces[nPiece], "x", mDest.x, "y", mDest.y);
     return true;
 }
 

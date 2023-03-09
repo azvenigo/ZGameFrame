@@ -68,31 +68,31 @@ void Sandbox::InitControlPanel()
     tZFontPtr pBtnFont = gpFontSystem->GetFont(gDefaultButtonFont);
     ZASSERT(pBtnFont);
 
-    gpControlPanel->AddButton("Quit", "type=quit_app_confirmed", pBtnFont);
+    gpControlPanel->AddButton("Quit", "quit_app_confirmed", pBtnFont);
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
 
 
-    gpControlPanel->AddButton("FloatLinesWin",  "type=initchildwindows;mode=1;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("FloatLinesWin",  "initchildwindows;mode=1;target=MainAppMessageTarget", pBtnFont);
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("LifeWin",        "type=initchildwindows;mode=5;target=MainAppMessageTarget", pBtnFont);
-    gpControlPanel->AddSlider(&gnLifeGridSize, 1, 100, 5, "type=initchildwindows;mode=5;target=MainAppMessageTarget", true, false);
+    gpControlPanel->AddButton("LifeWin",        "initchildwindows;mode=5;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddSlider(&gnLifeGridSize, 1, 100, 5, "initchildwindows;mode=5;target=MainAppMessageTarget", true, false);
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
 
-    gpControlPanel->AddButton("ImageProcessor", "type=initchildwindows;mode=4;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("ImageProcessor", "initchildwindows;mode=4;target=MainAppMessageTarget", pBtnFont);
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight/2);
-    gpControlPanel->AddButton("Checkerboard", "type=initchildwindows;mode=2;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("Checkerboard", "initchildwindows;mode=2;target=MainAppMessageTarget", pBtnFont);
     gpControlPanel->AddSlider(&gnCheckerWindowCount, 1, 250, 1, "", true, false);
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("Font Tool", "type=initchildwindows;mode=6;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("Font Tool", "initchildwindows;mode=6;target=MainAppMessageTarget", pBtnFont);
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("3DTestWin", "type=initchildwindows;mode=7;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("3DTestWin", "initchildwindows;mode=7;target=MainAppMessageTarget", pBtnFont);
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("ChessWin", "type=initchildwindows;mode=8;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("ChessWin", "initchildwindows;mode=8;target=MainAppMessageTarget", pBtnFont);
 
 
     gpMainWin->ChildAdd(gpControlPanel);
@@ -146,9 +146,20 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 				ZRect rSub(x, y, x + nSubWidth, y + nSubHeight);
 				if ((nGridX + nGridY % 2) % 2)
 				{
-					cFloatLinesWin* pWin = new cFloatLinesWin();
-					pWin->SetArea(rSub);
-					gpMainWin->ChildAdd(pWin);
+                    if (RANDI64(0, 5) == 1)
+                    {
+                        ZChessWin* pWin = new ZChessWin();
+                        pWin->SetArea(rSub);
+                        pWin->SetDemoMode(true);
+                        gpMainWin->ChildAdd(pWin);
+
+                    }
+                    else
+                    {
+                        cFloatLinesWin* pWin = new cFloatLinesWin();
+                        pWin->SetArea(rSub);
+                        gpMainWin->ChildAdd(pWin);
+                    }
 				}
 				else
 				{
@@ -218,7 +229,7 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
     {
         ZChessWin* pWin = new ZChessWin();
         pWin->SetArea(grFullArea);
-        pWin->SetDemoMode(true);
+        //pWin->SetDemoMode(true);
         gpMainWin->ChildAdd(pWin);
     }
 

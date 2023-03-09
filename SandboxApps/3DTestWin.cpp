@@ -1019,15 +1019,17 @@ bool Z3DTestWin::Init()
 
         pCP->Init();
 
+        string sUpdateSphereCountMsg(ZMessage("updatespherecount", this));
+
         pCP->AddCaption("Sphere Count", gDefaultTitleFont);
-        pCP->AddSlider(&mnTargetSphereCount, 1, 50, 1, "type=updatespherecount;target=3dtestwin", true, false, pBtnFont);
+        pCP->AddSlider(&mnTargetSphereCount, 1, 50, 1, sUpdateSphereCountMsg, true, false, pBtnFont);
         //    pCP->AddSpace(16);
 
         pCP->AddCaption("Min Sphere Size", gDefaultTitleFont);
-        pCP->AddSlider(&mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, "type=updatespherecount;target=3dtestwin", true, false, pBtnFont);
+        pCP->AddSlider(&mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, sUpdateSphereCountMsg, true, false, pBtnFont);
 
         pCP->AddCaption("Max Sphere Size", gDefaultTitleFont);
-        pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, "type=updatespherecount;target=3dtestwin", true, false, pBtnFont);
+        pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, sUpdateSphereCountMsg, true, false, pBtnFont);
 
         pCP->AddCaption("Speed", gDefaultTitleFont);
         pCP->AddSlider(&mnRotateSpeed, 0, 100, 1, "", true, false, pBtnFont);
@@ -1039,13 +1041,13 @@ bool Z3DTestWin::Init()
 
         pCP->AddSpace(16);
         pCP->AddCaption("Render Size", gDefaultTitleFont);
-        pCP->AddSlider(&mnRenderSize, 1, 128, 16, "type=updaterendersize;target=3dtestwin", true);
+        pCP->AddSlider(&mnRenderSize, 1, 128, 16, ZMessage("updaterendersize", this), true);
 
         pCP->AddSpace(16);
         pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", "rendermode", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
         pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", "rendermode", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddToggle(&mbOuterSphere, "Outer Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddToggle(&mbCenterSphere, "Center Sphere", "type=updatespherecount;target=3dtestwin", "type=updatespherecount;target=3dtestwin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddToggle(&mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddToggle(&mbCenterSphere, "Center Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
         ChildAdd(pCP);
     }

@@ -6,6 +6,9 @@
 #include <set>
 
 
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZMessage
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,20 +23,29 @@
 // type=type;key1=val1...keyn=valn
 class ZMessage
 {
+    friend class ZMessageSystem;
 public:
 	ZMessage();
-	ZMessage(const std::string& sRawMessage);
-	ZMessage(const ZMessage& message);
+    ZMessage(const std::string& sType, const std::string& sRawMessage, class IMessageTarget* pTarget = nullptr);
+    ZMessage(const std::string& sRaw, class IMessageTarget* pTarget = nullptr);
+    ZMessage(const ZMessage& rhs);
 
 	~ZMessage();
 
-	// Helper functions
-    std::string     GetType() const { return GetParam("type"); }
-	void            SetType(const std::string& sType) { SetParam("type", sType); }
 
-	bool            HasTarget() const { return HasParam("target"); }
-    std::string     GetTarget() const { return GetParam("target"); }
-	void            SetTarget(const std::string& sTarget) { SetParam("target", sTarget); }
+
+
+
+
+
+
+
+	// Helper functions
+    std::string     GetTarget() const { return mTarget; }
+	void            SetTarget(const std::string& sTarget) { mTarget = sTarget; }
+
+    std::string     GetType() const { return mType; }
+    void            SetType(const std::string& sType) { mType = sType; }
 
 	bool            HasParam(const std::string& sKey) const;
     std::string     GetParam(const std::string& sKey) const;
@@ -42,8 +54,12 @@ public:
 	void            FromString(const std::string& sMessage);
     std::string     ToString() const;
 
+    operator std::string() const { return ToString(); }
+
 private:
 	tKeyValueMap    mKeyValueMap;
+    std::string     mTarget;
+    std::string     mType;
 };
 
 
@@ -82,8 +98,54 @@ public:
 	void							RemoveNotification(const std::string& sMessageType, IMessageTarget* pTarget);
 	void							RemoveAllNotifications(IMessageTarget* pTarget);
 
-	void							Post(ZMessage& message);
-	void							Post(std::string sRawMessages);
+	void                            Post(std::string sType, class IMessageTarget* pTarget = nullptr);
+    void                            Post(ZMessage& message, class IMessageTarget* pTarget = nullptr);
+
+
+
+
+
+
+    template <typename T, typename...Types>
+    void Post(std::string type, std::string key, T val, Types...more)
+    {
+        ZMessage m;
+        m.mType = type;
+        ToMessage(m, key, val, more...);
+        mMessageQueue.push_back(std::move(m));
+    }
+
+
+    template <typename T, typename...Types>
+    void Post(std::string type, IMessageTarget* pTarget, std::string key, T val, Types...more)
+    {
+        ZMessage m;
+        m.mType = type;
+        if (pTarget)
+            m.mTarget = pTarget->GetTargetName();
+        ToMessage(m, key, val, more...);
+        mMessageQueue.push_back(std::move(m));
+    }
+
+
+
+    template <typename S, typename...SMore>
+    inline void ToMessage(ZMessage& m, std::string key, S val, SMore...moreargs)
+    {
+        std::stringstream ss;
+        ss << val;
+        m.mKeyValueMap[key] = ss.str();
+        return ToMessage(m, moreargs...);
+    }
+
+    inline void ToMessage(ZMessage&) {}   // needed for the variadic with no args
+
+
+
+
+
+
+
 
 	// utility functions
     std::string                     GenerateUniqueTargetName();

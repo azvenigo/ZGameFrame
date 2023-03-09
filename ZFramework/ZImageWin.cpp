@@ -95,7 +95,7 @@ bool ZImageWin::Init()
 
 
         string sMessage;
-        Sprintf(sMessage, "type=rotate_left;target=%s", GetTargetName().c_str());
+        Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
         pBtn->SetMessage(sMessage);
         mpPanel->ChildAdd(pBtn);
 
@@ -112,7 +112,7 @@ bool ZImageWin::Init()
 
         pBtn->SetArea(rButton);
 
-        Sprintf(sMessage, "type=rotate_right;target=%s", GetTargetName().c_str());
+        Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
 
         pBtn->SetMessage(sMessage);
         mpPanel->ChildAdd(pBtn);

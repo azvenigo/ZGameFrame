@@ -376,28 +376,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
             if (wParam == '`')
             {
-                gMessageSystem.Post(ZMessage("toggleconsole"));
+                gMessageSystem.Post("toggleconsole");
             }
             else
             {
-                ZMessage message("chardown");
-                message.SetParam("code", StringHelpers::FromInt(wParam));
-                gMessageSystem.Post(message);
+//                ZMessage message("chardown");
+//                message.SetParam("code", StringHelpers::FromInt(wParam));
+                gMessageSystem.Post("chardown", "code", wParam);
             }
 		}
 	case WM_KEYDOWN:
 		{
-			ZMessage message("keydown");
-			message.SetParam("code", StringHelpers::FromInt(wParam));
-			gMessageSystem.Post(message);
-		}
+	//		ZMessage message("keydown");
+//			message.SetParam("code", StringHelpers::FromInt(wParam));
+//			gMessageSystem.Post(message);
+            gMessageSystem.Post("keydown", "code", wParam);
+    }
 		break;
 	case WM_KEYUP:
 		{
-			ZMessage message("keyup");
-			message.SetParam("code", StringHelpers::FromInt(wParam));
-			gMessageSystem.Post(message);
-		}
+	//		ZMessage message("keyup");
+		//	message.SetParam("code", StringHelpers::FromInt(wParam));
+			//gMessageSystem.Post(message);
+            gMessageSystem.Post("keyup", "code", wParam);
+    }
 		break;
 	case WM_LBUTTONDOWN:
 		Window_OnLButtonDown(LOWORD(lParam), HIWORD(lParam));
@@ -434,19 +436,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
 		gbPaused = false;
 		gTimer.Start();
-		gMessageSystem.Post("type=pause;set=0");
+		gMessageSystem.Post("pause;set=0");
 		break;
 	case WM_ACTIVATE:
 		if (LOWORD(wParam) == WA_INACTIVE)
 		{
-			gMessageSystem.Post("type=pause;set=1");
-			gbPaused = true;
+			gMessageSystem.Post("pause;set=1");
+            gbPaused = true;
 			gTimer.Stop();
 		}
 		else
 		{
-			gMessageSystem.Post("type=pause;set=0");
-			gbPaused = false;
+            gMessageSystem.Post("pause;set=0");
+            gbPaused = false;
 			gTimer.Start();
 		}
 		break;

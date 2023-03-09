@@ -167,10 +167,11 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 
 
             string sMessage;
-            Sprintf(sMessage, "type=selectimg;name=%s;target=imageprocesswin", filename.c_str());
+            Sprintf(sMessage, "selectimg;name=%s;target=imageprocesswin", filename.c_str());
             pOriginalImageWin->SetMouseUpLMessage(sMessage);
+//            pOriginalImageWin->SetMouseUpLMessage(ZMessage("selectimg", this, "name", filename));
 
-            Sprintf(sMessage, "type=closeimg;name=%s;target=imageprocesswin", filename.c_str());
+            Sprintf(sMessage, "closeimg;name=%s;target=imageprocesswin", filename.c_str());
             pOriginalImageWin->SetCloseButtonMessage(sMessage);
 
             pOriginalImageWin->SetEnableControlPanel(true);
@@ -972,33 +973,33 @@ bool cProcessImageWin::Init()
 
     pCP->Init();
 
-    pCP->AddButton("Load Image", "type=loadimages;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Close All Images", "type=clearall;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Load Image", "loadimages;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Close All Images", "clearall;target=imageprocesswin", pBtnFont);
 
     pCP->AddSpace(32);
 
     pCP->AddCaption("Radius", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
     pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, pBtnFont);
 
-    pCP->AddButton("Blur", "type=radiusblur;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Stack", "type=stackimages;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Contrast", "type=computecontrast;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Blur", "radiusblur;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Stack", "stackimages;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Contrast", "computecontrast;target=imageprocesswin", pBtnFont);
 
     pCP->AddSpace(32);
     pCP->AddCaption("Ops", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
-    pCP->AddButton("Negative", "type=negative;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Monochrome", "type=mono;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Negative", "negative;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Monochrome", "mono;target=imageprocesswin", pBtnFont);
 
 
     pCP->AddSpace(64);
 
     pCP->AddCaption("Experiments", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
-    pCP->AddButton("compute gradients", "type=computegradients;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("compute gradients", "computegradients;target=imageprocesswin", pBtnFont);
     pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, pBtnFont);
 
     pCP->AddSpace(16);
 
-    pCP->AddButton("float color sandbox", "type=floatcolorsandbox;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("float color sandbox", "floatcolorsandbox;target=imageprocesswin", pBtnFont);
     pCP->AddSlider(&mnSubdivisionLevels, 1, 512, 1, "", true, false, pBtnFont);
 
 
@@ -1129,7 +1130,7 @@ void cProcessImageWin::ResetResultsBuffer()
         mpResultWin->SetArea(mrResultImageDest);
         mpResultWin->SetZoomable(true, 0.05, 100.0);
         mpResultWin->SetEnableControlPanel(true);
-        mpResultWin->SetSaveButtonMessage("type=saveimg;target=imageprocesswin");
+        mpResultWin->SetSaveButtonMessage("saveimg;target=imageprocesswin");
 
 
         ChildAdd(mpResultWin);
