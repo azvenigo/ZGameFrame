@@ -4,6 +4,7 @@
 #include "ZTypes.h"
 #include "ZMessageSystem.h"
 #include "ZTransformable.h"
+#include "ZGUIHelpers.h"
 #include <mutex>
 #ifdef _WIN64
 #include "windows.h"		// Virtual Key Defs
@@ -68,7 +69,7 @@ public:
 //	virtual void		SetSize(int64_t width, int64_t height);
 //	virtual void		SetArea(int64_t l,int64_t t,int64_t r,int64_t b);
 	
-	virtual void		CenterWindowInRect(const ZRect &outerRect);
+	virtual void		Arrange(ZGUI::ePosition pos, const ZRect &outerRect, int64_t hPadding = 0, int64_t vPadding = 0);
 	
 //	virtual void		MoveTo(int64_t newX, int64_t newY);
 //	virtual void		OffsetTo(int64_t deltaX, int64_t deltaY);
@@ -89,9 +90,8 @@ public:
 	virtual std::string GetTargetName() { return msWinName; }						// returns a unique target identifier
 
 public:
-	virtual void		Show();
-	virtual void		Hide();
-	virtual bool		IsVisible();
+	virtual void		SetVisible(bool bVisible = true);
+    virtual bool		IsVisible() { return mbVisible; }
 	
     std::string&        GetWinName() { return msWinName; }
     std::string         GetFullWinName();		// returns the fully qualified name all the way up the parental chain.  Example: A.B.C.D or main.quitdialog.ok
@@ -242,20 +242,3 @@ void ZWin::SetMouseDownPos(int64_t mouseX, int64_t mouseY) {
 	mMouseDownOffset.y = mouseY;
 }
 
-inline
-bool ZWin::IsVisible()
-{
-	return mbVisible;
-}
-
-/*inline 
-void ZWin::Invalidate()	// walk up the chain invalidating all
-{
-	mbInvalid = true;
-	ZWin* pWin = mpParentWin;
-	while (pWin)
-	{
-		pWin->mbInvalid = true;
-		pWin = pWin->mpParentWin;
-	}
-}*/

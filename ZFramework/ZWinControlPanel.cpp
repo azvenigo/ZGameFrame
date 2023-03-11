@@ -21,15 +21,14 @@ bool ZWinControlPanel::Init()
 }
 
 
-bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage, tZFontPtr pFont, uint32_t nFontColTop, uint32_t nFontColBottom, ZFont::eStyle style)
+ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage, tZFontPtr pFont, uint32_t nFontColTop, uint32_t nFontColBottom, ZFont::eStyle style)
 {
     ZWinSizablePushBtn* pBtn;
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption(sCaption);
-    pBtn->SetFont(pFont);
-    pBtn->SetColors(nFontColTop, nFontColBottom);
+    pBtn->SetFont(pFont, nFontColTop, nFontColBottom);
     pBtn->SetStyle(style);
 
     pBtn->SetArea(mrNextControl);
@@ -38,10 +37,10 @@ bool ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage,
 
     mrNextControl.OffsetRect(0,mrNextControl.Height());
 
-    return true;
+    return pBtn;
 }
 
-bool ZWinControlPanel::AddCaption(const string& sCaption, ZFontParams& fontParams, uint32_t nFontCol, uint32_t nFillCol, ZFont::eStyle style, ZFont::ePosition pos)
+ZFormattedTextWin* ZWinControlPanel::AddCaption(const string& sCaption, ZFontParams& fontParams, uint32_t nFontCol, uint32_t nFillCol, ZFont::eStyle style, ZFont::ePosition pos)
 {
     ZFormattedTextWin* pWin = new ZFormattedTextWin();
     pWin->SetArea(mrNextControl);
@@ -51,11 +50,11 @@ bool ZWinControlPanel::AddCaption(const string& sCaption, ZFontParams& fontParam
 
     mrNextControl.OffsetRect(0, mrNextControl.Height());
 
-    return true;
+    return pWin;
 }
 
 
-bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, const std::string& sRadioGroup, tZFontPtr pFont, uint32_t nFontColUnchecked, uint32_t nFontColChecked, ZFont::eStyle style)
+ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, const std::string& sRadioGroup, tZFontPtr pFont, uint32_t nFontColUnchecked, uint32_t nFontColChecked, ZFont::eStyle style)
 {
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
@@ -63,17 +62,16 @@ bool ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const st
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pCheck->SetCaption(sCaption);
     pCheck->SetArea(mrNextControl);
-    pCheck->SetFont(pFont);
-    pCheck->SetCheckedColors(nFontColUnchecked, nFontColChecked);
+    pCheck->SetFont(pFont, nFontColUnchecked, nFontColChecked);
     pCheck->SetStyle(style);
     ChildAdd(pCheck);
 
     mrNextControl.OffsetRect(0, mrNextControl.Height());
-    return true;
+    return pCheck;
 }
 
 
-bool ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue, tZFontPtr pFont)
+ZSliderWin* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue, tZFontPtr pFont)
 {
     ZSliderWin* pSlider = new ZSliderWin(pnSliderValue);
     pSlider->SetArea(mrNextControl);
@@ -85,7 +83,7 @@ bool ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t n
 
     mrNextControl.OffsetRect(0, mrNextControl.Height());
 
-    return true;
+    return pSlider;
 }
 
 bool ZWinControlPanel::Paint()
@@ -106,7 +104,7 @@ bool ZWinControlPanel::Process()
         {
             if (mrTrigger.PtInRect(gLastMouseMove))
             {
-                Show();
+                SetVisible();
                 return true;
             }
         }
@@ -117,7 +115,7 @@ bool ZWinControlPanel::Process()
 
             if (!rOverArea.PtInRect(gLastMouseMove))        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
             {
-                Hide();
+                SetVisible(false);
                 return true;
             }
         }

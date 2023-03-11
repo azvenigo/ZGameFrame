@@ -103,6 +103,8 @@ set(COMMON_FILES
 ../ZFramework/ZXMLNode.h
 ../ZFramework/ZZipAPI.cpp
 ../ZFramework/ZZipAPI.h
+../ZFramework/ZGUIHelpers.h
+../ZFramework/ZGUIHelpers.cpp
 ../ZFramework/platforms/windows/GDIImageTags.h
 ../ZFramework/platforms/windows/ZWinFileDialog_Windows.cpp
 )

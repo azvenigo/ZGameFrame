@@ -560,11 +560,11 @@ void ZWinSizablePushBtn::SetCaption(const string& sCaption)
 	msCaption = sCaption; 
 }
 
-void ZWinSizablePushBtn::SetColors(uint32_t nColTop, uint32_t nColBottom) 
+/*void ZWinSizablePushBtn::SetColors(uint32_t nColTop, uint32_t nColBottom) 
 { 
 	mnTextColorTop = nColTop;
     mnTextColorBottom = nColBottom;
-}
+}*/
 
 void ZWinSizablePushBtn::SetStyle(ZFont::eStyle style) 
 { 

@@ -95,8 +95,7 @@ bool ZWin::Shutdown()
 {
 	if (mbInitted)
 	{
-        Hide();
-//        const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+        SetVisible(false);
 
 		mbShutdownFlag = true;
 		mThread.join();
@@ -216,12 +215,18 @@ void  ZWin::CalcAbsoluteArea()
 	gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
 }
 
-void ZWin::CenterWindowInRect(const ZRect &outerRect) 
+/*void ZWin::CenterWindowInRect(const ZRect &outerRect) 
 {
 	const int64_t tempX = outerRect.left + ( (outerRect.Width() - mArea.Width() ) / 2 );
 	const int64_t tempY = outerRect.top  + ( (outerRect.Height()- mArea.Height() ) / 2 );
 	SetArea( ZRect(tempX, tempY, tempX + mArea.Width(), tempY + mArea.Height()));
+}*/
+
+void ZWin::Arrange(ZGUI::ePosition pos, const ZRect& outerRect, int64_t hPadding, int64_t vPadding)
+{
+    SetArea(ZGUI::Arrange(mArea, outerRect, pos, hPadding, vPadding));
 }
+
 
 bool  ZWin::SetParentWin(ZWin* pNewParent) 
 {
@@ -250,10 +255,7 @@ bool ZWin::ChildAdd(ZWin* child, bool bAutoShow)
 		return false;
 	}
 
-    if (bAutoShow)
-        child->Show();
-    else
-        child->Hide();
+    child->SetVisible(bAutoShow);
 
 	return true;
 }
@@ -724,21 +726,12 @@ bool ZWin::HandleMessage(const ZMessage& message)
 	return false;
 }
 
-void ZWin::Show()
+void ZWin::SetVisible(bool bVisible)
 {
-    if (!mbVisible)
+    if (bVisible != mbVisible)
     {
-        mbVisible = true;
+        mbVisible = bVisible;
         Invalidate();
-        gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
-    }
-}
-
-void ZWin::Hide()
-{
-    if (mbVisible)
-    {
-        mbVisible = false;
         gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
     }
 }

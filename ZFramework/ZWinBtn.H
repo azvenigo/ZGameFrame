@@ -28,7 +28,7 @@ public:
 
 public:
 	virtual	bool		SetImage(tZBufferPtr pImage );
-	virtual void		SetFont(tZFontPtr pFont) { mpFont = pFont; }
+    virtual void		SetFont(tZFontPtr pFont, uint32_t nCol1, uint32_t nCol2) { mpFont = pFont; mnTextColorTop = nCol1; mnTextColorBottom = nCol2; }
 
 	virtual void		SetText( std::string& text ) { sText = text; }
 	virtual bool		SetSrcRect( ZRect rBaseRect );
@@ -47,6 +47,9 @@ protected:
 	ZRect			mrSrcRect;
 	std::string		sText;
 	tZFontPtr       mpFont;
+    uint32_t        mnTextColorTop;
+    uint32_t        mnTextColorBottom;
+
 	IMessageTarget*	mpMessageTarget;     // if this is NULL, the button posts the message to everyone
 
 	// Event specific messages
@@ -119,9 +122,9 @@ public:
 
 	virtual void            SetCaption(const std::string& sCaption);
     std::string             GetCaption() { return msCaption; };
-    void                    SetColors(uint32_t nColTop, uint32_t nColBottom);
+//    void                    SetColors(uint32_t nColTop, uint32_t nColBottom);
 	void                    SetStyle(ZFont::eStyle style);
-    virtual void		    SetFont(tZFontPtr pFont) { mpFont = pFont; }
+    virtual void		    SetFont(tZFontPtr pFont, uint32_t nCol1, uint32_t nCol2) { mpFont = pFont; mnTextColorTop = nCol1; mnTextColorBottom = nCol2; }
     tZFontPtr  GetFont()    { return mpFont; }
 
 	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
@@ -136,8 +139,6 @@ protected:
 	eSizablePushBtnState	mDrawState;
 	std::string             msCaption;
 
-	uint32_t                mnTextColorTop;
-	uint32_t                mnTextColorBottom;
 	ZFont::eStyle           mCaptionStyle;
 
     tZBufferPtr             mpUpEdgeImage;              // not owned by this class
@@ -145,6 +146,8 @@ protected:
 	ZRect                   mrEdge;
 
     tZFontPtr               mpFont;
+    uint32_t                mnTextColorTop;
+    uint32_t                mnTextColorBottom;
 
 	std::string             msButtonMessage;
 };

@@ -12,6 +12,7 @@
 #include "ZTimer.h"
 #include "ZAnimator.h"
 #include "ZAnimObjects.h"
+#include "ZGUIHelpers.h"
 
 using namespace std;
 
@@ -42,8 +43,7 @@ bool ZChoosePGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("Cancel"); // wingdings 3 to the beggining
-    pBtn->SetFont(gpFontSystem->GetFont(gDefaultButtonFont));
-    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetFont(gpFontSystem->GetFont(gDefaultButtonFont), 0xffffffff, 0xffffffff);
     pBtn->SetStyle(ZFont::kNormal);
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
@@ -186,59 +186,49 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption(")"); // wingdings 3 to the beggining
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight));
-    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
     pBtn->SetStyle(ZFont::kNormal);
     pBtn->SetArea(rButton);
-//    pBtn->SetMessage("beginning;target=pgnwin");
     pBtn->SetMessage(ZMessage("beginning", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("v"); // back one
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight));
-    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-//    pBtn->SetMessage("backone;target=pgnwin");
     pBtn->SetMessage(ZMessage("backone", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("w"); // forward one
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight));
-    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-//    pBtn->SetMessage("forwardone;target=pgnwin");
     pBtn->SetMessage(ZMessage("forwardone", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("*"); // to end
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight));
-    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-//    pBtn->SetMessage("end;target=pgnwin");
     pBtn->SetMessage(ZMessage("end", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("1"); // open file
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight));
-    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width() *2, 0);
     pBtn->SetArea(rButton);
-//    pBtn->SetMessage("loadgame;target=chesswin");
     pBtn->SetMessage(ZMessage("loadgame", mpParentWin));
     ChildAdd(pBtn);
 
@@ -246,12 +236,10 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("<"); // save file
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight));
-    pBtn->SetColors(0xffffffff, 0xffffffff);
+    pBtn->SetFont(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
     pBtn->SetStyle(ZFont::kNormal);
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-//    pBtn->SetMessage("savegame;target=chesswin");
     pBtn->SetMessage(ZMessage("savegame", mpParentWin));
     ChildAdd(pBtn);
 
@@ -432,6 +420,7 @@ ZChessWin::ZChessWin()
     mpPiecePromotionWin = nullptr;
     mpPGNWin = nullptr;
     mpChoosePGNWin = nullptr;
+    mpSwitchSidesButton = nullptr;
     mbDemoMode = false;
     mnDemoModeNextMoveTimeStamp = 0;
     mAutoplayMSBetweenMoves = 1000;
@@ -476,9 +465,7 @@ bool ZChessWin::Init()
         pCP->AddCaption("Piece Height", gDefaultTitleFont);
         pCP->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, pBtnFont);
         //    pCP->AddSpace(16);
-        pCP->AddToggle(&mbEditMode, "Edit Mode", invalidateMsg, invalidateMsg, "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-
-        pCP->AddButton("Change Turn", ZMessage("changeturn", this), pBtnFont, 0xffffffff, 0xff000000, ZFont::kShadowed);
+        pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
 
         pCP->AddButton("Clear Board", ZMessage("clearboard", this), pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
         pCP->AddButton("Reset Board", ZMessage("resetboard", this), pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
@@ -502,6 +489,14 @@ bool ZChessWin::Init()
         rPGNPanel.OffsetRect(rControlPanel.left - rPGNPanel.Width() - gDefaultSpacer, rControlPanel.top);
         mpPGNWin->SetArea(rPGNPanel);
         ChildAdd(mpPGNWin);
+
+        mpSwitchSidesButton = new ZWinSizablePushBtn();
+        mpSwitchSidesButton->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+        mpSwitchSidesButton->SetArea(ZRect(0, 0, mnPieceHeight*1.5, mnPieceHeight / 1.5));
+        mpSwitchSidesButton->SetCaption("Change Turn");
+        mpSwitchSidesButton->SetMessage(ZMessage("changeturn", this));
+        mpSwitchSidesButton->SetFont(pBtnFont, 0xffffffff, 0xff000000);
+        ChildAdd(mpSwitchSidesButton);
     }
 
 
@@ -557,6 +552,9 @@ void ZChessWin::UpdateSize()
     mnPalettePieceHeight = mnPieceHeight * 8 / 12;      // 12 possible pieces drawn over 8 squares
 
     mrPaletteArea.SetRect(mrBoardArea.right, mrBoardArea.top, mrBoardArea.right + mnPalettePieceHeight, mrBoardArea.bottom);
+
+    if (mpSwitchSidesButton)
+        mpSwitchSidesButton->Arrange(ZGUI::OLIC, mrBoardArea, gDefaultSpacer, gDefaultSpacer);
 
     InvalidateChildren();
 }
@@ -771,7 +769,7 @@ bool ZChessWin::Paint()
     if (!mbInvalid)
         return true;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, 0xff000000);
+    mpTransformTexture->Fill(mAreaToDrawTo, 0xff444444);
     DrawBoard();
 
     if (mpDraggingPiece)
@@ -1086,6 +1084,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         ChildDelete(mpChoosePGNWin);
         mpChoosePGNWin = nullptr;
         InvalidateChildren();
+        return true;
     }
     else if (sType == "savegame")
     {
@@ -1094,6 +1093,16 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     else if (sType == "randgame")
     {
         LoadRandomGame();
+        return true;
+    }
+    else if (sType == "toggleeditmode")
+    {
+/*        ZRect r(mpSwitchSidesButton->GetArea());
+        r.MoveRect(mrBoardArea.left-r.Width(), (mrBoardArea.bottom + mrBoardArea.top)/2 - r.Height()/2);
+        mpSwitchSidesButton->SetArea(r);*/
+        mpSwitchSidesButton->Arrange(ZGUI::OLIC, mrBoardArea, gDefaultSpacer, gDefaultSpacer);
+        mpSwitchSidesButton->SetVisible(mbEditMode);
+        Invalidate();
         return true;
     }
     else if (sType == "promote")
@@ -1128,26 +1137,44 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             if (nHalfMove >= mHistory.size())
                 nHalfMove = mHistory.size() - 1;
 
+
+            // remember previous board for animation purposes
+            ChessBoard prevBoard = mBoard;
             mBoard = mHistory[nHalfMove];
 
             sMove move = mBoard.GetLastMove();
 
             if (mBoard.ValidCoord(move.mSrc) && mBoard.ValidCoord(move.mDest))
             {
-                ZRect rSrcSquareArea = SquareArea(move.mSrc);
-                ZRect rDstSquareArea = SquareArea(move.mDest);
-
-                ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mPieceData[mBoard.Piece(move.mDest)].mpImage.get());
-                pImage->StartTransformation(ZTransformation(ZPoint(rSrcSquareArea.left, rSrcSquareArea.top)));
-
                 int nTransformTime = (mAutoplayMSBetweenMoves) / 2;
                 if (nTransformTime > 500)
                     nTransformTime = 500;
-                ;
+
+                ZRect rSrcSquareArea = SquareArea(move.mSrc);
+                ZRect rDstSquareArea = SquareArea(move.mDest);
+
+
+                // If there was 
+                ZAnimObject_TransformingImage* pImage;
+                if (prevBoard.GetHalfMoveNumber() == mBoard.GetHalfMoveNumber() - 1)
+                {
+                    char prevPiece = prevBoard.Piece(move.mDest);
+                    if (prevPiece)
+                    {
+                        pImage = new ZAnimObject_TransformingImage(mPieceData[prevPiece].mpImage.get());
+                        pImage->StartTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)));
+                        pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, ""), nTransformTime);
+                        pImage->SetDestination(mpTransformTexture);
+                        mpAnimator->AddObject(pImage);
+                    }
+                }
+
+
+                pImage = new ZAnimObject_TransformingImage(mPieceData[mBoard.Piece(move.mDest)].mpImage.get());
+                pImage->StartTransformation(ZTransformation(ZPoint(rSrcSquareArea.left, rSrcSquareArea.top)));
                 pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, ZMessage("hidesquare;x=-1;y=-1", this)), nTransformTime);
                 pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 33);    // 33ms to at least cover 30fps
                 pImage->SetDestination(mpTransformTexture);
-                //pImage->SetCompletionMessage("hidesquare;x=-1;y=-1;target=chesswin");  // clear the hidden square on completion
                 mHiddenSquare = move.mDest;
                 mpAnimator->AddObject(pImage);
             }

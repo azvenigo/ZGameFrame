@@ -5,32 +5,37 @@
 
 /////////////////////////////////////////////////////////////////////////
 // 
+class ZFormattedTextWin;
+class ZWinSizablePushBtn;
+class ZWinCheck;
+class ZSliderWin;
+
 class ZWinControlPanel : public ZWin
 {
 public:
     ZWinControlPanel() : mbHideOnMouseExit(false) {}
 
-    virtual bool    Init();
+    virtual bool        Init();
 
-    void            SetTriggerRect(const ZRect& rTrigger) { mrTrigger.SetRect(rTrigger); }
+    void                SetTriggerRect(const ZRect& rTrigger) { mrTrigger.SetRect(rTrigger); }
 
-    void            SetHideOnMouseExit(bool bHideOnMouseExit) { mbHideOnMouseExit = bHideOnMouseExit; }
+    void                SetHideOnMouseExit(bool bHideOnMouseExit) { mbHideOnMouseExit = bHideOnMouseExit; }
 
-    bool            AddCaption( const std::string& sCaption, 
+    ZFormattedTextWin*  AddCaption( const std::string& sCaption,
                                 ZFontParams& fontParams, 
                                 uint32_t nFontCol = 0xff000000, 
                                 uint32_t nFillCol = 0xffffffff, 
                                 ZFont::eStyle style = ZFont::kNormal, 
                                 ZFont::ePosition = ZFont::kMiddleCenter);
 
-    bool            AddButton(  const std::string& sCaption, 
+    ZWinSizablePushBtn* AddButton(  const std::string& sCaption,
                                 const std::string& sMessage, 
                                 tZFontPtr pFont, 
                                 uint32_t nFontCol1 = 0xffffffff, 
                                 uint32_t nFontCol2 = 0xffbbbbbb, 
                                 ZFont::eStyle style = ZFont::kShadowed);
 
-    bool            AddToggle(  bool* pbValue, 
+    ZWinCheck*          AddToggle(  bool* pbValue,
                                 const std::string& sCaption, 
                                 const std::string& sCheckMessage, 
                                 const std::string& sUncheckMessage,         
@@ -40,7 +45,7 @@ public:
                                 uint32_t nUncheckedFontCol = 0xff000000, 
                                 ZFont::eStyle style = ZFont::kNormal);
 
-    bool            AddSlider(  int64_t* pnSliderValue, 
+    ZSliderWin*         AddSlider(  int64_t* pnSliderValue,
                                 int64_t nMin, 
                                 int64_t nMax, 
                                 int64_t nMultiplier, 
@@ -49,19 +54,19 @@ public:
                                 bool bMouseOnlyDrawValue = false, 
                                 tZFontPtr pFont = nullptr);
 
-    void            AddSpace(int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
+    void                AddSpace(int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
 
-    bool            Process();
-    bool		    Paint();
+    bool                Process();
+    bool		        Paint();
 
 
 private:
-    ZRect           mrTrigger;
+    ZRect   mrTrigger;
 
-    int64_t         mnBorderWidth;
-    int64_t         mnControlHeight;
-    ZRect           mrNextControl;       // area for next control to be added
-    bool            mbHideOnMouseExit;
+    int64_t mnBorderWidth;
+    int64_t mnControlHeight;
+    ZRect   mrNextControl;       // area for next control to be added
+    bool    mbHideOnMouseExit;
 };
 
 

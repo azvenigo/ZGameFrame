@@ -127,21 +127,6 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 //    mImagesToProcess.clear();
 
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
-/*    for (auto pImageWins : mChildImageWins)
-    {
-        pImageWins->Hide();
-        ChildDelete(pImageWins);
-    }
-    mChildImageWins.clear();*/
-
-/*	for (auto filename : filenames)
-	{
-        tZBufferPtr pNewBuffer(new ZBuffer());
-		pNewBuffer->LoadBuffer(filename);
-		mImagesToProcess.push_back(pNewBuffer);
-	}*/
-
-//    mpResultBuffer = nullptr;
 
     int32_t nNumImages = (int32_t)filenames.size();
 

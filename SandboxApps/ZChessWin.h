@@ -96,6 +96,8 @@ private:
 };
 
 
+class ZWinSizablePushBtn;
+
 class ZChessWin : public ZWin
 {
 public:
@@ -164,6 +166,7 @@ private:
     ZRect mrBoardArea;
 
     ZRect mrPaletteArea;
+    ZWinSizablePushBtn*     mpSwitchSidesButton;
 
 
     ChessPiece              mPieceData[128]; // keyed by ascii chars for pieces, 'r', 'Q', 'P', etc.

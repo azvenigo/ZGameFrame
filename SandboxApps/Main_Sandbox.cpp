@@ -124,7 +124,7 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 	{
 
 		cFloatLinesWin* pWin = new cFloatLinesWin();
-		pWin->Show();
+		pWin->SetVisible();
 		pWin->SetArea(grFullArea);
 		gpMainWin->ChildAdd(pWin);
 	}
@@ -258,12 +258,7 @@ public:
 		}
         else if (sType == "toggleconsole")
         {
-            if (gpDebugConsole->IsVisible())
-            {
-                gpDebugConsole->Hide();
-            }
-            else
-                gpDebugConsole->Show();
+            gpDebugConsole->SetVisible(!gpDebugConsole->IsVisible());
         }
 
 		return true;

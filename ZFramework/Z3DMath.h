@@ -416,11 +416,11 @@ namespace Z3D
     inline void setProjectionMatrix(const double& angleOfView, const double& fNear, const double& fFar, Matrix44f& M)
     {
         // set the basic projection matrix
-        float scale = 1 / tan(angleOfView * 0.5 * M_PI / 180);
+        float scale = (float)1 / tan(angleOfView * 0.5 * M_PI / 180);
         M[0][0] = scale;  //scale the x coordinates of the projected point 
         M[1][1] = scale;  //scale the y coordinates of the projected point 
-        M[2][2] = -fFar / (fFar - fNear);  //used to remap z to [0,1] 
-        M[3][2] = -fFar * fNear / (fFar - fNear);  //used to remap z [0,1] 
+        M[2][2] = (float)-fFar / (fFar - fNear);  //used to remap z to [0,1] 
+        M[3][2] = (float)-fFar * fNear / (fFar - fNear);  //used to remap z [0,1] 
         M[2][3] = -1;  //set w = -z 
         M[3][3] = 0;
     }
