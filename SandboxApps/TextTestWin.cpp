@@ -165,24 +165,16 @@ bool TextTestWin::Init()
         string sMessage;
         Sprintf(sMessage, "link=setcustomfont;fontindex=%d;target=TextTestWin", i);
 
-        sDialogScript += "<line wrap=0><text size=2 color=0xffffffff color2=0xffffffff style=normal ";
+        sDialogScript += "<line wrap=0><text color=0xffffffff color2=0xffffffff style=normal ";
         sDialogScript += sEncodedFontParams;
         sDialogScript += sMessage.c_str();
-        sDialogScript += " position=MiddleLeft>";
+        sDialogScript += " position=lc>";
         sDialogScript += gWindowsFontFacenames[i];
         sDialogScript += "</text></line>";
     }
     sDialogScript += "</textwin>";
-//    sDialogScript += "<btn size=4 area=0,0,200,30 color=0xff000000 style=normal message=\"<msg>kill_window;target=fontselectionwin</msg>\">Done</btn>";
     sDialogScript += "</scripteddialog>";
 
-//    sDialogScript += "<btn size=4 area=" + RectToString(grBottomRightButton) + " color=0xff000000 color2=0xff000000 style=normal position=middlecenter message=\"<msg>kill_window;target=optionswin</msg>\">Done</btn>";
-
-//    ZXMLNode doc;
-//    doc.Init(sDialogScript);
-
-//    pTextWin->InitFromXML(doc.GetChild("textwin"));
-//    pWin->InitFromXML(doc.GetChild("scripteddialog"));
     pWin->PreInit(sDialogScript);
     ChildAdd(pWin);
 
@@ -199,19 +191,19 @@ bool TextTestWin::Init()
 
 //    pCP->AddButton("Custom Font", "setcustomfont;target=TextTestWin");
 
-    ZTextLook captionLook(ZTextLook::kEmbossed, 0xff444444, 0xff737373);
+    ZTextLook captionLook(ZTextLook::kNormal, 0xffffffff, 0xffffffff);
 
-    pCP->AddCaption("Height", gDefaultButtonFont, captionLook);
+    pCP->AddCaption("Height", gDefaultCaptionFont, captionLook, ZGUI::CB, gDefaultDialogFill);
 
     pCP->AddSlider(&mCustomFontParams.nHeight, 8, 200, 2, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddCaption("Weight", gDefaultButtonFont, captionLook);
+    pCP->AddCaption("Weight", gDefaultCaptionFont, captionLook, ZGUI::CB, gDefaultDialogFill);
     pCP->AddSlider(&mCustomFontParams.nWeight, 2, 9, 100, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddCaption("Tracking", gDefaultButtonFont, captionLook);
+    pCP->AddCaption("Tracking", gDefaultCaptionFont, captionLook, ZGUI::CB, gDefaultDialogFill);
     pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "setfonttracking;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddCaption("Fixed Width", gDefaultButtonFont, captionLook);
+    pCP->AddCaption("Fixed Width", gDefaultCaptionFont, captionLook, ZGUI::CB, gDefaultDialogFill);
     pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
     pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, captionLook);
@@ -298,9 +290,9 @@ bool TextTestWin::Paint()
             nCol2 = nCol1;
 
         if (RANDBOOL)
-            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, ZTextLook(ZTextLook::kShadowed,nCol1, nCol2), ZGUI::TopLeft);
+            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, ZTextLook(ZTextLook::kShadowed,nCol1, nCol2), ZGUI::LT);
         else
-            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, ZTextLook(ZTextLook::kShadowed, nCol1, nCol2), ZGUI::TopLeft);
+            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, ZTextLook(ZTextLook::kShadowed, nCol1, nCol2), ZGUI::LT);
 
         int64_t nLines = mpFont->CalculateNumberOfLines(rText.Width(), (uint8_t*)sSampleText.data(), sSampleText.length());
         rText.OffsetRect(0, mpFont->Height() * nLines);
@@ -308,7 +300,7 @@ bool TextTestWin::Paint()
 
 
         TIME_SECTION_START(TextTestLines);
-    mpFont->DrawTextParagraph(mpTransformTexture.get(), sAliceText, rText, ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::TopLeft);
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sAliceText, rText, ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::LT);
 
   TIME_SECTION_END(TextTestLines);
   

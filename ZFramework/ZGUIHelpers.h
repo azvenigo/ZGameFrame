@@ -55,13 +55,16 @@ namespace ZGUI
         LB = Left|Bottom,        CB     = Bottom|HCenter,     RB = Bottom|Right,
 
         // Aliases
-        TopLeft = LT,       LeftTop = LT,       
-        TopCenter = CT,     CenterTop = CT,     
-        TopRight = RT,      RightTop = RT,
+        LeftTop = LT,       
+        CenterTop = CT,     
+        RightTop = RT,
 
-        BottomLeft = LB,    LeftBottom = LB,    
-        BottomCenter = CB,  CenterBottom = CB,  
-        BottomRight = RB,   RightBottom = RB,
+        LeftCenter = LC,
+        RightCenter = RC,
+
+        LeftBottom = LB,    
+        CenterBottom = CB,  
+        RightBottom = RB,
         
 
 
@@ -96,5 +99,7 @@ namespace ZGUI
          OLOB = HOutside|Left|VOutside|Bottom,  ILOB = HInside|Left|VOutside|Bottom, ICOB = HInside|HCenter|VOutside|Bottom, IROB = HInside|Right|VOutside|Bottom,  OROB = HOutside|Right|VOutside|Bottom,
     };
 
-    ZRect Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t HPadding = 0, int64_t VPadding = 0);  // moves r relative to ref based on position flags
+    ZRect       Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t HPadding = 0, int64_t VPadding = 0);  // moves r relative to ref based on position flags
+    std::string ToString(ePosition pos);
+    ePosition   FromString(std::string s);
 };

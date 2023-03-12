@@ -1,4 +1,5 @@
 #include "ZGUIHelpers.h"
+#include "helpers/StringHelpers.h"
 #include "ZDebug.h"
 
 using namespace std;
@@ -34,6 +35,132 @@ namespace ZGUI
 
         return val;
     }
+
+    ePosition FromString(string s)
+    {
+        StringHelpers::makelower(s);
+
+        // Single position
+        if (s == "l" || s == "Left")
+            return ePosition::L;
+
+        if (s == "t" || s == "top")
+            return ePosition::T;
+
+        if (s == "r" || s == "right")
+            return ePosition::R;
+
+        if (s == "b" || s == "bottom")
+            return ePosition::B;
+
+        if (s == "c" || s == "center")
+            return ePosition::C;
+
+        if (s == "hc" || s == "hcenter")
+            return ePosition::HC;
+
+        if (s == "vc" || s == "vcenter")
+            return ePosition::VC;
+
+        if (s == "hi" || s == "hinside")
+            return ePosition::HInside;
+
+        if (s == "ho" || s == "houtside")
+            return ePosition::HOutside;
+
+        if (s == "i" || s == "inside")
+            return ePosition::I;
+
+        if (s == "o" || s == "outside")
+            return ePosition::O;
+
+
+        // compound position
+        if (s == "lt" || s == "lefttop")
+            return ePosition::LT;
+
+        if (s == "ct" || s == "centertop")
+            return ePosition::CT;
+
+        if (s == "rt" || s == "righttop")
+            return ePosition::RT;
+
+        if (s == "lc" || s == "leftcenter")
+            return ePosition::LC;
+
+        if (s == "rc" || s == "rightcenter")
+            return ePosition::RC;
+
+        if (s == "lb" || s == "leftbottom")
+            return ePosition::LB;
+
+        if (s == "cb" || s == "centerbottom")
+            return ePosition::CB;
+
+        if (s == "rb" || s == "rightbottom")
+            return ePosition::RB;
+
+
+        ZASSERT(s.size() == 4);
+
+        if (s.size() == 4)
+        {
+            uint32_t pos;
+
+            if (s[0] == 'i')
+            {
+                pos |= ePosition::HInside;
+            }
+            else
+            {
+                ZASSERT(s[0] == 'o');
+                pos |= ePosition::HOutside;
+            }
+
+            if (s[1] == 'l')
+            {
+                pos |= ePosition::L;
+            }
+            else if (s[1] == 'c')
+            {
+                pos |= ePosition::HC;
+            }
+            else
+            {
+                ZASSERT(s[1] == 'r');
+                pos |= ePosition::R;
+            }
+
+            if (s[2] == 'i')
+            {
+                pos |= ePosition::VInside;
+            }
+            else
+            {
+                ZASSERT(s[2] == 'o');
+                pos |= ePosition::VOutside;
+            }
+
+            if (s[3] == 't')
+            {
+                pos |= ePosition::T;
+            }
+            else if (s[3] == 'c')
+            {
+                pos |= ePosition::VC;
+            }
+            else
+            {
+                ZASSERT(s[3] == 'b');
+                pos |= ePosition::B;
+            }
+
+            return (ePosition)pos;
+        }
+
+        return ePosition::Unknown;
+    }
+
 
     ZRect Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t HPadding, int64_t VPadding)
     {

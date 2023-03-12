@@ -455,48 +455,56 @@ bool ZFormattedTextWin::ParseDocument(ZXMLNode* pNode)
 	return true;
 }
 
-void ZFormattedTextWin::AddTextLine(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, bool bWrap, const string& sLink)
+/*void ZFormattedTextWin::AddLineNode(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
 {
-	tTextLine textLine;
-	if (bWrap)
-	{
-		// Insert as much text on each line as will fit
-		while (sLine.length() > 0)
-		{
-            tZFontPtr pFont(gpFontSystem->GetFont(fontParams));
-            assert(pFont);
-			int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrTextArea.Width(), (uint8_t*)sLine.data(), sLine.length());
+    // Treat the line as a line node
+    ZXMLNode lineNode;
+    lineNode.Init(sLine);
+    mCurrentLook = look;
+    mCurrentFont = fontParams;
+    mCurrentTextPosition = pos;
+    msLink = sLink;
 
-			sTextEntry textEntry;
-			textEntry.sText         = sLine.substr(0, nChars);
-            textEntry.look          = look;
-			textEntry.fontParams    = fontParams;
-			textEntry.pos           = pos;
-			textEntry.sLink         = sLink;
+    ProcessLineNode(lineNode.GetChild("line"));
+}*/
 
-			textLine.push_back(textEntry);
 
-			// Add it to the document, and on to the next line
-            std::unique_lock<std::mutex> lk(mDocumentMutex);
-            mDocument.push_back(textLine);
-			mnFullDocumentHeight += GetLineHeight(textLine);
-			textLine.clear();
+void ZFormattedTextWin::AddLineNode(string sLine)
+{
+    // Treat the line as a line node
+    ZXMLNode lineNode;
+    lineNode.Init(sLine);
+    ProcessLineNode(lineNode.GetChild("line"));
+}
 
-			sLine = sLine.substr((int) nChars);
-		}
-	}
-	else
-	{
-		// Treat the line as a line node
-		ZXMLNode lineNode;
-		lineNode.Init(sLine);
-        mCurrentLook = look;
-		mCurrentFont = fontParams;
-		mCurrentTextPosition = pos;
-		msLink = sLink;
 
-        ProcessLineNode(lineNode.GetChild("line"));
-	}
+void ZFormattedTextWin::AddMultiLine(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
+{
+    tTextLine textLine;
+    // Insert as much text on each line as will fit
+    while (sLine.length() > 0)
+    {
+        tZFontPtr pFont(gpFontSystem->GetFont(fontParams));
+        assert(pFont);
+        int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrTextArea.Width(), (uint8_t*)sLine.data(), sLine.length());
+
+        sTextEntry textEntry;
+        textEntry.sText = sLine.substr(0, nChars);
+        textEntry.look = look;
+        textEntry.fontParams = fontParams;
+        textEntry.pos = pos;
+        textEntry.sLink = sLink;
+
+        textLine.push_back(textEntry);
+
+        // Add it to the document, and on to the next line
+        std::unique_lock<std::mutex> lk(mDocumentMutex);
+        mDocument.push_back(textLine);
+        mnFullDocumentHeight += GetLineHeight(textLine);
+        textLine.clear();
+
+        sLine = sLine.substr((int)nChars);
+    }
 }
 
 bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
@@ -523,7 +531,7 @@ bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
 
 		if (bWrapLine)
 		{
-			AddTextLine(sCaption, mCurrentFont, mCurrentLook, mCurrentTextPosition, bWrapLine, msLink);
+			AddMultiLine(sCaption, mCurrentFont, mCurrentLook, mCurrentTextPosition, msLink);
 		}
 		else
 		{
@@ -561,38 +569,41 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 	sParam = pTextNode->GetAttribute(ksColorTag);
 	if (!sParam.empty())
 	{
-		mnCurrentColor = (uint32_t)StringHelpers::ToInt(sParam);
+        mCurrentLook.colTop = (uint32_t)StringHelpers::ToInt(sParam);
 	}
 
 	sParam = pTextNode->GetAttribute(ksColor2Tag);
 	if (!sParam.empty())
 	{
-		mnCurrentColor2 = (uint32_t)StringHelpers::ToInt(sParam);
+        mCurrentLook.colBottom = (uint32_t)StringHelpers::ToInt(sParam);
 	}
 	else
 	{
-		mnCurrentColor2 = mnCurrentColor;
+        mCurrentLook.colBottom = mCurrentLook.colTop;
 	}
 
 	sParam = pTextNode->GetAttribute(ksPositionTag);
-	if (!sParam.empty())
+    mCurrentTextPosition = ZGUI::FromString(sParam);
+    ZASSERT(mCurrentTextPosition != ZGUI::Unknown);
+
+/*	if (!sParam.empty())
 	{
 		StringHelpers::makelower(sParam);
 
-		if (sParam == "topleft")            mCurrentTextPosition = ZGUI::LT;
-		else if (sParam == "topcenter")     mCurrentTextPosition = ZGUI::CT;
-		else if (sParam == "topright")      mCurrentTextPosition = ZGUI::RT;
-		else if (sParam == "middleleft")    mCurrentTextPosition = ZGUI::LC;
-		else if (sParam == "middlecenter")  mCurrentTextPosition = ZGUI::C;
-		else if (sParam == "middleright")   mCurrentTextPosition = ZGUI::RC;
-		else if (sParam == "bottomleft")    mCurrentTextPosition = ZGUI::LB;
-		else if (sParam == "bottomcenter")  mCurrentTextPosition = ZGUI::CB;
-		else if (sParam == "bottomright")   mCurrentTextPosition = ZGUI::RB;
+		if (sParam == "lt")         mCurrentTextPosition = ZGUI::LT;
+		else if (sParam == "ct")    mCurrentTextPosition = ZGUI::CT;
+		else if (sParam == "rt")    mCurrentTextPosition = ZGUI::RT;
+		else if (sParam == "lc")    mCurrentTextPosition = ZGUI::LC;
+		else if (sParam == "c")     mCurrentTextPosition = ZGUI::C;
+		else if (sParam == "rc")    mCurrentTextPosition = ZGUI::RC;
+		else if (sParam == "lb")    mCurrentTextPosition = ZGUI::LB;
+		else if (sParam == "cb")    mCurrentTextPosition = ZGUI::CB;
+		else if (sParam == "rb")    mCurrentTextPosition = ZGUI::RB;
 		else
 		{
 			ZASSERT(false);  // unknown position type
 		}
-	}
+	}*/
 
 	sParam = pTextNode->GetAttribute(ksStyleTag);
 	if (!sParam.empty())

@@ -42,7 +42,7 @@ ZFormattedTextWin* ZWinControlPanel::AddCaption(const string& sCaption, const ZF
 {
     ZFormattedTextWin* pWin = new ZFormattedTextWin();
     pWin->SetArea(mrNextControl);
-    pWin->AddTextLine(sCaption, fontParams, look, pos);
+    pWin->AddMultiLine(sCaption, fontParams, look, pos);
     pWin->SetFill(nFillCol);
     ChildAdd(pWin);
 

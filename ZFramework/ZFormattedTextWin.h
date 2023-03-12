@@ -36,8 +36,10 @@ public:
     virtual void        SetUnderlineLinks(bool bUnderline = true) { mbUnderlineLinks = bUnderline; }
 	virtual void		Clear();
     virtual void        SetFill(uint32_t nCol, bool bEnable = true) { mnFillColor = nCol; mbFillBackground = bEnable && ARGB_A(mnFillColor) > 5; }
-    virtual void		AddTextLine(std::string sLine, ZFontParams fontParams, const ZTextLook& look = {}, ZGUI::ePosition = ZGUI::LB, bool bWrap = true, const std::string& sLink = "");
-	int64_t   			GetFullDocumentHeight() { return mnFullDocumentHeight; }
+
+    virtual void		AddLineNode(std::string sLine);
+    virtual void		AddMultiLine(std::string sLine, ZFontParams fontParams, const ZTextLook& look = {}, ZGUI::ePosition = ZGUI::LB, const std::string& sLink = "");
+    int64_t   			GetFullDocumentHeight() { return mnFullDocumentHeight; }
 
 	void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
 	void				UpdateScrollbar();					// Creates a scrollbar if one is needed
@@ -76,8 +78,6 @@ private:
 
 	// Storage for text parameters while parsing the document
 	ZFontParams		    mCurrentFont;
-	uint32_t			mnCurrentColor;
-	uint32_t			mnCurrentColor2;
     ZTextLook           mCurrentLook;
 	ZGUI::ePosition	    mCurrentTextPosition;
 	bool				mbScrollable;

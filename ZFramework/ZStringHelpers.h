@@ -6,19 +6,6 @@
 #include <ZMemBuffer.h>
 #include "helpers/StringHelpers.h"
 
-// Conversion functions
-/*bool        StringToBool(std::string sVal);
-std::string BoolToString(bool bVal);
-
-int64_t     StringToInt(const std::string& sVal);
-std::string IntToString(int64_t nVal);
-
-uint32_t    StringToHex(const std::string& sVal);
-std::string HexToString(uint32_t nVal);
-
-double      StringToDouble(const std::string& sVal);
-std::string DoubleToString(double fVal);*/
-
 ZPoint      StringToPoint(const std::string& sVal);
 std::string PointToString(const ZPoint& pointValue);
 
@@ -27,9 +14,6 @@ std::string RectToString(const ZRect& rectValue);
 
 void        StringToInt64Array(const std::string& sVal, std::vector<int64_t>& intArray);
 std::string Int64ArrayToString(std::vector<int64_t>& intArray);
-
-std::string StringArrayToString(std::vector<std::string>& stringArray);
-void        StringToStringArray(const std::string& sVal, std::vector<std::string>& stringArray);
 
 std::string StringMapToString(tKeyValueMap& stringMap);
 void        StringToStringMap(std::string sVal, tKeyValueMap& stringMap);
@@ -59,7 +43,6 @@ void        Sprintf(std::string& sOut, const char* format, va_list args);
 bool		StartsWith(const std::string& sConsider, const std::string& starts);
 bool		EndsWith(const std::string& sConsider, const std::string& ends);
 
-std::string SanitizeAscii(const std::string& sText);  // ensures all characters are in the lower 7bit ascii values
 
 std::string GetHoursMinutesSecondsString(int64_t nSeconds);		
 

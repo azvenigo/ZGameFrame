@@ -123,9 +123,9 @@ bool ZChoosePGNWin::ListGamesFromPGN(string& sFilename, string& sPGNFile)
 
 
 
-            string sListBoxEntry = "<line wrap=0><text size=0 color=0xff000000 color2=0xff000000 position=MiddleLeft link=setpgn;contents="+ StringHelpers::URL_Encode(sPGNContent) +";target=" + mpParentWin->GetTargetName() + ">" + StringHelpers::FromInt(nCount) + ". " +
+            string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + StringHelpers::URL_Encode(mFont) + " position=lb link=setpgn;contents="+ StringHelpers::URL_Encode(sPGNContent) +";target=" + mpParentWin->GetTargetName() + ">" + StringHelpers::FromInt(nCount) + ". " +
                 sDate + "/" + sEventName + "/"+ sSiteName + "/" + sRound +"</text></line>";
-            mpGamesList->AddTextLine(sListBoxEntry, mFont, ZTextLook(), ZGUI::BottomRight, false);
+            mpGamesList->AddLineNode(sListBoxEntry);
 
             nIndex = nEndPGNContent;    // length of "[Event"
             nCount++;
@@ -298,8 +298,8 @@ void ZPGNWin::UpdateView()
         
         if (!sValue.empty())
         {
-            sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + pgnTags[nTagIndex] + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + sValue + "</text></line>";
-            mpGameTagsWin->AddTextLine(sTag, mTagsFont, ZTextLook(ZTextLook::kNormal, 0xffff0000, 0xffff0000), ZGUI::BottomLeft, false);
+            sTag = "<line wrap=0><text color=0xffffffff color2=0xffffffff fontparams=" + StringHelpers::URL_Encode(mTagsFont) + " position=lb>" + pgnTags[nTagIndex] + "</text><text fontparams=" + StringHelpers::URL_Encode(mTagsFont) + " color=0xff000000 color2=0xff000000 position=rb>" + sValue + "</text></line>";
+            mpGameTagsWin->AddLineNode(sTag);
         }
     }
 
@@ -319,23 +319,23 @@ void ZPGNWin::UpdateView()
             if ((mCurrentHalfMoveNumber+1) % 2 == 0)
             {
                 // highlight white
-                sMoveLine = "<line wrap=0><text size=0 color=0xff0088ff color2=0xff0088ff position=MiddleLeft link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". [" + move.whiteAction + "]</text>";
-                sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">" + move.blackAction + "</text></line>";
+                sMoveLine = "<line wrap=0><text fontparams=" + StringHelpers::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=lb link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". [" + move.whiteAction + "]</text>";
+                sMoveLine += "<text fontparams=" + StringHelpers::URL_Encode(mBoldFont) + " color=0xff000000 color2=0xff000000 position=rb link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">" + move.blackAction + "</text></line>";
             }
             else
             {
                 // highlight black
-                sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
-                sMoveLine += "<text size=0 color=0xff0088ff color2=0xff0088ff position=middleRight link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">[" + move.blackAction + "]</text></line>";
+                sMoveLine = "<line wrap=0><text fontparams=" + StringHelpers::URL_Encode(mBoldFont) + " color=0xffffffff color2=0xffffffff position=lb link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
+                sMoveLine += "<text fontparams=" + StringHelpers::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=rb link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">[" + move.blackAction + "]</text></line>";
             }
-            mpMovesWin->AddTextLine(sMoveLine, mBoldFont, ZTextLook(ZTextLook::kNormal,0xffff0000, 0xffff0000), ZGUI::BottomLeft, false);
+            mpMovesWin->AddLineNode(sMoveLine);
         }
         else
         {
 
-            sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=setmove;target=pgnwin;halfmove="+ StringHelpers::FromInt(nHalfMove-1) +">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
-            sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=setmove;target=pgnwin;halfmove="+StringHelpers::FromInt(nHalfMove)+">" + move.blackAction + "</text></line>";
-            mpMovesWin->AddTextLine(sMoveLine, mBoldFont, ZTextLook(ZTextLook::kNormal, 0xffff0000, 0xffff0000), ZGUI::BottomLeft, false);
+            sMoveLine = "<line wrap=0><text fontparams=" + StringHelpers::URL_Encode(mMoveFont) + " color=0xffffffff color2=0xffffffff position=lb link=setmove;target=pgnwin;halfmove="+ StringHelpers::FromInt(nHalfMove-1) +">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
+            sMoveLine += "<text fontparams=" + StringHelpers::URL_Encode(mMoveFont) + " color=0xff000000 color2=0xff000000 position=rb link=setmove;target=pgnwin;halfmove="+StringHelpers::FromInt(nHalfMove)+">" + move.blackAction + "</text></line>";
+            mpMovesWin->AddLineNode(sMoveLine);
         }
 
         nHalfMove += 2;
@@ -455,7 +455,7 @@ bool ZChessWin::Init()
 
         pCP->Init();
 
-        pCP->AddCaption("Piece Height", gDefaultTitleFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
+        pCP->AddCaption("Piece Height", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, pBtnFont);
         //    pCP->AddSpace(16);
         pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "", pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
@@ -471,7 +471,7 @@ bool ZChessWin::Init()
         pCP->AddButton("Load Random Game", ZMessage("randgame", this), pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
         pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg, "", pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
 
-        pCP->AddCaption("Playback Speed", gDefaultTitleFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
+        pCP->AddCaption("Playback Speed", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mAutoplayMSBetweenMoves, 1, 100, 250);
 
         ChildAdd(pCP);

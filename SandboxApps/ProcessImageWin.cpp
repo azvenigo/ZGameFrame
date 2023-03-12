@@ -209,22 +209,19 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
     {
         string sPropLineXMLNode("<line wrap=0>");
 
-        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
-        sPropLineXMLNode += " position=MiddleLeft>";
+        sPropLineXMLNode += "<text color=0xffffffff color2=0xffffffff";
+        sPropLineXMLNode += " fontparams=" + (string)fp;
+        sPropLineXMLNode += " position=lb>";
         sPropLineXMLNode += prop.sName;
         sPropLineXMLNode += "</text>";
 
-/*        sPropLineXMLNode += "<text size=0 color=0xffffffff color2=0xffffffff ";
-        sPropLineXMLNode += " position=middleCenter>";
-        sPropLineXMLNode += prop.sType;
-        sPropLineXMLNode += "</text>";*/
-
-        sPropLineXMLNode += "<text size=0 color=0xff000000 color2=0xff000000 ";
-        sPropLineXMLNode += " position=middleRight>";
+        sPropLineXMLNode += "<text color=0xff000000 color2=0xff000000";
+        sPropLineXMLNode += " fontparams=" + (string)fp;
+        sPropLineXMLNode += " position=rb>";
         sPropLineXMLNode += prop.sValue.substr(0,16);
         sPropLineXMLNode += "</text></line>";
 
-        mpImageProps->AddTextLine(sPropLineXMLNode, fp, ZTextLook(), ZGUI::LB, false);
+        mpImageProps->AddLineNode(sPropLineXMLNode);
         mpImageProps->SetScrollable();
     }
 }
@@ -1110,7 +1107,7 @@ void cProcessImageWin::ResetResultsBuffer()
 
         mpResultWin = new ZImageWin();
         mpResultWin->SetArea(mrResultImageDest);
-        mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont),ZTextLook(ZTextLook::kNormal, 0x44ffffff, 0x44ffffff), ZGUI::BottomRight, true);
+        mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont),ZTextLook(ZTextLook::kNormal, 0x44ffffff, 0x44ffffff), ZGUI::RB, true);
         mpResultWin->SetFill(0xff222222);
         mpResultWin->SetArea(mrResultImageDest);
         mpResultWin->SetZoomable(true, 0.05, 100.0);

@@ -51,6 +51,7 @@ extern ZRect        grSliderThumbEdge;
 // Fonts
 extern ZFontParams  gDefaultButtonFont;
 extern ZFontParams  gDefaultTitleFont;
+extern ZFontParams  gDefaultCaptionFont;
 extern ZFontParams  gDefaultTextFont;
 
 
