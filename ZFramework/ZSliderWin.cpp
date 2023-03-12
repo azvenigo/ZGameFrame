@@ -266,8 +266,8 @@ bool ZSliderWin::Paint()
 		{
 			string sLabel;
 			Sprintf(sLabel, "%d", GetSliderValue());
-			ZRect rText(mpFont->GetOutputRect(rThumb, (uint8_t*)sLabel.data(), sLabel.length(), ZFont::kMiddleCenter));
-            mpFont->DrawText(mpTransformTexture.get(), sLabel, rText, 0xffffffff, 0xffffffff, ZFont::kShadowed);
+			ZRect rText(mpFont->GetOutputRect(rThumb, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center));
+            mpFont->DrawText(mpTransformTexture.get(), sLabel, rText, ZTextLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff));
 		}	
 	}
 

@@ -29,9 +29,10 @@ ZAnimObject::~ZAnimObject()
 {
 }
 
-ZAnimObject_TextMover::ZAnimObject_TextMover(tZFontPtr pFont) : ZAnimObject()
+ZAnimObject_TextMover::ZAnimObject_TextMover(tZFontPtr pFont, const ZTextLook& look) : ZAnimObject()
 {
 	mpFont = pFont;
+    mTextLook = look;
 	mfX  = 0;
 	mfY  = 0;
 	mfDX = 0;
@@ -40,8 +41,6 @@ ZAnimObject_TextMover::ZAnimObject_TextMover(tZFontPtr pFont) : ZAnimObject()
 	mnEndAlpha = 0;
 	mnRemainingAlphaFadeTime = 0;
 	mbAlphaFading = false;
-	mnColor = 0;
-	mbShadow = false;
 }
 
 
@@ -72,11 +71,6 @@ bool ZAnimObject_TextMover::Paint()
 		mState = kFinished;
 		return true;
 	}
-
-	ZFont::eStyle drawStyle = ZFont::kNormal;
-	if (mbShadow)
-		drawStyle = ZFont::kShadowed;
-
 	if (mbAlphaFading)
 	{
 		// Alpha Draw
@@ -91,26 +85,24 @@ bool ZAnimObject_TextMover::Paint()
 		double fT = (double) (mnTotalFadeTime - mnRemainingAlphaFadeTime) / (double) mnTotalFadeTime;
 		int64_t nAlpha = (int64_t) (mnStartAlpha + (mnEndAlpha - mnStartAlpha) * fT);
 
-		uint32_t nCol = ARGB((uint8_t) nAlpha, ARGB_R(mnColor), ARGB_G(mnColor), ARGB_B(mnColor));
-		uint32_t nCol2 = ARGB((uint8_t) nAlpha, ARGB_R(mnColor2), ARGB_G(mnColor2), ARGB_B(mnColor2));
-		mpFont->DrawText(mpDestination.get(), msText, mrArea, nCol, nCol2, drawStyle);
+        ZTextLook useLook(mTextLook);
+		useLook.colTop = ARGB((uint8_t) nAlpha, ARGB_R(mTextLook.colTop), ARGB_G(mTextLook.colTop), ARGB_B(mTextLook.colTop));
+        useLook.colBottom= ARGB((uint8_t) nAlpha, ARGB_R(mTextLook.colBottom), ARGB_G(mTextLook.colBottom), ARGB_B(mTextLook.colBottom));
+		mpFont->DrawText(mpDestination.get(), msText, mrArea, useLook);
 
 		return true;
 	}
 
 	// Plain Draw
-	mpFont->DrawText(mpDestination.get(), msText, mrArea, mnColor, mnColor, drawStyle);
+	mpFont->DrawText(mpDestination.get(), msText, mrArea, mTextLook);
 
 	return true;
 }
 
 // cCEAnimObject_TextMover
-void ZAnimObject_TextMover::SetText(const string& sText, uint32_t nColor, uint32_t nColor2, bool bShadow)
+void ZAnimObject_TextMover::SetText(const string& sText)
 {
 	msText = sText;
-	mnColor = nColor;
-	mnColor2 = nColor2;
-	mbShadow = bShadow;
 
 	int64_t nX = (int64_t) mfX;
 	int64_t nY = (int64_t) mfY;
@@ -342,14 +334,13 @@ void ZCEAnimObject_Sparkler::ProcessSparkles()
 
 
 // cCEAnimObject
-ZAnimObject_TextPulser::ZAnimObject_TextPulser() : ZAnimObject()
+ZAnimObject_TextPulser::ZAnimObject_TextPulser(tZFontPtr pFont, const ZTextLook& look) : ZAnimObject()
 {
-	mpFont = NULL;
+	mpFont = pFont;
+    mLook = look;
 	mnMaxAlpha = 255;
 	mnMinAlpha = 0;
 	mfPeriod = 10.0;
-	mnColor = 0;
-	mbShadow = false;
 }
 
 bool ZAnimObject_TextPulser::Paint()
@@ -359,24 +350,22 @@ bool ZAnimObject_TextPulser::Paint()
 	double pulse = 0.5 * (1.0 + (double) sin(((double) gTimer.GetElapsedTime()) / mfPeriod));
 	int64_t nAlpha = (int64_t) ((double) mnMinAlpha + ((double)mnMaxAlpha - (double)mnMinAlpha) * pulse );
 
-	uint32_t nCol = ARGB((uint8_t) nAlpha, ARGB_R(mnColor), ARGB_G(mnColor), ARGB_B(mnColor));
-	ZFont::eStyle style = ZFont::kNormal;
-	if (mbShadow)
-		style = ZFont::kShadowed;
+    ZTextLook useLook(mLook);
 
-	mpFont->DrawTextParagraph(mpDestination.get(), msText, mrArea, nCol, nCol, ZFont::kMiddleCenter, style);
+	useLook.colTop = ARGB((uint8_t) nAlpha, ARGB_R(useLook.colTop), ARGB_G(useLook.colTop), ARGB_B(useLook.colTop));
+    useLook.colBottom = ARGB((uint8_t)nAlpha, ARGB_R(useLook.colBottom), ARGB_G(useLook.colBottom), ARGB_B(useLook.colBottom));
+
+
+	mpFont->DrawTextParagraph(mpDestination.get(), msText, mrArea, useLook, ZGUI::Center);
 
 	return true;
 
 }
 
 // cCEAnimObject_TextPulser
-void ZAnimObject_TextPulser::SetText(const string& sText, uint32_t nColor, tZFontPtr pFont, bool bShadow)
+void ZAnimObject_TextPulser::SetText(const string& sText)
 {
 	msText = sText;
-	mnColor = nColor;
-	mbShadow = bShadow;
-	mpFont = pFont;
 
 	ZASSERT(mpFont);
 
@@ -929,35 +918,6 @@ bool ZAnimObject_TransformingImage::Paint()
 
     gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpDestination.get(), mrArea, mrArea);
 
-
-	return true;
-}
-
-
-
-ZAnimObject_TransformingText::ZAnimObject_TransformingText(const string& sText, const ZRect& rArea, ZFont* pFont, uint32_t nColor, uint32_t nColor2, ZFont::ePosition nPosition, ZFont::eStyle nStyle)
-{
-	ZRect rAdjustedArea = pFont->GetOutputRect(rArea, (uint8_t*) sText.data(), sText.length(), nPosition);
-	ZTransformable::Init(rAdjustedArea);
-    mpTransformTexture.get()->Fill(mpTransformTexture.get()->GetArea(), 0x00000000);
-	pFont->DrawText(mpTransformTexture.get(), sText.data(), mpTransformTexture.get()->GetArea(), nColor, nColor2, nStyle);
-#ifdef _DEBUG
-	msDebugName = "TransformingText::sText";
-#endif
-}
-
-ZAnimObject_TransformingText::~ZAnimObject_TransformingText()
-{
-}
-
-bool ZAnimObject_TransformingText::Paint()
-{
-	if (mTransformState == ZTransformable::kFinished)
-	{
-		mState = ZAnimObject::kFinished;
-	}
-	else
-        TransformDraw(mpDestination.get(), &mpDestination->GetArea());
 
 	return true;
 }

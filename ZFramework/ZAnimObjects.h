@@ -46,28 +46,24 @@ protected:
 class ZAnimObject_TextMover : public ZAnimObject
 {
 public:
-   // cCEAnimObject
-   ZAnimObject_TextMover(tZFontPtr pFont);
+    ZAnimObject_TextMover(tZFontPtr pFont, const ZTextLook& look = {});
 
-   virtual bool		Paint();
+    virtual bool    Paint();
 
-   // cCEAnimObject_TextMover
-   void           	SetText(const std::string& sText, uint32_t nColor, uint32_t nColor2, bool bShadow = false);
-   void           	SetLocation(int64_t nX, int64_t nY);
-   void           	SetPixelsPerSecond(double fDX, double fDY);
-   void           	SetAlphaFade(int64_t nStartAlpha, int64_t nEndAlpha, int64_t nMilliseconds);
+    void            SetText(const std::string& sText);
+    void           	SetLocation(int64_t nX, int64_t nY);
+    void           	SetPixelsPerSecond(double fDX, double fDY);
+    void           	SetAlphaFade(int64_t nStartAlpha, int64_t nEndAlpha, int64_t nMilliseconds);
 
 protected:
     std::string     msText;
     tZFontPtr       mpFont;
-    uint32_t        mnColor;
-    uint32_t        mnColor2;
+    ZTextLook       mTextLook;
     int64_t			mnStartAlpha;
     int64_t			mnEndAlpha;
     int64_t         mnTotalFadeTime;
     int64_t         mnRemainingAlphaFadeTime;
     bool           	mbAlphaFading;
-    bool           	mbShadow;
 
     // we keep our location in floating point values for smooth animating
     double          mfX;           
@@ -123,19 +119,18 @@ class ZAnimObject_TextPulser : public ZAnimObject
 {
 public:
    // cCEAnimObject
-   ZAnimObject_TextPulser();
+   ZAnimObject_TextPulser(tZFontPtr pFont, const ZTextLook& look = {});
 
    virtual bool Paint();
 
    // cCEAnimObject_TextPulser
-   void			SetText(const std::string& sText, uint32_t nColor, tZFontPtr pFont, bool bShadow = false);
+   void			SetText(const std::string& sText);
    void			SetPulse(int64_t nMinAlpha, int64_t nMaxAlpha, double fPeriod);
 
 protected:
     tZFontPtr   mpFont;
+    ZTextLook   mLook;
     std::string msText;
-    uint32_t	mnColor;
-    bool		mbShadow;
 
     double		mfPeriod;
     int64_t		mnMinAlpha;
@@ -161,16 +156,6 @@ class ZAnimObject_TransformingImage : public ZAnimObject, public ZTransformable
 public:
 	ZAnimObject_TransformingImage(ZBuffer* pBuffer, ZRect* pArea = NULL);
 	virtual ~ZAnimObject_TransformingImage();
-
-	virtual bool  Paint();
-};
-
-// TransformingText
-class ZAnimObject_TransformingText : public ZAnimObject, public ZTransformable
-{
-public:
-	ZAnimObject_TransformingText(const std::string& sText, const ZRect& rArea, ZFont* pFont, uint32_t nColor, uint32_t nColor2, ZFont::ePosition nPosition, ZFont::eStyle nStyle);
-	virtual ~ZAnimObject_TransformingText();
 
 	virtual bool  Paint();
 };

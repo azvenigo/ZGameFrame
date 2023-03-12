@@ -224,7 +224,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
         sPropLineXMLNode += prop.sValue.substr(0,16);
         sPropLineXMLNode += "</text></line>";
 
-        mpImageProps->AddTextLine(sPropLineXMLNode, fp, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+        mpImageProps->AddTextLine(sPropLineXMLNode, fp, ZTextLook(), ZGUI::LB, false);
         mpImageProps->SetScrollable();
     }
 }
@@ -963,7 +963,7 @@ bool cProcessImageWin::Init()
 
     pCP->AddSpace(32);
 
-    pCP->AddCaption("Radius", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
+    pCP->AddCaption("Radius", gDefaultTitleFont, ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::CenterBottom, gDefaultDialogFill);
     pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, pBtnFont);
 
     pCP->AddButton("Blur", "radiusblur;target=imageprocesswin", pBtnFont);
@@ -971,14 +971,14 @@ bool cProcessImageWin::Init()
     pCP->AddButton("Contrast", "computecontrast;target=imageprocesswin", pBtnFont);
 
     pCP->AddSpace(32);
-    pCP->AddCaption("Ops", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
+    pCP->AddCaption("Ops", gDefaultTitleFont,ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::CenterBottom, gDefaultDialogFill);
     pCP->AddButton("Negative", "negative;target=imageprocesswin", pBtnFont);
     pCP->AddButton("Monochrome", "mono;target=imageprocesswin", pBtnFont);
 
 
     pCP->AddSpace(64);
 
-    pCP->AddCaption("Experiments", gDefaultTitleFont, 0xffbbbbbb, gDefaultDialogFill, ZFont::kNormal, ZFont::kBottomCenter);
+    pCP->AddCaption("Experiments", gDefaultTitleFont, ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::CenterBottom, gDefaultDialogFill);
     pCP->AddButton("compute gradients", "computegradients;target=imageprocesswin", pBtnFont);
     pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, pBtnFont);
 
@@ -996,7 +996,7 @@ bool cProcessImageWin::Init()
     ZWinWatchPanel* pWP = new ZWinWatchPanel();
     pWP->SetArea(mrWatchPanel);
     pWP->Init();
-    pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, 0xff000000, 0xff000000, ZFont::kEmbossed);
+    pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, ZTextLook(ZTextLook::kEmbossed, 0xff000000, 0xff000000));
     ChildAdd(pWP);
 
     ZRect rImageProps(8, gDefaultTextFont.nHeight*2, mrWatchPanel.Width() - 8, mrWatchPanel.Height() - 8);
@@ -1110,7 +1110,7 @@ void cProcessImageWin::ResetResultsBuffer()
 
         mpResultWin = new ZImageWin();
         mpResultWin->SetArea(mrResultImageDest);
-        mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont), 0x44ffffff, ZFont::kBottomRight, true);
+        mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont),ZTextLook(ZTextLook::kNormal, 0x44ffffff, 0x44ffffff), ZGUI::BottomRight, true);
         mpResultWin->SetFill(0xff222222);
         mpResultWin->SetArea(mrResultImageDest);
         mpResultWin->SetZoomable(true, 0.05, 100.0);

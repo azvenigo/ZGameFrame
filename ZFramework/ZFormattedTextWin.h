@@ -3,6 +3,7 @@
 #include "ZWin.h"
 #include <string>
 #include "ZFont.h"
+#include "ZBuffer.h"
 #include <list>
 
 class ZSliderWin;
@@ -12,10 +13,8 @@ struct sTextEntry
 {
     std::string         sText;
 	ZFontParams         fontParams;
-	uint32_t            nColor;
-	uint32_t            nColor2;
-	ZFont::ePosition    position;
-	ZFont::eStyle       style;
+    ZTextLook           look;
+    ZGUI::ePosition     pos;
     std::string         sLink;
 };
 
@@ -36,8 +35,8 @@ public:
     virtual void        SetDrawBorder(bool bDraw = true) { mbDrawBorder = bDraw; }
     virtual void        SetUnderlineLinks(bool bUnderline = true) { mbUnderlineLinks = bUnderline; }
 	virtual void		Clear();
-    virtual void        SetFill(uint32_t nCol, bool bEnable = true) { mnFillColor = nCol; mbFillBackground = bEnable; }
-	virtual void		AddTextLine(std::string sLine, ZFontParams fontParams, uint32_t nCol1, uint32_t nCol2, ZFont::eStyle style = ZFont::kNormal, ZFont::ePosition = ZFont::kBottomLeft, bool bWrap = true, const std::string& sLink = "");
+    virtual void        SetFill(uint32_t nCol, bool bEnable = true) { mnFillColor = nCol; mbFillBackground = bEnable && ARGB_A(mnFillColor) > 5; }
+    virtual void		AddTextLine(std::string sLine, ZFontParams fontParams, const ZTextLook& look = {}, ZGUI::ePosition = ZGUI::LB, bool bWrap = true, const std::string& sLink = "");
 	int64_t   			GetFullDocumentHeight() { return mnFullDocumentHeight; }
 
 	void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
@@ -79,8 +78,8 @@ private:
 	ZFontParams		    mCurrentFont;
 	uint32_t			mnCurrentColor;
 	uint32_t			mnCurrentColor2;
-	ZFont::ePosition	mCurrentTextPosition;
-	ZFont::eStyle		mCurrentStyle;
+    ZTextLook           mCurrentLook;
+	ZGUI::ePosition	    mCurrentTextPosition;
 	bool				mbScrollable;
     std::string         msLink;
 

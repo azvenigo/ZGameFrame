@@ -27,10 +27,11 @@ public:
     WatchType       mType;
     void*           pMem;
 
-    uint32_t        nCaptionCol;
-    uint32_t        nWatchCol;
+    ZTextLook       captionLook;
+    ZTextLook       textLook;
+
     ZRect           mArea;
-    ZFont::eStyle   mStyle;
+    ZTextLook       mLook;
 };
 
 typedef std::list<WatchStruct> tWatchList;
@@ -45,7 +46,7 @@ public:
 
     virtual bool    Init();
 
-    bool            AddItem(WatchType type, const std::string& sCaption, void* pWatchAddress = nullptr, uint32_t nCaptionCol = 0xffaaaaaa, uint32_t nWatchColor = 0xffffffff, ZFont::eStyle style = ZFont::kNormal);
+    bool            AddItem(WatchType type, const std::string& sCaption, void* pWatchAddress = nullptr, const ZTextLook& captionlook = {}, const ZTextLook& textlook = {});
     void            AddSpace(int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
 
     bool            Process();

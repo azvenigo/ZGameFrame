@@ -54,6 +54,15 @@ namespace ZGUI
         LC = Left|VCenter,       Center = HCenter|VCenter,    RC = Right|VCenter,
         LB = Left|Bottom,        CB     = Bottom|HCenter,     RB = Bottom|Right,
 
+        // Aliases
+        TopLeft = LT,       LeftTop = LT,       
+        TopCenter = CT,     CenterTop = CT,     
+        TopRight = RT,      RightTop = RT,
+
+        BottomLeft = LB,    LeftBottom = LB,    
+        BottomCenter = CB,  CenterBottom = CB,  
+        BottomRight = RB,   RightBottom = RB,
+        
 
 
         /*

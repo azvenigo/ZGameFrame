@@ -43,8 +43,7 @@ bool ZChoosePGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("Cancel"); // wingdings 3 to the beggining
-    pBtn->SetFont(gpFontSystem->GetFont(gDefaultButtonFont), 0xffffffff, 0xffffffff);
-    pBtn->SetStyle(ZFont::kNormal);
+    pBtn->SetTextLook(gpFontSystem->GetFont(gDefaultButtonFont), ZTextLook());
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
     pBtn->SetMessage(ZMessage("cancelpgnselect", mpParentWin));
@@ -71,7 +70,7 @@ bool ZChoosePGNWin::Paint()
 
     ZRect rText(mAreaToDrawTo);
     rText.OffsetRect(gDefaultSpacer, gDefaultSpacer);
-    gpFontSystem->GetFont(mFont)->DrawTextParagraph(mpTransformTexture.get(), msCaption, rText, 0xffffffff, 0xffffffff);
+    gpFontSystem->GetFont(mFont)->DrawTextParagraph(mpTransformTexture.get(), msCaption, rText);
     return ZWin::Paint();
 }
 
@@ -126,7 +125,7 @@ bool ZChoosePGNWin::ListGamesFromPGN(string& sFilename, string& sPGNFile)
 
             string sListBoxEntry = "<line wrap=0><text size=0 color=0xff000000 color2=0xff000000 position=MiddleLeft link=setpgn;contents="+ StringHelpers::URL_Encode(sPGNContent) +";target=" + mpParentWin->GetTargetName() + ">" + StringHelpers::FromInt(nCount) + ". " +
                 sDate + "/" + sEventName + "/"+ sSiteName + "/" + sRound +"</text></line>";
-            mpGamesList->AddTextLine(sListBoxEntry, mFont, 0xffffffff, 0xffffffff, ZFont::kNormal, ZFont::kBottomRight, false);
+            mpGamesList->AddTextLine(sListBoxEntry, mFont, ZTextLook(), ZGUI::BottomRight, false);
 
             nIndex = nEndPGNContent;    // length of "[Event"
             nCount++;
@@ -186,8 +185,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption(")"); // wingdings 3 to the beggining
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
-    pBtn->SetStyle(ZFont::kNormal);
+    pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), ZTextLook());
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("beginning", this));
     ChildAdd(pBtn);
@@ -195,8 +193,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("v"); // back one
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
-    pBtn->SetStyle(ZFont::kNormal);
+    pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), ZTextLook());
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("backone", this));
@@ -205,8 +202,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("w"); // forward one
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
-    pBtn->SetStyle(ZFont::kNormal);
+    pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), ZTextLook());
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("forwardone", this));
@@ -215,8 +211,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("*"); // to end
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
-    pBtn->SetStyle(ZFont::kNormal);
+    pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings 3", gDefaultButtonFont.nHeight), ZTextLook());
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("end", this));
@@ -225,8 +220,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("1"); // open file
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
-    pBtn->SetStyle(ZFont::kNormal);
+    pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight), ZTextLook());
     rButton.OffsetRect(rButton.Width() *2, 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("loadgame", mpParentWin));
@@ -236,8 +230,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("<"); // save file
-    pBtn->SetFont(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight), 0xffffffff, 0xffffffff);
-    pBtn->SetStyle(ZFont::kNormal);
+    pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings", gDefaultButtonFont.nHeight), ZTextLook());
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("savegame", mpParentWin));
@@ -306,7 +299,7 @@ void ZPGNWin::UpdateView()
         if (!sValue.empty())
         {
             sTag = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft>" + pgnTags[nTagIndex] + "</text><text size=0 color=0xff000000 color2=0xff000000 position=middleRight>" + sValue + "</text></line>";
-            mpGameTagsWin->AddTextLine(sTag, mTagsFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+            mpGameTagsWin->AddTextLine(sTag, mTagsFont, ZTextLook(ZTextLook::kNormal, 0xffff0000, 0xffff0000), ZGUI::BottomLeft, false);
         }
     }
 
@@ -335,14 +328,14 @@ void ZPGNWin::UpdateView()
                 sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
                 sMoveLine += "<text size=0 color=0xff0088ff color2=0xff0088ff position=middleRight link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">[" + move.blackAction + "]</text></line>";
             }
-            mpMovesWin->AddTextLine(sMoveLine, mBoldFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+            mpMovesWin->AddTextLine(sMoveLine, mBoldFont, ZTextLook(ZTextLook::kNormal,0xffff0000, 0xffff0000), ZGUI::BottomLeft, false);
         }
         else
         {
 
             sMoveLine = "<line wrap=0><text size=0 color=0xffffffff color2=0xffffffff position=MiddleLeft link=setmove;target=pgnwin;halfmove="+ StringHelpers::FromInt(nHalfMove-1) +">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
             sMoveLine += "<text size=0 color=0xff000000 color2=0xff000000 position=middleRight link=setmove;target=pgnwin;halfmove="+StringHelpers::FromInt(nHalfMove)+">" + move.blackAction + "</text></line>";
-            mpMovesWin->AddTextLine(sMoveLine, mMoveFont, 0xffff0000, 0xffff0000, ZFont::kNormal, ZFont::kBottomLeft, false);
+            mpMovesWin->AddTextLine(sMoveLine, mBoldFont, ZTextLook(ZTextLook::kNormal, 0xffff0000, 0xffff0000), ZGUI::BottomLeft, false);
         }
 
         nHalfMove += 2;
@@ -462,23 +455,23 @@ bool ZChessWin::Init()
 
         pCP->Init();
 
-        pCP->AddCaption("Piece Height", gDefaultTitleFont);
+        pCP->AddCaption("Piece Height", gDefaultTitleFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, pBtnFont);
         //    pCP->AddSpace(16);
-        pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "", pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
 
-        pCP->AddButton("Clear Board", ZMessage("clearboard", this), pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddButton("Reset Board", ZMessage("resetboard", this), pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Clear Board", ZMessage("clearboard", this), pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
+        pCP->AddButton("Reset Board", ZMessage("resetboard", this), pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
         pCP->AddSpace(panelH / 30);
 
 /*        pCP->AddButton("Load Position", "loadboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
         pCP->AddButton("Save Position", "saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);*/
 
         pCP->AddSpace(panelH / 30);
-        pCP->AddButton("Load Random Game", ZMessage("randgame", this), pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg, "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddButton("Load Random Game", ZMessage("randgame", this), pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
+        pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg, "", pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
 
-        pCP->AddCaption("Playback Speed", gDefaultTitleFont);
+        pCP->AddCaption("Playback Speed", gDefaultTitleFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mAutoplayMSBetweenMoves, 1, 100, 250);
 
         ChildAdd(pCP);
@@ -495,7 +488,7 @@ bool ZChessWin::Init()
         mpSwitchSidesButton->SetArea(ZRect(0, 0, mnPieceHeight*1.5, mnPieceHeight / 1.5));
         mpSwitchSidesButton->SetCaption("Change Turn");
         mpSwitchSidesButton->SetMessage(ZMessage("changeturn", this));
-        mpSwitchSidesButton->SetFont(pBtnFont, 0xffffffff, 0xff000000);
+        mpSwitchSidesButton->SetTextLook(pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xff000000));
         ChildAdd(mpSwitchSidesButton);
     }
 
@@ -896,12 +889,12 @@ void ZChessWin::DrawBoard()
                 string sCount;
                 Sprintf(sCount, "%d", mBoard.UnderAttack(true, grid));
                 ZRect rText(SquareArea(grid));
-                defaultFont->DrawText(mpTransformTexture.get(), sCount, rText, 0xffffffff, 0xffffffff);
+                defaultFont->DrawText(mpTransformTexture.get(), sCount, rText);
 
                 rText.OffsetRect(0, defaultFont->Height());
 
                 Sprintf(sCount, "%d",mBoard.UnderAttack(false, grid));
-                defaultFont->DrawText(mpTransformTexture.get(), sCount, rText, 0xff000000, 0xff000000);
+                defaultFont->DrawText(mpTransformTexture.get(), sCount, rText);
             }
 
 
@@ -941,10 +934,10 @@ void ZChessWin::DrawBoard()
                     sLabel = "White is in Check";
             }
 
-            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
+            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             mpTransformTexture->Fill(rMoveLabel, 0xffffffff);
-            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, 0xff000000, 0xff000000, ZFont::kMiddleCenter);
+            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel,ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center);
         }
         else
         {
@@ -958,10 +951,10 @@ void ZChessWin::DrawBoard()
                 else
                     sLabel = "Black is in Check";
             }
-            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZFont::kMiddleCenter);
+            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             mpTransformTexture->Fill(rMoveLabel, 0xff000000);
-            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, 0xffffffff, 0xffffffff, ZFont::kMiddleCenter);
+            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, ZTextLook(), ZGUI::Center);
         }
     }
 
@@ -1336,16 +1329,16 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
         int64_t nOffset = nSize / 64;
         ZRect rOutline(rSquare);
         rOutline.OffsetRect(-nOffset, -nOffset);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, nOutline, nOutline, ZFont::kMiddleCenter, ZFont::kNormal);
+        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, ZTextLook(ZTextLook::kNormal, nOutline, nOutline), ZGUI::Center);
         rOutline.OffsetRect(nOffset * 2, 0);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, nOutline, nOutline, ZFont::kMiddleCenter, ZFont::kNormal);
+        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, ZTextLook(ZTextLook::kNormal, nOutline, nOutline), ZGUI::Center);
         rOutline.OffsetRect(0, nOffset * 2);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, nOutline, nOutline, ZFont::kMiddleCenter, ZFont::kNormal);
+        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, ZTextLook(ZTextLook::kNormal, nOutline, nOutline), ZGUI::Center);
         rOutline.OffsetRect(-nOffset * 2, 0);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, nOutline, nOutline, ZFont::kMiddleCenter, ZFont::kNormal);
+        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, ZTextLook(ZTextLook::kNormal, nOutline, nOutline), ZGUI::Center);
     }
 
-    pFont->DrawTextParagraph(mpImage.get(), s, rSquare, nCol, nCol, ZFont::kMiddleCenter, ZFont::kNormal);
+    pFont->DrawTextParagraph(mpImage.get(), s, rSquare, ZTextLook(ZTextLook::kNormal, nCol, nCol), ZGUI::Center);
     return true;
 }
 

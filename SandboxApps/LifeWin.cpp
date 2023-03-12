@@ -131,7 +131,7 @@ bool cLifeWin::Paint()
 	ZRect rText(0, 0, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
 
 //    TIME_SECTION_START(LifeWinDrawText);
-    mpFont->DrawText(mpTransformTexture.get(), sTemp, rText, 0xffffff00, 0xffffff00);
+    mpFont->DrawText(mpTransformTexture.get(), sTemp, rText, ZTextLook(ZTextLook::kNormal, 0xffffff00, 0xffffff00));
 //    TIME_SECTION_END(LifeWinDrawText);
     
 	ZWin::Paint();

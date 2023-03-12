@@ -2,6 +2,7 @@
 
 #include "ZWin.h"
 #include "ZFont.h"
+#include "ZGUIHelpers.h"
 
 /////////////////////////////////////////////////////////////////////////
 // 
@@ -22,18 +23,15 @@ public:
     void                SetHideOnMouseExit(bool bHideOnMouseExit) { mbHideOnMouseExit = bHideOnMouseExit; }
 
     ZFormattedTextWin*  AddCaption( const std::string& sCaption,
-                                ZFontParams& fontParams, 
-                                uint32_t nFontCol = 0xff000000, 
-                                uint32_t nFillCol = 0xffffffff, 
-                                ZFont::eStyle style = ZFont::kNormal, 
-                                ZFont::ePosition = ZFont::kMiddleCenter);
+                                const ZFontParams& fontParams, 
+                                const ZTextLook& look = {ZTextLook::kNormal, 0xffffffff, 0xffffffff},
+                                ZGUI::ePosition = ZGUI::Center,
+                                uint32_t fillColor = 0x00000000);
 
     ZWinSizablePushBtn* AddButton(  const std::string& sCaption,
                                 const std::string& sMessage, 
                                 tZFontPtr pFont, 
-                                uint32_t nFontCol1 = 0xffffffff, 
-                                uint32_t nFontCol2 = 0xffbbbbbb, 
-                                ZFont::eStyle style = ZFont::kShadowed);
+                                const ZTextLook& look = { ZTextLook::kShadowed, 0xffffffff, 0xffffffff });
 
     ZWinCheck*          AddToggle(  bool* pbValue,
                                 const std::string& sCaption, 
@@ -41,9 +39,8 @@ public:
                                 const std::string& sUncheckMessage,         
                                 const std::string& sRadioGroup,             // If part of a radio group, all others in the group get auto unchecked
                                 tZFontPtr pFont, 
-                                uint32_t nCheckedFontCol = 0xff000000, 
-                                uint32_t nUncheckedFontCol = 0xff000000, 
-                                ZFont::eStyle style = ZFont::kNormal);
+                                const ZTextLook& checkedLook   = {ZTextLook::kNormal, 0xff000000, 0xff000000},
+                                const ZTextLook& uncheckedLook = {ZTextLook::kNormal, 0xff000000, 0xff000000});
 
     ZSliderWin*         AddSlider(  int64_t* pnSliderValue,
                                 int64_t nMin, 

@@ -28,8 +28,8 @@ ZImageWin::ZImageWin()
 
     mbShowZoom = false;
     mbShow100Also = false;
-    mZoomCaptionColor = 0;
-    mZoomCaptionPos = ZFont::kTopLeft;
+    mZoomCaptionLook = ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000);
+    mZoomCaptionPos = ZGUI::LT;
     mpPanel = nullptr;
 }
 
@@ -67,11 +67,7 @@ bool ZImageWin::Init()
             pBtn = new ZWinSizablePushBtn();
             pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
             pBtn->SetCaption("X"); 
-//            pBtn->SetFont(gpFontSystem->GetDefaultFont(1));
-            pBtn->SetFont(gpFontSystem->GetFont(gDefaultButtonFont), 0xffffffff, 0xffffffff);
-//            pBtn->SetColors(0xffffffff, 0xffffffff);
-            pBtn->SetStyle(ZFont::kNormal);
-
+            pBtn->SetTextLook(gpFontSystem->GetFont(gDefaultButtonFont), ZTextLook());
             pBtn->SetArea(rButton);
             pBtn->SetMessage(msCloseButtonMessage);
             mpPanel->ChildAdd(pBtn);
@@ -87,10 +83,7 @@ bool ZImageWin::Init()
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(":"); // wingdings rotate left
-        pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", mnControlPanelFontHeight), 0xffffffff, 0xffffffff);
-//        pBtn->SetColors(0xffffffff,0xffffffff);
-        pBtn->SetStyle(ZFont::kNormal);
-
+        pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings 3", mnControlPanelFontHeight), ZTextLook());
         pBtn->SetArea(rButton);
 
 
@@ -106,10 +99,7 @@ bool ZImageWin::Init()
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(";"); // wingdings rotate right
-        pBtn->SetFont(gpFontSystem->GetFont("Wingdings 3", mnControlPanelFontHeight), 0xffffffff, 0xffffffff);
-//        pBtn->SetColors(0xffffffff,0xffffffff);
-        pBtn->SetStyle(ZFont::kNormal);
-
+        pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings 3", mnControlPanelFontHeight), ZTextLook());
         pBtn->SetArea(rButton);
 
         Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
@@ -126,10 +116,7 @@ bool ZImageWin::Init()
             pBtn = new ZWinSizablePushBtn();
             pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
             pBtn->SetCaption("save"); 
-            pBtn->SetFont(gpFontSystem->GetFont(gDefaultButtonFont), 0xffffffff, 0xffffffff);
-//            pBtn->SetColors(0xffffffff,0xffffffff);
-            pBtn->SetStyle(ZFont::kNormal);
-
+            pBtn->SetTextLook(gpFontSystem->GetFont(gDefaultButtonFont), ZTextLook());
             pBtn->SetArea(rButton);
             pBtn->SetMessage(msSaveButtonMessage);
             mpPanel->ChildAdd(pBtn);
@@ -405,7 +392,7 @@ bool ZImageWin::Paint()
         assert(mpCaptionFont);
 
         ZRect rCaption(mpCaptionFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), msCaption.length(), mCaptionPos));
-        mpCaptionFont->DrawText(mpTransformTexture.get(), msCaption, rCaption, mnCaptionCol, mnCaptionCol);
+        mpCaptionFont->DrawText(mpTransformTexture.get(), msCaption, rCaption, mCaptionLook);
     }
 
     if (mbShowZoom)
@@ -418,7 +405,7 @@ bool ZImageWin::Paint()
             Sprintf(sZoom, "%d%%", (int32_t)(mfZoom * 100.0));
 
             ZRect rZoomCaption(mpZoomCaptionFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)sZoom.data(), sZoom.length(), mZoomCaptionPos));
-            mpZoomCaptionFont->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, mZoomCaptionColor, mZoomCaptionColor);
+            mpZoomCaptionFont->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, mZoomCaptionLook);
         }
     }
 

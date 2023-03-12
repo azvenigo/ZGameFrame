@@ -123,8 +123,7 @@ public:
 	virtual void            SetCaption(const std::string& sCaption);
     std::string             GetCaption() { return msCaption; };
 //    void                    SetColors(uint32_t nColTop, uint32_t nColBottom);
-	void                    SetStyle(ZFont::eStyle style);
-    virtual void		    SetFont(tZFontPtr pFont, uint32_t nCol1, uint32_t nCol2) { mpFont = pFont; mnTextColorTop = nCol1; mnTextColorBottom = nCol2; }
+    virtual void		    SetTextLook(tZFontPtr pFont, const ZTextLook& look) { mpFont = pFont; mTextLook = look; }
     tZFontPtr  GetFont()    { return mpFont; }
 
 	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
@@ -139,15 +138,12 @@ protected:
 	eSizablePushBtnState	mDrawState;
 	std::string             msCaption;
 
-	ZFont::eStyle           mCaptionStyle;
-
     tZBufferPtr             mpUpEdgeImage;              // not owned by this class
     tZBufferPtr             mpDownEdgeImage;            // not owned by this class
 	ZRect                   mrEdge;
 
     tZFontPtr               mpFont;
-    uint32_t                mnTextColorTop;
-    uint32_t                mnTextColorBottom;
+    ZTextLook               mTextLook;
 
 	std::string             msButtonMessage;
 };
@@ -170,7 +166,7 @@ public:
 	// IMessageTarget
 	virtual bool			HandleMessage(const ZMessage& message);
 
-    void                    SetCheckedColors(uint32_t nUncheckedColor, uint32_t nCheckedColor) { mnUncheckedColor = nUncheckedColor; mnCheckedColor = nCheckedColor; }
+    void                    SetTextLook(tZFontPtr pFont, const ZTextLook& checkedLook, const ZTextLook& uncheckedLook) { mCheckedLook = checkedLook; mUncheckedLook = uncheckedLook; ZWinSizablePushBtn::SetTextLook(pFont, uncheckedLook); }
 public:  // ZWinCheck ///////////////////////////////////////////////////////
 
 	bool					GetState() { return *mpbChecked; }
@@ -184,8 +180,9 @@ protected:
     bool*					mpbChecked;
 	std::string				msUncheckMessage;
     std::string             msRadioGroupName;
-    uint32_t                mnCheckedColor;
-    uint32_t                mnUncheckedColor;
+
+    ZTextLook               mCheckedLook;
+    ZTextLook               mUncheckedLook;
 };
 
 

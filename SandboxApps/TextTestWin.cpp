@@ -198,34 +198,37 @@ bool TextTestWin::Init()
     tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
 
 //    pCP->AddButton("Custom Font", "setcustomfont;target=TextTestWin");
-    pCP->AddCaption("Height", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
+
+    ZTextLook captionLook(ZTextLook::kEmbossed, 0xff444444, 0xff737373);
+
+    pCP->AddCaption("Height", gDefaultButtonFont, captionLook);
 
     pCP->AddSlider(&mCustomFontParams.nHeight, 8, 200, 2, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddCaption("Weight", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
+    pCP->AddCaption("Weight", gDefaultButtonFont, captionLook);
     pCP->AddSlider(&mCustomFontParams.nWeight, 2, 9, 100, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddCaption("Tracking", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
+    pCP->AddCaption("Tracking", gDefaultButtonFont, captionLook);
     pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "setfonttracking;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddCaption("Fixed Width", gDefaultButtonFont, 0xff444444, 0xff737373, ZFont::kEmbossed);
+    pCP->AddCaption("Fixed Width", gDefaultButtonFont, captionLook);
     pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, captionLook);
 
-    pCP->AddToggle(&mCustomFontParams.bUnderline, "Underline", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bUnderline, "Underline", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, captionLook);
 
-    pCP->AddToggle(&mCustomFontParams.bStrikeOut, "StrikeOut", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mCustomFontParams.bStrikeOut, "StrikeOut", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, captionLook);
 
 
 
     pCP->AddSpace(16);
 
-    pCP->AddToggle(&mbEnableKerning, "View Kerning", "togglekerning;enable=1;target=TextTestWin", "togglekerning;enable=0;target=TextTestWin", "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+    pCP->AddToggle(&mbEnableKerning, "View Kerning", "togglekerning;enable=1;target=TextTestWin", "togglekerning;enable=0;target=TextTestWin", "", pBtnFont, captionLook);
     pCP->AddSpace(16);
 
-    pCP->AddButton("Load Font", "loadfont;target=TextTestWin", pBtnFont, 0xff737373, 0xff737373, ZFont::kEmbossed);
-    pCP->AddButton("Save Font", "savefont;target=TextTestWin", pBtnFont, 0xff737373, 0xff737373, ZFont::kEmbossed);
+    pCP->AddButton("Load Font", "loadfont;target=TextTestWin", pBtnFont, captionLook);
+    pCP->AddButton("Save Font", "savefont;target=TextTestWin", pBtnFont, captionLook);
 
     ChildAdd(pCP);
 
@@ -272,7 +275,7 @@ bool TextTestWin::Paint()
     assert(mpFont);
     int32_t nLines = (int32_t) (mpFont->CalculateNumberOfLines(rText.Width(), (uint8_t*)sTemp.data(), sTemp.length()));
     
-    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp, rText, 0xFF000000, 0xFF000000);
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp, rText, ZTextLook(ZTextLook::kNormal, 0xFF000000, 0xFF000000));
 
 
 
@@ -282,7 +285,7 @@ bool TextTestWin::Paint()
 
     
     Sprintf(sTemp, "Font: %s Size:%d", mpFont->GetFontParams().sFacename.c_str(), mpFont->Height());
-    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp.c_str(), rText, 0xFF880044, 0xFF000000);
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp.c_str(), rText, ZTextLook(ZTextLook::kNormal, 0xFF880044, 0xFF000000));
     rText.OffsetRect(0, mpFont->Height()*2);
 
     string sSampleText("The quick brown fox jumped over the lazy dog.\nA Relic is Relish of Radishes! Show me the $$$$");
@@ -295,9 +298,9 @@ bool TextTestWin::Paint()
             nCol2 = nCol1;
 
         if (RANDBOOL)
-            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, nCol1, nCol2, ZFont::kTopLeft, ZFont::kShadowed);
+            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, ZTextLook(ZTextLook::kShadowed,nCol1, nCol2), ZGUI::TopLeft);
         else
-            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, nCol1, nCol2, ZFont::kTopLeft, ZFont::kEmbossed);
+            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, ZTextLook(ZTextLook::kShadowed, nCol1, nCol2), ZGUI::TopLeft);
 
         int64_t nLines = mpFont->CalculateNumberOfLines(rText.Width(), (uint8_t*)sSampleText.data(), sSampleText.length());
         rText.OffsetRect(0, mpFont->Height() * nLines);
@@ -305,7 +308,7 @@ bool TextTestWin::Paint()
 
 
         TIME_SECTION_START(TextTestLines);
-    mpFont->DrawTextParagraph(mpTransformTexture.get(), sAliceText, rText, 0xff000000, 0xff000000, ZFont::kTopLeft, ZFont::kNormal);
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sAliceText, rText, ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::TopLeft);
 
   TIME_SECTION_END(TextTestLines);
   

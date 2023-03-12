@@ -176,7 +176,7 @@ bool  ZWinPushBtn::Paint()
 		}
 
 		// Draw it here
-		mpFont->DrawText(mpTransformTexture.get(), sText, rText, 0xffffffff, 0xffffffff, ZFont::kNormal);
+		mpFont->DrawText(mpTransformTexture.get(), sText, rText);
 	}
 
 	return ZWin::Paint();
@@ -257,8 +257,6 @@ ZWinCheck::ZWinCheck(bool* pbChecked)
 {
     ZASSERT(pbChecked);
 	mpbChecked = pbChecked;
-    mnCheckedColor = 0xff000000;
-    mnUncheckedColor = 0xff000000;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -292,14 +290,12 @@ bool ZWinCheck::Paint()
     if (*mpbChecked)
     {
         mDrawState = kDown;
-        mnTextColorTop = mnCheckedColor;
-        mnTextColorBottom = mnCheckedColor;
+        mTextLook = mCheckedLook;
     }
     else
     {
         mDrawState = kUp;
-        mnTextColorTop = mnUncheckedColor;
-        mnTextColorBottom = mnUncheckedColor;
+        mTextLook = mUncheckedLook;
     }
 
 	return ZWinSizablePushBtn::Paint();
@@ -387,9 +383,6 @@ ZWinSizablePushBtn::ZWinSizablePushBtn()
 	mpUpEdgeImage       = NULL;
 	mpDownEdgeImage     = NULL;
 	mDrawState          = kUp;
-	mCaptionStyle       = ZFont::kNormal;
-	mnTextColorTop      = 0xff000000;
-	mnTextColorBottom   = 0xff000000;
 	msButtonMessage     = "btn_pressed";
 	mbTransformable = false;
 }
@@ -428,17 +421,17 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 
 	string sStyle = pNode->GetAttribute("style");
 	if (sStyle == "shadowed")
-		mCaptionStyle = ZFont::kShadowed;
+		mTextLook.style = ZTextLook::kShadowed;
 	else if (sStyle == "embossed")
-		mCaptionStyle = ZFont::kEmbossed;
+        mTextLook.style = ZTextLook::kEmbossed;
 
 	string sColor = pNode->GetAttribute("color");
 	if (!sColor.empty())
-		mnTextColorTop = (uint32_t) StringHelpers::ToInt(sColor);
+        mTextLook.colTop = (uint32_t) StringHelpers::ToInt(sColor);
 
 	string sColor2 = pNode->GetAttribute("color2");
 	if (!sColor2.empty())
-		mnTextColorBottom = (uint32_t) StringHelpers::ToInt(sColor2);
+		mTextLook.colBottom = (uint32_t) StringHelpers::ToInt(sColor2);
 
 	msButtonMessage = pNode->GetAttribute("message");
 
@@ -480,7 +473,7 @@ bool ZWinSizablePushBtn::Paint()
 	int64_t nStrlen = msCaption.length();
 	if (nStrlen > 0)
 	{
-		ZRect rText(mpFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), nStrlen, ZFont::kMiddleCenter));
+		ZRect rText(mpFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), nStrlen, ZGUI::Center));
 
 		string sCaptionToDraw(msCaption);
 
@@ -490,7 +483,7 @@ bool ZWinSizablePushBtn::Paint()
 		if (mDrawState == kDown)
 			rText.OffsetRect(nOffset,nOffset);
 
-		mpFont->DrawText(mpTransformTexture.get(), sCaptionToDraw, rText, mnTextColorTop, mnTextColorBottom, mCaptionStyle);
+		mpFont->DrawText(mpTransformTexture.get(), sCaptionToDraw, rText, mTextLook);
 	}
 
 	return ZWin::Paint();
@@ -558,17 +551,6 @@ bool ZWinSizablePushBtn::OnMouseMove(int64_t x, int64_t y)
 void ZWinSizablePushBtn::SetCaption(const string& sCaption) 
 { 
 	msCaption = sCaption; 
-}
-
-/*void ZWinSizablePushBtn::SetColors(uint32_t nColTop, uint32_t nColBottom) 
-{ 
-	mnTextColorTop = nColTop;
-    mnTextColorBottom = nColBottom;
-}*/
-
-void ZWinSizablePushBtn::SetStyle(ZFont::eStyle style) 
-{ 
-	mCaptionStyle = style; 
 }
 
 

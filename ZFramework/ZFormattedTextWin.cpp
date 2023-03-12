@@ -16,10 +16,9 @@ extern shared_ptr <ZBuffer> gDimRectBackground;
 extern shared_ptr<ZBuffer>  gDimRectBackground;
 extern ZRect				grDimRectEdge;
 
-const int64_t 				kDefaultColor = 0;
-const int64_t				kSliderWidth = 20;
-const ZFont::ePosition	    kDefaultTextPosition = ZFont::kBottomLeft; // we use bottom left by default in case there are multiple size fonts per text line
-const ZFont::eStyle		    kDefaultStyle = ZFont::kNormal;
+const int64_t               kSliderWidth = 20;
+const ZGUI::ePosition       kDefaultTextPosition = ZGUI::LB; // we use bottom left by default in case there are multiple size fonts per text line
+const ZTextLook		        kDefaultLook = { ZTextLook::kNormal, 0xff000000, 0xff000000 };
 
 
 const string				ksLineTag("line");
@@ -55,10 +54,8 @@ ZFormattedTextWin::ZFormattedTextWin()
 	mrTextBorderArea.SetRect(0,0,0,0);
 
     mCurrentFont                = ZFontParams("Ariel", 12);
-	mnCurrentColor				= kDefaultColor;
-	mnCurrentColor2				= kDefaultColor;
+    mCurrentLook                = kDefaultLook;
 	mCurrentTextPosition		= kDefaultTextPosition;       
-	mCurrentStyle 				= kDefaultStyle;
 	mnFullDocumentHeight		= 0;
 	mbScrollable				= false;
 
@@ -161,7 +158,7 @@ bool ZFormattedTextWin::OnMouseDownL(int64_t x, int64_t y)
 				sTextEntry& entry = *lineIt;
 
                 tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
-				ZRect rText = pFont->GetOutputRect(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.position);
+				ZRect rText = pFont->GetOutputRect(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.pos);
 				if (rText.PtInRect(nMouseX, nMouseY))
 				{
 					if (!entry.sLink.empty())
@@ -340,20 +337,20 @@ bool ZFormattedTextWin::Paint()
 				sTextEntry& entry = *lineIt;
 
                 tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
-				ZRect rText = pFont->GetOutputRect(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.position);
+				ZRect rText = pFont->GetOutputRect(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.pos);
 
 				int64_t nShadowOffset = max((int) pFont->Height()/16, (int) 1);
 
-				pFont->DrawText(mpTransformTexture.get(), entry.sText, rText, entry.nColor, entry.nColor2, entry.style, &rClip);
+				pFont->DrawText(mpTransformTexture.get(), entry.sText, rText, entry.look, &rClip);
 
 				if (mbUnderlineLinks && !entry.sLink.empty())
 				{
 					ZRect rUnderline(rText);
 					rUnderline.top = rUnderline.bottom-nShadowOffset;
 					rUnderline.IntersectRect(&rClip);
-                    mpTransformTexture.get()->Fill(rUnderline, entry.nColor2);
+                    mpTransformTexture.get()->Fill(rUnderline, entry.look.colBottom);
 
-					if (entry.style == ZFont::kShadowed)
+					if (entry.look.style == ZTextLook::kShadowed)
 					{
 						rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
 						rUnderline.IntersectRect(&rClip);
@@ -410,10 +407,8 @@ void ZFormattedTextWin::Clear()
 
 	// Restore the defaults
 	mCurrentFont			= ZFontParams("Arial", 12);
-	mnCurrentColor			= kDefaultColor;
-	mnCurrentColor2			= kDefaultColor;
-	mCurrentTextPosition	= kDefaultTextPosition;       
-	mCurrentStyle			= kDefaultStyle;
+    mCurrentLook = kDefaultLook;
+    mCurrentTextPosition	= kDefaultTextPosition;
 }
 
 bool ZFormattedTextWin::ParseDocument(ZXMLNode* pNode)
@@ -460,7 +455,7 @@ bool ZFormattedTextWin::ParseDocument(ZXMLNode* pNode)
 	return true;
 }
 
-void ZFormattedTextWin::AddTextLine(string sLine, ZFontParams fontParams, uint32_t nCol1, uint32_t nCol2, ZFont::eStyle style, ZFont::ePosition position, bool bWrap, const string& sLink)
+void ZFormattedTextWin::AddTextLine(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, bool bWrap, const string& sLink)
 {
 	tTextLine textLine;
 	if (bWrap)
@@ -473,13 +468,11 @@ void ZFormattedTextWin::AddTextLine(string sLine, ZFontParams fontParams, uint32
 			int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrTextArea.Width(), (uint8_t*)sLine.data(), sLine.length());
 
 			sTextEntry textEntry;
-			textEntry.sText		= sLine.substr(0, nChars);
-			textEntry.nColor	= nCol1;
-			textEntry.nColor2	= nCol2;
-			textEntry.style		= style;
-			textEntry.fontParams	= fontParams;
-			textEntry.position	= position;
-			textEntry.sLink		= sLink;
+			textEntry.sText         = sLine.substr(0, nChars);
+            textEntry.look          = look;
+			textEntry.fontParams    = fontParams;
+			textEntry.pos           = pos;
+			textEntry.sLink         = sLink;
 
 			textLine.push_back(textEntry);
 
@@ -497,11 +490,9 @@ void ZFormattedTextWin::AddTextLine(string sLine, ZFontParams fontParams, uint32
 		// Treat the line as a line node
 		ZXMLNode lineNode;
 		lineNode.Init(sLine);
-		mnCurrentColor = nCol1;
-		mnCurrentColor2 = nCol2;
+        mCurrentLook = look;
 		mCurrentFont = fontParams;
-		mCurrentStyle = style;
-		mCurrentTextPosition = position;
+		mCurrentTextPosition = pos;
 		msLink = sLink;
 
         ProcessLineNode(lineNode.GetChild("line"));
@@ -532,18 +523,16 @@ bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
 
 		if (bWrapLine)
 		{
-			AddTextLine(sCaption, mCurrentFont, mnCurrentColor, mnCurrentColor2, mCurrentStyle, mCurrentTextPosition, bWrapLine, msLink);
+			AddTextLine(sCaption, mCurrentFont, mCurrentLook, mCurrentTextPosition, bWrapLine, msLink);
 		}
 		else
 		{
 			sTextEntry textEntry;
-			textEntry.sText			= sCaption;
-			textEntry.nColor		= mnCurrentColor;
-			textEntry.nColor2		= mnCurrentColor2;
-			textEntry.style			= mCurrentStyle;
-			textEntry.fontParams	= mCurrentFont;
-			textEntry.position		= mCurrentTextPosition;
-			textEntry.sLink			= msLink;
+			textEntry.sText         = sCaption;
+            textEntry.look          = mCurrentLook;
+			textEntry.fontParams    = mCurrentFont;
+			textEntry.pos           = mCurrentTextPosition;
+			textEntry.sLink         = msLink;
 
 			textLine.push_back(textEntry);
 		}
@@ -590,15 +579,15 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 	{
 		StringHelpers::makelower(sParam);
 
-		if (sParam == "topleft")            mCurrentTextPosition = ZFont::kTopLeft;
-		else if (sParam == "topcenter")     mCurrentTextPosition = ZFont::kTopCenter;
-		else if (sParam == "topright")      mCurrentTextPosition = ZFont::kTopRight;
-		else if (sParam == "middleleft")    mCurrentTextPosition = ZFont::kMiddleLeft;
-		else if (sParam == "middlecenter")  mCurrentTextPosition = ZFont::kMiddleCenter;
-		else if (sParam == "middleright")   mCurrentTextPosition = ZFont::kMiddleRight;
-		else if (sParam == "bottomleft")    mCurrentTextPosition = ZFont::kBottomLeft;
-		else if (sParam == "bottomcenter")  mCurrentTextPosition = ZFont::kBottomCenter;
-		else if (sParam == "bottomright")   mCurrentTextPosition = ZFont::kBottomRight;
+		if (sParam == "topleft")            mCurrentTextPosition = ZGUI::LT;
+		else if (sParam == "topcenter")     mCurrentTextPosition = ZGUI::CT;
+		else if (sParam == "topright")      mCurrentTextPosition = ZGUI::RT;
+		else if (sParam == "middleleft")    mCurrentTextPosition = ZGUI::LC;
+		else if (sParam == "middlecenter")  mCurrentTextPosition = ZGUI::C;
+		else if (sParam == "middleright")   mCurrentTextPosition = ZGUI::RC;
+		else if (sParam == "bottomleft")    mCurrentTextPosition = ZGUI::LB;
+		else if (sParam == "bottomcenter")  mCurrentTextPosition = ZGUI::CB;
+		else if (sParam == "bottomright")   mCurrentTextPosition = ZGUI::RB;
 		else
 		{
 			ZASSERT(false);  // unknown position type
@@ -610,9 +599,9 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 	{
         StringHelpers::makelower(sParam);
 
-		if (sParam == "normal")        mCurrentStyle = ZFont::kNormal;
-		else if (sParam == "shadowed") mCurrentStyle = ZFont::kShadowed;
-		else if (sParam == "embossed") mCurrentStyle = ZFont::kEmbossed;
+		if (sParam == "normal")        mCurrentLook.style = ZTextLook::kNormal;
+		else if (sParam == "shadowed") mCurrentLook.style = ZTextLook::kShadowed;
+		else if (sParam == "embossed") mCurrentLook.style = ZTextLook::kEmbossed;
 		else
 		{
 			ZASSERT(false);  // unknown style type

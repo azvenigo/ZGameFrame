@@ -1043,11 +1043,13 @@ bool Z3DTestWin::Init()
         pCP->AddCaption("Render Size", gDefaultTitleFont);
         pCP->AddSlider(&mnRenderSize, 1, 128, 16, ZMessage("updaterendersize", this), true);
 
+        ZTextLook toggleLook(ZTextLook::kEmbossed, 0xff737373, 0xff737373);
+
         pCP->AddSpace(16);
-        pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", "rendermode", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", "rendermode", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddToggle(&mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
-        pCP->AddToggle(&mbCenterSphere, "Center Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
+        pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", "rendermode", pBtnFont, toggleLook);
+        pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", "rendermode", pBtnFont, toggleLook);
+        pCP->AddToggle(&mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "", pBtnFont, toggleLook);
+        pCP->AddToggle(&mbCenterSphere, "Center Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "", pBtnFont, toggleLook);
 
         ChildAdd(pCP);
     }

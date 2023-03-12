@@ -249,7 +249,7 @@ int64_t ZFont::StringWidth(const string& sText)
 	return nWidth;
 }
 
-bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol /*= 0xff000000*/, uint32_t nCol2 /*= 0xff000000*/, eStyle style /*= kNormal*/, ZRect* pClip /*= NULL*/ )
+bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, const ZTextLook& look, ZRect* pClip )
 {
 	ZASSERT(mbInitted);
 	ZASSERT(pBuffer);
@@ -257,17 +257,17 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 	if (!pBuffer || !mbInitted )
 		return false;
 
-	switch (style)
+	switch (look.style)
 	{
-	case kNormal:
-		if (nCol == nCol2 && ARGB_A(nCol) == 0xff)
-			return DrawText_Helper(pBuffer, sText, rAreaToDrawTo, nCol, pClip);
-		return DrawText_Gradient_Helper(pBuffer, sText, rAreaToDrawTo, nCol, nCol2, pClip);
+    case ZTextLook::kNormal:
+		if (look.colTop == look.colBottom && ARGB_A(look.colTop) == 0xff)
+			return DrawText_Helper(pBuffer, sText, rAreaToDrawTo, look.colTop, pClip);
+		return DrawText_Gradient_Helper(pBuffer, sText, rAreaToDrawTo, look.colTop, look.colBottom, pClip);
 		break;
 
-	case kShadowed:
+	case ZTextLook::kShadowed:
 		{
-			uint32_t nShadowColor = nCol & 0xAA000000;		// draw the shadow, but only as dark as the text alpha
+			uint32_t nShadowColor = look.colTop & 0xAA000000;		// draw the shadow, but only as dark as the text alpha
 			int64_t nShadowOffset = mFontParams.nHeight/20;
             if (nShadowOffset < 1)
                 nShadowOffset = 1;
@@ -277,22 +277,22 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 
 			ZRect rShadowRect(rAreaToDrawTo);
 			rShadowRect.OffsetRect(nShadowOffset, nShadowOffset);
-			if (nCol == nCol2)
+			if (look.colTop == look.colBottom)
 			{
 				DrawText_Helper(pBuffer, sText, rShadowRect, nShadowColor, pClip);
-				return DrawText_Helper(pBuffer, sText, rAreaToDrawTo, nCol, pClip);
+				return DrawText_Helper(pBuffer, sText, rAreaToDrawTo, look.colTop, pClip);
 			};
 
 //			uint32_t nShadow2Color = (nShadowColor & 0x00ffffff) | (nCol2 & 0xff000000);
 			DrawText_Helper(pBuffer, sText, rShadowRect, nShadowColor, pClip);
-			return DrawText_Gradient_Helper(pBuffer, sText, rAreaToDrawTo, nCol, nCol2, pClip);
+			return DrawText_Gradient_Helper(pBuffer, sText, rAreaToDrawTo, look.colTop, look.colBottom, pClip);
 		}
 		break;
 
-	case kEmbossed:
+	case ZTextLook::kEmbossed:
 		{
-			uint32_t nShadowColor = nCol & 0xAA000000;		// draw the shadow, but only as dark as the text alpha
-			uint32_t nHighlightColor = (nCol & 0xAA000000) | 0x00ffffff;	// the highlight will also only be as bright as the text alpha
+			uint32_t nShadowColor = look.colTop & 0xAA000000;		// draw the shadow, but only as dark as the text alpha
+			uint32_t nHighlightColor = (look.colTop & 0xAA000000) | 0x00ffffff;	// the highlight will also only be as bright as the text alpha
 
 			int64_t nShadowOffset = mFontParams.nHeight/32;
             if (nShadowOffset < 1)
@@ -308,10 +308,10 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 
 			DrawText_Helper(pBuffer, sText, rShadowRect, nShadowColor, pClip);			// draw the shadow
 			DrawText_Helper(pBuffer, sText, rHighlightRect, nHighlightColor, pClip);			// draw the highlight
-			if (nCol == nCol2)
-				return DrawText_Helper(pBuffer, sText, rAreaToDrawTo, nCol, pClip);
+			if (look.colTop == look.colBottom)
+				return DrawText_Helper(pBuffer, sText, rAreaToDrawTo, look.colTop, pClip);
 
-			return DrawText_Gradient_Helper(pBuffer, sText, rAreaToDrawTo, nCol, nCol2, pClip);
+			return DrawText_Gradient_Helper(pBuffer, sText, rAreaToDrawTo, look.colTop, look.colBottom, pClip);
 		}
 		break;
 	}
@@ -633,7 +633,7 @@ void ZFont::DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>&
 
 // This function helps format text by returning a rectangle where the text should be output
 // It will not clip, however... That should be done by the caller if necessary
-ZRect ZFont::GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ePosition position, int64_t nPadding)
+ZRect ZFont::GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding)
 {
 	ZRect rText(0,0, StringWidth(string((char*)pChars,nNumChars)), mFontParams.nHeight);
 	rArea.DeflateRect(nPadding, nPadding);
@@ -641,35 +641,35 @@ ZRect ZFont::GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars,
 	int64_t nXCenter = rArea.left + (rArea.Width()  - rText.Width())/2;
 	int64_t nYCenter = rArea.top  + (rArea.Height() - mFontParams.nHeight)/2;
 
-	switch (position)
+	switch (pos)
 	{
-	case kTopLeft:
+	case ZGUI::LT:
 		rText.OffsetRect(rArea.left, rArea.top);
 		break;
-	case kTopCenter:
+	case ZGUI::CT:
 		rText.OffsetRect(nXCenter, rArea.top);
 		break;
-	case kTopRight:
+	case ZGUI::RT:
 		rText.OffsetRect(rArea.right - rText.Width(), rArea.top);
 		break;
 
-	case kMiddleLeft:
+	case ZGUI::LC:
 		rText.OffsetRect(rArea.left, nYCenter);
 		break;
-	case kMiddleCenter:
+	case ZGUI::C:
 		rText.OffsetRect(nXCenter, nYCenter);
 		break;
-	case kMiddleRight:
+	case ZGUI::RC:
 		rText.OffsetRect(rArea.right - rText.Width(), nYCenter);
 		break;
 
-	case kBottomLeft:
+	case ZGUI::LB:
 		rText.OffsetRect(rArea.left, rArea.bottom - mFontParams.nHeight);
 		break;
-	case kBottomCenter:
+	case ZGUI::CB:
 		rText.OffsetRect(nXCenter, rArea.bottom - mFontParams.nHeight);
 		break;
-	case kBottomRight:
+	case ZGUI::RB:
 		rText.OffsetRect(rArea.right - rText.Width(), rArea.bottom - mFontParams.nHeight);
 		break;
 	}
@@ -677,44 +677,44 @@ ZRect ZFont::GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars,
 	return rText;
 }
 
-bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol /*= 0xff000000*/, uint32_t nCol2 /*= 0xff000000*/, ePosition paragraphPosition /*= kTopLeft*/, eStyle style /*= kNormal*/, ZRect* pClip /*= NULL*/ )
+bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, const ZTextLook& look, ZGUI::ePosition pos, ZRect* pClip)
 {
 	ZRect rTextLine(rAreaToDrawTo);
 
 	int64_t nLines = CalculateNumberOfLines(rAreaToDrawTo.Width(), (uint8_t*)sText.data(), sText.length());
-	ePosition lineStyle = kBottomLeft;
+    ZGUI::ePosition lineStyle = ZGUI::LB;
 
 	// Calculate the top line 
-	switch (paragraphPosition)
+	switch (pos)
 	{
-	case kTopLeft:
-	case kTopCenter:
-	case kTopRight:
+	case ZGUI::LT:
+	case ZGUI::CT:
+	case ZGUI::RT:
 		break;
-	case kMiddleLeft:
-	case kMiddleCenter:
-	case kMiddleRight:
+	case ZGUI::LC:
+	case ZGUI::C:
+	case ZGUI::RC:
 		rTextLine.top = (rAreaToDrawTo.top + rAreaToDrawTo.bottom - (mFontParams.nHeight * nLines))/2;
 		break;
-	case kBottomLeft:
-	case kBottomCenter:
-	case kBottomRight:
+	case ZGUI::LB:
+	case ZGUI::CB:
+	case ZGUI::RB:
 		rTextLine.top = rAreaToDrawTo.bottom - (mFontParams.nHeight * nLines);
 		break;
 	}
 
 	// Which individual line style to use
-	switch (paragraphPosition)
+	switch (pos)
 	{
-	case kTopCenter:
-	case kMiddleCenter:
-	case kBottomCenter:
-		lineStyle = kBottomCenter;
+	case ZGUI::CT:
+	case ZGUI::C:
+	case ZGUI::CB:
+		lineStyle = ZGUI::CB;
 		break;
-	case kTopRight:
-	case kMiddleRight:
-	case kBottomRight:
-		lineStyle = kBottomRight;
+	case ZGUI::RT:
+	case ZGUI::RC:
+	case ZGUI::RB:
+		lineStyle = ZGUI::RB;
 	}
 
 	rTextLine.bottom = rTextLine.top + mFontParams.nHeight;
@@ -730,7 +730,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
        
         ZRect rAdjustedLine(GetOutputRect(rTextLine, (uint8_t*)pChars, nLettersToDraw, lineStyle));
         if (rAdjustedLine.bottom > rAreaToDrawTo.top && rAdjustedLine.top < rAreaToDrawTo.bottom)       // only draw if line is within rAreaToDrawTo
-		    DrawText(pBuffer, string(pChars, nLettersToDraw), rAdjustedLine, nCol, nCol2, style, pClip);
+		    DrawText(pBuffer, string(pChars, nLettersToDraw), rAdjustedLine, look, pClip);
 
 		nCharsDrawn += nLettersToDraw;
 

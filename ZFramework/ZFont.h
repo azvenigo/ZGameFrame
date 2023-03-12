@@ -4,6 +4,7 @@
 #include <string>
 #include "ZTypes.h"
 #include "ZDebug.h"
+#include "ZGUIHelpers.h"
 #include <vector>
 #include "json/json.hpp"
 
@@ -130,28 +131,26 @@ public:
     std::string sFacename;
 };
 
+class ZTextLook
+{
+public:
+    enum eStyle : uint8_t
+    {
+        kNormal = 0,
+        kShadowed = 1,
+        kEmbossed = 2
+    };
+
+    ZTextLook(eStyle _style = kNormal, uint32_t _colTop = 0xffffffff, uint32_t _colBottom = 0xffffffff) { style = _style; colTop = _colTop; colBottom = _colBottom; }
+
+    uint32_t colTop;
+    uint32_t colBottom;
+    eStyle   style;
+};
+
 class ZFont
 {
 public:
-	enum ePosition
-	{
-		kTopLeft       = 0,
-		kTopCenter     = 1,
-		kTopRight      = 2,
-		kMiddleLeft    = 3,
-		kMiddleCenter  = 4,
-		kMiddleRight   = 5,
-		kBottomLeft    = 6,
-		kBottomCenter  = 7,
-		kBottomRight   = 8
-	};
-
-	enum eStyle
-	{
-		kNormal     = 0,
-		kShadowed   = 1,
-		kEmbossed   = 2
-	};
 
 
 public:
@@ -162,17 +161,18 @@ public:
     virtual bool    SaveFont(const std::string& sFilename);
 
     ZFontParams&    GetFontParams() { return mFontParams; }
+    int64_t         Height() { return mFontParams.nHeight; }
 
-//    std::string     GetFilename() { return msFilename; }
-
-    bool            DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, eStyle style = kNormal, ZRect* pClip = NULL);
-    bool            DrawTextParagraph(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol = 0xffffffff, uint32_t nCol2 = 0xffffffff, ePosition paragraphPosition = kTopLeft, eStyle style = kNormal, ZRect* pClip = NULL);
-
-	int64_t         CharWidth(uint8_t c);
     void            SetEnableKerning(bool bEnable) { mbEnableKerning = bEnable; }
     void            SetTracking(int64_t nTracking) { mFontParams.nTracking = nTracking; }
-	int64_t         Height() { return mFontParams.nHeight; }
+
+    bool            DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, const ZTextLook& look = {}, ZRect* pClip = NULL);
+    bool            DrawTextParagraph(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, const ZTextLook& look = {}, ZGUI::ePosition pos = ZGUI::LT, ZRect* pClip = NULL);
+
+
+    int64_t         CharWidth(uint8_t c);
     int32_t         GetSpaceBetweenChars(uint8_t c1, uint8_t c2);
+    ZRect           GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding = 0);
 
 
 	int64_t         StringWidth(const std::string& sText);
@@ -180,7 +180,6 @@ public:
 	int64_t         CalculateLettersThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);	// returns the number of characters that fit on that line
 	int64_t         CalculateNumberOfLines(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);	// returns the number of lines required to draw text
 
-	ZRect           GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ePosition position, int64_t nPadding = 0);
 
 protected:
 	bool                    DrawText_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip);
@@ -194,14 +193,11 @@ protected:
 
     void                    FindKerning(uint8_t c1, uint8_t c2);
 
-//    std::string             msFilename;
-//	uint32_t                mnFontHeight;
     ZFontParams             mFontParams;
     bool                    mbEnableKerning;
 
 	sCharDescriptor         mCharDescriptors[kMaxChars];  // lower 128 ascii chars
 	bool                    mbInitted;
-//	std::vector<uint32_t>	mColorGradient;
 };
 
 
