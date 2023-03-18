@@ -191,19 +191,19 @@ bool TextTestWin::Init()
 
 //    pCP->AddButton("Custom Font", "setcustomfont;target=TextTestWin");
 
-    ZTextLook captionLook(ZTextLook::kNormal, 0xffffffff, 0xffffffff);
+    ZTextLook captionLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
 
-    pCP->AddCaption("Height", gDefaultCaptionFont, captionLook, ZGUI::CB, gDefaultDialogFill);
+    pCP->AddCaption("Height", gDefaultCaptionFont, captionLook, ZGUI::C, gDefaultDialogFill);
 
     pCP->AddSlider(&mCustomFontParams.nHeight, 8, 200, 2, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddCaption("Weight", gDefaultCaptionFont, captionLook, ZGUI::CB, gDefaultDialogFill);
+    pCP->AddCaption("Weight", gDefaultCaptionFont, captionLook, ZGUI::C, gDefaultDialogFill);
     pCP->AddSlider(&mCustomFontParams.nWeight, 2, 9, 100, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddCaption("Tracking", gDefaultCaptionFont, captionLook, ZGUI::CB, gDefaultDialogFill);
+    pCP->AddCaption("Tracking", gDefaultCaptionFont, captionLook, ZGUI::C, gDefaultDialogFill);
     pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "setfonttracking;target=TextTestWin", true, false, pBtnFont);
 
-    pCP->AddCaption("Fixed Width", gDefaultCaptionFont, captionLook, ZGUI::CB, gDefaultDialogFill);
+    pCP->AddCaption("Fixed Width", gDefaultCaptionFont, captionLook, ZGUI::C, gDefaultDialogFill);
     pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
 
     pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, captionLook);

@@ -1,5 +1,6 @@
 #include "ZWinControlPanel.h"
 #include "ZWinBtn.H"
+#include "ZWinText.H"
 #include "ZSliderWin.h"
 #include "ZFormattedTextWin.h"
 #include "Resources.h"
@@ -38,12 +39,18 @@ ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const st
     return pBtn;
 }
 
-ZFormattedTextWin* ZWinControlPanel::AddCaption(const string& sCaption, const ZFontParams& fontParams, const ZTextLook& look, ZGUI::ePosition pos, uint32_t nFillCol)
+ZWinLabel* ZWinControlPanel::AddCaption(const string& sCaption, const ZFontParams& fontParams, const ZTextLook& look, ZGUI::ePosition pos, uint32_t nFillCol)
 {
-    ZFormattedTextWin* pWin = new ZFormattedTextWin();
+/*    ZFormattedTextWin* pWin = new ZFormattedTextWin();
     pWin->SetArea(mrNextControl);
     pWin->AddMultiLine(sCaption, fontParams, look, pos);
     pWin->SetFill(nFillCol);
+    ChildAdd(pWin);*/
+
+    ZWinLabel* pWin = new ZWinLabel();
+    pWin->SetText(sCaption);
+    pWin->SetLook(gpFontSystem->GetFont(fontParams), look, pos, nFillCol);
+    pWin->SetArea(mrNextControl);
     ChildAdd(pWin);
 
     mrNextControl.OffsetRect(0, mrNextControl.Height());

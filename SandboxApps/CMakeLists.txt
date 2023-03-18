@@ -101,6 +101,8 @@ set(COMMON_FILES
 ../ZFramework/ZWinDebugConsole.h
 ../ZFramework/ZXMLNode.cpp
 ../ZFramework/ZXMLNode.h
+../ZFramework/ZWinText.h
+../ZFramework/ZWinText.cpp
 ../ZFramework/ZZipAPI.cpp
 ../ZFramework/ZZipAPI.h
 ../ZFramework/ZGUIHelpers.h

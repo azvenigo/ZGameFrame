@@ -10,6 +10,7 @@ class ZFormattedTextWin;
 class ZWinSizablePushBtn;
 class ZWinCheck;
 class ZSliderWin;
+class ZWinLabel;
 
 class ZWinControlPanel : public ZWin
 {
@@ -22,7 +23,7 @@ public:
 
     void                SetHideOnMouseExit(bool bHideOnMouseExit) { mbHideOnMouseExit = bHideOnMouseExit; }
 
-    ZFormattedTextWin*  AddCaption( const std::string& sCaption,
+    ZWinLabel*          AddCaption( const std::string& sCaption,
                                 const ZFontParams& fontParams, 
                                 const ZTextLook& look = {ZTextLook::kNormal, 0xffffffff, 0xffffffff},
                                 ZGUI::ePosition = ZGUI::Center,

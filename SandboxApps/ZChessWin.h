@@ -5,7 +5,9 @@
 #include "ZWin.h"
 #include "ZFont.h"
 #include "ZFormattedTextWin.h"
+#include "ZWinText.H"
 #include <list>
+
 
 
 class ChessPiece
@@ -71,28 +73,31 @@ class ZPGNWin : public ZWin
 public:
     ZPGNWin();
 
-    bool    Init();
-    bool    Paint();
-    bool    HandleMessage(const ZMessage& message);
+    bool        Init();
+    bool        Paint();
+    bool        HandleMessage(const ZMessage& message);
 
-    bool    FromPGN(ZChessPGN& pgn);
-    bool    Clear();
+    bool        FromPGN(ZChessPGN& pgn);
+    std::string GetPGN();
+    bool        AddAction(const std::string& sAction);
+    bool        Clear();
 
-    bool    SetHalfMove(int64_t nHalfMove);
+
+    bool        SetHalfMove(int64_t nHalfMove);
 
 private:
 
-    void    UpdateView();
+    void        UpdateView();
 
-    ZFormattedTextWin* mpGameTagsWin;
-    ZFormattedTextWin* mpMovesWin;
+    ZFormattedTextWin*  mpGameTagsWin;
+    ZFormattedTextWin*  mpMovesWin;
 
-    uint32_t    mFillColor;
-    int64_t  mCurrentHalfMoveNumber;
-    ZFontParams mMoveFont;
-    ZFontParams mTagsFont;
-    ZFontParams mBoldFont;
-    ZChessPGN mPGN;
+    uint32_t            mFillColor;
+    int64_t             mCurrentHalfMoveNumber;
+    ZFontParams         mMoveFont;
+    ZFontParams         mTagsFont;
+    ZFontParams         mBoldFont;
+    ZChessPGN           mPGN;
 };
 
 
@@ -122,6 +127,8 @@ public:
 
     bool    OnChar(char key);
 
+
+    void    UpdateStatus(const std::string& sText, uint32_t col = 0xffffffff);
    
 private:
     void    DrawBoard();
@@ -137,6 +144,7 @@ private:
 
     void    LoadRandomGame();
     bool    LoadPGN(std::string sFilename);
+    bool    SavePGN(std::string sFilename);
     bool    FromPGN(class ZChessPGN& pgn);
 
 
@@ -167,6 +175,8 @@ private:
 
     ZRect mrPaletteArea;
     ZWinSizablePushBtn*     mpSwitchSidesButton;
+
+    ZWinLabel*              mpStatusWin;
 
 
     ChessPiece              mPieceData[128]; // keyed by ascii chars for pieces, 'r', 'Q', 'P', etc.

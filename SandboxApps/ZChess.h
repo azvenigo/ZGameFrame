@@ -86,6 +86,9 @@ public:
     bool            GetMoves(char c, const ZPoint& src, tMoveList& moves, tMoveList& attackSquares);
 
     bool            GetMovesThatSatisfy(char piece, bool bAttack, const ZPoint& endsquare, tMoveList& moves);       // given a piece and a target square, find all moves that satisfy the condition
+    bool            GetMovesThatSatisfy(char piece, const ZPoint& endsquare, tMoveList& moves);                    // find all moves for one side that end at a destination
+    size_t          CountPieceOnRank(char piece, int64_t nRank);
+    size_t          CountPieceOnFile(char piece, int64_t nFile);
 
     bool            IsPromotingMove(const ZPoint& src, const ZPoint& dst);
 
@@ -143,16 +146,17 @@ protected:
 class ZPGNSANEntry
 {
 public:
-    ZPGNSANEntry(uint32_t _movenumber = 0, const std::string _whiteaction = "", const std::string& _blackaction = "", const std::string& _annotation = "")
+    ZPGNSANEntry(uint32_t _movenumber = 0, const std::string _whiteaction = "", const std::string& _blackaction = "", const std::string& _whitecomment = "", const std::string& _blackcomment = "")
     {
         movenumber  = _movenumber;
         whiteAction = _whiteaction;
         blackAction = _blackaction;
-        annotation  = _annotation;
+        whiteComment = _whitecomment;
+        blackComment = _blackcomment;
     }
 
     bool            ParseLine(std::string sSANLine);
-
+    std::string     ToString();
 
     char            PieceFromAction(bool bWhite);
     std::string     DisambiguationChars(bool bWhite);
@@ -161,6 +165,9 @@ public:
     ZPoint          DestFromAction(bool bWhite);
 
     ZPoint          LocationFromText(const std::string& sSquare);
+
+    static std::string  ActionFromMove(const sMove& move, ChessBoard board);   // returns a SAN action string (ex "Nb6+") from a move
+    static std::string  ActionFromPromotion(const sMove& move, char promotedPiece, ChessBoard board);
 
 
     bool            IsGameResult(bool bWhite);
@@ -172,7 +179,9 @@ public:
     uint32_t        movenumber;
     std::string     whiteAction;
     std::string     blackAction;
-    std::string     annotation;
+
+    std::string     whiteComment;
+    std::string     blackComment;
 
 private:
 };
@@ -218,13 +227,19 @@ class ZChessPGN
 public:
     ZChessPGN() {}
 
-
     bool ParsePGN(const std::string& sPGN);
+
+    std::string ToString();
+
+    // for live games
+    bool AddMove(const std::string& sAction);
+
 
     bool IsDraw() { return GetTag("Result") == "1/2-1/2"; }
     bool WhiteWins() { return GetTag("Result") == "1-0"; }
     bool BlackWins() { return GetTag("Result") == "0-1"; }
 
+    void ResetTags();
     std::string GetTag(const std::string& sTag);
 
 
@@ -234,4 +249,5 @@ public:
     std::unordered_map<std::string, std::string> mTags;
     std::vector<ZPGNSANEntry> mMoves;
 
+    bool IsStandardTag(const std::string& sTag);
 };

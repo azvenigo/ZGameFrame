@@ -266,13 +266,32 @@ bool ZPGNWin::Paint()
 bool ZPGNWin::FromPGN(ZChessPGN& pgn)
 {
     mPGN = pgn;
-    mCurrentHalfMoveNumber = mPGN.GetHalfMoveCount()-1;
+    mCurrentHalfMoveNumber = 0;
 
     UpdateView();
     InvalidateChildren();
 
     return true;
 }
+
+string ZPGNWin::GetPGN()
+{
+    return mPGN.ToString();
+}
+
+bool ZPGNWin::AddAction(const std::string& sAction)
+{
+    if (mPGN.AddMove(sAction))
+    {
+        mCurrentHalfMoveNumber = mPGN.GetHalfMoveCount() - 1;
+        UpdateView();
+        InvalidateChildren();
+        return true;
+    }
+
+    return false;
+}
+
 
 bool ZPGNWin::Clear()
 {
@@ -400,6 +419,9 @@ bool ZPGNWin::HandleMessage(const ZMessage& message)
 }
 
 
+const int64_t kAutoplayMaxMSBetweenMoves = 2000;
+const int64_t kAutoplayMinMSBetweenMoves = 200;
+
 ZChessWin::ZChessWin()
 {
     msWinName = "chesswin" + gMessageSystem.GenerateUniqueTargetName();
@@ -414,9 +436,10 @@ ZChessWin::ZChessWin()
     mpPGNWin = nullptr;
     mpChoosePGNWin = nullptr;
     mpSwitchSidesButton = nullptr;
+    mpStatusWin = nullptr;
     mbDemoMode = false;
     mnDemoModeNextMoveTimeStamp = 0;
-    mAutoplayMSBetweenMoves = 1000;
+    mAutoplayMSBetweenMoves = (kAutoplayMaxMSBetweenMoves+kAutoplayMinMSBetweenMoves)/2;
 }
    
 bool ZChessWin::Init()
@@ -455,24 +478,27 @@ bool ZChessWin::Init()
 
         pCP->Init();
 
+        ZTextLook buttonLook(ZTextLook::kEmbossed, 0xff737373, 0xff737373);
+        ZTextLook checkedButtonLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73);
+
         pCP->AddCaption("Piece Height", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, pBtnFont);
         //    pCP->AddSpace(16);
-        pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "", pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
+        pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "", pBtnFont, checkedButtonLook, buttonLook);
 
-        pCP->AddButton("Clear Board", ZMessage("clearboard", this), pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
-        pCP->AddButton("Reset Board", ZMessage("resetboard", this), pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
+        pCP->AddButton("Clear Board", ZMessage("clearboard", this), pBtnFont, buttonLook);
+        pCP->AddButton("Reset Board", ZMessage("resetboard", this), pBtnFont, buttonLook);
         pCP->AddSpace(panelH / 30);
 
 /*        pCP->AddButton("Load Position", "loadboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);
         pCP->AddButton("Save Position", "saveboard;target=chesswin", pBtnFont, 0xff737373, 0xff73ff73, ZFont::kEmbossed);*/
 
         pCP->AddSpace(panelH / 30);
-        pCP->AddButton("Load Random Game", ZMessage("randgame", this), pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
-        pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg, "", pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73));
+        pCP->AddButton("Load Random Game", ZMessage("randgame", this), pBtnFont, buttonLook);
+        pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg, "", pBtnFont, checkedButtonLook, buttonLook);
 
         pCP->AddCaption("Playback Speed", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
-        pCP->AddSlider(&mAutoplayMSBetweenMoves, 1, 100, 250);
+        pCP->AddSlider(&mAutoplayMSBetweenMoves, kAutoplayMinMSBetweenMoves, kAutoplayMaxMSBetweenMoves, 1);
 
         ChildAdd(pCP);
 
@@ -489,7 +515,16 @@ bool ZChessWin::Init()
         mpSwitchSidesButton->SetCaption("Change Turn");
         mpSwitchSidesButton->SetMessage(ZMessage("changeturn", this));
         mpSwitchSidesButton->SetTextLook(pBtnFont, ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xff000000));
-        ChildAdd(mpSwitchSidesButton);
+        ChildAdd(mpSwitchSidesButton, false);
+
+
+        ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
+
+        mpStatusWin = new ZWinLabel();
+        mpStatusWin->SetLook(gpFontSystem->GetFont(ZFontParams("Ariel", 80, 600)), ZTextLook(ZTextLook::kShadowed), ZGUI::Center, gDefaultTextAreaFill);
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
+        mpStatusWin->SetText("Welcome to ZChess");
+        ChildAdd(mpStatusWin);
     }
 
 
@@ -548,6 +583,13 @@ void ZChessWin::UpdateSize()
 
     if (mpSwitchSidesButton)
         mpSwitchSidesButton->Arrange(ZGUI::OLIC, mrBoardArea, gDefaultSpacer, gDefaultSpacer);
+
+    if (mpStatusWin)
+    {
+        ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
+    }
+
 
     InvalidateChildren();
 }
@@ -657,7 +699,25 @@ bool ZChessWin::OnMouseUpL(int64_t x, int64_t y)
                 }
                 else
                 {
-                    mBoard.MovePiece(mDraggingSourceGrid, dstGrid);
+                    string sAction = ZPGNSANEntry::ActionFromMove(sMove(mDraggingSourceGrid, dstGrid), mBoard);
+                    ZOUT("Action: ", sAction);
+
+                    if (mBoard.MovePiece(mDraggingSourceGrid, dstGrid))
+                    {
+                        if (mpPGNWin)
+                            mpPGNWin->AddAction(sAction);
+
+                        if (mpStatusWin)
+                            mpStatusWin->SetText(sAction);
+
+                        const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
+                        if (mHistory.empty())
+                        {
+                            ChessBoard board;
+                            mHistory.push_back(board); // initial board
+                        }
+                        mHistory.push_back(mBoard);
+                    }
                 }
             }
 
@@ -743,7 +803,7 @@ bool ZChessWin::Process()
             else
             {
                 ZDEBUG_OUT("Setting halfmove:", mBoard.GetHalfMoveNumber() + 1);
-                mnDemoModeNextMoveTimeStamp = gTimer.GetUSSinceEpoch() + (mAutoplayMSBetweenMoves*1000);
+                mnDemoModeNextMoveTimeStamp = gTimer.GetUSSinceEpoch() + ((kAutoplayMaxMSBetweenMoves-mAutoplayMSBetweenMoves)*1000);
                 //string sMessage;
                 //Sprintf(sMessage, "sethistoryindex;target=chesswin;halfmove=%d", mBoard.GetHalfMoveNumber());
                 //gMessageSystem.Post(sMessage);
@@ -984,6 +1044,15 @@ bool ZChessWin::OnChar(char key)
     return ZWin::OnKeyDown(key);
 }
 
+void ZChessWin::UpdateStatus(const std::string& sText, uint32_t col)
+{
+    if (mpStatusWin)
+    {
+        mpStatusWin->SetText(sText);
+        mpStatusWin->UpdateLook(ZTextLook(ZTextLook::kShadowed, col, col));
+    }
+}
+
 bool ZChessWin::HandleMessage(const ZMessage& message)
 {
     string sType = message.GetType();
@@ -992,6 +1061,14 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     {
         UpdateSize();
         return true;
+    }
+    else if (sType == "statusmessage")
+    {
+        if (message.HasParam("col"))
+            UpdateStatus(message.GetParam("message"), StringHelpers::ToInt(message.GetParam("col")));
+        else
+            UpdateStatus(message.GetParam("message"));
+        Invalidate();
     }
     else if (sType == "invalidate")
     {
@@ -1057,7 +1134,16 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         }
         return true;
     }
-    else if (sType == "setpgn")  
+    else if (sType == "savegame")
+    {
+        string sFilename;
+        if (ZWinFileDialog::ShowSaveDialog("Portable Game Notation", "*.PGN", sFilename))
+        {
+            SavePGN(sFilename);
+        }
+        return true;
+    }
+    else if (sType == "setpgn")
     {
         string sPGN = StringHelpers::URL_Decode(message.GetParam("contents"));
         ZChessPGN pgn;
@@ -1077,10 +1163,6 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         ChildDelete(mpChoosePGNWin);
         mpChoosePGNWin = nullptr;
         InvalidateChildren();
-        return true;
-    }
-    else if (sType == "savegame")
-    {
         return true;
     }
     else if (sType == "randgame")
@@ -1107,7 +1189,25 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             ZPoint grid;
             grid.x = StringHelpers::ToInt(message.GetParam("x"));
             grid.y = StringHelpers::ToInt(message.GetParam("y"));
-            mBoard.PromotePiece(mDraggingSourceGrid, grid, c);
+
+            string sAction = ZPGNSANEntry::ActionFromPromotion(sMove(mDraggingSourceGrid, grid), c, mBoard);
+            ZOUT("Action: ", sAction);
+
+            if (mBoard.PromotePiece(mDraggingSourceGrid, grid, c))
+            {
+                if (mpPGNWin)
+                    mpPGNWin->AddAction(sAction);
+                if (mpStatusWin)
+                    mpStatusWin->SetText(sAction);
+
+                const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
+                if (mHistory.empty())
+                {
+                    ChessBoard board;
+                    mHistory.push_back(board); // initial board
+                }
+                mHistory.push_back(mBoard);
+            }
         }
 
         ChildDelete(mpPiecePromotionWin);
@@ -1117,6 +1217,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "sethistoryindex")
     {
+        UpdateStatus("");
         if (mHistory.empty())
         {
             ZWARNING("No game history");
@@ -1137,9 +1238,9 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
 
             sMove move = mBoard.GetLastMove();
 
-            if (mBoard.ValidCoord(move.mSrc) && mBoard.ValidCoord(move.mDest))
+            if (mBoard.ValidCoord(move.mSrc) && mBoard.ValidCoord(move.mDest) && (kAutoplayMaxMSBetweenMoves - mAutoplayMSBetweenMoves) > 250)
             {
-                int nTransformTime = (mAutoplayMSBetweenMoves) / 2;
+                int nTransformTime = (kAutoplayMaxMSBetweenMoves-mAutoplayMSBetweenMoves) / 2;
                 if (nTransformTime > 500)
                     nTransformTime = 500;
 
@@ -1223,6 +1324,7 @@ bool ZChessWin::LoadPGN(string sFilename)
             mpChoosePGNWin->SetArea(rChoosePGNWin);
             ChildAdd(mpChoosePGNWin);
             mpChoosePGNWin->ListGamesFromPGN(sFilename, sPGN);
+            UpdateStatus("Select game from list...");
             return true;
         }
         else
@@ -1233,6 +1335,7 @@ bool ZChessWin::LoadPGN(string sFilename)
             {
                 FromPGN(pgn);
                 InvalidateChildren();
+                UpdateStatus("Game loaded");
                 return true;
             }
         }
@@ -1240,6 +1343,19 @@ bool ZChessWin::LoadPGN(string sFilename)
     }
     return false;
 }
+
+bool ZChessWin::SavePGN(string sFilename)
+{
+    if (mpPGNWin)
+    {
+        string sPGN(mpPGNWin->GetPGN());
+        UpdateStatus("Game saved");
+        return WriteStringToFile(sFilename, sPGN);
+    }
+
+    return false;
+}
+
 
 
 void ZChessWin::LoadRandomGame()
@@ -1300,6 +1416,7 @@ void ZChessWin::ShowPromotingWin(const ZPoint& grid)
 
     mpPiecePromotionWin->SetArea(rArea);
     mpPiecePromotionWin->Init(&mPieceData[0], grid);
+    UpdateStatus("Select piece");
     ChildAdd(mpPiecePromotionWin);
 }
 
@@ -1370,8 +1487,8 @@ bool ZChessWin::FromPGN(ZChessPGN& pgn)
         }
         else
         {
-            cout << "Before move - w:[" << move.whiteAction << "] b:" << move.blackAction << "\n";
-            board.DebugDump();
+//            cout << "Before move - w:[" << move.whiteAction << "] b:" << move.blackAction << "\n";
+//            board.DebugDump();
 
             ZPoint dst = move.DestFromAction(kWhite);
             ZASSERT(board.ValidCoord(dst));

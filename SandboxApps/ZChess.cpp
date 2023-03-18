@@ -1183,6 +1183,57 @@ bool ChessBoard::GetMovesThatSatisfy(char piece, bool bAttack, const ZPoint& end
     return !moves.empty();
 }
 
+bool ChessBoard::GetMovesThatSatisfy(char piece, const ZPoint& endSquare, tMoveList& moves)
+{
+    char pieceOnDest = Piece(endSquare);
+    bool bAttack = pieceOnDest != 0;
+
+    for (int y = 0; y < 8; y++)
+    {
+        for (int x = 0; x < 8; x++)
+        {
+            char c = mBoard[y][x];
+            if (c == piece)
+            {
+                tMoveList pieceMoves;
+                tMoveList pieceAttacks;
+                ZPoint src(x, y);
+                GetMoves(c, src, pieceMoves, pieceAttacks);
+
+                if (bAttack && IsOneOfMoves(endSquare, pieceAttacks) && LegalMove(src, endSquare))
+                {
+                    moves.push_back(sMove(src, endSquare));
+                }
+
+                if (!bAttack && IsOneOfMoves(endSquare, pieceMoves) && LegalMove(src, endSquare))
+                {
+                    moves.push_back(sMove(src, endSquare));
+                }
+            }
+        }
+    }
+
+    return !moves.empty();
+}
+
+size_t ChessBoard::CountPieceOnRank(char piece, int64_t nRank)
+{
+    size_t nCount = 0;
+    for (int x = 0; x < 8; x++)
+        nCount += (int)mBoard[nRank][x] == piece;   // if piece matches
+    return nCount;
+}
+
+size_t ChessBoard::CountPieceOnFile(char piece, int64_t nFile)
+{
+    size_t nCount = 0;
+    for (int y = 0; y < 8; y++)
+        nCount += (int)mBoard[y][nFile] == piece;   // if piece matches
+    return nCount;
+}
+
+
+
 
 bool ChessBoard::IsOneOfMoves(const ZPoint& dst, const tMoveList& moves)
 {
@@ -1453,6 +1504,50 @@ size_t ZChessPGN::GetHalfMoveCount()
     return nHalfMoves;
 }
 
+// for live games
+bool ZChessPGN::AddMove(const std::string& sAction)
+{
+    size_t nCurrentHalfMove = GetHalfMoveCount();
+    if (mMoves.empty())
+    {
+        mMoves.push_back(ZPGNSANEntry());       // dummy entry so that move numbers line up
+        mMoves.push_back(ZPGNSANEntry(1, sAction)); // Add a new entry
+    }
+    else if (nCurrentHalfMove % 2 == 1)    // first move or black last moved
+    {
+        mMoves.push_back(ZPGNSANEntry(GetMoveCount(), sAction)); // Add a new entry
+    }
+    else
+    {
+        mMoves[mMoves.size() - 1].blackAction = sAction;
+    }
+
+    return true;
+}
+
+
+void ZChessPGN::ResetTags()
+{
+    mTags.clear();
+    mTags["Event"] = "ZChess Game";
+
+    std::time_t curTime = std::time(nullptr);
+    string sDateTime(std::asctime(std::localtime(&curTime)));
+    sDateTime = sDateTime.substr(0, sDateTime.length() - 1);    // strip \n from the end
+    mTags["Date"] = sDateTime;
+}
+
+
+bool ZChessPGN::IsStandardTag(const std::string& sTag)
+{
+    for (auto s : pgnTags)
+    {
+        if (s == sTag)
+            return true;
+    }
+    return false;
+}
+
 
 bool ZChessPGN::ParsePGN(const string& sPGN)
 {
@@ -1464,7 +1559,6 @@ bool ZChessPGN::ParsePGN(const string& sPGN)
     mMoves.clear();
     mMoves.push_back(ZPGNSANEntry());       // dummy entry so that move numbers line up
 
-    mTags.clear();
 
 
 
@@ -1550,6 +1644,32 @@ bool ZChessPGN::ParsePGN(const string& sPGN)
 
     return true;
 }
+
+std::string ZChessPGN::ToString()
+{
+    string sPGN;
+
+    // save tags
+    if (GetTag("Event").empty())
+        ResetTags();
+
+    for (auto s : pgnTags)
+    {
+        string sTag = GetTag(s);
+        if (!sTag.empty())
+            sPGN += "[" + s + " \"" + sTag + "\"]\n";
+    }
+
+    sPGN += "\n";
+    for (int i = 1; i < mMoves.size(); i++)
+    {
+        ZPGNSANEntry& entry = mMoves[i];
+        sPGN += entry.ToString() + " ";
+    }
+
+    return sPGN;
+}
+
 
 string ZChessPGN::GetTag(const std::string& sTag)
 {
@@ -1726,18 +1846,16 @@ ZPoint ZPGNSANEntry::DestFromAction(bool bWhite)
 }
 
 
+
+
 bool ZPGNSANEntry::ParseLine(std::string sSANLine)
 {
-    // extract commentary if it exists
-    size_t nStartComment = sSANLine.find("{");
-    if (nStartComment != string::npos)
+    // extract comments if they exist
+    size_t nStartRestOfLineComment = sSANLine.find(";");
+    if (nStartRestOfLineComment != string::npos)
     {
-        size_t nEndComment = sSANLine.find("}", nStartComment + 1);
-
-        annotation = sSANLine.substr(nStartComment+1, nEndComment - nStartComment);
-
-        sSANLine.erase(nStartComment, nEndComment - nStartComment+1);
-
+        blackComment = sSANLine.substr(nStartRestOfLineComment+1);
+        sSANLine = sSANLine.substr(0, nStartRestOfLineComment);   
     }
 
 
@@ -1754,15 +1872,55 @@ bool ZPGNSANEntry::ParseLine(std::string sSANLine)
 
     size_t nStartOfWhiteText = SkipWhitespace(sSANLine, nMoveEndIndex);
     size_t nEndOfWhiteText = FindNextWhitespace(sSANLine, nStartOfWhiteText);
+    size_t nStartOfNext = SkipWhitespace(sSANLine, nEndOfWhiteText);
+    if (sSANLine[nStartOfNext] == '{')
+    {
+        nStartOfNext++;
 
-    size_t nStartOfBlackText = SkipWhitespace(sSANLine, nEndOfWhiteText);
+        size_t nEndOfComment = sSANLine.find('}', nStartOfNext + 1);
+        if (nEndOfComment != string::npos)
+        {
+            whiteComment = sSANLine.substr(nStartOfNext, nEndOfComment - nStartOfNext);
+            nStartOfNext = SkipWhitespace(sSANLine, nEndOfComment+1);
+        }
+    }
+
+
+    size_t nStartOfBlackText = nStartOfNext;
     size_t nEndOfBlackText = FindNextWhitespace(sSANLine, nStartOfBlackText);
+
+
+    nStartOfNext = SkipWhitespace(sSANLine, nEndOfBlackText);
+    if (nStartOfNext != string::npos && sSANLine[nStartOfNext] == '{')
+    {
+        nStartOfNext++;
+
+        size_t nEndOfComment = sSANLine.find('}', nStartOfNext + 1);
+        if (nEndOfComment != string::npos)
+        {
+            blackComment = sSANLine.substr(nStartOfNext, nEndOfComment - nStartOfNext);
+        }
+    }
 
     whiteAction = sSANLine.substr(nStartOfWhiteText, nEndOfWhiteText - nStartOfWhiteText);
     blackAction = sSANLine.substr(nStartOfBlackText, nEndOfBlackText - nStartOfBlackText);
 
     return true;
 }
+
+string ZPGNSANEntry::ToString()
+{
+    string sAction(StringHelpers::FromInt(movenumber) + ". " + whiteAction + " ");
+    if (!whiteComment.empty())
+        sAction += "{ " + whiteComment + " } ";
+
+    sAction += blackAction;
+    if (!blackComment.empty())
+        sAction += " { " + blackComment + " }";
+
+    return sAction;
+}
+
 
 
 char ZPGNSANEntry::IsPromotion(bool bWhite)
@@ -1855,6 +2013,122 @@ char ZPGNSANEntry::PieceFromAction(bool bWhite)
 
     return 'p';
 }
+
+string ZPGNSANEntry::ActionFromMove(const sMove& move, ChessBoard board)
+{
+    if (!board.LegalMove(move.mSrc, move.mDest))
+    {
+        ZERROR("ERROR: illegal move");
+        return "illegal";
+    }
+
+    char c = board.Piece(move.mSrc);
+
+    bool bCapture = false;
+    if (board.Opponent(c, move.mDest))
+        bCapture = true;
+
+    string sAction;
+
+    char scratch[3] = { 0 };
+
+    // pawn character get just a file if it's a capture
+    if ((c == 'p' || c == 'P'))
+    {
+        if (bCapture)
+        {
+            scratch[0] = move.mSrc.x + 'a';
+            sAction = string(scratch);
+            scratch[0] = 0;
+        }
+    }
+    else
+    {
+        sAction = string(&c, 1);
+        StringHelpers::makeupper(sAction);        
+    }
+
+    // castling
+    if (c == 'K' && move.mSrc == kE1 && move.mDest == kG1)
+        return "O-O";
+    else if (c == 'K' && move.mSrc == kE1 && move.mDest == kC1)
+        return "O-O-O";
+    else if (c == 'k' && move.mSrc == kE8 && move.mDest == kG8)
+        return "O-O";
+    else if (c == 'k' && move.mSrc == kE8 && move.mDest == kC8)
+        return "O-O-O";
+    else
+    {
+        // check for ambiguities
+        tMoveList legalMoves;
+
+        if (!board.GetMovesThatSatisfy(c, move.mDest, legalMoves))
+        {
+            ZERROR("ERROR: Couldn't get list of moves that satisfy.");
+            return "error";
+        }
+
+
+        if (legalMoves.size() > 1)
+        {
+            if (board.CountPieceOnFile(c, move.mSrc.x) == 1)    // if this is the only piece on this file
+            {
+                scratch[0] = move.mSrc.x + 'a';
+            }
+            else if (board.CountPieceOnRank(c, move.mSrc.y) == 1)   // if this is the only piece on this rank
+            {
+                scratch[0] = 7 - move.mSrc.y + '1';
+            }
+            else
+            {
+                // both file and rank
+                scratch[0] = move.mSrc.x + 'a';
+                scratch[1] = 7 - move.mSrc.y + '1';
+            }
+        }
+        sAction += string(scratch);
+
+        if (bCapture)
+            sAction += "x";
+
+        // both file and rank
+        scratch[0] = move.mDest.x + 'a';
+        scratch[1] = 7 - move.mDest.y + '1';
+
+        sAction += string(scratch);
+    }
+
+    board.MovePiece(move.mSrc, move.mDest, true);
+    if (board.IsCheckmate())
+        sAction += "#";
+    else if (board.IsKingInCheck(!board.IsWhite(c)))
+        sAction += "+";
+
+    return sAction;
+}
+
+string ZPGNSANEntry::ActionFromPromotion(const sMove& move, char promotedPiece, ChessBoard board)
+{
+    string sAction = "P";
+    char scratch[3] = { 0 };
+
+    scratch[0] = move.mDest.x + 'a';
+    scratch[1] = 7 - move.mDest.y + '1';
+
+    if (move.mSrc.x != move.mDest.x)        // if different file then it's a capture
+        sAction += "x";
+    sAction += string(scratch);
+
+    board.MovePiece(move.mSrc, move.mDest, true);
+    if (board.IsCheckmate())
+        sAction += "#";
+    else if (board.IsKingInCheck(!board.IsWhite(promotedPiece)))
+        sAction += "+";
+
+    return sAction;
+}
+
+
 
 string ZPGNSANEntry::DisambiguationChars(bool bWhite)
 {
