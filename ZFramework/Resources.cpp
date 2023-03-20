@@ -37,6 +37,11 @@ ZFontParams     gDefaultTitleFont("Gadugi", 40);
 ZFontParams     gDefaultCaptionFont("Gadugi", 30, 400);
 ZFontParams     gDefaultTextFont("Gadugi", 20);
 
+ZFontParams     gDefaultTooltipFont("Verdana", 30);
+ZTextLook       gDefaultToolitipLook(ZTextLook::kShadowed, 0xff000000, 0xff000000);
+uint32_t        gDefaultTooltipFill(0xff999999);
+
+
 cResources::cResources()
 {
 }

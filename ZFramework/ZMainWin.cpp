@@ -33,7 +33,7 @@ ZMainWin::ZMainWin()
 bool ZMainWin::Init()
 {
 	gMessageSystem.AddNotification("quit_app_confirmed", this);
-	gMessageSystem.AddNotification("kill_window", this);
+//	gMessageSystem.AddNotification("kill_window", this);
 	gMessageSystem.AddNotification("chardown", this);
 	gMessageSystem.AddNotification("keydown", this);
 	gMessageSystem.AddNotification("keyup", this);
@@ -101,6 +101,7 @@ bool ZMainWin::HandleMessage(const ZMessage& message)
 	else if (sType == "quit_app_confirmed")
 	{
 		gbApplicationExiting = true;
+        InvalidateChildren();       // wakes all children that may be waiting on CVs
 		return true;
 	}
 

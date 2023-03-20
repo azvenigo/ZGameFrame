@@ -34,7 +34,7 @@ ZWinBtn::~ZWinBtn()
 bool ZWinBtn::Init() 
 {
 	mbAcceptsCursorMessages = true;
-    mIdleSleepMS = 10000;
+    mIdleSleepMS = 30000;
 	return ZWin::Init();
 }
 
@@ -52,7 +52,7 @@ bool ZWinBtn::Shutdown()
 bool ZWinBtn::Paint()
 {
 	if (!mbInvalid)
-		return true;
+		return false;
 
     if (!mpTransformTexture.get())
         return false;
@@ -129,7 +129,7 @@ bool  ZWinPushBtn::Init()
 	SetArea(buttonImageRect);
 	mrSrcRect = mrBaseRect;
 	mbAcceptsCursorMessages = true;
-    mIdleSleepMS = 10000;
+    mIdleSleepMS = 30000;
     return ZWinBtn::Init();
 }
 
@@ -141,7 +141,7 @@ bool  ZWinPushBtn::Shutdown()
 bool  ZWinPushBtn::Paint() 
 {
 	if (!mbInvalid)
-		return true;
+		return false;
 
     if (!mpTransformTexture.get())
         return false;
@@ -280,7 +280,7 @@ bool ZWinCheck::Init()
 bool ZWinCheck::Paint()
 {
 	if (!mbInvalid)
-		return true;
+		return false;
 
     if (!mpTransformTexture.get())
         return false;
@@ -394,7 +394,7 @@ ZWinSizablePushBtn::~ZWinSizablePushBtn()
 bool ZWinSizablePushBtn::Init()
 { 
 	mbAcceptsCursorMessages = true;
-    mIdleSleepMS = 10000;
+    mIdleSleepMS = 30000;
 
 	return ZWin::Init();
 }
@@ -446,7 +446,7 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 bool ZWinSizablePushBtn::Paint()
 {
 	if (!mbInvalid)
-		return true;
+		return false;
 
     if (!mpTransformTexture.get())
         return false;

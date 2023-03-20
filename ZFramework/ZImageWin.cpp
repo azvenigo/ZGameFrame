@@ -355,7 +355,7 @@ bool ZImageWin::Paint()
         return false;
 
     if (!mbInvalid)
-        return true;
+        return false;
 
 
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);

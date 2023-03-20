@@ -49,7 +49,9 @@ public:
         std::string sLine;
         ToString(sLine, arg, more...);
 
+        mHistoryMutex.lock();
         mHistory.push_back(sDbgMsg(sLine, level));
+        mHistoryMutex.unlock();
         mHistoryCounter++;
         TrimHistory();
 

@@ -105,6 +105,9 @@ bool cLifeWin::Shutdown()
 
 bool cLifeWin::Paint()
 {
+    if (!mbInvalid)
+        return false;
+
 //	if (gbApplicationExiting)
 //		return true;
 

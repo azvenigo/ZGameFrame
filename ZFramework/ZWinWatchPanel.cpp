@@ -7,7 +7,8 @@ using namespace std;
 
 ZWinWatchPanel::ZWinWatchPanel()
 {
-    mIdleSleepMS = 250;
+    mbAcceptsCursorMessages = true;
+    mIdleSleepMS = 25000;
 }
 
 bool ZWinWatchPanel::Init()
@@ -139,7 +140,7 @@ bool ZWinWatchPanel::Paint()
     if (!mbVisible)
         return false;
     if (!mbInvalid)
-        return true;
+        return false;
 
     mpTransformTexture.get()->Fill(mAreaToDrawTo, gDefaultDialogFill);
 

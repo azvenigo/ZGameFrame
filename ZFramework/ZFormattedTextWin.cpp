@@ -283,7 +283,7 @@ void ZFormattedTextWin::UpdateScrollbar()
 bool ZFormattedTextWin::Paint()
 {
 	if (!mbInvalid)
-		return true;
+		return false;
 
     if (!mpTransformTexture.get())
         return false;

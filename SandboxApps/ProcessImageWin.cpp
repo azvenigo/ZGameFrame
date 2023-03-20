@@ -20,6 +20,7 @@
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
 #include "ZWinFileDialog.h"
+#include "ZWinText.H"
 
 
 using namespace std;
@@ -210,13 +211,13 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
         string sPropLineXMLNode("<line wrap=0>");
 
         sPropLineXMLNode += "<text color=0xffffffff color2=0xffffffff";
-        sPropLineXMLNode += " fontparams=" + (string)fp;
+        sPropLineXMLNode += " fontparams=" + StringHelpers::URL_Encode(fp);
         sPropLineXMLNode += " position=lb>";
         sPropLineXMLNode += prop.sName;
         sPropLineXMLNode += "</text>";
 
         sPropLineXMLNode += "<text color=0xff000000 color2=0xff000000";
-        sPropLineXMLNode += " fontparams=" + (string)fp;
+        sPropLineXMLNode += " fontparams=" + StringHelpers::URL_Encode(fp);
         sPropLineXMLNode += " position=rb>";
         sPropLineXMLNode += prop.sValue.substr(0,16);
         sPropLineXMLNode += "</text></line>";
@@ -960,7 +961,9 @@ bool cProcessImageWin::Init()
 
     pCP->AddSpace(32);
 
-    pCP->AddCaption("Radius", gDefaultTitleFont, ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::CenterBottom, gDefaultDialogFill);
+    ZWinLabel* pLabel = pCP->AddCaption("Compute Radius", gDefaultTitleFont, ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::C, gDefaultDialogFill);
+    pLabel->SetHoverMessage("Sets the radius for the operations below.", &gDefaultTooltipFont, &gDefaultToolitipLook, gDefaultTooltipFill);
+
     pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, pBtnFont);
 
     pCP->AddButton("Blur", "radiusblur;target=imageprocesswin", pBtnFont);
@@ -968,14 +971,14 @@ bool cProcessImageWin::Init()
     pCP->AddButton("Contrast", "computecontrast;target=imageprocesswin", pBtnFont);
 
     pCP->AddSpace(32);
-    pCP->AddCaption("Ops", gDefaultTitleFont,ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::CenterBottom, gDefaultDialogFill);
+    pCP->AddCaption("Ops", gDefaultTitleFont,ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::C, gDefaultDialogFill);
     pCP->AddButton("Negative", "negative;target=imageprocesswin", pBtnFont);
     pCP->AddButton("Monochrome", "mono;target=imageprocesswin", pBtnFont);
 
 
     pCP->AddSpace(64);
 
-    pCP->AddCaption("Experiments", gDefaultTitleFont, ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::CenterBottom, gDefaultDialogFill);
+    pCP->AddCaption("Experiments", gDefaultTitleFont, ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::C, gDefaultDialogFill);
     pCP->AddButton("compute gradients", "computegradients;target=imageprocesswin", pBtnFont);
     pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, pBtnFont);
 
@@ -1001,6 +1004,7 @@ bool cProcessImageWin::Init()
     mpImageProps = new ZFormattedTextWin();
     mpImageProps->SetArea(rImageProps);
     mpImageProps->SetFill(gDefaultTextAreaFill);
+    mpImageProps->SetScrollable();
 
     pWP->ChildAdd(mpImageProps);
 
@@ -1321,7 +1325,7 @@ double LimitUV(double f, double fMin, double fMax)
 bool cProcessImageWin::Paint()
 {
     if (!mbInvalid)
-        return true;
+        return false;
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 

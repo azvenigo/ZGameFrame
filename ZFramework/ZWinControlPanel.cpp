@@ -17,7 +17,7 @@ bool ZWinControlPanel::Init()
 
     mbAcceptsCursorMessages = true;
 
-    mIdleSleepMS = 100;
+    mIdleSleepMS = 250;
     return ZWin::Init();
 }
 
@@ -49,7 +49,8 @@ ZWinLabel* ZWinControlPanel::AddCaption(const string& sCaption, const ZFontParam
 
     ZWinLabel* pWin = new ZWinLabel();
     pWin->SetText(sCaption);
-    pWin->SetLook(gpFontSystem->GetFont(fontParams), look, pos, nFillCol);
+//    pWin->SetHoverMessage("this is a test popup", &gDefaultTooltipFont, &gDefaultToolitipLook, gDefaultTooltipFill);
+    pWin->SetLook(fontParams, look, pos, nFillCol);
     pWin->SetArea(mrNextControl);
     ChildAdd(pWin);
 

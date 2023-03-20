@@ -54,7 +54,7 @@ bool ZSliderWin::Init(tZBufferPtr pBufSliderThumb, ZRect rEdgeThumb, tZBufferPtr
 
 	mbAcceptsCursorMessages = true;
 
-    mIdleSleepMS = 100;
+//    mIdleSleepMS = 100;
 
 	return ZWin::Init();
 }
@@ -246,7 +246,7 @@ bool ZSliderWin::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 bool ZSliderWin::Paint()
 {
 	if (!mbInvalid)
-		return true;
+		return false;
 
 	if (!mpTransformTexture.get())
 		return false;

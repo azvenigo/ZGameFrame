@@ -18,7 +18,7 @@ ZWin* ZWin::mpFocusWin	= NULL;
 extern bool gbApplicationExiting;
 
 const int64_t kDefaultTransformTime = 500;
-const int64_t kDefaultIdleTime = 32;
+const int64_t kDefaultIdleTime = 1000;
 
 #ifdef _DEBUG
 #define new new(_NORMAL_BLOCK, THIS_FILE, __LINE__)
@@ -228,7 +228,16 @@ void ZWin::Arrange(ZGUI::ePosition pos, const ZRect& outerRect, int64_t hPadding
 }
 
 
-bool  ZWin::SetParentWin(ZWin* pNewParent) 
+ZWin* ZWin::GetTopWindow()
+{
+    if (!mpParentWin)
+        return this;
+
+    return mpParentWin->GetTopWindow();
+}
+
+
+bool ZWin::SetParentWin(ZWin* pNewParent) 
 {
 	mpParentWin = pNewParent;
 	return true;
@@ -510,6 +519,12 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 	return false;
 }
 
+
+bool ZWin::Process() 
+{
+    return false; 
+}
+
 bool  ZWin::Paint() 
 {
     if (!mbInitted || !mbInvalid)
@@ -705,12 +720,12 @@ bool ZWin::HandleMessage(const ZMessage& message)
 		ProcessCursorMessage(message);
 		return true;
 	}
-	else if (sType == "kill_window")
+	else if (sType == "kill_child")
 	{
-		if (message.GetParam("target") == GetTargetName())
+        ZWin* pChild = GetChildWindowByWinName(message.GetParam("child"));
+        if (pChild)
 		{
-			ZASSERT(mpParentWin);
-			mpParentWin->ChildDelete(this);
+			ChildDelete(pChild);
 			return true;
 		}
 	}
@@ -808,6 +823,7 @@ bool ZWin::WindowThreadProc(void* pContext)
 
         bool bActive = pThis->Process();
         bActive |= pThis->Paint();
+        bActive |= pThis->mMessages.size() > 0;
 
         if (bActive)    // if either simulation was done or painting was done do a quick sleep
         {

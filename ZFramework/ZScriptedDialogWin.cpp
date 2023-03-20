@@ -76,10 +76,8 @@ bool ZScriptedDialogWin::Init()
 {
 	ExecuteScript(msDialogScript);
 
-    mIdleSleepMS = 100;
-
 	//   cCEFont* pFont = gpFontSystem->GetDefaultFont(0);
-	gMessageSystem.AddNotification("kill_window", this);
+//	gMessageSystem.AddNotification("kill_window", this);
 
 	tMessageBoxButtonList::iterator it;
 
@@ -182,7 +180,7 @@ bool ZScriptedDialogWin::Shutdown()
 bool ZScriptedDialogWin::Paint()
 {
 	if (!mbInvalid)
-		return true;
+		return false;
     if (!mpTransformTexture)
         return false;
 

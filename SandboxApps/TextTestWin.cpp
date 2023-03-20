@@ -245,7 +245,7 @@ bool TextTestWin::Paint()
 {
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
-        return true;
+        return false;
 
 
 

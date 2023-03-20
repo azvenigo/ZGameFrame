@@ -21,7 +21,7 @@ ZChoosePGNWin::ZChoosePGNWin()
 {
     msWinName = "choosepgnwin";
     mbAcceptsCursorMessages = true;
-    mIdleSleepMS = 10000;
+    mIdleSleepMS = 1500;
     mFillColor = gDefaultDialogFill;
 }
 
@@ -64,7 +64,7 @@ bool ZChoosePGNWin::Paint()
 {
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
-        return true;
+        return false;
 
     mpTransformTexture->Fill(mAreaToDrawTo, mFillColor);
 
@@ -146,7 +146,7 @@ ZPGNWin::ZPGNWin()
 {
     msWinName = "pgnwin";
     mbAcceptsCursorMessages = true;
-    mIdleSleepMS = 10000;
+    mIdleSleepMS = 500;
     mFillColor = gDefaultDialogFill;
 }
 
@@ -255,7 +255,7 @@ bool ZPGNWin::Paint()
 {
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
-        return true;
+        return false;
 
     mpTransformTexture->Fill(mAreaToDrawTo, mFillColor);
 
@@ -359,11 +359,12 @@ void ZPGNWin::UpdateView()
 
         nHalfMove += 2;
     }
-    mpMovesWin->InvalidateChildren();
+//    mpMovesWin->InvalidateChildren();
     mpMovesWin->SetScrollable();
     mpMovesWin->SetUnderlineLinks(false);
     mpMovesWin->ScrollTo(mMoveFont.nHeight * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
 
+    InvalidateChildren();
 }
 
 
@@ -446,7 +447,7 @@ bool ZChessWin::Init()
 {
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
-    mIdleSleepMS = 10000;
+    mIdleSleepMS = 250;
     SetFocus();
 
     mnPieceHeight = mAreaToDrawTo.Height() / 12;
@@ -521,7 +522,7 @@ bool ZChessWin::Init()
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
 
         mpStatusWin = new ZWinLabel();
-        mpStatusWin->SetLook(gpFontSystem->GetFont(ZFontParams("Ariel", 80, 600)), ZTextLook(ZTextLook::kShadowed), ZGUI::Center, gDefaultTextAreaFill);
+        mpStatusWin->SetLook(ZFontParams("Ariel", 80, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::Center, gDefaultTextAreaFill);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
         mpStatusWin->SetText("Welcome to ZChess");
         ChildAdd(mpStatusWin);
@@ -820,7 +821,7 @@ bool ZChessWin::Paint()
 {
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
-        return true;
+        return false;
 
     mpTransformTexture->Fill(mAreaToDrawTo, 0xff444444);
     DrawBoard();
@@ -1583,7 +1584,7 @@ bool ZPiecePromotionWin::Paint()
 {
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
-        return true;
+        return false;
 
 //    mpTransformTexture->Fill(mAreaToDrawTo, 0xff4444ff);
 

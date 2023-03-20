@@ -26,37 +26,40 @@ ZAnimator::~ZAnimator()
 
 bool ZAnimator::Paint()
 {
-   tAnimObjectList::iterator it;
+    if (mAnimObjectList.empty())
+        return false;
+
+    tAnimObjectList::iterator it;
 
    // Paint all the objects
-   for (it = mAnimObjectList.begin(); it != mAnimObjectList.end(); it++)
-   {
-      ZAnimObject* pObject = *it;
-      if (pObject->GetState() != ZAnimObject::kHidden)
-         pObject->Paint();
-   }
+    for (it = mAnimObjectList.begin(); it != mAnimObjectList.end(); it++)
+    {
+        ZAnimObject* pObject = *it;
+        if (pObject->GetState() != ZAnimObject::kHidden)
+            pObject->Paint();
+    }
 
-   // Remove any objects that are in kFinished state
-   for (it = mAnimObjectList.begin(); it != mAnimObjectList.end();)
-   {
-      ZAnimObject* pObject = *it;
-      if (pObject->GetState() == ZAnimObject::kFinished)
-      {
-         tAnimObjectList::iterator itNext = it;
-         itNext++;
+    // Remove any objects that are in kFinished state
+    for (it = mAnimObjectList.begin(); it != mAnimObjectList.end();)
+    {
+        ZAnimObject* pObject = *it;
+        if (pObject->GetState() == ZAnimObject::kFinished)
+        {
+            tAnimObjectList::iterator itNext = it;
+            itNext++;
 
-         mAnimObjectList.erase(it);
-         delete pObject;
+            mAnimObjectList.erase(it);
+            delete pObject;
 //		 ZDEBUG_OUT("cCEAnimator::Paint - deleting object:%x\n", (uint32_t) pObject);
 
-         it = itNext;
-         continue;
-      }
+            it = itNext;
+            continue;
+        }
 
-      it++;
-   }
+        it++;
+    }
 
-   return true;
+   return mAnimObjectList.empty();  // true if there are still objects to animate
 }
 
 bool ZAnimator::AddObject(ZAnimObject* pObject, void* pContext)

@@ -48,6 +48,7 @@ public:
 	virtual void		SignalShutdown();
 	
 public:   
+    virtual ZWin*       GetTopWindow();
 	virtual	ZWin*		GetParentWin() const { return mpParentWin; }
 	virtual	bool		SetParentWin(ZWin*);
 	
@@ -139,7 +140,7 @@ public:
 	virtual bool		ComputeVisibility();		// Add my own area to ZScreenBuffer's ScreenRect container, then call all children (that will be on top of me) recursively to do the same
 
 protected:
-    virtual bool        Process() { return false; }      // for doing any computation/simulation/etc. Returns true if anything was done
+    virtual bool        Process();              // for doing any computation/simulation/etc. Returns true if anything was done
 	virtual bool		Paint();
 	virtual void		TransformIn();
 	virtual void		TransformOut();

@@ -903,10 +903,9 @@ const int64_t kDefaultMaxSphereSize = 400;
 
 Z3DTestWin::Z3DTestWin()
 {
-    mIdleSleepMS = 1000;
-    mnTargetSphereCount = 5;
+    mnTargetSphereCount = 15;
     mnMinSphereSizeTimes100 = kDefaultMinSphereSize;
-    mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize;
+    mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize/2;
     mnRotateSpeed = 10;
     mnRayDepth = 3;
     mfBaseAngle = 0.0;
@@ -1021,26 +1020,26 @@ bool Z3DTestWin::Init()
 
         string sUpdateSphereCountMsg(ZMessage("updatespherecount", this));
 
-        pCP->AddCaption("Sphere Count", gDefaultTitleFont);
+        pCP->AddCaption("Sphere Count", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mnTargetSphereCount, 1, 50, 1, sUpdateSphereCountMsg, true, false, pBtnFont);
         //    pCP->AddSpace(16);
 
-        pCP->AddCaption("Min Sphere Size", gDefaultTitleFont);
+        pCP->AddCaption("Min Sphere Size", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, sUpdateSphereCountMsg, true, false, pBtnFont);
 
-        pCP->AddCaption("Max Sphere Size", gDefaultTitleFont);
+        pCP->AddCaption("Max Sphere Size", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, sUpdateSphereCountMsg, true, false, pBtnFont);
 
-        pCP->AddCaption("Speed", gDefaultTitleFont);
+        pCP->AddCaption("Speed", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mnRotateSpeed, 0, 100, 1, "", true, false, pBtnFont);
 
-        pCP->AddCaption("Ray Depth", gDefaultTitleFont);
+        pCP->AddCaption("Ray Depth", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mnRayDepth, 0, 10, 1, "", true, false, pBtnFont);
 
 
 
         pCP->AddSpace(16);
-        pCP->AddCaption("Render Size", gDefaultTitleFont);
+        pCP->AddCaption("Render Size", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
         pCP->AddSlider(&mnRenderSize, 1, 128, 16, ZMessage("updaterendersize", this), true);
 
         ZTextLook toggleLook(ZTextLook::kEmbossed, 0xff737373, 0xff737373);

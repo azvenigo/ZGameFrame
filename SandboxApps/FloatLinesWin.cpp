@@ -514,6 +514,9 @@ bool cFloatLinesWin::OnKeyDown(uint32_t key)
 
 bool cFloatLinesWin::Paint()
 {
+    if (!mbInvalid)
+        return false;
+
     for (int64_t i = 0; i < mnProcessPerFrame; i++)
     {
         if (mbReset)

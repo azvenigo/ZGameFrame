@@ -58,8 +58,9 @@ bool ZWinDebugConsole::Process()
     {
         mnDebugHistoryLastSeenCounter = gDebug.Counter();
         UpdateScrollbar();
+        return true;
     }
-    return true;
+    return false;
 }
 
 
@@ -136,7 +137,7 @@ size_t ZWinDebugConsole::GetVisibleLines()
 bool ZWinDebugConsole::Paint()
 {
 	if (!mbInvalid)
-		return true;
+		return false;
 
     if (!mpTransformTexture.get())
         return false;

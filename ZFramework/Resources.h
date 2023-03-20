@@ -54,6 +54,11 @@ extern ZFontParams  gDefaultTitleFont;
 extern ZFontParams  gDefaultCaptionFont;
 extern ZFontParams  gDefaultTextFont;
 
+extern ZFontParams  gDefaultTooltipFont;
+extern ZTextLook    gDefaultToolitipLook;
+extern uint32_t     gDefaultTooltipFill;
+
+
 
 typedef std::map<std::string, tZBufferPtr >	tBufferResourceMap;
 
