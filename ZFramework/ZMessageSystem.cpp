@@ -170,27 +170,28 @@ void ZMessageSystem::Process()
 {
 	// Messages can be posted from within a handler... 
 	// so we only process the messages that are here when this is first called
-	int64_t nNumMessagesToProcess = mMessageQueue.size();
+    mMessageQueueMutex.lock();
+    int64_t nNumMessagesToProcess = mMessageQueue.size();
+    tMessageList messages = std::move(mMessageQueue);
+    mMessageQueueMutex.unlock();
+
 	tMessageList::iterator it;
 
-	while (nNumMessagesToProcess > 0)
+	for (auto& message : messages)
 	{
-		ZMessage& msg = *mMessageQueue.begin();
-
-        string sTarget(msg.GetTarget());
+        string sTarget(message.GetTarget());
 		if (!sTarget.empty())
 		{
 			tNameToMessageTargetMap::iterator it = mNameToMessageTargetMap.find(sTarget);
-			//CEASSERT_MESSAGE(it != mNameToMessageTargetMap.end(), string("Target:\"" + msg.GetTarget() + "\" not registerred in message system!").c_str());
 			if (it != mNameToMessageTargetMap.end())
 			{
-				((*it).second)->ReceiveMessage(msg);
+				((*it).second)->ReceiveMessage(message);
 			}
 		}
 		else
 		{
 			// Target-less message..... send to all listeners of that type
-			tMessageTargetSet& messageTargets = mMessageToMessageTargetsMap[msg.GetType()];
+			tMessageTargetSet& messageTargets = mMessageToMessageTargetsMap[message.GetType()];
 
 			for (tMessageTargetSet::iterator targetIt = messageTargets.begin(); targetIt != messageTargets.end(); )
 			{
@@ -201,18 +202,15 @@ void ZMessageSystem::Process()
 				IMessageTarget* pTarget = *targetIt;
 				ZASSERT(pTarget);
 
-				pTarget->ReceiveMessage(msg);
+				pTarget->ReceiveMessage(message);
 
 				// If the HandleMessage call above cause the map to be cleared, break out of the loop
-				if (mMessageToMessageTargetsMap.find(msg.GetType()) == mMessageToMessageTargetsMap.end())
+				if (mMessageToMessageTargetsMap.find(message.GetType()) == mMessageToMessageTargetsMap.end())
 					break;
 
 				targetIt = targetItNext;
 			}
 		}
-
-		mMessageQueue.pop_front();
-		nNumMessagesToProcess--;
 	}
 }
 
@@ -270,6 +268,7 @@ void ZMessageSystem::UnregisterTarget(IMessageTarget* pTarget)
 
 void ZMessageSystem::Post(string sRaw, IMessageTarget* pTarget)
 {
+    const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
     mMessageQueue.push_back(std::move(ZMessage(sRaw, pTarget)));
 }
 
@@ -282,6 +281,7 @@ void ZMessageSystem::Post(ZMessage& msg, IMessageTarget* pTarget)
         msg.mTarget = pTarget->GetTargetName();
     }
 
+    const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
     mMessageQueue.push_back(std::move(msg));
 }
 

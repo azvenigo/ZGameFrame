@@ -35,7 +35,7 @@ public:
 	virtual bool		SetBaseRect( ZRect rBaseRect );
 
 	virtual void		SetTriggerMessage(const std::string& sMessage)	{ msTriggerMessage = sMessage; }
-	virtual void		SetHoverMessage(const std::string& sMessage)		{ msHoverMessage = sMessage; }
+	virtual void		SetTooltip(const std::string& sMessage)		{ msHoverMessage = sMessage; }
 	virtual void		SetCursorInMessage(const std::string& sMessage)	{ msCursorInMessage = sMessage; }
 	virtual void		SetCursorOutMessage(const std::string& sMessage)	{ msCursorOutMessage = sMessage; }
 

@@ -95,6 +95,8 @@ void Sandbox::InitControlPanel()
     gpControlPanel->AddButton("ChessWin", "initchildwindows;mode=8;target=MainAppMessageTarget", pBtnFont);
 
 
+    gpControlPanel->FitToControls();
+
     gpMainWin->ChildAdd(gpControlPanel);
 
 

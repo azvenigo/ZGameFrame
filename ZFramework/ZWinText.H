@@ -15,20 +15,23 @@ public:
     enum eBehavior : uint8_t
     {
         None                = 0,
-        PopupOnHover        = 1,        // 1   
+        TooltipOnHover      = 1,        // 1   
         CloseOnMouseOut     = 1 << 1,   // 2
         CloseOnClick        = 1 << 2,   // 4
     };
 
-    ZWinLabel() : mBehavior(None), mFillColor(0), mPosition(ZGUI::C) {}
+    ZWinLabel() : mBehavior(None), mFillColor(0), mPosition(ZGUI::C)
+    {
+        mbAcceptsCursorMessages = true;
+    }
 
 
     virtual bool		OnMouseDownL(int64_t x, int64_t y);
     virtual bool		OnMouseHover(int64_t x, int64_t y);
     virtual bool        Process();
 
-    virtual void        SetBehavior(eBehavior b) { mBehavior = b; }
-    virtual void		SetLook(ZFontParams font, const ZTextLook& look, ZGUI::ePosition pos, uint32_t nFillColor = 0);
+    virtual void        SetBehavior(uint8_t b) { mBehavior = (eBehavior)b; }
+    virtual void		SetLook(ZFontParams font, const ZTextLook& look, ZGUI::ePosition pos, bool bWrap = false, uint32_t nFillColor = 0);
     virtual void        UpdateLook(ZFontParams font);
     virtual void        UpdateLook(const ZTextLook& look);
     virtual void        UpdateLook(ZGUI::ePosition pos);
@@ -37,7 +40,7 @@ public:
 
     virtual void		SetText(const std::string& text);
 
-    virtual void		SetHoverMessage(const std::string& sMessage, ZFontParams* pHoverFontParams = nullptr, ZTextLook* pHoverLook = nullptr, uint32_t nHoverFill = 0);
+    virtual void		SetTooltip(const std::string& sMessage, ZFontParams* pTooltipFontParams = nullptr, ZTextLook* pTooltipLook = nullptr, bool bWrap = false, uint32_t nTooltipFill = 0);
 
 protected:   
     virtual bool		Paint();
@@ -47,13 +50,15 @@ protected:
 	tZFontPtr           mpFont;
     ZTextLook           mLook;
     ZGUI::ePosition     mPosition;
+    bool                mbWrap;
 
     eBehavior           mBehavior;
 
-	std::string		    msHoverMessage;
-    ZFontParams         mHoverFontParams;
-    ZTextLook           mHoverLook;
-    uint32_t            mHoverFill;
+	std::string		    msTooltipMessage;
+    ZFontParams         mTooltipFontParams;
+    ZTextLook           mTooltipLook;
+    uint32_t            mTooltipFill;
+    bool                mbTooltipWrap;
 };
 
 

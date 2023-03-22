@@ -79,7 +79,7 @@ public:
 
     bool        FromPGN(ZChessPGN& pgn);
     std::string GetPGN();
-    bool        AddAction(const std::string& sAction);
+    bool        AddAction(const std::string& sAction, size_t nHalfMoveNumber);
     bool        Clear();
 
 
@@ -142,6 +142,7 @@ private:
 
     char    ScreenToPalettePiece(int64_t x, int64_t y);
 
+    void    ClearHistory();
     void    LoadRandomGame();
     bool    LoadPGN(std::string sFilename);
     bool    SavePGN(std::string sFilename);

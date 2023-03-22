@@ -17,18 +17,18 @@ bool ZWinLabel::OnMouseDownL(int64_t x, int64_t y)
 
 bool ZWinLabel::OnMouseHover(int64_t x, int64_t y)
 {
-    if (!msHoverMessage.empty())
+    if (!msTooltipMessage.empty())
     {
         ZWinLabel* pWin = new ZWinLabel();
-        pWin->SetText(msHoverMessage);
-        pWin->SetBehavior(ZWinLabel::CloseOnMouseOut);
+        pWin->SetText(msTooltipMessage);
+        pWin->SetBehavior(ZWinLabel::CloseOnMouseOut| ZWinLabel::CloseOnClick);
 
         ZRect rTextArea;
         
-        tZFontPtr pHoverFont = gpFontSystem->GetFont(mHoverFontParams);
-        rTextArea = pHoverFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msHoverMessage.c_str(), msHoverMessage.length(), mPosition);
-        pWin->SetLook(mHoverFontParams, mHoverLook, mPosition, mHoverFill);
-        rTextArea.InflateRect(pHoverFont->Height()/4, pHoverFont->Height()/4);
+        tZFontPtr pTooltipFont = gpFontSystem->GetFont(mTooltipFontParams);
+        rTextArea = pTooltipFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msTooltipMessage.c_str(), msTooltipMessage.length(), mPosition);
+        pWin->SetLook(mTooltipFontParams, mTooltipLook, mPosition, mTooltipFill);
+        rTextArea.InflateRect(pTooltipFont->Height()/4, pTooltipFont->Height()/4);
 
 
         rTextArea.MoveRect(ZPoint(x - rTextArea.Width() + 16, y - rTextArea.Height() + 16));
@@ -58,12 +58,13 @@ bool ZWinLabel::Process()
 
 
 
-void ZWinLabel::SetLook(ZFontParams font, const ZTextLook& look, ZGUI::ePosition pos, uint32_t nFill)
+void ZWinLabel::SetLook(ZFontParams font, const ZTextLook& look, ZGUI::ePosition pos, bool bWrap, uint32_t nFill)
 { 
     mpFont = gpFontSystem->GetFont(font);  
     mLook = look;
     mPosition = pos;
     mFillColor = nFill;
+    mbWrap = bWrap;
     Invalidate();
 }
 
@@ -99,17 +100,19 @@ void ZWinLabel::SetText(const std::string& text )
     Invalidate();
 }
 
-void ZWinLabel::SetHoverMessage(const std::string& sMessage, ZFontParams* pHoverFontParams, ZTextLook* pHoverLook, uint32_t nHoverFill)
+void ZWinLabel::SetTooltip(const std::string& sMessage, ZFontParams* pTooltipFontParams, ZTextLook* pTooltipLook, bool bWrap, uint32_t nTooltipFill)
 { 
-    msHoverMessage = sMessage; 
-    if (pHoverFontParams)
-        mHoverFontParams = *pHoverFontParams;
+    msTooltipMessage = sMessage;
+    if (pTooltipFontParams)
+        mTooltipFontParams = *pTooltipFontParams;
 
-    if (pHoverLook)
-        mHoverLook = *pHoverLook;
+    if (pTooltipLook)
+        mTooltipLook = *pTooltipLook;
 
-    if (nHoverFill > 0)
-        mHoverFill = nHoverFill;
+    mbTooltipWrap = bWrap;
+
+    if (nTooltipFill > 0)
+        mTooltipFill = nTooltipFill;
 
 }
 
@@ -122,8 +125,15 @@ bool ZWinLabel::Paint()
     if (ARGB_A(mFillColor) > 5)
         mpTransformTexture->Fill(mAreaToDrawTo, mFillColor);
 
-    ZRect rOut = mpFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msText.c_str(), msText.length(), mPosition);
-    mpFont->DrawTextA(mpTransformTexture.get(), msText, rOut, mLook);
+    if (mbWrap)
+    {
+        mpFont->DrawTextParagraph(mpTransformTexture.get(), msText, mAreaToDrawTo, mLook, mPosition);
+    }
+    else
+    {
+        ZRect rOut = mpFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msText.c_str(), msText.length(), mPosition);
+        mpFont->DrawText(mpTransformTexture.get(), msText, rOut, mLook);
+    }
 
     return ZWin::Paint();
 }

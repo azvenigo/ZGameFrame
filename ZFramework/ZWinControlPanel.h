@@ -21,6 +21,8 @@ public:
 
     void                SetTriggerRect(const ZRect& rTrigger) { mrTrigger.SetRect(rTrigger); }
 
+    void                FitToControls();
+
     void                SetHideOnMouseExit(bool bHideOnMouseExit) { mbHideOnMouseExit = bHideOnMouseExit; }
 
     ZWinLabel*          AddCaption( const std::string& sCaption,

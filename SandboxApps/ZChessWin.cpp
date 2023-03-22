@@ -279,8 +279,9 @@ string ZPGNWin::GetPGN()
     return mPGN.ToString();
 }
 
-bool ZPGNWin::AddAction(const std::string& sAction)
+bool ZPGNWin::AddAction(const std::string& sAction, size_t nHalfMoveNumber)
 {
+    mPGN.TrimToHalfMove(nHalfMoveNumber);
     if (mPGN.AddMove(sAction))
     {
         mCurrentHalfMoveNumber = mPGN.GetHalfMoveCount() - 1;
@@ -299,6 +300,7 @@ bool ZPGNWin::Clear()
         mpGameTagsWin->Clear();
     if (mpMovesWin)
         mpMovesWin->Clear();
+    mPGN.Reset();
     InvalidateChildren();
     return true;
 }
@@ -340,12 +342,20 @@ void ZPGNWin::UpdateView()
                 // highlight white
                 sMoveLine = "<line wrap=0><text fontparams=" + StringHelpers::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=lb link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". [" + move.whiteAction + "]</text>";
                 sMoveLine += "<text fontparams=" + StringHelpers::URL_Encode(mBoldFont) + " color=0xff000000 color2=0xff000000 position=rb link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">" + move.blackAction + "</text></line>";
+
+                if (!move.whiteComment.empty())
+                    gMessageSystem.Post("statusmessage", mpParentWin, "message", StringHelpers::FromInt(nMove) + ". [" + move.whiteAction + "] " + move.whiteComment, "col", 0xff0066aa);
+
             }
             else
             {
                 // highlight black
                 sMoveLine = "<line wrap=0><text fontparams=" + StringHelpers::URL_Encode(mBoldFont) + " color=0xffffffff color2=0xffffffff position=lb link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove - 1) + ">" + StringHelpers::FromInt(nMove) + ". " + move.whiteAction + "</text>";
                 sMoveLine += "<text fontparams=" + StringHelpers::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=rb link=setmove;target=pgnwin;halfmove=" + StringHelpers::FromInt(nHalfMove) + ">[" + move.blackAction + "]</text></line>";
+
+                if (!move.blackComment.empty())
+                    gMessageSystem.Post("statusmessage", mpParentWin, "message", StringHelpers::FromInt(nMove) + "... [" + move.blackAction + "] " + move.blackComment, "col", 0xff0066aa);
+
             }
             mpMovesWin->AddLineNode(sMoveLine);
         }
@@ -377,6 +387,7 @@ bool ZPGNWin::SetHalfMove(int64_t nHalfMove)
 //        Sprintf(sMessage, "sethistoryindex;target=chesswin;halfmove=%d", mCurrentHalfMoveNumber);
 //        gMessageSystem.Post(sMessage);
         gMessageSystem.Post("sethistoryindex", mpParentWin, "halfmove", mCurrentHalfMoveNumber);
+
         UpdateView();
         return true;
     }    
@@ -450,11 +461,12 @@ bool ZChessWin::Init()
     mIdleSleepMS = 250;
     SetFocus();
 
+    ClearHistory();
+
     mnPieceHeight = mAreaToDrawTo.Height() / 12;
 
     mLightSquareCol = 0xffeeeed5;
     mDarkSquareCol = 0xff7d945d;
-
 
     UpdateSize();
 
@@ -522,7 +534,7 @@ bool ZChessWin::Init()
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
 
         mpStatusWin = new ZWinLabel();
-        mpStatusWin->SetLook(ZFontParams("Ariel", 80, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::Center, gDefaultTextAreaFill);
+        mpStatusWin->SetLook(ZFontParams("Ariel", 80, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::C, true, gDefaultTextAreaFill);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
         mpStatusWin->SetText("Welcome to ZChess");
         ChildAdd(mpStatusWin);
@@ -706,17 +718,13 @@ bool ZChessWin::OnMouseUpL(int64_t x, int64_t y)
                     if (mBoard.MovePiece(mDraggingSourceGrid, dstGrid))
                     {
                         if (mpPGNWin)
-                            mpPGNWin->AddAction(sAction);
+                            mpPGNWin->AddAction(sAction, mBoard.GetHalfMoveNumber());
 
                         if (mpStatusWin)
                             mpStatusWin->SetText(sAction);
 
                         const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
-                        if (mHistory.empty())
-                        {
-                            ChessBoard board;
-                            mHistory.push_back(board); // initial board
-                        }
+                        mHistory.resize(mBoard.GetHalfMoveNumber());
                         mHistory.push_back(mBoard);
                     }
                 }
@@ -939,7 +947,7 @@ void ZChessWin::DrawBoard()
 
             sMove lastMove = mBoard.GetLastMove();
             if (grid == lastMove.mSrc || grid == lastMove.mDest)
-                nSquareColor = 0xff0088ff;
+                nSquareColor = ZBuffer::AlphaBlend_BlendAlpha(nSquareColor, 0xff0088ff, 128);
 
 
             mpTransformTexture->Fill(SquareArea(grid), nSquareColor);
@@ -1050,7 +1058,7 @@ void ZChessWin::UpdateStatus(const std::string& sText, uint32_t col)
     if (mpStatusWin)
     {
         mpStatusWin->SetText(sText);
-        mpStatusWin->UpdateLook(ZTextLook(ZTextLook::kShadowed, col, col));
+        mpStatusWin->SetLook(ZFontParams("Ariel", 40, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::LT, true, gDefaultTextAreaFill);
     }
 }
 
@@ -1070,6 +1078,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         else
             UpdateStatus(message.GetParam("message"));
         Invalidate();
+        return true;
     }
     else if (sType == "invalidate")
     {
@@ -1087,6 +1096,9 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     else if (sType == "resetboard")
     {
         mBoard.ResetBoard();
+        ClearHistory();
+        if (mpPGNWin)
+            mpPGNWin->Clear();
         InvalidateChildren();
         return true;
     }
@@ -1197,16 +1209,11 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             if (mBoard.PromotePiece(mDraggingSourceGrid, grid, c))
             {
                 if (mpPGNWin)
-                    mpPGNWin->AddAction(sAction);
+                    mpPGNWin->AddAction(sAction, mBoard.GetHalfMoveNumber());
                 if (mpStatusWin)
                     mpStatusWin->SetText(sAction);
 
                 const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
-                if (mHistory.empty())
-                {
-                    ChessBoard board;
-                    mHistory.push_back(board); // initial board
-                }
                 mHistory.push_back(mBoard);
             }
         }
@@ -1225,7 +1232,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             return true;
         }
 
-        int64_t nHalfMove = StringHelpers::ToInt(message.GetParam("halfmove"));
+        int64_t nHalfMove = 1+StringHelpers::ToInt(message.GetParam("halfmove"));   // add 1 since first two history boards are placeholder
         const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
         if (nHalfMove >= 0)
         {
@@ -1461,19 +1468,28 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
 }
 
 
-
-
-bool ZChessWin::FromPGN(ZChessPGN& pgn)
+void ZChessWin::ClearHistory()
 {
     const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
     mHistory.clear();
 
     ChessBoard board;
     mHistory.push_back(board); // initial board
-    
+    mHistory.push_back(board); // initial board
+}
+
+
+
+bool ZChessWin::FromPGN(ZChessPGN& pgn)
+{
+    ClearHistory();
+
+    const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
+
     if (mpPGNWin)
         mpPGNWin->FromPGN(pgn);
 
+    ChessBoard board;
     size_t nMove = 1;
     bool bDone = false;
     while (!bDone && nMove < pgn.GetMoveCount())
@@ -1526,10 +1542,10 @@ bool ZChessWin::FromPGN(ZChessPGN& pgn)
                 //board.DebugDump();
 
                 ZPoint dst = move.DestFromAction(kBlack);
-                ZASSERT(board.ValidCoord(dst));
+                ZASSERT(ChessBoard::ValidCoord(dst));
 
                 ZPoint src = move.ResolveSourceFromAction(kBlack, board);
-                ZASSERT(board.ValidCoord(src));
+                ZASSERT(ChessBoard::ValidCoord(src));
 
                 char promotion = move.IsPromotion(kBlack);
                 if (promotion)

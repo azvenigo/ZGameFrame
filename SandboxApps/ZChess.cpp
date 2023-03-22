@@ -1505,6 +1505,22 @@ size_t ZChessPGN::GetHalfMoveCount()
 }
 
 // for live games
+bool ZChessPGN::TrimToHalfMove(size_t halfMoveNumber)
+{
+    if (GetHalfMoveCount() < halfMoveNumber)
+        return false;
+
+    mMoves.resize((1+halfMoveNumber) / 2);
+    // if we've trimmed to a white move, clear the black move
+    if (halfMoveNumber % 2 == 1)
+    {
+        mMoves[mMoves.size() - 1].blackAction = "";
+        mMoves[mMoves.size() - 1].blackComment = "";
+    }
+
+    return true;
+}
+
 bool ZChessPGN::AddMove(const std::string& sAction)
 {
     size_t nCurrentHalfMove = GetHalfMoveCount();
@@ -1526,8 +1542,9 @@ bool ZChessPGN::AddMove(const std::string& sAction)
 }
 
 
-void ZChessPGN::ResetTags()
+void ZChessPGN::Reset()
 {
+    mMoves.clear();
     mTags.clear();
     mTags["Event"] = "ZChess Game";
 
@@ -1535,6 +1552,7 @@ void ZChessPGN::ResetTags()
     string sDateTime(std::asctime(std::localtime(&curTime)));
     sDateTime = sDateTime.substr(0, sDateTime.length() - 1);    // strip \n from the end
     mTags["Date"] = sDateTime;
+
 }
 
 
@@ -1651,7 +1669,7 @@ std::string ZChessPGN::ToString()
 
     // save tags
     if (GetTag("Event").empty())
-        ResetTags();
+        Reset();
 
     for (auto s : pgnTags)
     {

@@ -917,6 +917,8 @@ Z3DTestWin::Z3DTestWin()
     mnRenderSize = 256;
     mbControlPanelEnabled = true;
 
+    mIdleSleepMS = 16;
+
     mLastTimeStamp = gTimer.GetMSSinceEpoch();
     msWinName = "3dtestwin";
 }

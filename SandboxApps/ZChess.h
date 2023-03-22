@@ -227,11 +227,16 @@ class ZChessPGN
 public:
     ZChessPGN() {}
 
+    void Reset();
+
     bool ParsePGN(const std::string& sPGN);
+
+
 
     std::string ToString();
 
     // for live games
+    bool TrimToHalfMove(size_t halfMoveNumber); // for picking up a pgn in the middle
     bool AddMove(const std::string& sAction);
 
 
@@ -239,7 +244,6 @@ public:
     bool WhiteWins() { return GetTag("Result") == "1-0"; }
     bool BlackWins() { return GetTag("Result") == "0-1"; }
 
-    void ResetTags();
     std::string GetTag(const std::string& sTag);
 
 

@@ -4,6 +4,7 @@
 #include <list>
 #include <map>
 #include <set>
+#include <mutex>
 
 
 
@@ -112,6 +113,8 @@ public:
         ZMessage m;
         m.mType = type;
         ToMessage(m, key, val, more...);
+
+        const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
         mMessageQueue.push_back(std::move(m));
     }
 
@@ -124,6 +127,8 @@ public:
         if (pTarget)
             m.mTarget = pTarget->GetTargetName();
         ToMessage(m, key, val, more...);
+
+        const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
         mMessageQueue.push_back(std::move(m));
     }
 
@@ -152,6 +157,8 @@ public:
 
 private:
 	tMessageList					mMessageQueue;
+    std::mutex			            mMessageQueueMutex;
+
 	tMessageToMessageTargetsMap		mMessageToMessageTargetsMap;
 
 	tNameToMessageTargetMap			mNameToMessageTargetMap;

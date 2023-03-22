@@ -223,8 +223,8 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
         sPropLineXMLNode += "</text></line>";
 
         mpImageProps->AddLineNode(sPropLineXMLNode);
-        mpImageProps->SetScrollable();
     }
+    mpImageProps->SetScrollable();
 }
 
 void cProcessImageWin::Process_SelectImage(string sImageName)
@@ -962,7 +962,7 @@ bool cProcessImageWin::Init()
     pCP->AddSpace(32);
 
     ZWinLabel* pLabel = pCP->AddCaption("Compute Radius", gDefaultTitleFont, ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::C, gDefaultDialogFill);
-    pLabel->SetHoverMessage("Sets the radius for the operations below.", &gDefaultTooltipFont, &gDefaultToolitipLook, gDefaultTooltipFill);
+    pLabel->SetTooltip("Sets the radius for the operations below.", &gDefaultTooltipFont, &gDefaultToolitipLook, gDefaultTooltipFill);
 
     pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, pBtnFont);
 

@@ -21,6 +21,20 @@ bool ZWinControlPanel::Init()
     return ZWin::Init();
 }
 
+void ZWinControlPanel::FitToControls()
+{
+    ZRect rFit;
+    for (auto child : mChildList)
+    {
+        rFit.UnionRect(child->GetArea());
+    }
+
+    rFit.InflateRect(gnControlPanelEdge, gnControlPanelEdge);
+    rFit.MoveRect(mAreaAbsolute.left, mAreaAbsolute.top);
+
+    SetArea(rFit);
+}
+
 
 ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage, tZFontPtr pFont, const ZTextLook& look)
 {
