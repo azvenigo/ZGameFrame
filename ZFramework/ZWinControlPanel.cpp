@@ -64,7 +64,7 @@ ZWinLabel* ZWinControlPanel::AddCaption(const string& sCaption, const ZFontParam
     ZWinLabel* pWin = new ZWinLabel();
     pWin->SetText(sCaption);
 //    pWin->SetHoverMessage("this is a test popup", &gDefaultTooltipFont, &gDefaultToolitipLook, gDefaultTooltipFill);
-    pWin->SetLook(fontParams, look, pos, nFillCol);
+    pWin->SetLook(fontParams, look, pos, false, nFillCol);
     pWin->SetArea(mrNextControl);
     ChildAdd(pWin);
 

@@ -27,7 +27,7 @@ bool ZWinLabel::OnMouseHover(int64_t x, int64_t y)
         
         tZFontPtr pTooltipFont = gpFontSystem->GetFont(mTooltipFontParams);
         rTextArea = pTooltipFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msTooltipMessage.c_str(), msTooltipMessage.length(), mPosition);
-        pWin->SetLook(mTooltipFontParams, mTooltipLook, mPosition, mTooltipFill);
+        pWin->SetLook(mTooltipFontParams, mTooltipLook, mPosition, true, mTooltipFill);
         rTextArea.InflateRect(pTooltipFont->Height()/4, pTooltipFont->Height()/4);
 
 
