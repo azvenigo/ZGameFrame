@@ -134,18 +134,18 @@ public:
 class ZTextLook
 {
 public:
-    enum eStyle : uint8_t
+    enum eDeco : uint8_t
     {
         kNormal = 0,
         kShadowed = 1,
         kEmbossed = 2
     };
 
-    ZTextLook(eStyle _style = kNormal, uint32_t _colTop = 0xffffffff, uint32_t _colBottom = 0xffffffff) { style = _style; colTop = _colTop; colBottom = _colBottom; }
+    ZTextLook(eDeco _decoration = kNormal, uint32_t _colTop = 0xffffffff, uint32_t _colBottom = 0xffffffff) { decoration = _decoration; colTop = _colTop; colBottom = _colBottom; }
 
-    uint32_t colTop;
-    uint32_t colBottom;
-    eStyle   style;
+    uint32_t    colTop;
+    uint32_t    colBottom;
+    eDeco       decoration;
 };
 
 class ZFont

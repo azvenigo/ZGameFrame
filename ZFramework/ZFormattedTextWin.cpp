@@ -28,7 +28,7 @@ const string				ksFontParamsTag("fontparams");
 const string				ksColorTag("color");
 const string				ksColor2Tag("color2");
 const string				ksPositionTag("position");
-const string				ksStyleTag("style");
+const string				ksDecoTag("deco");
 const string				ksWrapTag("wrap");
 const string				ksLinkTag("link");
 
@@ -350,7 +350,7 @@ bool ZFormattedTextWin::Paint()
 					rUnderline.IntersectRect(&rClip);
                     mpTransformTexture.get()->Fill(rUnderline, entry.look.colBottom);
 
-					if (entry.look.style == ZTextLook::kShadowed)
+					if (entry.look.decoration == ZTextLook::kShadowed)
 					{
 						rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
 						rUnderline.IntersectRect(&rClip);
@@ -605,17 +605,17 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 		}
 	}*/
 
-	sParam = pTextNode->GetAttribute(ksStyleTag);
+	sParam = pTextNode->GetAttribute(ksDecoTag);
 	if (!sParam.empty())
 	{
         StringHelpers::makelower(sParam);
 
-		if (sParam == "normal")        mCurrentLook.style = ZTextLook::kNormal;
-		else if (sParam == "shadowed") mCurrentLook.style = ZTextLook::kShadowed;
-		else if (sParam == "embossed") mCurrentLook.style = ZTextLook::kEmbossed;
+		if (sParam == "normal")        mCurrentLook.decoration = ZTextLook::kNormal;
+		else if (sParam == "shadowed") mCurrentLook.decoration = ZTextLook::kShadowed;
+		else if (sParam == "embossed") mCurrentLook.decoration = ZTextLook::kEmbossed;
 		else
 		{
-			ZASSERT(false);  // unknown style type
+			ZASSERT(false);  // unknown decoration type
 		}
 	}
 

@@ -257,7 +257,7 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 	if (!pBuffer || !mbInitted )
 		return false;
 
-	switch (look.style)
+	switch (look.decoration)
 	{
     case ZTextLook::kNormal:
 		if (look.colTop == look.colBottom && ARGB_A(look.colTop) == 0xff)
@@ -1253,7 +1253,7 @@ bool ZDynamicFont::ExtractChar(uint8_t c)
     // if we've encountered a wider char than we've seen before
     if (rExtents.right - rExtents.left > mnWidestCharacterWidth)
     {
-        mnWidestCharacterWidth = rExtents.right - rExtents.left;
+        mnWidestCharacterWidth = (int32_t) (rExtents.right - rExtents.left);
 
         // If we have a fixed width font and we've encountered a wider character, adjust the font params?  <tbd if this is a bad idea>
         if (mFontParams.nFixedWidth > 0 && mFontParams.nFixedWidth < mnWidestCharacterWidth)

@@ -165,7 +165,7 @@ bool TextTestWin::Init()
         string sMessage;
         Sprintf(sMessage, "link=setcustomfont;fontindex=%d;target=TextTestWin", i);
 
-        sDialogScript += "<line wrap=0><text color=0xffffffff color2=0xffffffff style=normal ";
+        sDialogScript += "<line wrap=0><text color=0xffffffff color2=0xffffffff deco=normal ";
         sDialogScript += sEncodedFontParams;
         sDialogScript += sMessage.c_str();
         sDialogScript += " position=lc>";

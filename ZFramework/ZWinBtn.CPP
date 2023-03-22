@@ -421,9 +421,9 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 
 	string sStyle = pNode->GetAttribute("style");
 	if (sStyle == "shadowed")
-		mTextLook.style = ZTextLook::kShadowed;
+		mTextLook.decoration = ZTextLook::kShadowed;
 	else if (sStyle == "embossed")
-        mTextLook.style = ZTextLook::kEmbossed;
+        mTextLook.decoration = ZTextLook::kEmbossed;
 
 	string sColor = pNode->GetAttribute("color");
 	if (!sColor.empty())
