@@ -951,41 +951,42 @@ bool cProcessImageWin::Init()
     pCP->SetArea(mrControlPanel);
 //    pCP->SetTriggerRect(grControlPanelTrigger);
 
-    tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
+//    tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
 
 
     pCP->Init();
 
-    pCP->AddButton("Load Image", "loadimages;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Close All Images", "clearall;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Load Image", "loadimages;target=imageprocesswin");
+    pCP->AddButton("Close All Images", "clearall;target=imageprocesswin");
 
     pCP->AddSpace(32);
 
-    ZWinLabel* pLabel = pCP->AddCaption("Compute Radius", gDefaultTitleFont, ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::C, gDefaultDialogFill);
-    pLabel->SetTooltip("Sets the radius for the operations below.", &gDefaultTooltipFont, &gDefaultToolitipLook, gDefaultTooltipFill);
+    ZWinLabel* pLabel = pCP->AddCaption("Compute Radius");
+    pLabel->msText = "Sets the radius for the operations below.";
+    pLabel->mStyle = gStyleTooltip;
 
-    pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, pBtnFont);
+    pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, gStyleButton.Font());
 
-    pCP->AddButton("Blur", "radiusblur;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Stack", "stackimages;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Contrast", "computecontrast;target=imageprocesswin", pBtnFont);
+    pCP->AddButton("Blur", "radiusblur;target=imageprocesswin");
+    pCP->AddButton("Stack", "stackimages;target=imageprocesswin");
+    pCP->AddButton("Contrast", "computecontrast;target=imageprocesswin");
 
     pCP->AddSpace(32);
-    pCP->AddCaption("Ops", gDefaultTitleFont,ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::C, gDefaultDialogFill);
-    pCP->AddButton("Negative", "negative;target=imageprocesswin", pBtnFont);
-    pCP->AddButton("Monochrome", "mono;target=imageprocesswin", pBtnFont);
+    pCP->AddCaption("Ops");
+    pCP->AddButton("Negative", "negative;target=imageprocesswin");
+    pCP->AddButton("Monochrome", "mono;target=imageprocesswin");
 
 
     pCP->AddSpace(64);
 
-    pCP->AddCaption("Experiments", gDefaultTitleFont, ZTextLook(ZTextLook::kNormal, 0xffbbbbbb, 0xffbbbbbb), ZGUI::C, gDefaultDialogFill);
-    pCP->AddButton("compute gradients", "computegradients;target=imageprocesswin", pBtnFont);
-    pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, pBtnFont);
+    pCP->AddCaption("Experiments");
+    pCP->AddButton("compute gradients", "computegradients;target=imageprocesswin");
+    pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, gStyleButton.Font());
 
     pCP->AddSpace(16);
 
-    pCP->AddButton("float color sandbox", "floatcolorsandbox;target=imageprocesswin", pBtnFont);
-    pCP->AddSlider(&mnSubdivisionLevels, 1, 512, 1, "", true, false, pBtnFont);
+    pCP->AddButton("float color sandbox", "floatcolorsandbox;target=imageprocesswin");
+    pCP->AddSlider(&mnSubdivisionLevels, 1, 512, 1, "", true, false, gStyleButton.Font());
 
 
     ChildAdd(pCP);
@@ -1255,12 +1256,6 @@ bool cProcessImageWin::BlurBox(int64_t x, int64_t y)
         verts[1].mColor = mpResultBuffer.get()->GetPixel(nResultX + nAdjustedRect, nResultY - nAdjustedRect);
         verts[2].mColor = mpResultBuffer.get()->GetPixel(nResultX + nAdjustedRect, nResultY + nAdjustedRect);
         verts[3].mColor = mpResultBuffer.get()->GetPixel(nResultX - nAdjustedRect, nResultY + nAdjustedRect);
-
-
-        /*            verts[0].mColor = nCol;
-                    verts[1].mColor = nCol;
-                    verts[2].mColor = nCol;
-                    verts[3].mColor = nCol;*/
 
         gRasterizer.Rasterize(mpResultBuffer.get(), verts);
 

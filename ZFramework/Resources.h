@@ -6,6 +6,8 @@
 #include <memory>
 #include "ZBuffer.h"
 #include "ZFont.h"
+#include "ZGUIHelpers.h"
+#include "ZGUIStyle.h"
 
 class ZBuffer;
 
@@ -47,16 +49,6 @@ extern tZBufferPtr  gSliderThumbVertical;
 extern tZBufferPtr  gSliderBackground;
 extern ZRect        grSliderBgEdge;
 extern ZRect        grSliderThumbEdge;
-
-// Fonts
-extern ZFontParams  gDefaultButtonFont;
-extern ZFontParams  gDefaultTitleFont;
-extern ZFontParams  gDefaultCaptionFont;
-extern ZFontParams  gDefaultTextFont;
-
-extern ZFontParams  gDefaultTooltipFont;
-extern ZTextLook    gDefaultToolitipLook;
-extern uint32_t     gDefaultTooltipFill;
 
 
 

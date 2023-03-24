@@ -36,16 +36,16 @@ void ZWinControlPanel::FitToControls()
 }
 
 
-ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const string& sMessage, tZFontPtr pFont, const ZTextLook& look)
+ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const std::string& sMessage, const ZGUI::Style& style)
 {
     ZWinSizablePushBtn* pBtn;
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption(sCaption);
-    pBtn->SetTextLook(pFont, look);
-    pBtn->SetArea(mrNextControl);
     pBtn->SetMessage(sMessage);
+    pBtn->mStyle = style;
+    pBtn->SetArea(mrNextControl);
     ChildAdd(pBtn);
 
     mrNextControl.OffsetRect(0,mrNextControl.Height());
@@ -53,18 +53,11 @@ ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const st
     return pBtn;
 }
 
-ZWinLabel* ZWinControlPanel::AddCaption(const string& sCaption, const ZFontParams& fontParams, const ZTextLook& look, ZGUI::ePosition pos, uint32_t nFillCol)
+ZWinLabel* ZWinControlPanel::AddCaption(const std::string& sCaption, const ZGUI::Style& style)
 {
-/*    ZFormattedTextWin* pWin = new ZFormattedTextWin();
-    pWin->SetArea(mrNextControl);
-    pWin->AddMultiLine(sCaption, fontParams, look, pos);
-    pWin->SetFill(nFillCol);
-    ChildAdd(pWin);*/
-
     ZWinLabel* pWin = new ZWinLabel();
-    pWin->SetText(sCaption);
-//    pWin->SetHoverMessage("this is a test popup", &gDefaultTooltipFont, &gDefaultToolitipLook, gDefaultTooltipFill);
-    pWin->SetLook(fontParams, look, pos, false, nFillCol);
+    pWin->msText = sCaption;
+    pWin->mStyle = style;
     pWin->SetArea(mrNextControl);
     ChildAdd(pWin);
 
@@ -74,7 +67,7 @@ ZWinLabel* ZWinControlPanel::AddCaption(const string& sCaption, const ZFontParam
 }
 
 
-ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, const std::string& sRadioGroup, tZFontPtr pFont, const ZTextLook& checkedLook, const ZTextLook& uncheckedLook)
+ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, const std::string& sRadioGroup, const ZGUI::Style& checkedStyle, const ZGUI::Style& uncheckedStyle)
 {
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
@@ -82,7 +75,8 @@ ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, co
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pCheck->SetCaption(sCaption);
     pCheck->SetArea(mrNextControl);
-    pCheck->SetTextLook(pFont, checkedLook, uncheckedLook);
+    pCheck->mCheckedStyle = checkedStyle;
+    pCheck->mUncheckedStyle = uncheckedStyle;
     ChildAdd(pCheck);
 
     mrNextControl.OffsetRect(0, mrNextControl.Height());

@@ -93,10 +93,8 @@ bool ZScriptedDialogWin::Init()
 		{
 			ZWinSizablePushBtn* pBtn = *it;
 
-            tZFontPtr pFont = pBtn->GetFont();
-
 			string sCaption = pBtn->GetCaption();
-			int64_t nSize = pFont->StringWidth(sCaption);
+			int64_t nSize = pBtn->mStyle.Font()->StringWidth(sCaption);
 			ZASSERT(nSize < mAreaToDrawTo.Width());
 
 			if (nSize > nLargestCaptionSize)
@@ -131,9 +129,7 @@ bool ZScriptedDialogWin::Init()
 		{
 			ZWinSizablePushBtn* pBtn = *it;
 
-            tZFontPtr pFont = pBtn->GetFont();
-			int64_t nFontSize = pFont->Height();
-//			CEASSERT(nFontSize < kMaxFonts);
+			int64_t nFontSize = pBtn->mStyle.fp.nHeight;
 
 			ZRect rButtonArea(nXPos, nYPos, nXPos + nLargestCaptionSize + nFontSize*kPadding*2, nYPos + kButtonMeasure);
 			pBtn ->SetArea(rButtonArea);
@@ -188,7 +184,6 @@ bool ZScriptedDialogWin::Paint()
    
     // Draw the dialog edge
 	if (mbDrawDefaultBackground)
-		//pBufferToDrawTo->Blt(&gDefaultDialogBackground, mAreaToDrawTo, mAreaToDrawTo, pClip);
 		mpTransformTexture->Fill(mArea, gDefaultDialogFill);
 	return ZWin::Paint();
 }
@@ -198,10 +193,8 @@ bool ZScriptedDialogWin::ExecuteScript(string sDialogScript)
 {
 	string sElement;
 
-//	WriteStringToFile("d:/temp/testraw.txt", sDialogScript);
 	ZXMLNode dialogTree;
 	dialogTree.Init(sDialogScript);
-//	WriteStringToFile("d:/temp/testoutput.xml", dialogTree.ToString());
 
 	ZXMLNode* pDialogNode = dialogTree.GetChild(ksScriptedDialog);
 	ZASSERT(pDialogNode);

@@ -290,12 +290,12 @@ bool ZWinCheck::Paint()
     if (*mpbChecked)
     {
         mDrawState = kDown;
-        mTextLook = mCheckedLook;
+        mStyle= mCheckedStyle;
     }
     else
     {
         mDrawState = kUp;
-        mTextLook = mUncheckedLook;
+        mStyle = mUncheckedStyle;
     }
 
 	return ZWinSizablePushBtn::Paint();
@@ -384,7 +384,8 @@ ZWinSizablePushBtn::ZWinSizablePushBtn()
 	mpDownEdgeImage     = NULL;
 	mDrawState          = kUp;
 	msButtonMessage     = "btn_pressed";
-	mbTransformable = false;
+	mbTransformable     = false;
+    mStyle              = gStyleButton;
 }
 
 ZWinSizablePushBtn::~ZWinSizablePushBtn()
@@ -416,22 +417,9 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 
 //	int64_t nFontID = StringHelpers::ToInt(pNode->GetAttribute("size"));
     ZFontParams params(pNode->GetAttribute("fontparams"));
-    mpFont = gpFontSystem->GetFont(params);
 
+    mStyle = ZGUI::Style(pNode->GetAttribute("style"));
 
-	string sStyle = pNode->GetAttribute("style");
-	if (sStyle == "shadowed")
-		mTextLook.decoration = ZTextLook::kShadowed;
-	else if (sStyle == "embossed")
-        mTextLook.decoration = ZTextLook::kEmbossed;
-
-	string sColor = pNode->GetAttribute("color");
-	if (!sColor.empty())
-        mTextLook.colTop = (uint32_t) StringHelpers::ToInt(sColor);
-
-	string sColor2 = pNode->GetAttribute("color2");
-	if (!sColor2.empty())
-		mTextLook.colBottom = (uint32_t) StringHelpers::ToInt(sColor2);
 
 	msButtonMessage = pNode->GetAttribute("message");
 
@@ -473,17 +461,17 @@ bool ZWinSizablePushBtn::Paint()
 	int64_t nStrlen = msCaption.length();
 	if (nStrlen > 0)
 	{
-		ZRect rText(mpFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), nStrlen, ZGUI::Center));
+		ZRect rText(mStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), nStrlen, ZGUI::Center));
 
 		string sCaptionToDraw(msCaption);
 
 
 		// Offset for text and shadow is based on font size.....but at least of 1
-		int64_t nOffset = max((int) mpFont->Height()/16, (int) 1);
+		int64_t nOffset = max((int) mStyle.fp.nHeight/16, (int) 1);
 		if (mDrawState == kDown)
 			rText.OffsetRect(nOffset,nOffset);
 
-		mpFont->DrawText(mpTransformTexture.get(), sCaptionToDraw, rText, mTextLook);
+		mStyle.Font()->DrawText(mpTransformTexture.get(), sCaptionToDraw, rText, mStyle.look);
 	}
 
 	return ZWin::Paint();

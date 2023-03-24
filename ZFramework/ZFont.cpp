@@ -48,6 +48,43 @@ string sZFontHeader("ZFONT v3.1 by Alex Zvenigorodsky");
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+
+ZTextLook::ZTextLook(eDeco _decoration, uint32_t _colTop, uint32_t _colBottom)
+{ 
+    decoration = _decoration; 
+    colTop = _colTop; 
+    colBottom = _colBottom; 
+}
+
+ZTextLook::ZTextLook(const std::string& s)
+{
+    nlohmann::json j = nlohmann::json::parse(s);
+
+    if (j.contains("deco"))
+        decoration = j["deco"];
+
+    if (j.contains("colT"))
+        colTop = j["colT"];
+
+    if (j.contains("colB"))
+        colBottom = j["colB"];
+}
+
+ZTextLook::operator string() const
+{
+    nlohmann::json j;
+    j["deco"] = decoration;
+    j["colT"] = colTop;
+    j["colB"] = colBottom;
+
+    return j.dump();
+}
+
+
+
+
+
 ZFont::ZFont()
 {
 	mbInitted = false;
@@ -283,7 +320,6 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 				return DrawText_Helper(pBuffer, sText, rAreaToDrawTo, look.colTop, pClip);
 			};
 
-//			uint32_t nShadow2Color = (nShadowColor & 0x00ffffff) | (nCol2 & 0xff000000);
 			DrawText_Helper(pBuffer, sText, rShadowRect, nShadowColor, pClip);
 			return DrawText_Gradient_Helper(pBuffer, sText, rAreaToDrawTo, look.colTop, look.colBottom, pClip);
 		}
@@ -846,32 +882,6 @@ int64_t ZFont::CalculateWordsThatFitOnLine(int64_t nLineWidth, const uint8_t* pC
 	return nNumChars;
 }
 
-/*void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2)
-{
-	ZASSERT(mFontParams.nHeight > 1);
-    mColorGradient.resize(mFontParams.nHeight);
-
-	// If the gradient is already set, don't bother
-	if (mColorGradient[0] == nColor1 && mColorGradient[mFontParams.nHeight -1] == nColor2)
-		return;
-
-
-    float fHeight = (float) mFontParams.nHeight;
-
-    for (int64_t i = 0; i < mFontParams.nHeight; i++)
-    {
-        float fT = (float)i / fHeight;
-
-        uint8_t nA = (uint8_t)ARGB_A(nColor1) * fT + (uint8_t)ARGB_A(nColor2) * (1.0f - fT);
-        uint8_t nR = (uint8_t)ARGB_R(nColor1) * fT + (uint8_t)ARGB_R(nColor2) * (1.0f - fT);
-        uint8_t nG = (uint8_t)ARGB_G(nColor1) * fT + (uint8_t)ARGB_G(nColor2) * (1.0f - fT);
-        uint8_t nB = (uint8_t)ARGB_B(nColor1) * fT + (uint8_t)ARGB_B(nColor2) * (1.0f - fT);
-
-        mColorGradient[i] = ARGB(nA, nR, nG, nB);
-    }
-}*/
-
-
 void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2, std::vector<uint32_t>& gradient)
 {
     ZASSERT(mFontParams.nHeight > 1);
@@ -1101,12 +1111,7 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
     mhWinTargetBitmap = CreateDIBSection(mWinHDC, &mDIBInfo, DIB_RGB_COLORS, (void**)&mpBits, NULL, 0);
 
     mhWinTargetDC = CreateCompatibleDC(mWinHDC);
-
-//    int nDPI = ::GetDeviceCaps(mhWinTargetDC, LOGPIXELSY);
-//    double fDPIAdjustedHeight = (double) mFontParams.nHeight * (double)nDPI / 96.0;
-
     mhWinFont = CreateFontA( 
-//        (int)fDPIAdjustedHeight,
         (int)mFontParams.nHeight,
         0,                      /*nWidth*/
         0,                      /*nEscapement*/
@@ -1161,22 +1166,9 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
     return true;
 }
 
-
-
-
-/*typedef vector<unsigned char> tDataList;
-
-struct sCEFontChar
-{
-    unsigned short  charWidth;
-    tDataList       data;
-};
-
-sCEFontChar gCEFontArray[256];*/
-
 ZRect ZDynamicFont::FindCharExtents()
 {
-    ZRect rExtents;// = { 0,0,0,0 };
+    ZRect rExtents;
 
     // find bottom
     for (int64_t y = mrScratchArea.bottom - 1; y >= 0; y--)
@@ -1238,13 +1230,6 @@ ZRect ZDynamicFont::FindCharExtents()
 
 bool ZDynamicFont::ExtractChar(uint8_t c)
 {
-    // Special case
- /*   if (c < 'A' || c > 'Z')
-    {
-       gCEFontArray[c].charWidth = 0;
-       return;
-    }*/
-
     if (c <= 0)
         return false;
 
@@ -1483,10 +1468,7 @@ bool ZDynamicFont::RetrieveKerningPairs()
 
         if (cFirst > 0 && cSecond > 0)
         {
-
             mCharDescriptors[cFirst].kerningArray[cSecond] = nKern;
-//            ZDEBUG_OUT("kerning %c:%c = %d\n", cFirst, cSecond, nKern);
-            //FlushDebugOutQueue();
         }
     }
 

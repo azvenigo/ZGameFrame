@@ -32,15 +32,15 @@ int64_t         gnControlPanelButtonHeight;
 int64_t         gnControlPanelEdge;
 
 //Fonts
-ZFontParams     gDefaultButtonFont("Verdana", 30, 600);
 ZFontParams     gDefaultTitleFont("Gadugi", 40);
 ZFontParams     gDefaultCaptionFont("Gadugi", 30, 400);
 ZFontParams     gDefaultTextFont("Gadugi", 20);
 
-ZFontParams     gDefaultTooltipFont("Verdana", 30);
-ZTextLook       gDefaultToolitipLook(ZTextLook::kShadowed, 0xff000000, 0xff000000);
-uint32_t        gDefaultTooltipFill(0xff999999);
-
+ZGUI::Style     gStyleTooltip(ZFontParams("Verdana", 30), ZTextLook(ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::C, gDefaultTextAreaFill);
+ZGUI::Style     gStyleCaption(ZFontParams("Gadugi", 36, 400), ZTextLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, gDefaultDialogFill);
+ZGUI::Style     gStyleButton(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, gDefaultDialogFill);
+ZGUI::Style     gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, gDefaultDialogFill);
+ZGUI::Style     gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, gDefaultDialogFill);
 
 cResources::cResources()
 {
@@ -57,7 +57,7 @@ bool cResources::Init(const string& sDefaultResourcePath)
     // Adjust font sizes based on screen resolution
     gDefaultSpacer = grFullArea.Height() / 125;
 
-    gDefaultButtonFont.nHeight = grFullArea.Height() / 72;
+    gStyleButton.fp.nHeight = grFullArea.Height() / 72;
 
     gDefaultTitleFont.nHeight = grFullArea.Height() / 54;
     gDefaultCaptionFont.nHeight = grFullArea.Height() / 60;

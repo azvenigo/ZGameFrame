@@ -64,35 +64,31 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel->Init();
 
-
-    tZFontPtr pBtnFont = gpFontSystem->GetFont(gDefaultButtonFont);
-    ZASSERT(pBtnFont);
-
-    gpControlPanel->AddButton("Quit", "quit_app_confirmed", pBtnFont);
+    gpControlPanel->AddButton("Quit", "quit_app_confirmed");
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
 
 
-    gpControlPanel->AddButton("FloatLinesWin",  "initchildwindows;mode=1;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("FloatLinesWin",  "initchildwindows;mode=1;target=MainAppMessageTarget");
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("LifeWin",        "initchildwindows;mode=5;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("LifeWin",        "initchildwindows;mode=5;target=MainAppMessageTarget");
     gpControlPanel->AddSlider(&gnLifeGridSize, 1, 100, 5, "initchildwindows;mode=5;target=MainAppMessageTarget", true, false);
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
 
-    gpControlPanel->AddButton("ImageProcessor", "initchildwindows;mode=4;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("ImageProcessor", "initchildwindows;mode=4;target=MainAppMessageTarget");
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight/2);
-    gpControlPanel->AddButton("Checkerboard", "initchildwindows;mode=2;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("Checkerboard", "initchildwindows;mode=2;target=MainAppMessageTarget");
     gpControlPanel->AddSlider(&gnCheckerWindowCount, 1, 250, 1, "", true, false);
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("Font Tool", "initchildwindows;mode=6;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("Font Tool", "initchildwindows;mode=6;target=MainAppMessageTarget");
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("3DTestWin", "initchildwindows;mode=7;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("3DTestWin", "initchildwindows;mode=7;target=MainAppMessageTarget");
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("ChessWin", "initchildwindows;mode=8;target=MainAppMessageTarget", pBtnFont);
+    gpControlPanel->AddButton("ChessWin", "initchildwindows;mode=8;target=MainAppMessageTarget");
 
 
     gpControlPanel->FitToControls();

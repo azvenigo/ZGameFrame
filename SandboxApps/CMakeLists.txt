@@ -107,6 +107,8 @@ set(COMMON_FILES
 ../ZFramework/ZZipAPI.h
 ../ZFramework/ZGUIHelpers.h
 ../ZFramework/ZGUIHelpers.cpp
+../ZFramework/ZGUIStyle.h
+../ZFramework/ZGUIStyle.cpp
 ../ZFramework/platforms/windows/GDIImageTags.h
 ../ZFramework/platforms/windows/ZWinFileDialog_Windows.cpp
 )

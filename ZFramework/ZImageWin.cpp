@@ -67,7 +67,6 @@ bool ZImageWin::Init()
             pBtn = new ZWinSizablePushBtn();
             pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
             pBtn->SetCaption("X"); 
-            pBtn->SetTextLook(gpFontSystem->GetFont(gDefaultButtonFont), ZTextLook());
             pBtn->SetArea(rButton);
             pBtn->SetMessage(msCloseButtonMessage);
             mpPanel->ChildAdd(pBtn);
@@ -83,7 +82,7 @@ bool ZImageWin::Init()
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(":"); // wingdings rotate left
-        pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings 3", mnControlPanelFontHeight), ZTextLook());
+        pBtn->mStyle = ZGUI::Style(ZFontParams("Wingdings 3", mnControlPanelFontHeight));
         pBtn->SetArea(rButton);
 
 
@@ -99,7 +98,7 @@ bool ZImageWin::Init()
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(";"); // wingdings rotate right
-        pBtn->SetTextLook(gpFontSystem->GetFont("Wingdings 3", mnControlPanelFontHeight), ZTextLook());
+        pBtn->mStyle = ZGUI::Style(ZFontParams("Wingdings 3", mnControlPanelFontHeight));
         pBtn->SetArea(rButton);
 
         Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
@@ -116,7 +115,6 @@ bool ZImageWin::Init()
             pBtn = new ZWinSizablePushBtn();
             pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
             pBtn->SetCaption("save"); 
-            pBtn->SetTextLook(gpFontSystem->GetFont(gDefaultButtonFont), ZTextLook());
             pBtn->SetArea(rButton);
             pBtn->SetMessage(msSaveButtonMessage);
             mpPanel->ChildAdd(pBtn);
@@ -270,7 +268,6 @@ void ZImageWin::LoadImage(const string& sName)
 void ZImageWin::SetArea(const ZRect& newArea)
 {
     mbVisible = false;
-//    OutputDebugImmediate("SetArea %s [%d,%d,%d,%d\n", msWinName.c_str(), newArea.left, newArea.top, newArea.right, newArea.bottom);
     ZWin::SetArea(newArea);
 
     if (mpPanel)
@@ -359,9 +356,7 @@ bool ZImageWin::Paint()
 
 
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
-
     ZOUT_LOCKLESS("painting ", msWinName);
-//    OutputDebugImmediate("painting %s", msWinName.c_str());
 
     ZRect rDest(mpTransformTexture.get()->GetArea());
 
@@ -489,11 +484,6 @@ bool ZImageWin::InitFromXML(ZXMLNode* pNode)
 	ZXMLNode* pTransform = pNode->GetChild("trans");
 	if (pTransform)
 	{
-/*		cCEAnimObject_TransformingImage* pNewTransImage = new cCEAnimObject_TransformingImage(&mImage);
-		pNewTransImage->DoTransformation(pTransform->GetText());
-
-		gAnimator.AddObject(pNewTransImage, this);*/
-
 		DoTransformation(pTransform->GetText());
 	}
 	else if (pNode->HasAttribute("pos"))

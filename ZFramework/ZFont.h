@@ -131,6 +131,8 @@ public:
     std::string sFacename;
 };
 
+typedef std::shared_ptr<ZFontParams> tZFontParamsPtr;
+
 class ZTextLook
 {
 public:
@@ -141,7 +143,9 @@ public:
         kEmbossed = 2
     };
 
-    ZTextLook(eDeco _decoration = kNormal, uint32_t _colTop = 0xffffffff, uint32_t _colBottom = 0xffffffff) { decoration = _decoration; colTop = _colTop; colBottom = _colBottom; }
+    ZTextLook(eDeco _decoration = kNormal, uint32_t _colTop = 0xffffffff, uint32_t _colBottom = 0xffffffff);
+    ZTextLook(const std::string& s);
+    operator std::string() const;
 
     uint32_t    colTop;
     uint32_t    colBottom;

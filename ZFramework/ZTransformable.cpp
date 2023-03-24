@@ -235,84 +235,56 @@ bool ZTransformable::Tick()
 		double fCurrent = ((double) mCurTransform.mnTimestamp - (double) mStartTransform.mnTimestamp);
 		double fFullTime = ((double) mEndTransform.mnTimestamp - (double) mStartTransform.mnTimestamp);
 
-		double fPercentage = fCurrent / fFullTime;
+        if (fFullTime > 0.0)
+        {
+            double fPercentage = fCurrent / fFullTime;
 
-		if (!bEaseFrom && !bEaseTo)		//	false false
-		{
-			// Linear transform
-			fT = fCurrent / fFullTime;
-//			ZDEBUG_OUT("Transition linear.\n");
-		}
-		else if (bEaseFrom && bEaseTo)	// true true
-		{
-			// Ease Both
-			fRange = fPercentage * pi;
-			fT = 1.0-(1.0+cos(fRange))/2.0;
-//			ZDEBUG_OUT("Easing Both\n");
-		}
-		else if (bEaseFrom)				// true false
-		{
-			fRange = pi/2.0 - fPercentage * pi/2.0;
-			fT = 1.0-sin(fRange);
-//			ZDEBUG_OUT("Easing in.\n");
-		}
-		else if (bEaseTo)				// false true
-		{
-			fRange = fPercentage * pi/2.0;
-			fT = sin(fRange);
-//			ZDEBUG_OUT("Easing out.\n");
-		}
-		else
-		{
-			ZASSERT(false); //		!? What other state can there be?
-		}
+            if (!bEaseFrom && !bEaseTo)		//	false false
+            {
+                // Linear transform
+                fT = fCurrent / fFullTime;
+                //			ZDEBUG_OUT("Transition linear.\n");
+            }
+            else if (bEaseFrom && bEaseTo)	// true true
+            {
+                // Ease Both
+                fRange = fPercentage * pi;
+                fT = 1.0 - (1.0 + cos(fRange)) / 2.0;
+                //			ZDEBUG_OUT("Easing Both\n");
+            }
+            else if (bEaseFrom)				// true false
+            {
+                fRange = pi / 2.0 - fPercentage * pi / 2.0;
+                fT = 1.0 - sin(fRange);
+                //			ZDEBUG_OUT("Easing in.\n");
+            }
+            else if (bEaseTo)				// false true
+            {
+                fRange = fPercentage * pi / 2.0;
+                fT = sin(fRange);
+                //			ZDEBUG_OUT("Easing out.\n");
+            }
+            else
+            {
+                ZASSERT(false); //		!? What other state can there be?
+            }
 
-		ZASSERT(fT >= 0.0 && fT <= 1.0);
-		//ZDEBUG_OUT("fCurrent:%f fFull:%f  fRange:%f  fT:%f\n", fCurrent, fFullTime, fRange, fT);
-		if (fT < -0.0)
-			fT = 0.0;
-		else if (fT >= 1.0)
-			fT = 1.0;
-
-/*		for (double fTest = 0.0; fTest < 1.0; fTest += 0.02)
-		{
-			const double pi = 3.141592653;
+            ZASSERT(fT >= 0.0 && fT <= 1.0);
+            //ZDEBUG_OUT("fCurrent:%f fFull:%f  fRange:%f  fT:%f\n", fCurrent, fFullTime, fRange, fT);
+            if (fT < -0.0)
+                fT = 0.0;
+            else if (fT >= 1.0)
+                fT = 1.0;
 
 
-			// Straight in..... ease out
-//			double fRange = fTest * pi/2.0;
-//			double fT = sin(fRange);
-
-			// ease in....... straight out
-			double fRange = fTest * pi/2.0;
-			double fT = sin(fRange);
-
-
-//			double fRange = fTest * pi;
-//			double fT = 1.0-(1.0+cos(fRange))/2.0;
-
-
-			ZDEBUG_OUT("fCurrent:%f fFull:%f  fRange:%f  fT:%f\n", fCurrent, fFullTime, fRange, fT);
-			for (int64_t j = 0; j < (int64_t) (100.0*fT); j++)
-			{
-				ZDEBUG_OUT(".");
-			}
-			ZDEBUG_OUT("\n");
-		}
-
-*/
-
-
-
-
-
-//		double fT = fArcTanTransition;
-//		double fT = ((double) mCurTransform.mnTimestamp - (double) mStartTransform.mnTimestamp) / ((double) mEndTransform.mnTimestamp - (double) mStartTransform.mnTimestamp);
-		mCurTransform.mPosition.x = (int64_t) ((double)mStartTransform.mPosition.x + (double) (mEndTransform.mPosition.x -mStartTransform.mPosition.x) * fT);
-		mCurTransform.mPosition.y = (int64_t) ((double)mStartTransform.mPosition.y + (double) (mEndTransform.mPosition.y -mStartTransform.mPosition.y) * fT);
-		mCurTransform.mRotation = mStartTransform.mRotation + (mEndTransform.mRotation-mStartTransform.mRotation) * fT;
-		mCurTransform.mScale = mStartTransform.mScale + (mEndTransform.mScale-mStartTransform.mScale) * fT;
-		mCurTransform.mnAlpha = (uint32_t) (mStartTransform.mnAlpha + (mEndTransform.mnAlpha-mStartTransform.mnAlpha) * fT);
+            mCurTransform.mPosition.x = (int64_t)((double)mStartTransform.mPosition.x + (double)(mEndTransform.mPosition.x - mStartTransform.mPosition.x) * fT);
+            mCurTransform.mPosition.y = (int64_t)((double)mStartTransform.mPosition.y + (double)(mEndTransform.mPosition.y - mStartTransform.mPosition.y) * fT);
+            mCurTransform.mRotation = mStartTransform.mRotation + (mEndTransform.mRotation - mStartTransform.mRotation) * fT;
+            mCurTransform.mScale = mStartTransform.mScale + (mEndTransform.mScale - mStartTransform.mScale) * fT;
+            mCurTransform.mnAlpha = (uint32_t)(mStartTransform.mnAlpha + (mEndTransform.mnAlpha - mStartTransform.mnAlpha) * fT);
+        }
+        else
+            mCurTransform = mEndTransform;
 
 		UpdateVertsAndBounds();
 //		ZDEBUG_OUT("fT: %3.2f size: %3.2f\n", fT, mCurTransform.mScale);

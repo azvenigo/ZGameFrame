@@ -5,6 +5,7 @@
 #include "ZMessageSystem.h"
 #include "ZFont.h"
 #include "ZGUIHelpers.h"
+#include "ZGUIStyle.h"
 
 class ZBuffer;
 class ZFont;
@@ -20,7 +21,7 @@ public:
         CloseOnClick        = 1 << 2,   // 4
     };
 
-    ZWinLabel() : mBehavior(None), mFillColor(0), mPosition(ZGUI::C)
+    ZWinLabel(uint8_t _behavior = None) : mBehavior((eBehavior)_behavior)
     {
         mbAcceptsCursorMessages = true;
     }
@@ -31,34 +32,17 @@ public:
     virtual bool        Process();
 
     virtual void        SetBehavior(uint8_t b) { mBehavior = (eBehavior)b; }
-    virtual void		SetLook(ZFontParams font, const ZTextLook& look, ZGUI::ePosition pos, bool bWrap = false, uint32_t nFillColor = 0);
-    virtual void        UpdateLook(ZFontParams font);
-    virtual void        UpdateLook(const ZTextLook& look);
-    virtual void        UpdateLook(ZGUI::ePosition pos);
-    virtual void        UpdateLook(uint32_t fillColor);
 
+    std::string		    msText;
+    ZGUI::Style         mStyle;
 
-    virtual void		SetText(const std::string& text);
-
-    virtual void		SetTooltip(const std::string& sMessage, ZFontParams* pTooltipFontParams = nullptr, ZTextLook* pTooltipLook = nullptr, bool bWrap = false, uint32_t nTooltipFill = 0);
+    std::string		    msTooltipText;
+    ZGUI::Style         mStyleTooltip;
 
 protected:   
     virtual bool		Paint();
 
-	std::string		    msText;
-    uint32_t            mFillColor;
-	tZFontPtr           mpFont;
-    ZTextLook           mLook;
-    ZGUI::ePosition     mPosition;
-    bool                mbWrap;
-
     eBehavior           mBehavior;
-
-	std::string		    msTooltipMessage;
-    ZFontParams         mTooltipFontParams;
-    ZTextLook           mTooltipLook;
-    uint32_t            mTooltipFill;
-    bool                mbTooltipWrap;
 };
 
 

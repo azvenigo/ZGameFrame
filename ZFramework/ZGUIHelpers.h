@@ -3,6 +3,9 @@
 #include "ZTypes.h"
 #include <string>
 
+class ZFontParams;
+class ZTextLook;
+
 namespace ZGUI
 {
     enum ePosition : uint32_t
@@ -103,3 +106,4 @@ namespace ZGUI
     std::string ToString(ePosition pos);
     ePosition   FromString(std::string s);
 };
+

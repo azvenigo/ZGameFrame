@@ -3,6 +3,7 @@
 #include "ZWin.h"
 #include "ZFont.h"
 #include "ZGUIHelpers.h"
+#include "ZGUIStyle.h"
 
 /////////////////////////////////////////////////////////////////////////
 // 
@@ -25,25 +26,16 @@ public:
 
     void                SetHideOnMouseExit(bool bHideOnMouseExit) { mbHideOnMouseExit = bHideOnMouseExit; }
 
-    ZWinLabel*          AddCaption( const std::string& sCaption,
-                                const ZFontParams& fontParams, 
-                                const ZTextLook& look = {ZTextLook::kNormal, 0xffffffff, 0xffffffff},
-                                ZGUI::ePosition = ZGUI::Center,
-                                uint32_t fillColor = 0x00000000);
-
-    ZWinSizablePushBtn* AddButton(  const std::string& sCaption,
-                                const std::string& sMessage, 
-                                tZFontPtr pFont, 
-                                const ZTextLook& look = { ZTextLook::kShadowed, 0xffffffff, 0xffffffff });
+    ZWinLabel*          AddCaption(const std::string& sCaption, const ZGUI::Style& style = gStyleCaption);
+    ZWinSizablePushBtn* AddButton(  const std::string& sCaption, const std::string& sMessage, const ZGUI::Style& style = gStyleButton);
 
     ZWinCheck*          AddToggle(  bool* pbValue,
                                 const std::string& sCaption, 
                                 const std::string& sCheckMessage, 
                                 const std::string& sUncheckMessage,         
                                 const std::string& sRadioGroup,             // If part of a radio group, all others in the group get auto unchecked
-                                tZFontPtr pFont, 
-                                const ZTextLook& checkedLook   = {ZTextLook::kNormal, 0xff000000, 0xff000000},
-                                const ZTextLook& uncheckedLook = {ZTextLook::kNormal, 0xff000000, 0xff000000});
+                                const ZGUI::Style& checkedStyle = gStyleToggleChecked,
+                                const ZGUI::Style& uncheckedStyle = gStyleToggleUnchecked);
 
     ZSliderWin*         AddSlider(  int64_t* pnSliderValue,
                                 int64_t nMin, 

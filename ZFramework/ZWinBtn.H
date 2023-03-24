@@ -7,6 +7,7 @@
 #include <string>
 #include "ZMessageSystem.h"
 #include "ZFont.h"
+#include "ZGUIStyle.h"
 #include <list>
 
 class ZBuffer;
@@ -19,28 +20,28 @@ public:
 	~ZWinBtn();
 
 public:
-	virtual bool		Init();
-	virtual bool		Shutdown(); 
+	virtual bool    Init();
+	virtual bool    Shutdown(); 
 
-	virtual bool		OnMouseHover(int64_t x, int64_t y);
-	virtual bool		OnMouseIn();
-	virtual bool		OnMouseOut();
+	virtual bool    OnMouseHover(int64_t x, int64_t y);
+	virtual bool    OnMouseIn();
+	virtual bool    OnMouseOut();
 
 public:
-	virtual	bool		SetImage(tZBufferPtr pImage );
-    virtual void		SetFont(tZFontPtr pFont, uint32_t nCol1, uint32_t nCol2) { mpFont = pFont; mnTextColorTop = nCol1; mnTextColorBottom = nCol2; }
+	virtual	bool    SetImage(tZBufferPtr pImage );
+    virtual void    SetFont(tZFontPtr pFont, uint32_t nCol1, uint32_t nCol2) { mpFont = pFont; mnTextColorTop = nCol1; mnTextColorBottom = nCol2; }
 
-	virtual void		SetText( std::string& text ) { sText = text; }
-	virtual bool		SetSrcRect( ZRect rBaseRect );
-	virtual bool		SetBaseRect( ZRect rBaseRect );
+	virtual void    SetText( std::string& text ) { sText = text; }
+	virtual bool    SetSrcRect( ZRect rBaseRect );
+	virtual bool    SetBaseRect( ZRect rBaseRect );
 
-	virtual void		SetTriggerMessage(const std::string& sMessage)	{ msTriggerMessage = sMessage; }
-	virtual void		SetTooltip(const std::string& sMessage)		{ msHoverMessage = sMessage; }
-	virtual void		SetCursorInMessage(const std::string& sMessage)	{ msCursorInMessage = sMessage; }
-	virtual void		SetCursorOutMessage(const std::string& sMessage)	{ msCursorOutMessage = sMessage; }
+	virtual void    SetTriggerMessage(const std::string& sMessage)	{ msTriggerMessage = sMessage; }
+	virtual void    SetTooltip(const std::string& sMessage)		{ msHoverMessage = sMessage; }
+	virtual void    SetCursorInMessage(const std::string& sMessage)	{ msCursorInMessage = sMessage; }
+	virtual void    SetCursorOutMessage(const std::string& sMessage)	{ msCursorOutMessage = sMessage; }
 
 protected:   
-    virtual bool		Paint();
+    virtual bool    Paint();
 
     tZBufferPtr     mpButtonImage;
 	ZRect			mrBaseRect;
@@ -122,14 +123,13 @@ public:
 
 	virtual void            SetCaption(const std::string& sCaption);
     std::string             GetCaption() { return msCaption; };
-//    void                    SetColors(uint32_t nColTop, uint32_t nColBottom);
-    virtual void		    SetTextLook(tZFontPtr pFont, const ZTextLook& look) { mpFont = pFont; mTextLook = look; }
-    tZFontPtr  GetFont()    { return mpFont; }
 
 	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
 	virtual std::string     GetMessage() { return msButtonMessage; }
 
 	void                    SetImages(tZBufferPtr pUpEdgeImage, tZBufferPtr pDownEdgeImage, ZRect rUpEdge );
+
+    ZGUI::Style             mStyle;
 
 protected:
     virtual bool            Paint();
@@ -141,9 +141,6 @@ protected:
     tZBufferPtr             mpUpEdgeImage;              // not owned by this class
     tZBufferPtr             mpDownEdgeImage;            // not owned by this class
 	ZRect                   mrEdge;
-
-    tZFontPtr               mpFont;
-    ZTextLook               mTextLook;
 
 	std::string             msButtonMessage;
 };
@@ -166,7 +163,6 @@ public:
 	// IMessageTarget
 	virtual bool			HandleMessage(const ZMessage& message);
 
-    void                    SetTextLook(tZFontPtr pFont, const ZTextLook& checkedLook, const ZTextLook& uncheckedLook) { mCheckedLook = checkedLook; mUncheckedLook = uncheckedLook; ZWinSizablePushBtn::SetTextLook(pFont, uncheckedLook); }
 public:  // ZWinCheck ///////////////////////////////////////////////////////
 
 	bool					GetState() { return *mpbChecked; }
@@ -174,15 +170,16 @@ public:  // ZWinCheck ///////////////////////////////////////////////////////
 	void					SetMessages(const std::string& sCheckMessage, const std::string sUncheckMessage) { msButtonMessage = sCheckMessage; msUncheckMessage = sUncheckMessage; }
     void                    SetRadioGroup(const std::string& sRadioGroupName); // If part of a radio group, when any other in the same group is checked, automatically unchecks
 
+    // Style
+    ZGUI::Style             mCheckedStyle;
+    ZGUI::Style             mUncheckedStyle;
+
 protected:
     virtual bool  			Paint();
    
     bool*					mpbChecked;
 	std::string				msUncheckMessage;
     std::string             msRadioGroupName;
-
-    ZTextLook               mCheckedLook;
-    ZTextLook               mUncheckedLook;
 };
 
 

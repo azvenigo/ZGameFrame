@@ -114,13 +114,11 @@ bool TextTestWin::Init()
 
     
 #ifdef _WIN64
-	//mpFont = gGraphicSystem.GetDefaultFont(0);
     mnSelectedFontIndex = (int32_t) (RANDU64( 0, gWindowsFontFacenames.size() ));
 
     mCustomFontParams.nHeight = 50;
     mCustomFontParams.nWeight = 200;
     mCustomFontParams.sFacename = gWindowsFontFacenames[mnSelectedFontIndex];
-//    mCustomFontParams.sFacename = "Blackadder ITC\n";
 
     mbEnableKerning = true;
 
@@ -148,12 +146,6 @@ bool TextTestWin::Init()
     pWin->SetArea(rFontSelectionWin);
 
     mpBackground.get()->LoadBuffer("res/paper.jpg");
-
-/*    ZFormattedTextWin* pTextWin = new ZFormattedTextWin();
-    pTextWin->SetScrollable();
-    int32_t nWidth = mAreaToDrawTo.right/8;
-//    ZRect rTextWin(mAreaToDrawTo.right -nWidth, mAreaToDrawTo.top+150, mAreaToDrawTo.right, mAreaToDrawTo.bottom - 205);
-*/
 
     string sDialogScript("<scripteddialog winname=fontselectionwin area=" + RectToString(rFontSelectionWin) + " draw_background=1 bgcolor=0xff444444>");
     sDialogScript += "<textwin area=" + RectToString(rTextAreaWin) + " text_background_fill=1 text_fill_color=0xff444444 text_edge_blt=0 text_scrollable=1 underline_links=1 auto_scroll=1 auto_scroll_momentum=0.001>";
@@ -187,40 +179,36 @@ bool TextTestWin::Init()
 
     pCP->Init();
 
-    tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
-
-//    pCP->AddButton("Custom Font", "setcustomfont;target=TextTestWin");
-
     ZTextLook captionLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
 
-    pCP->AddCaption("Height", gDefaultCaptionFont, captionLook, ZGUI::C, gDefaultDialogFill);
+    pCP->AddCaption("Height");
 
-    pCP->AddSlider(&mCustomFontParams.nHeight, 8, 200, 2, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
+    pCP->AddSlider(&mCustomFontParams.nHeight, 8, 200, 2, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
 
-    pCP->AddCaption("Weight", gDefaultCaptionFont, captionLook, ZGUI::C, gDefaultDialogFill);
-    pCP->AddSlider(&mCustomFontParams.nWeight, 2, 9, 100, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
+    pCP->AddCaption("Weight");
+    pCP->AddSlider(&mCustomFontParams.nWeight, 2, 9, 100, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
 
-    pCP->AddCaption("Tracking", gDefaultCaptionFont, captionLook, ZGUI::C, gDefaultDialogFill);
-    pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "setfonttracking;target=TextTestWin", true, false, pBtnFont);
+    pCP->AddCaption("Tracking");
+    pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "setfonttracking;target=TextTestWin", true, false, gStyleButton.Font());
 
-    pCP->AddCaption("Fixed Width", gDefaultCaptionFont, captionLook, ZGUI::C, gDefaultDialogFill);
-    pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, "setcustomfont;target=TextTestWin", true, false, pBtnFont);
+    pCP->AddCaption("Fixed Width");
+    pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
 
-    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, captionLook);
+    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
 
-    pCP->AddToggle(&mCustomFontParams.bUnderline, "Underline", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, captionLook);
+    pCP->AddToggle(&mCustomFontParams.bUnderline, "Underline", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
 
-    pCP->AddToggle(&mCustomFontParams.bStrikeOut, "StrikeOut", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "", pBtnFont, captionLook);
+    pCP->AddToggle(&mCustomFontParams.bStrikeOut, "StrikeOut", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
 
 
 
     pCP->AddSpace(16);
 
-    pCP->AddToggle(&mbEnableKerning, "View Kerning", "togglekerning;enable=1;target=TextTestWin", "togglekerning;enable=0;target=TextTestWin", "", pBtnFont, captionLook);
+    pCP->AddToggle(&mbEnableKerning, "View Kerning", "togglekerning;enable=1;target=TextTestWin", "togglekerning;enable=0;target=TextTestWin", "");
     pCP->AddSpace(16);
 
-    pCP->AddButton("Load Font", "loadfont;target=TextTestWin", pBtnFont, captionLook);
-    pCP->AddButton("Save Font", "savefont;target=TextTestWin", pBtnFont, captionLook);
+    pCP->AddButton("Load Font", "loadfont;target=TextTestWin");
+    pCP->AddButton("Save Font", "savefont;target=TextTestWin");
 
     ChildAdd(pCP);
 
@@ -520,8 +508,6 @@ bool TextTestWin::SaveFont()
                     pItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath);
 
                     filename = StringHelpers::wstring2string(pszFilePath);
-//                        wstring wideFilename(pszFilePath);
-//                        filenames.push_back(WideToAscii(wideFilename));
                     pItem->Release();
                 }
             }

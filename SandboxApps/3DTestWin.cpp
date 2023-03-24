@@ -8,7 +8,6 @@
 #include <cmath> 
 #include <limits>
 #include <algorithm>
-#include "teapotdata.h"
 #include "helpers/ThreadPool.h"
 #include "ZWinControlPanel.h"
 #include "Resources.h"
@@ -22,6 +21,10 @@ extern ZPoint gLastMouseMove;
 
 
 //#define RENDER_TEAPOT
+
+#ifdef RENDER_TEAPOT
+#include "teapotdata.h"
+#endif
 
 
 inline
@@ -758,13 +761,13 @@ Vec3f TraceSpheres(
     // reverse the normal direction. That also means we are inside the sphere so set
     // the inside bool to true. Finally reverse the sign of IdotN which we want
     // positive.
-    float bias = 1e-4; // add some bias to the point from which we will be tracing
+    float bias = (float)1e-4; // add some bias to the point from which we will be tracing
     bool inside = false;
     if (raydir.dotProduct(nhit) > 0) nhit = -nhit, inside = true;
     if ((sphere->mTransparency > 0 || sphere->mReflection > 0) && depthRemaining > 0) {
         float facingratio = -raydir.dotProduct(nhit);
         // change the mix value to tweak the effect
-        float fresneleffect = mix(pow(1 - facingratio, 3), 1, 0.1);
+        float fresneleffect = mix(pow(1 - facingratio, 3), 1, 0.1f);
         // compute reflection direction (not need to normalize because all vectors
         // are already normalized)
         Vec3f refldir = raydir - nhit * 2 * raydir.dotProduct(nhit);
@@ -1015,42 +1018,42 @@ bool Z3DTestWin::Init()
         ZWinControlPanel* pCP = new ZWinControlPanel();
         pCP->SetArea(rControlPanel);
 
-        tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
+//        tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
 
 
         pCP->Init();
 
         string sUpdateSphereCountMsg(ZMessage("updatespherecount", this));
 
-        pCP->AddCaption("Sphere Count", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
-        pCP->AddSlider(&mnTargetSphereCount, 1, 50, 1, sUpdateSphereCountMsg, true, false, pBtnFont);
+        pCP->AddCaption("Sphere Count");
+        pCP->AddSlider(&mnTargetSphereCount, 1, 50, 1, sUpdateSphereCountMsg, true, false, gStyleButton.Font());
         //    pCP->AddSpace(16);
 
-        pCP->AddCaption("Min Sphere Size", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
-        pCP->AddSlider(&mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, sUpdateSphereCountMsg, true, false, pBtnFont);
+        pCP->AddCaption("Min Sphere Size");
+        pCP->AddSlider(&mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, sUpdateSphereCountMsg, true, false, gStyleButton.Font());
 
-        pCP->AddCaption("Max Sphere Size", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
-        pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, sUpdateSphereCountMsg, true, false, pBtnFont);
+        pCP->AddCaption("Max Sphere Size");
+        pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, sUpdateSphereCountMsg, true, false, gStyleButton.Font());
 
-        pCP->AddCaption("Speed", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
-        pCP->AddSlider(&mnRotateSpeed, 0, 100, 1, "", true, false, pBtnFont);
+        pCP->AddCaption("Speed");
+        pCP->AddSlider(&mnRotateSpeed, 0, 100, 1, "", true, false, gStyleButton.Font());
 
-        pCP->AddCaption("Ray Depth", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
-        pCP->AddSlider(&mnRayDepth, 0, 10, 1, "", true, false, pBtnFont);
+        pCP->AddCaption("Ray Depth");
+        pCP->AddSlider(&mnRayDepth, 0, 10, 1, "", true, false, gStyleButton.Font());
 
 
 
         pCP->AddSpace(16);
-        pCP->AddCaption("Render Size", gDefaultCaptionFont, ZTextLook(), ZGUI::Center, gDefaultDialogFill);
+        pCP->AddCaption("Render Size");
         pCP->AddSlider(&mnRenderSize, 1, 128, 16, ZMessage("updaterendersize", this), true);
 
         ZTextLook toggleLook(ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
         pCP->AddSpace(16);
-        pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", "rendermode", pBtnFont, toggleLook);
-        pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", "rendermode", pBtnFont, toggleLook);
-        pCP->AddToggle(&mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "", pBtnFont, toggleLook);
-        pCP->AddToggle(&mbCenterSphere, "Center Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "", pBtnFont, toggleLook);
+        pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", "rendermode");
+        pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", "rendermode");
+        pCP->AddToggle(&mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "");
+        pCP->AddToggle(&mbCenterSphere, "Center Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "");
 
         ChildAdd(pCP);
     }
