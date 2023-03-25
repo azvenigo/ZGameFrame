@@ -6,7 +6,7 @@
 #include "ZBuffer.h"
 #include <list>
 
-class ZSliderWin;
+class ZWinSlider;
 class ZFont;
 
 struct sTextEntry
@@ -65,7 +65,7 @@ private:
 	void				ExtractTextParameters(ZXMLNode* pTextNode);
 
 
-	ZSliderWin*			mpSliderWin;
+	ZWinSlider*         mpWinSlider;
 	int64_t				mnSliderVal;
 	//cCEFont*     		mpFont[3];
 

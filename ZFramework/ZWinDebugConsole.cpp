@@ -2,7 +2,7 @@
 #include "ZStringHelpers.h"
 #include "helpers/StringHelpers.h"
 #include "ZMessageSystem.h"
-#include "ZSliderWin.h"
+#include "ZWinSlider.h"
 #include "Resources.h"
 
 using namespace std;
@@ -15,7 +15,7 @@ static char THIS_FILE[] = __FILE__;
 
 ZWinDebugConsole::ZWinDebugConsole()
 {
-	mpSliderWin = NULL;
+	mpWinSlider = NULL;
 
 	mrTextArea.SetRect(0,0,0,0);
     mTextCol = 0xff00ffff;
@@ -75,14 +75,14 @@ void ZWinDebugConsole::SetArea(const ZRect& newArea)
 
 bool ZWinDebugConsole::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 {
-	if (mpSliderWin)
+	if (mpWinSlider)
 	{
 		int64_t nMin;
 		int64_t nMax;
-		mpSliderWin->GetSliderRange(nMin, nMax);
+		mpWinSlider->GetSliderRange(nMin, nMax);
 		if (nMax-nMin > 0)
 		{
-			mpSliderWin->SetSliderValue(mpSliderWin->GetSliderValue() + nDelta);
+			mpWinSlider->SetSliderValue(mpWinSlider->GetSliderValue() + nDelta);
 		}
 	}
 
@@ -103,23 +103,23 @@ void ZWinDebugConsole::UpdateScrollbar()
 
 	if (mbScrollable && mFont && nFullTextHeight > nVisible)
 	{
-        if (!mpSliderWin)
+        if (!mpWinSlider)
         {
-            mpSliderWin = new ZSliderWin(&mnSliderVal);
-            mpSliderWin->Init(gSliderThumbVertical, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
-            mpSliderWin->SetArea(ZRect(mArea.Width() - 32, 0, mArea.Width(), mArea.Height()));
-            ChildAdd(mpSliderWin);
+            mpWinSlider = new ZWinSlider(&mnSliderVal);
+            mpWinSlider->Init(gSliderThumbVertical, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
+            mpWinSlider->SetArea(ZRect(mArea.Width() - 32, 0, mArea.Width(), mArea.Height()));
+            ChildAdd(mpWinSlider);
         }
 
-		mpSliderWin->SetSliderRange(0, nFullTextHeight- nVisible);
-        mpSliderWin->SetSliderValue(nFullTextHeight - nVisible);
+		mpWinSlider->SetSliderRange(0, nFullTextHeight- nVisible);
+        mpWinSlider->SetSliderValue(nFullTextHeight - nVisible);
 	}
 	else
 	{
-		if (mpSliderWin)
+		if (mpWinSlider)
 		{
-			ChildDelete(mpSliderWin);
-			mpSliderWin = NULL;
+			ChildDelete(mpWinSlider);
+			mpWinSlider = NULL;
 		}
 	}
     Invalidate();
@@ -157,11 +157,11 @@ bool ZWinDebugConsole::Paint()
 
 
     int64_t nScroll = 0;
-    if (mpSliderWin)
+    if (mpWinSlider)
     {
         int64_t nMin = 0;
         int64_t nMax = 0;
-        mpSliderWin->GetSliderRange(nMin, nMax);
+        mpWinSlider->GetSliderRange(nMin, nMax);
         nScroll = nMax - mnSliderVal;
     }
 
@@ -200,7 +200,7 @@ bool ZWinDebugConsole::Paint()
 
 void ZWinDebugConsole::ScrollTo(int64_t nSliderValue)
 {
-	if (mpSliderWin)
-		mpSliderWin->SetSliderValue(nSliderValue);
+	if (mpWinSlider)
+		mpWinSlider->SetSliderValue(nSliderValue);
     Invalidate();
 }

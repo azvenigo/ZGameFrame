@@ -33,7 +33,7 @@ int64_t         gnControlPanelEdge;
 
 //Fonts
 ZFontParams     gDefaultTitleFont("Gadugi", 40);
-ZFontParams     gDefaultCaptionFont("Gadugi", 30, 400);
+//ZFontParams     gDefaultCaptionFont("Gadugi", 30, 400);
 ZFontParams     gDefaultTextFont("Gadugi", 20);
 
 ZGUI::Style     gStyleTooltip(ZFontParams("Verdana", 30), ZTextLook(ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::C, gDefaultTextAreaFill);
@@ -58,9 +58,14 @@ bool cResources::Init(const string& sDefaultResourcePath)
     gDefaultSpacer = grFullArea.Height() / 125;
 
     gStyleButton.fp.nHeight = grFullArea.Height() / 72;
+    gStyleToggleChecked.fp.nHeight = grFullArea.Height() / 72;
+    gStyleToggleUnchecked.fp.nHeight = grFullArea.Height() / 72;
+    gStyleTooltip.fp.nHeight = grFullArea.Height() / 72;
+    gStyleCaption.fp.nHeight = grFullArea.Height() / 60;
+
 
     gDefaultTitleFont.nHeight = grFullArea.Height() / 54;
-    gDefaultCaptionFont.nHeight = grFullArea.Height() / 60;
+//    gDefaultCaptionFont.nHeight = grFullArea.Height() / 60;
     gDefaultTextFont.nHeight = grFullArea.Height() / 108;
 
     gSliderBackground.reset(new ZBuffer());

@@ -1,4 +1,4 @@
-#include "ZSliderWin.h"
+#include "ZWinSlider.h"
 #include "ZBuffer.h"
 #include "ZDebug.h"
 #include "ZGraphicSystem.h"
@@ -12,7 +12,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 using namespace std;
 
-ZSliderWin::ZSliderWin(int64_t* pnSliderValue)
+ZWinSlider::ZWinSlider(int64_t* pnSliderValue)
 {
 	mpBufSliderThumb = NULL;
 	mpBufSliderBackground = NULL;
@@ -35,11 +35,11 @@ ZSliderWin::ZSliderWin(int64_t* pnSliderValue)
     mbInvalidateParentWhenInvalid = true;
 }
 
-ZSliderWin::~ZSliderWin()
+ZWinSlider::~ZWinSlider()
 {
 }
 
-bool ZSliderWin::Init(tZBufferPtr pBufSliderThumb, ZRect rEdgeThumb, tZBufferPtr pBufSliderBackground, ZRect& rEdgeBackground, eOrientation orientation )
+bool ZWinSlider::Init(tZBufferPtr pBufSliderThumb, ZRect rEdgeThumb, tZBufferPtr pBufSliderBackground, ZRect& rEdgeBackground, eOrientation orientation )
 {
 	ZASSERT(pBufSliderThumb);
 	ZASSERT(pBufSliderBackground);
@@ -59,12 +59,12 @@ bool ZSliderWin::Init(tZBufferPtr pBufSliderThumb, ZRect rEdgeThumb, tZBufferPtr
 	return ZWin::Init();
 }
 
-bool ZSliderWin::Shutdown()
+bool ZWinSlider::Shutdown()
 {
 	return ZWin::Shutdown();
 }
 
-void ZSliderWin::UpdateSliderDrawBounds()
+void ZWinSlider::UpdateSliderDrawBounds()
 {
     if (!mbInitted)
         return;
@@ -104,7 +104,7 @@ void ZSliderWin::UpdateSliderDrawBounds()
 	Invalidate();
 }
 
-void ZSliderWin::SetDrawSliderValueFlag(bool bEnable, bool bMouseOverDrawOnly, tZFontPtr pFont) 
+void ZWinSlider::SetDrawSliderValueFlag(bool bEnable, bool bMouseOverDrawOnly, tZFontPtr pFont) 
 { 
     mbDrawValue = bEnable; 
     mbMouseOverDrawOnly = bMouseOverDrawOnly; 
@@ -115,14 +115,14 @@ void ZSliderWin::SetDrawSliderValueFlag(bool bEnable, bool bMouseOverDrawOnly, t
     ZASSERT(mpFont);
 }
 
-void ZSliderWin::SetAreaToDrawTo()
+void ZWinSlider::SetAreaToDrawTo()
 {
 	ZWin::SetAreaToDrawTo();	// compute
 
 	UpdateSliderDrawBounds();
 }
 
-void ZSliderWin::SetSliderRange(int64_t nMin, int64_t nMax, int64_t nMultiplier)
+void ZWinSlider::SetSliderRange(int64_t nMin, int64_t nMax, int64_t nMultiplier)
 { 
 	ZASSERT(mbInitted);
 
@@ -141,7 +141,7 @@ void ZSliderWin::SetSliderRange(int64_t nMin, int64_t nMax, int64_t nMultiplier)
 }
 
 
-bool ZSliderWin::OnMouseDownL(int64_t x, int64_t y)
+bool ZWinSlider::OnMouseDownL(int64_t x, int64_t y)
 {
 	ZRect rThumbRect(GetSliderThumbRect());
 	double fSliderRep;
@@ -195,7 +195,7 @@ bool ZSliderWin::OnMouseDownL(int64_t x, int64_t y)
 	return ZWin::OnMouseDownL(x, y);
 }
 
-bool ZSliderWin::OnMouseUpL(int64_t x, int64_t y)
+bool ZWinSlider::OnMouseUpL(int64_t x, int64_t y)
 {
 	ReleaseCapture();
     if (!msSliderSetMessage.empty())
@@ -204,7 +204,7 @@ bool ZSliderWin::OnMouseUpL(int64_t x, int64_t y)
 	return ZWin::OnMouseUpL(x, y);
 }
 
-bool ZSliderWin::OnMouseMove(int64_t x, int64_t y)
+bool ZWinSlider::OnMouseMove(int64_t x, int64_t y)
 {
 	if (AmCapturing())
 	{
@@ -224,7 +224,7 @@ bool ZSliderWin::OnMouseMove(int64_t x, int64_t y)
 	return ZWin::OnMouseMove(x, y);
 }
 
-bool ZSliderWin::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
+bool ZWinSlider::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 {
     ZRect rThumbRect(GetSliderThumbRect());
     double fSliderRep;
@@ -243,7 +243,7 @@ bool ZSliderWin::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 }
 
 
-bool ZSliderWin::Paint()
+bool ZWinSlider::Paint()
 {
 	if (!mbInvalid)
 		return false;
@@ -276,7 +276,7 @@ bool ZSliderWin::Paint()
 	return ZWin::Paint();
 }
 
-ZRect ZSliderWin::GetSliderThumbRect()
+ZRect ZWinSlider::GetSliderThumbRect()
 {
 	ZRect rSliderThumb;
 	double fNormalizedValue = ((double)*mpnSliderValue / mnSliderValMultiplier - (double)mnSliderValMin) / ((double)mnSliderValMax - (double)mnSliderValMin);
@@ -299,7 +299,7 @@ ZRect ZSliderWin::GetSliderThumbRect()
 }
 
 
-void ZSliderWin::SetSliderValue(int64_t nVal)
+void ZWinSlider::SetSliderValue(int64_t nVal)
 {
 	if (nVal < mnSliderValMin)
 		nVal = mnSliderValMin;

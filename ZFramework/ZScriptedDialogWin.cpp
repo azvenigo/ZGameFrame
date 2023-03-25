@@ -1,5 +1,5 @@
 #include "ZScriptedDialogWin.h"
-#include "ZSliderWin.h"
+#include "ZWinSlider.h"
 #include "ZImageWin.h"
 #include "ZWinBtn.h"
 #include "ZFormattedTextWin.h"

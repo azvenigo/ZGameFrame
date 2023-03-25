@@ -75,8 +75,8 @@ set(COMMON_FILES
 ../ZFramework/ZScreenBuffer.h
 ../ZFramework/ZScriptedDialogWin.cpp
 ../ZFramework/ZScriptedDialogWin.h
-../ZFramework/ZSliderWin.cpp
-../ZFramework/ZSliderWin.h
+../ZFramework/ZWinSlider.cpp
+../ZFramework/ZWinSlider.h
 ../ZFramework/ZDebug.h
 ../ZFramework/ZTypes.h
 ../ZFramework/Z3DMath.h

@@ -9,7 +9,7 @@
 #include "ZStringHelpers.h"
 #include "ZScriptedDialogWin.h"
 #include "ZWinBtn.H"
-#include "ZSliderWin.h"
+#include "ZWinSlider.h"
 #include "ZImageWin.h"
 #include "ZWinControlPanel.h"
 #include "ZWinWatchPanel.h"
@@ -962,8 +962,8 @@ bool cProcessImageWin::Init()
     pCP->AddSpace(32);
 
     ZWinLabel* pLabel = pCP->AddCaption("Compute Radius");
-    pLabel->msText = "Sets the radius for the operations below.";
-    pLabel->mStyle = gStyleTooltip;
+    pLabel->msTooltipText= "Sets the radius for the operations below.";
+    pLabel->mStyleTooltip = gStyleTooltip;
 
     pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, gStyleButton.Font());
 
@@ -992,15 +992,15 @@ bool cProcessImageWin::Init()
     ChildAdd(pCP);
 
 
-    mrWatchPanel.SetRect(mrControlPanel);
-    mrWatchPanel.OffsetRect(-mrWatchPanel.Width() + 8, 0);
+    mrWatchPanel.SetRect(0,0,mrControlPanel.Width()*2, mrControlPanel.Height());
+    mrWatchPanel.MoveRect(mrControlPanel.left-mrWatchPanel.Width() + gDefaultSpacer, mrControlPanel.top);
     ZWinWatchPanel* pWP = new ZWinWatchPanel();
     pWP->SetArea(mrWatchPanel);
     pWP->Init();
     pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, ZTextLook(ZTextLook::kEmbossed, 0xff000000, 0xff000000));
     ChildAdd(pWP);
 
-    ZRect rImageProps(8, gDefaultTextFont.nHeight*2, mrWatchPanel.Width() - 8, mrWatchPanel.Height() - 8);
+    ZRect rImageProps(gDefaultSpacer, gDefaultTextFont.nHeight*2, mrWatchPanel.Width() - gDefaultSpacer, mrWatchPanel.Height() - gDefaultSpacer);
 
     mpImageProps = new ZFormattedTextWin();
     mpImageProps->SetArea(rImageProps);

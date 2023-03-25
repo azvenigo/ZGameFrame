@@ -3,7 +3,7 @@
 #include "ZWin.h"
 #include "ZFont.h"
 #include <list>
-#include "ZSliderWin.h"
+#include "ZWinSlider.h"
 #include "ZDebug.h"
 
 typedef std::list<std::string> tStringList;
@@ -30,7 +30,7 @@ private:
     size_t              GetVisibleLines();
 
 
-    ZSliderWin*         mpSliderWin;
+    ZWinSlider*         mpWinSlider;
     int64_t				mnSliderVal;
 
     size_t              mnDebugHistoryLastSeenCounter;

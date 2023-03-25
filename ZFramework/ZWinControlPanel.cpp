@@ -1,7 +1,7 @@
 #include "ZWinControlPanel.h"
 #include "ZWinBtn.H"
 #include "ZWinText.H"
-#include "ZSliderWin.h"
+#include "ZWinSlider.h"
 #include "ZFormattedTextWin.h"
 #include "Resources.h"
 
@@ -84,12 +84,12 @@ ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, co
 }
 
 
-ZSliderWin* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue, tZFontPtr pFont)
+ZWinSlider* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue, tZFontPtr pFont)
 {
-    ZSliderWin* pSlider = new ZSliderWin(pnSliderValue);
+    ZWinSlider* pSlider = new ZWinSlider(pnSliderValue);
     pSlider->SetArea(mrNextControl);
     pSlider->SetDrawSliderValueFlag(bDrawValue, bMouseOnlyDrawValue, pFont);
-    pSlider->Init(gSliderThumbHorizontal, grSliderThumbEdge, gSliderBackground, grSliderBgEdge, ZSliderWin::kHorizontal);
+    pSlider->Init(gSliderThumbHorizontal, grSliderThumbEdge, gSliderBackground, grSliderBgEdge, ZWinSlider::kHorizontal);
     pSlider->SetSliderRange(nMin, nMax, nMultiplier);
     pSlider->SetSliderSetMessage(sMessage);
     ChildAdd(pSlider);

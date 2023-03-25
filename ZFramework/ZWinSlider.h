@@ -7,7 +7,7 @@ extern ZRect	grSliderBgEdge;
 extern ZRect	grSliderThumbEdge;
 
 
-class ZSliderWin : public ZWin
+class ZWinSlider : public ZWin
 {
 
 public:
@@ -18,8 +18,8 @@ public:
 		kVertical = 1
 	};
 
-	ZSliderWin(int64_t* pnSliderValue);
-	~ZSliderWin();
+	ZWinSlider(int64_t* pnSliderValue);
+	~ZWinSlider();
 
 	bool            Init(tZBufferPtr pBufSliderThumb, ZRect rEdgeThumb, tZBufferPtr pBufSliderBackground, ZRect& rEdgeBackground, eOrientation orientation = kVertical);
 	bool			Shutdown();

@@ -2,7 +2,7 @@
 #include "ZStringHelpers.h"
 #include "helpers/StringHelpers.h"
 #include "ZMessageSystem.h"
-#include "ZSliderWin.h"
+#include "ZWinSlider.h"
 #include "ZXMLNode.h"
 #include "ZGraphicSystem.h"
 
@@ -48,7 +48,7 @@ static char THIS_FILE[] = __FILE__;
 
 ZFormattedTextWin::ZFormattedTextWin()
 {
-	mpSliderWin = NULL;
+    mpWinSlider = NULL;
 
 	mrTextArea.SetRect(0,0,0,0);
 	mrTextBorderArea.SetRect(0,0,0,0);
@@ -134,13 +134,13 @@ bool ZFormattedTextWin::OnMouseDownL(int64_t x, int64_t y)
 //	int64_t nX = rLocalTextArea.left;
 	int64_t nY = rLocalTextArea.top;
 
-	if (mpSliderWin)
+	if (mpWinSlider)
 	{
 		int64_t nMin;
 		int64_t nMax;
-		mpSliderWin->GetSliderRange(nMin, nMax);
+        mpWinSlider->GetSliderRange(nMin, nMax);
 
-		mnMouseDownSliderVal = mpSliderWin->GetSliderValue();
+		mnMouseDownSliderVal = mpWinSlider->GetSliderValue();
 		nY -=  mnMouseDownSliderVal;
 	}
 
@@ -193,14 +193,14 @@ bool ZFormattedTextWin::OnMouseUpL(int64_t x, int64_t y)
 
 bool ZFormattedTextWin::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 {
-	if (mpSliderWin)
+	if (mpWinSlider)
 	{
 		int64_t nMin;
 		int64_t nMax;
-		mpSliderWin->GetSliderRange(nMin, nMax);
+        mpWinSlider->GetSliderRange(nMin, nMax);
 		if (nMax-nMin > 0)
 		{
-			mpSliderWin->SetSliderValue(mpSliderWin->GetSliderValue() + nDelta);
+            mpWinSlider->SetSliderValue(mpWinSlider->GetSliderValue() + nDelta);
 		}
 	}
 
@@ -211,14 +211,14 @@ bool ZFormattedTextWin::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelt
 
 bool ZFormattedTextWin::OnMouseMove(int64_t x, int64_t y)
 {
-	if (AmCapturing() && mpSliderWin)
+	if (AmCapturing() && mpWinSlider)
 	{
 		int64_t nDownX;
 		int64_t nDownY;
 		GetMouseDownPos(nDownX, nDownY);
 		int64_t nDelta = nDownY - y;
 		int64_t nScrollDelta = (nDelta)/ mAreaToDrawTo.Height()/5 + mnMouseDownSliderVal;
-		mpSliderWin->SetSliderValue(nScrollDelta);
+        mpWinSlider->SetSliderValue(nScrollDelta);
         Invalidate();
         //ZDEBUG_OUT("DownY:%d, y:%d, nDelta: %d  \n", nDownY, y, mfScrollDelta);
 	}
@@ -242,16 +242,16 @@ void ZFormattedTextWin::UpdateScrollbar()
 
 	if (mbScrollable && nFullTextHeight > mrTextArea.Height())
 	{
-        if (!mpSliderWin)
+        if (!mpWinSlider)
         {
-            mpSliderWin = new ZSliderWin(&mnSliderVal);
-            mpSliderWin->Init(gSliderThumbVertical, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
-            mpSliderWin->SetDrawSliderValueFlag(false, false, gpFontSystem->GetFont(mCurrentFont));
-            mpSliderWin->SetArea(ZRect(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height()));
-            ChildAdd(mpSliderWin);
+            mpWinSlider = new ZWinSlider(&mnSliderVal);
+            mpWinSlider->Init(gSliderThumbVertical, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
+            mpWinSlider->SetDrawSliderValueFlag(false, false, gpFontSystem->GetFont(mCurrentFont));
+            mpWinSlider->SetArea(ZRect(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height()));
+            ChildAdd(mpWinSlider);
         }
 
-		mpSliderWin->SetSliderRange(0, nFullTextHeight-mrTextArea.Height());
+        mpWinSlider->SetSliderRange(0, nFullTextHeight-mrTextArea.Height());
 
 		if (mnScrollToOnInit > 0)
 		{
@@ -266,15 +266,15 @@ void ZFormattedTextWin::UpdateScrollbar()
 				nHeight += GetLineHeight(textLine);
 			}
 
-			mpSliderWin->SetSliderValue(nHeight);
+            mpWinSlider->SetSliderValue(nHeight);
 		}
 	}
 	else
 	{
-		if (mpSliderWin)
+		if (mpWinSlider)
 		{
-			ChildDelete(mpSliderWin);
-			mpSliderWin = NULL;
+			ChildDelete(mpWinSlider);
+            mpWinSlider = NULL;
 		}
 	}
     Invalidate();
@@ -314,13 +314,13 @@ bool ZFormattedTextWin::Paint()
 //	int64_t nX = rLocalTextArea.left;
 	int64_t nY = rLocalTextArea.top;
 
-	if (mpSliderWin)
+	if (mpWinSlider)
 	{
 		int64_t nMin;
 		int64_t nMax;
-		mpSliderWin->GetSliderRange(nMin, nMax);
+        mpWinSlider->GetSliderRange(nMin, nMax);
 
-		nY -=  (int64_t) mpSliderWin->GetSliderValue();
+		nY -=  (int64_t)mpWinSlider->GetSliderValue();
 	}
 
     std::unique_lock<std::mutex> lk(mDocumentMutex);
@@ -629,7 +629,7 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 
 void ZFormattedTextWin::ScrollTo(int64_t nSliderValue)
 {
-	if (mpSliderWin)
-		mpSliderWin->SetSliderValue(nSliderValue);
+	if (mpWinSlider)
+        mpWinSlider->SetSliderValue(nSliderValue);
     Invalidate();
 }

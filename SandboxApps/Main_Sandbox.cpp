@@ -6,7 +6,7 @@
 #include "ZImageWin.h"
 #include "ProcessImageWin.h"
 #include "ZWinDebugConsole.h"
-#include "ZSliderWin.h"
+#include "ZWinSlider.h"
 #include "FloatLinesWin.h"
 #include "TextTestWin.h"
 #include "3DTestWin.h"

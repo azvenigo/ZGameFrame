@@ -219,7 +219,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("1"); // open file
-    pBtn->mStyle = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nHeight));
+    pBtn->mStyle = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.nHeight));
     rButton.OffsetRect(rButton.Width() *2, 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("loadgame", mpParentWin));
@@ -229,7 +229,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("<"); // save file
-    pBtn->mStyle = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nHeight));
+    pBtn->mStyle = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.nHeight));
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("savegame", mpParentWin));
@@ -528,7 +528,7 @@ bool ZChessWin::Init()
 
         mpStatusWin = new ZWinLabel();
         mpStatusWin->msText = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", 80, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::C, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::C, gDefaultTextAreaFill, true);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
         ChildAdd(mpStatusWin);
     }

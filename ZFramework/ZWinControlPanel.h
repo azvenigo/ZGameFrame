@@ -10,7 +10,7 @@
 class ZFormattedTextWin;
 class ZWinSizablePushBtn;
 class ZWinCheck;
-class ZSliderWin;
+class ZWinSlider;
 class ZWinLabel;
 
 class ZWinControlPanel : public ZWin
@@ -37,7 +37,7 @@ public:
                                 const ZGUI::Style& checkedStyle = gStyleToggleChecked,
                                 const ZGUI::Style& uncheckedStyle = gStyleToggleUnchecked);
 
-    ZSliderWin*         AddSlider(  int64_t* pnSliderValue,
+    ZWinSlider*         AddSlider(  int64_t* pnSliderValue,
                                 int64_t nMin, 
                                 int64_t nMax, 
                                 int64_t nMultiplier, 
