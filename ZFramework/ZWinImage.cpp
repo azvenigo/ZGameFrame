@@ -1,4 +1,4 @@
-#include "ZImageWin.h"
+#include "ZWinImage.h"
 #include "ZXMLNode.h"
 #include "ZAnimator.h"
 #include "ZStringHelpers.h"
@@ -12,7 +12,7 @@
 extern ZAnimator gAnimator;
 using namespace std;
 
-ZImageWin::ZImageWin()
+ZWinImage::ZWinImage()
 {
 	mbAcceptsCursorMessages = true;
     mpImage.reset();
@@ -33,11 +33,11 @@ ZImageWin::ZImageWin()
     mpPanel = nullptr;
 }
 
-ZImageWin::~ZImageWin()
+ZWinImage::~ZWinImage()
 {
 }
 
-bool ZImageWin::Init()
+bool ZWinImage::Init()
 {
     mIdleSleepMS = 10000;
 
@@ -127,7 +127,7 @@ bool ZImageWin::Init()
     return ZWin::Init();
 }
 
-bool ZImageWin::OnMouseUpL(int64_t x, int64_t y)
+bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 {
     ReleaseCapture();
     if (!msMouseUpLMessage.empty() && mImageArea.PtInRect(x, y))
@@ -135,7 +135,7 @@ bool ZImageWin::OnMouseUpL(int64_t x, int64_t y)
     return ZWin::OnMouseUpL(x, y);
 }
 
-bool ZImageWin::OnMouseDownL(int64_t x, int64_t y)
+bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 {
     if (mbZoomable && mImageArea.PtInRect(x,y))
     {
@@ -151,14 +151,14 @@ bool ZImageWin::OnMouseDownL(int64_t x, int64_t y)
 	return ZWin::OnMouseDownL(x, y);
 }
 
-bool ZImageWin::OnMouseDownR(int64_t x, int64_t y)
+bool ZWinImage::OnMouseDownR(int64_t x, int64_t y)
 {
     FitImageToWindow();
     return ZWin::OnMouseDownR(x, y);
 }
 
 
-bool ZImageWin::OnMouseMove(int64_t x, int64_t y)
+bool ZWinImage::OnMouseMove(int64_t x, int64_t y)
 {
     // x,y in window space
 
@@ -173,7 +173,7 @@ bool ZImageWin::OnMouseMove(int64_t x, int64_t y)
 }
 
 
-bool ZImageWin::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
+bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 {
     if (mbZoomable && mImageArea.PtInRect(x, y))
     {
@@ -225,7 +225,7 @@ bool ZImageWin::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 	return true;
 }
 
-void ZImageWin::ScrollTo(int64_t nX, int64_t nY)
+void ZWinImage::ScrollTo(int64_t nX, int64_t nY)
 {
     const int32_t kSnapDistance = 10;
     if (abs(nX - mAreaToDrawTo.left) < kSnapDistance)
@@ -250,7 +250,7 @@ void ZImageWin::ScrollTo(int64_t nX, int64_t nY)
     Invalidate();
 }
 
-void ZImageWin::LoadImage(const string& sName)
+void ZWinImage::LoadImage(const string& sName)
 {
     mbVisible = false;
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
@@ -265,7 +265,7 @@ void ZImageWin::LoadImage(const string& sName)
     mbVisible = true;
 }
 
-void ZImageWin::SetArea(const ZRect& newArea)
+void ZWinImage::SetArea(const ZRect& newArea)
 {
     mbVisible = false;
     ZWin::SetArea(newArea);
@@ -282,7 +282,7 @@ void ZImageWin::SetArea(const ZRect& newArea)
 }
 
 
-void ZImageWin::FitImageToWindow()
+void ZWinImage::FitImageToWindow()
 {
     if (!mpImage)
         return;
@@ -318,7 +318,7 @@ void ZImageWin::FitImageToWindow()
 }
 
 
-void ZImageWin::SetZoom(double fZoom) 
+void ZWinImage::SetZoom(double fZoom) 
 { 
     mfZoom = fZoom;
     if (mfZoom < mfMinZoom)
@@ -328,20 +328,20 @@ void ZImageWin::SetZoom(double fZoom)
     Invalidate(); 
 }
 
-double ZImageWin::GetZoom() 
+double ZWinImage::GetZoom() 
 { 
     return mfZoom; 
 }
 
 
-void ZImageWin::SetImage(tZBufferPtr pImage)
+void ZWinImage::SetImage(tZBufferPtr pImage)
 {
 //	mpImage.reset(pImage);
     mpImage = pImage;
     FitImageToWindow();
 }
 
-bool ZImageWin::Paint()
+bool ZWinImage::Paint()
 {
     if (!mpTransformTexture)
         return false;
@@ -407,7 +407,7 @@ bool ZImageWin::Paint()
 	return ZWin::Paint();
 }
 
-bool ZImageWin::Rotate(eRotation rotation)
+bool ZWinImage::Rotate(eRotation rotation)
 {
     if (rotation == kLeft)
     {
@@ -454,7 +454,7 @@ bool ZImageWin::Rotate(eRotation rotation)
     return true;
 }
 
-bool ZImageWin::HandleMessage(const ZMessage& message)
+bool ZWinImage::HandleMessage(const ZMessage& message)
 {
     string sType = message.GetType();
 
@@ -471,7 +471,7 @@ bool ZImageWin::HandleMessage(const ZMessage& message)
 }
 
 
-bool ZImageWin::InitFromXML(ZXMLNode* pNode)
+bool ZWinImage::InitFromXML(ZXMLNode* pNode)
 {
 	string sName;
 

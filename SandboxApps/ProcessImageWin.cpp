@@ -10,7 +10,7 @@
 #include "ZScriptedDialogWin.h"
 #include "ZWinBtn.H"
 #include "ZWinSlider.h"
-#include "ZImageWin.h"
+#include "ZWinImage.h"
 #include "ZWinControlPanel.h"
 #include "ZWinWatchPanel.h"
 #include "ZTimer.h"
@@ -146,7 +146,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 
         if (!bAlreadyLoaded)
         {
-            ZImageWin* pOriginalImageWin = new ZImageWin();
+            ZWinImage* pOriginalImageWin = new ZWinImage();
             pOriginalImageWin->SetArea(mrThumbnailSize);
             pOriginalImageWin->LoadImage(filename);
             pOriginalImageWin->SetWinName(filename);
@@ -1110,7 +1110,7 @@ void cProcessImageWin::ResetResultsBuffer()
         if (mpResultWin)
             ChildDelete(mpResultWin);
 
-        mpResultWin = new ZImageWin();
+        mpResultWin = new ZWinImage();
         mpResultWin->SetArea(mrResultImageDest);
         mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont),ZTextLook(ZTextLook::kNormal, 0x44ffffff, 0x44ffffff), ZGUI::RB, true);
         mpResultWin->SetFill(0xff222222);

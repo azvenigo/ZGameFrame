@@ -1,6 +1,6 @@
 #include "ZScriptedDialogWin.h"
 #include "ZWinSlider.h"
-#include "ZImageWin.h"
+#include "ZWinImage.h"
 #include "ZWinBtn.h"
 #include "ZFormattedTextWin.h"
 #include "ZStringHelpers.h"
@@ -298,15 +298,15 @@ bool ZScriptedDialogWin::ProcessNode(ZXMLNode* pNode)
 	}
 	else if (sComponent == ksElementImage)
 	{
-		ZImageWin* pImageWin = new ZImageWin();
-		if (pImageWin->InitFromXML(pNode))
+		ZWinImage* pWinImage = new ZWinImage();
+		if (pWinImage->InitFromXML(pNode))
 		{
-			return ChildAdd(pImageWin);
+			return ChildAdd(pWinImage);
 		}
 		else
 		{
 			ZASSERT(false);
-			delete pImageWin;
+			delete pWinImage;
 		}
 	}
 	else

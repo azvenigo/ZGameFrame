@@ -3,7 +3,7 @@
 #include "helpers/Registry.h"
 
 #include "LifeWin.h"
-#include "ZImageWin.h"
+#include "ZWinImage.h"
 #include "ProcessImageWin.h"
 #include "ZWinDebugConsole.h"
 #include "ZWinSlider.h"

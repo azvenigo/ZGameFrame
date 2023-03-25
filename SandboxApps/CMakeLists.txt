@@ -57,8 +57,8 @@ set(COMMON_FILES
 ../ZFramework/ZFormattedTextWin.h
 ../ZFramework/ZGraphicSystem.cpp
 ../ZFramework/ZGraphicSystem.h
-../ZFramework/ZImageWin.cpp
-../ZFramework/ZImageWin.h
+../ZFramework/ZWinImage.cpp
+../ZFramework/ZWinImage.h
 ../ZFramework/zlib-1.2.11
 ../ZFramework/zlibAPI.cpp
 ../ZFramework/zlibAPI.h

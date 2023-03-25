@@ -5,7 +5,7 @@
 #include "ZTypes.h"
 #include "ZAnimObjects.h"
 #include "ZWinControlPanel.h"
-class ZImageWin : public ZWin
+class ZWinImage : public ZWin
 {
 public:
 
@@ -17,8 +17,8 @@ public:
     };
 
 
-    ZImageWin();
-    ~ZImageWin();
+    ZWinImage();
+    ~ZWinImage();
 
     bool        Init();
 

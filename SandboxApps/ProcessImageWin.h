@@ -6,7 +6,7 @@
 #include "ZFormattedTextWin.h"
 
 class cXMLNode;
-class ZImageWin;
+class ZWinImage;
 
 
 class cFloatAreaDescriptor
@@ -98,7 +98,7 @@ private:
     ZRect mrThumbnailSize;
 //	cCEBuffer*	mpBufferToProcess;
 
-	ZImageWin*                  mpProcessedImageWin;
+	ZWinImage*                  mpProcessedImageWin;
     ZFormattedTextWin*          mpImageProps;
 
     ZFloatColorBuffer           mFloatColorBuffer;
@@ -109,9 +109,9 @@ private:
     double                      mfHighestContrast;
 
 
-    std::list<ZImageWin*>       mChildImageWins;
+    std::list<ZWinImage*>       mChildImageWins;
 
-    ZImageWin*                  mpResultWin;
+    ZWinImage*                  mpResultWin;
     uint32_t                    mThreads;
 
 	ZRect mrSliderCaption;
