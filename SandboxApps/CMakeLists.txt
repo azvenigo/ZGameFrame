@@ -34,86 +34,61 @@ Main_Sandbox.h Main_Sandbox.cpp Main_Win64.cpp
 teapotdata.h
 )
 
-set(COMMON_FILES 
+set (GUI_FILES
+../ZFramework/ZWin.h                ../ZFramework/ZWin.cpp
+../ZFramework/ZWinBtn.h             ../ZFramework/ZWinBtn.cpp
+../ZFramework/ZWinDebugConsole.h    ../ZFramework/ZWinDebugConsole.cpp
+../ZFramework/ZWinFormattedText.h   ../ZFramework/ZWinFormattedText.cpp
+../ZFramework/ZWinImage.h           ../ZFramework/ZWinImage.cpp
+../ZFramework/ZMainWin.h            ../ZFramework/ZMainWin.cpp
+../ZFramework/ZWinScriptedDialog.h  ../ZFramework/ZWinScriptedDialog.cpp
+../ZFramework/ZWinSlider.h          ../ZFramework/ZWinSlider.cpp
+../ZFramework/ZWinControlPanel.h    ../ZFramework/ZWinControlPanel.cpp
+../ZFramework/ZWinWatchPanel.h      ../ZFramework/ZWinWatchPanel.cpp
+../ZFramework/ZWinText.h            ../ZFramework/ZWinText.cpp
+../ZFramework/ZWinFileDialog.h      ../ZFramework/platforms/windows/ZWinFileDialog_Windows.cpp
 
-../ZFramework/Resources.cpp
-../ZFramework/Resources.h
-../ZFramework/ZAnimator.cpp
-../ZFramework/ZAnimator.h
-../ZFramework/ZAnimObjects.cpp
-../ZFramework/ZAnimObjects.h
-../ZFramework/ZAssert.h
-../ZFramework/ZBitBuffer.cpp
-../ZFramework/ZBitBuffer.h
-../ZFramework/ZBuffer.cpp
-../ZFramework/ZBuffer.h
-../ZFramework/ZFloatColorBuffer.cpp
-../ZFramework/ZFloatColorBuffer.h
-../ZFramework/ZCompression.cpp
-../ZFramework/ZCompression.h
-../ZFramework/ZFont.cpp
-../ZFramework/ZFont.h
-../ZFramework/ZWinFormattedText.cpp
-../ZFramework/ZWinFormattedText.h
-../ZFramework/ZGraphicSystem.cpp
-../ZFramework/ZGraphicSystem.h
-../ZFramework/ZWinImage.cpp
-../ZFramework/ZWinImage.h
-../ZFramework/zlib-1.2.11
-../ZFramework/zlibAPI.cpp
-../ZFramework/zlibAPI.h
-../ZFramework/ZMainWin.cpp
-../ZFramework/ZMainWin.h
-../ZFramework/ZMemBuffer.cpp
-../ZFramework/ZMemBuffer.h
-../ZFramework/ZMessageSystem.cpp
-../ZFramework/ZMessageSystem.h
-../ZFramework/ZRandom.h
-../ZFramework/ZRasterizer.cpp
-../ZFramework/ZRasterizer.h
-../ZFramework/ZScreenBuffer.cpp
-../ZFramework/ZScreenBuffer.h
-../ZFramework/ZWinScriptedDialog.cpp
-../ZFramework/ZWinScriptedDialog.h
-../ZFramework/ZWinSlider.cpp
-../ZFramework/ZWinSlider.h
-../ZFramework/ZDebug.h
-../ZFramework/ZTypes.h
-../ZFramework/Z3DMath.h
-../ZFramework/ZStringHelpers.cpp
-../ZFramework/ZStringHelpers.h
-../ZFramework/ZTickManager.cpp
-../ZFramework/ZTickManager.h
-../ZFramework/ZTimer.cpp
-../ZFramework/ZTimer.h
-../ZFramework/ZTransformable.cpp
-../ZFramework/ZTransformable.h
-../ZFramework/ZWin.CPP
-../ZFramework/ZWin.H
-../ZFramework/ZWinBtn.CPP
-../ZFramework/ZWinBtn.H
-../ZFramework/ZWinControlPanel.cpp
-../ZFramework/ZWinControlPanel.h
-../ZFramework/ZWinFileDialog.h
-../ZFramework/ZWinWatchPanel.cpp
-../ZFramework/ZWinWatchPanel.h
-../ZFramework/ZWinDebugConsole.cpp
-../ZFramework/ZWinDebugConsole.h
-../ZFramework/ZXMLNode.cpp
-../ZFramework/ZXMLNode.h
-../ZFramework/ZWinText.h
-../ZFramework/ZWinText.cpp
-../ZFramework/ZZipAPI.cpp
-../ZFramework/ZZipAPI.h
-../ZFramework/ZGUIHelpers.h
-../ZFramework/ZGUIHelpers.cpp
-../ZFramework/ZGUIStyle.h
-../ZFramework/ZGUIStyle.cpp
-../ZFramework/platforms/windows/GDIImageTags.h
-../ZFramework/platforms/windows/ZWinFileDialog_Windows.cpp
+../ZFramework/ZBuffer.h             ../ZFramework/ZBuffer.cpp
+../ZFramework/ZFloatColorBuffer.h   ../ZFramework/ZFloatColorBuffer.cpp
+
+../ZFramework/ZGraphicSystem.h      ../ZFramework/ZGraphicSystem.cpp
+../ZFramework/ZGUIHelpers.h         ../ZFramework/ZGUIHelpers.cpp
+../ZFramework/ZGUIStyle.h           ../ZFramework/ZGUIStyle.cpp
+
+../ZFramework/ZRasterizer.h         ../ZFramework/ZRasterizer.cpp
+../ZFramework/ZScreenBuffer.h       ../ZFramework/ZScreenBuffer.cpp
+../ZFramework/ZFont.h               ../ZFramework/ZFont.cpp
 )
 
-list(APPEND COMMON_FILES ../../ZLibraries/Common/helpers/FNMatch.h ../../ZLibraries/Common/helpers/FNMatch.cpp ../../ZLibraries/Common/helpers/HTTPCache.h ../../ZLibraries/Common/helpers/HTTPCache.cpp)
+
+set(ZFRAMEWORK_FILES
+
+../ZFramework/ZAssert.h
+../ZFramework/ZDebug.h
+../ZFramework/ZRandom.h
+../ZFramework/ZTypes.h
+../ZFramework/Resources.h           ../ZFramework/Resources.cpp
+../ZFramework/ZAnimator.h           ../ZFramework/ZAnimator.cpp
+../ZFramework/ZAnimObjects.h        ../ZFramework/ZAnimObjects.cpp
+../ZFramework/ZBitBuffer.cpp
+../ZFramework/ZBitBuffer.h
+../ZFramework/ZCompression.cpp
+../ZFramework/ZCompression.h
+../ZFramework/zlibAPI.cpp
+../ZFramework/zlibAPI.h
+../ZFramework/ZMemBuffer.h          ../ZFramework/ZMemBuffer.cpp
+../ZFramework/ZMessageSystem.h      ../ZFramework/ZMessageSystem.cpp
+../ZFramework/Z3DMath.h
+../ZFramework/ZStringHelpers.h      ../ZFramework/ZStringHelpers.cpp
+../ZFramework/ZTickManager.h        ../ZFramework/ZTickManager.cpp
+../ZFramework/ZTimer.h              ../ZFramework/ZTimer.cpp
+../ZFramework/ZTransformable.h      ../ZFramework/ZTransformable.cpp
+../ZFramework/ZXMLNode.h            ../ZFramework/ZXMLNode.cpp
+../ZFramework/ZZipAPI.h             ../ZFramework/ZZipAPI.cpp
+../ZFramework/platforms/windows/GDIImageTags.h
+)
+
+set(COMMON_FILES ../../ZLibraries/Common/helpers/FNMatch.h ../../ZLibraries/Common/helpers/FNMatch.cpp ../../ZLibraries/Common/helpers/HTTPCache.h ../../ZLibraries/Common/helpers/HTTPCache.cpp)
 list(APPEND COMMON_FILES 
 ../../ZLibraries/Common/helpers/CommandLineParser.h 
 ../../ZLibraries/Common/helpers/CommandLineParser.cpp 
@@ -150,14 +125,16 @@ list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib
 # source and include sets
 
 set(INCLUDES ${INCLUDES} ${SANDBOXAPPS_HEADERS} ${COMMON_HEADERS})
-set(SOURCES ${SANDBOXAPPS_SOURCES} ${COMMON_FILES})
+set(SOURCES ${SANDBOXAPPS_SOURCES} ${COMMON_FILES} ${GUI_FILES} ${ZFRAMEWORK_FILES})
 
 
 ####################
 # GUI groups
 
-#source_group(SandboxApps FILES ${SANDBOXAPPS_SOURCES} ${SANDBOXAPPS_HEADERS})
 source_group(Common FILES ${COMMON_FILES})
+source_group(ZFramework FILES ${ZFRAMEWORK_FILES})
+source_group(ZFramework_GUI FILES ${GUI_FILES})
+source_group(SandboxApps FILES ${SANDBOXAPPS_SOURCES} ${SANDBOXAPPS_HEADERS})
 
 
 ####################
