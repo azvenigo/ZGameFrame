@@ -4,7 +4,7 @@
 #include "ZRasterizer.h"
 #include "ZRandom.h"
 #include "ZFormattedTextWin.h"
-#include "ZScriptedDialogWin.h"
+#include "ZWinScriptedDialog.h"
 #include "ZXMLNode.h"
 #include "ZWinControlPanel.h"
 #include "helpers/StringHelpers.h"
@@ -142,7 +142,7 @@ bool TextTestWin::Init()
     ZRect rFontSelectionWin(mAreaToDrawTo.right - nWidth - nSpacer, mAreaToDrawTo.top + nSpacer, mAreaToDrawTo.right, mAreaToDrawTo.top + nHeight - nSpacer);
     ZRect rTextAreaWin(10,10,rFontSelectionWin.Width()-10,rFontSelectionWin.Height()-10);
 
-    ZScriptedDialogWin* pWin = new ZScriptedDialogWin();
+    ZWinScriptedDialog* pWin = new ZWinScriptedDialog();
     pWin->SetArea(rFontSelectionWin);
 
     mpBackground.get()->LoadBuffer("res/paper.jpg");

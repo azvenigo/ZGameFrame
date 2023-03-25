@@ -1,4 +1,4 @@
-#include "ZScriptedDialogWin.h"
+#include "ZWinScriptedDialog.h"
 #include "ZWinSlider.h"
 #include "ZWinImage.h"
 #include "ZWinBtn.h"
@@ -56,23 +56,23 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-ZScriptedDialogWin::ZScriptedDialogWin()
+ZWinScriptedDialog::ZWinScriptedDialog()
 {
 	mbTransformable = true;
 	mbDrawDefaultBackground = true;
 	mbFillBackground = false;
 }
 
-ZScriptedDialogWin::~ZScriptedDialogWin()
+ZWinScriptedDialog::~ZWinScriptedDialog()
 {
 }
 
-void ZScriptedDialogWin::PreInit(const string& sDialogScript)
+void ZWinScriptedDialog::PreInit(const string& sDialogScript)
 {
 	msDialogScript = sDialogScript;
 }
 
-bool ZScriptedDialogWin::Init()
+bool ZWinScriptedDialog::Init()
 {
 	ExecuteScript(msDialogScript);
 
@@ -168,12 +168,12 @@ bool ZScriptedDialogWin::Init()
 	return ZWin::Init();
 }
 
-bool ZScriptedDialogWin::Shutdown()
+bool ZWinScriptedDialog::Shutdown()
 {
 	return ZWin::Shutdown();
 };
 
-bool ZScriptedDialogWin::Paint()
+bool ZWinScriptedDialog::Paint()
 {
 	if (!mbInvalid)
 		return false;
@@ -189,7 +189,7 @@ bool ZScriptedDialogWin::Paint()
 }
 
 
-bool ZScriptedDialogWin::ExecuteScript(string sDialogScript)
+bool ZWinScriptedDialog::ExecuteScript(string sDialogScript)
 {
 	string sElement;
 
@@ -268,7 +268,7 @@ bool ZScriptedDialogWin::ExecuteScript(string sDialogScript)
 	return true;
 }
 
-bool ZScriptedDialogWin::ProcessNode(ZXMLNode* pNode)
+bool ZWinScriptedDialog::ProcessNode(ZXMLNode* pNode)
 {
 	ZASSERT(pNode);
 
@@ -318,7 +318,7 @@ bool ZScriptedDialogWin::ProcessNode(ZXMLNode* pNode)
 	return false;
 }
 
-bool ZScriptedDialogWin::HandleMessage(const ZMessage& message)
+bool ZWinScriptedDialog::HandleMessage(const ZMessage& message)
 {
 	return ZWin::HandleMessage(message);
 }

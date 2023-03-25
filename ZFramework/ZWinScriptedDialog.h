@@ -12,11 +12,11 @@ class ZXMLNode;
 
 typedef  std::list<ZWinSizablePushBtn*> tMessageBoxButtonList;
 
-class ZScriptedDialogWin : public ZWin
+class ZWinScriptedDialog : public ZWin
 {
 public:
-   ZScriptedDialogWin();
-   ~ZScriptedDialogWin();
+   ZWinScriptedDialog();
+   ~ZWinScriptedDialog();
 
    void PreInit(const std::string& sDialogScript);
    virtual bool Init();

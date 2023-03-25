@@ -3,7 +3,7 @@
 #include "ZMessageSystem.h"
 #include "ZTimer.h"
 #include "ZFormattedTextWin.h"
-#include "ZScriptedDialogWin.h"
+#include "ZWinScriptedDialog.h"
 #include "helpers/StringHelpers.h"
 #include <iostream>
 

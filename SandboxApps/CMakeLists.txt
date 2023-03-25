@@ -73,8 +73,8 @@ set(COMMON_FILES
 ../ZFramework/ZRasterizer.h
 ../ZFramework/ZScreenBuffer.cpp
 ../ZFramework/ZScreenBuffer.h
-../ZFramework/ZScriptedDialogWin.cpp
-../ZFramework/ZScriptedDialogWin.h
+../ZFramework/ZWinScriptedDialog.cpp
+../ZFramework/ZWinScriptedDialog.h
 ../ZFramework/ZWinSlider.cpp
 ../ZFramework/ZWinSlider.h
 ../ZFramework/ZDebug.h
