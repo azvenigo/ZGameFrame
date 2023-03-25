@@ -3,7 +3,7 @@
 #include "ZWin.h"
 #include "ZAnimator.h"
 #include "ZFloatColorBuffer.h"
-#include "ZFormattedTextWin.h"
+#include "ZWinFormattedText.h"
 
 class cXMLNode;
 class ZWinImage;
@@ -99,7 +99,7 @@ private:
 //	cCEBuffer*	mpBufferToProcess;
 
 	ZWinImage*                  mpProcessedImageWin;
-    ZFormattedTextWin*          mpImageProps;
+    ZWinFormattedText*          mpImageProps;
 
     ZFloatColorBuffer           mFloatColorBuffer;
 

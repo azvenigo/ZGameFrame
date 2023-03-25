@@ -7,7 +7,7 @@
 
 /////////////////////////////////////////////////////////////////////////
 // 
-class ZFormattedTextWin;
+class ZWinFormattedText;
 class ZWinSizablePushBtn;
 class ZWinCheck;
 class ZWinSlider;

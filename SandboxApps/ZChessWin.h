@@ -4,7 +4,7 @@
 #include "ZChess.h"
 #include "ZWin.h"
 #include "ZFont.h"
-#include "ZFormattedTextWin.h"
+#include "ZWinFormattedText.h"
 #include "ZWinText.H"
 #include <list>
 
@@ -60,7 +60,7 @@ public:
 
 
 private:
-    ZFormattedTextWin* mpGamesList;
+    ZWinFormattedText* mpGamesList;
 
     std::string     msCaption;
     uint32_t        mFillColor;
@@ -89,8 +89,8 @@ private:
 
     void        UpdateView();
 
-    ZFormattedTextWin*  mpGameTagsWin;
-    ZFormattedTextWin*  mpMovesWin;
+    ZWinFormattedText*  mpGameTagsWin;
+    ZWinFormattedText*  mpMovesWin;
 
     uint32_t            mFillColor;
     int64_t             mCurrentHalfMoveNumber;

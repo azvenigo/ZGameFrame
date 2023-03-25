@@ -1,4 +1,4 @@
-#include "ZFormattedTextWin.h"
+#include "ZWinFormattedText.h"
 #include "ZStringHelpers.h"
 #include "helpers/StringHelpers.h"
 #include "ZMessageSystem.h"
@@ -46,7 +46,7 @@ const string				ksTextScrollToBottom("text_scroll_to_bottom");
 static char THIS_FILE[] = __FILE__;
 #endif
 
-ZFormattedTextWin::ZFormattedTextWin()
+ZWinFormattedText::ZWinFormattedText()
 {
     mpWinSlider = NULL;
 
@@ -71,11 +71,11 @@ ZFormattedTextWin::ZFormattedTextWin()
 
 }
 
-ZFormattedTextWin::~ZFormattedTextWin()
+ZWinFormattedText::~ZWinFormattedText()
 {
 }
 
-bool ZFormattedTextWin::InitFromXML(ZXMLNode* pNode)
+bool ZWinFormattedText::InitFromXML(ZXMLNode* pNode)
 {
 	ZASSERT(pNode);
 
@@ -90,7 +90,7 @@ bool ZFormattedTextWin::InitFromXML(ZXMLNode* pNode)
 	return false;
 }
 
-bool ZFormattedTextWin::Init()
+bool ZWinFormattedText::Init()
 {
 	if (ZWin::Init())
 	{
@@ -102,13 +102,13 @@ bool ZFormattedTextWin::Init()
 }
 
 
-void ZFormattedTextWin::SetArea(const ZRect& newArea)
+void ZWinFormattedText::SetArea(const ZRect& newArea)
 {
 	ZWin::SetArea(newArea);
 	UpdateScrollbar();
 }
 
-void ZFormattedTextWin::SetScrollable(bool bScrollable) 
+void ZWinFormattedText::SetScrollable(bool bScrollable) 
 { 
     mbScrollable = bScrollable;
     if (mbScrollable)
@@ -116,7 +116,7 @@ void ZFormattedTextWin::SetScrollable(bool bScrollable)
 }
 
 
-bool ZFormattedTextWin::OnMouseDownL(int64_t x, int64_t y)
+bool ZWinFormattedText::OnMouseDownL(int64_t x, int64_t y)
 {
 	ZRect rEdgeSrc(3,5,21,61);
 
@@ -183,7 +183,7 @@ bool ZFormattedTextWin::OnMouseDownL(int64_t x, int64_t y)
 	return ZWin::OnMouseDownL(x, y);
 }
 
-bool ZFormattedTextWin::OnMouseUpL(int64_t x, int64_t y)
+bool ZWinFormattedText::OnMouseUpL(int64_t x, int64_t y)
 {
 	ReleaseCapture();
 
@@ -191,7 +191,7 @@ bool ZFormattedTextWin::OnMouseUpL(int64_t x, int64_t y)
 }
 
 
-bool ZFormattedTextWin::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
+bool ZWinFormattedText::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 {
 	if (mpWinSlider)
 	{
@@ -209,7 +209,7 @@ bool ZFormattedTextWin::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelt
 	return true;
 }
 
-bool ZFormattedTextWin::OnMouseMove(int64_t x, int64_t y)
+bool ZWinFormattedText::OnMouseMove(int64_t x, int64_t y)
 {
 	if (AmCapturing() && mpWinSlider)
 	{
@@ -226,7 +226,7 @@ bool ZFormattedTextWin::OnMouseMove(int64_t x, int64_t y)
 	return ZWin::OnMouseMove(x, y);
 }
 
-void ZFormattedTextWin::UpdateScrollbar()
+void ZWinFormattedText::UpdateScrollbar()
 {
 	int64_t nFullTextHeight = GetFullDocumentHeight();
 
@@ -280,7 +280,7 @@ void ZFormattedTextWin::UpdateScrollbar()
     Invalidate();
 }
 
-bool ZFormattedTextWin::Paint()
+bool ZWinFormattedText::Paint()
 {
 	if (!mbInvalid)
 		return false;
@@ -370,7 +370,7 @@ bool ZFormattedTextWin::Paint()
 	return ZWin::Paint();
 }
 
-int64_t ZFormattedTextWin::GetLineHeight(tTextLine& textLine)
+int64_t ZWinFormattedText::GetLineHeight(tTextLine& textLine)
 {
 	ZFontParams largestFont;
 	for (tTextLine::iterator it = textLine.begin(); it != textLine.end(); it++)
@@ -386,7 +386,7 @@ int64_t ZFormattedTextWin::GetLineHeight(tTextLine& textLine)
     return pLargestFont->Height();
 }
 
-void ZFormattedTextWin::CalculateFullDocumentHeight()
+void ZWinFormattedText::CalculateFullDocumentHeight()
 {
 	mnFullDocumentHeight = 0;
 
@@ -399,7 +399,7 @@ void ZFormattedTextWin::CalculateFullDocumentHeight()
 	}
 }
 
-void ZFormattedTextWin::Clear()
+void ZWinFormattedText::Clear()
 {
     std::unique_lock<std::mutex> lk(mDocumentMutex);
     mDocument.clear();
@@ -411,7 +411,7 @@ void ZFormattedTextWin::Clear()
     mCurrentTextPosition	= kDefaultTextPosition;
 }
 
-bool ZFormattedTextWin::ParseDocument(ZXMLNode* pNode)
+bool ZWinFormattedText::ParseDocument(ZXMLNode* pNode)
 {
 	Clear();
 
@@ -455,7 +455,7 @@ bool ZFormattedTextWin::ParseDocument(ZXMLNode* pNode)
 	return true;
 }
 
-/*void ZFormattedTextWin::AddLineNode(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
+/*void ZWinFormattedText::AddLineNode(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
 {
     // Treat the line as a line node
     ZXMLNode lineNode;
@@ -469,7 +469,7 @@ bool ZFormattedTextWin::ParseDocument(ZXMLNode* pNode)
 }*/
 
 
-void ZFormattedTextWin::AddLineNode(string sLine)
+void ZWinFormattedText::AddLineNode(string sLine)
 {
     // Treat the line as a line node
     ZXMLNode lineNode;
@@ -478,7 +478,7 @@ void ZFormattedTextWin::AddLineNode(string sLine)
 }
 
 
-void ZFormattedTextWin::AddMultiLine(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
+void ZWinFormattedText::AddMultiLine(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
 {
     tTextLine textLine;
     // Insert as much text on each line as will fit
@@ -507,7 +507,7 @@ void ZFormattedTextWin::AddMultiLine(string sLine, ZFontParams fontParams, const
     }
 }
 
-bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
+bool ZWinFormattedText::ProcessLineNode(ZXMLNode* pTextNode)
 {
     if (!pTextNode)
         return false;
@@ -556,7 +556,7 @@ bool ZFormattedTextWin::ProcessLineNode(ZXMLNode* pTextNode)
 	return false;
 }
 
-void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
+void ZWinFormattedText::ExtractTextParameters(ZXMLNode* pTextNode)
 {
 	string sParam;
 
@@ -627,7 +627,7 @@ void ZFormattedTextWin::ExtractTextParameters(ZXMLNode* pTextNode)
 }
 
 
-void ZFormattedTextWin::ScrollTo(int64_t nSliderValue)
+void ZWinFormattedText::ScrollTo(int64_t nSliderValue)
 {
 	if (mpWinSlider)
         mpWinSlider->SetSliderValue(nSliderValue);

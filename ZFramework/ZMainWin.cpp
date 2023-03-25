@@ -2,7 +2,7 @@
 #include "ZFont.h"
 #include "ZMessageSystem.h"
 #include "ZTimer.h"
-#include "ZFormattedTextWin.h"
+#include "ZWinFormattedText.h"
 #include "ZWinScriptedDialog.h"
 #include "helpers/StringHelpers.h"
 #include <iostream>

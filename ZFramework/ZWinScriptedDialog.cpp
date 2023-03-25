@@ -2,7 +2,7 @@
 #include "ZWinSlider.h"
 #include "ZWinImage.h"
 #include "ZWinBtn.h"
-#include "ZFormattedTextWin.h"
+#include "ZWinFormattedText.h"
 #include "ZStringHelpers.h"
 #include "ZMessageSystem.h"
 #include "ZXMLNode.h"
@@ -282,7 +282,7 @@ bool ZWinScriptedDialog::ProcessNode(ZXMLNode* pNode)
 
 	if (sComponent == ksElementTextWin)
 	{
-		ZFormattedTextWin* pWin = new ZFormattedTextWin();
+		ZWinFormattedText* pWin = new ZWinFormattedText();
 		pWin->InitFromXML(pNode);
 		ChildAdd(pWin);
 	}

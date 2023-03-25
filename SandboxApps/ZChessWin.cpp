@@ -50,7 +50,7 @@ bool ZChoosePGNWin::Init()
 
     ZRect rGameTags(gDefaultSpacer, gDefaultSpacer + mFont.nHeight * 2, mAreaToDrawTo.Width() - gDefaultSpacer, rButton.top - gDefaultSpacer);
 
-    mpGamesList = new ZFormattedTextWin();
+    mpGamesList = new ZWinFormattedText();
     mpGamesList->SetArea(rGameTags);
     mpGamesList->SetFill(gDefaultTextAreaFill);
     mpGamesList->SetDrawBorder();
@@ -164,7 +164,7 @@ bool ZPGNWin::Init()
 
     ZRect rGameTags(gDefaultSpacer, gDefaultSpacer, mAreaToDrawTo.Width() - gDefaultSpacer, mAreaToDrawTo.Height() / 3 - gDefaultSpacer);
 
-    mpGameTagsWin = new ZFormattedTextWin();
+    mpGameTagsWin = new ZWinFormattedText();
     mpGameTagsWin->SetArea(rGameTags);
     mpGameTagsWin->SetFill(gDefaultTextAreaFill);
     mpGameTagsWin->SetDrawBorder();
@@ -237,7 +237,7 @@ bool ZPGNWin::Init()
 
     ZRect rMoves(rGameTags.left, rGameTags.bottom + gDefaultSpacer, rGameTags.right, rButton.top - gDefaultSpacer * 2);
 
-    mpMovesWin = new ZFormattedTextWin();
+    mpMovesWin = new ZWinFormattedText();
     mpMovesWin->SetArea(rMoves);
     mpMovesWin->SetFill(0xff444444);
     mpMovesWin->SetDrawBorder();

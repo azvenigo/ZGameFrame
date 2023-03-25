@@ -2,7 +2,7 @@
 
 #include "ZTypes.h"
 #include "ZFont.h"
-#include "ZFormattedTextWin.h"
+#include "ZWinFormattedText.h"
 #include <list>
 
 /////////////////////////////////////////////////////////////////////////

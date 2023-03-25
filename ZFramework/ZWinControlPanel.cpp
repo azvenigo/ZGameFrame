@@ -2,7 +2,7 @@
 #include "ZWinBtn.H"
 #include "ZWinText.H"
 #include "ZWinSlider.h"
-#include "ZFormattedTextWin.h"
+#include "ZWinFormattedText.h"
 #include "Resources.h"
 
 extern ZPoint gLastMouseMove;

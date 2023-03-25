@@ -3,7 +3,7 @@
 #include "ZWinBtn.h"
 #include "ZRasterizer.h"
 #include "ZRandom.h"
-#include "ZFormattedTextWin.h"
+#include "ZWinFormattedText.h"
 #include "ZWinScriptedDialog.h"
 #include "ZXMLNode.h"
 #include "ZWinControlPanel.h"

@@ -53,8 +53,8 @@ set(COMMON_FILES
 ../ZFramework/ZCompression.h
 ../ZFramework/ZFont.cpp
 ../ZFramework/ZFont.h
-../ZFramework/ZFormattedTextWin.cpp
-../ZFramework/ZFormattedTextWin.h
+../ZFramework/ZWinFormattedText.cpp
+../ZFramework/ZWinFormattedText.h
 ../ZFramework/ZGraphicSystem.cpp
 ../ZFramework/ZGraphicSystem.h
 ../ZFramework/ZWinImage.cpp

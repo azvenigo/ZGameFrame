@@ -21,11 +21,11 @@ struct sTextEntry
 typedef std::list<sTextEntry>	tTextLine;
 typedef std::list<tTextLine>	tDocument;
 
-class ZFormattedTextWin : public ZWin
+class ZWinFormattedText : public ZWin
 {
 public:
-	ZFormattedTextWin();
-	~ZFormattedTextWin();
+	ZWinFormattedText();
+	~ZWinFormattedText();
 
 	virtual bool		Init();
 	virtual bool		InitFromXML(ZXMLNode* pNode);
