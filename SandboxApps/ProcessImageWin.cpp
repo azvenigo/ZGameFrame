@@ -148,23 +148,29 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
         {
             ZWinImage* pOriginalImageWin = new ZWinImage();
             pOriginalImageWin->SetArea(mrThumbnailSize);
-            pOriginalImageWin->LoadImage(filename);
-            pOriginalImageWin->SetWinName(filename);
+            if (pOriginalImageWin->LoadImage(filename))
+            {
+                pOriginalImageWin->SetWinName(filename);
 
 
-            string sMessage;
-            Sprintf(sMessage, "selectimg;name=%s;target=imageprocesswin", filename.c_str());
-            pOriginalImageWin->SetMouseUpLMessage(sMessage);
-//            pOriginalImageWin->SetMouseUpLMessage(ZMessage("selectimg", this, "name", filename));
+                string sMessage;
+                Sprintf(sMessage, "selectimg;name=%s;target=imageprocesswin", filename.c_str());
+                pOriginalImageWin->SetMouseUpLMessage(sMessage);
+                //            pOriginalImageWin->SetMouseUpLMessage(ZMessage("selectimg", this, "name", filename));
 
-            Sprintf(sMessage, "closeimg;name=%s;target=imageprocesswin", filename.c_str());
-            pOriginalImageWin->SetCloseButtonMessage(sMessage);
+                Sprintf(sMessage, "closeimg;name=%s;target=imageprocesswin", filename.c_str());
+                pOriginalImageWin->SetCloseButtonMessage(sMessage);
 
-            pOriginalImageWin->SetEnableControlPanel(true);
-            pOriginalImageWin->SetFill(0x00000000);
-            ChildAdd(pOriginalImageWin);
+                pOriginalImageWin->SetEnableControlPanel(true);
+                pOriginalImageWin->SetFill(0x00000000);
+                ChildAdd(pOriginalImageWin);
 
-            mChildImageWins.push_back(pOriginalImageWin);
+                mChildImageWins.push_back(pOriginalImageWin);
+            }
+            else
+            {
+                delete pOriginalImageWin;   // failed to load image....
+            }
         }
     }
 
@@ -1033,8 +1039,17 @@ bool cProcessImageWin::Init()
             "res/414A2624.jpg"
         };
     }
-    LoadImages(filenames);
-    Process_SelectImage(*filenames.begin());
+
+    // remove any filenames with missing files
+    std::list<string> checkedFilenames;
+    for (auto filename : filenames)
+    {
+        if (filesystem::exists(filename))
+            checkedFilenames.push_back(filename);
+    }
+
+    LoadImages(checkedFilenames);
+    Process_SelectImage(*checkedFilenames.begin());
 
 	return ZWin::Init();
 }
@@ -1221,6 +1236,8 @@ void cProcessImageWin::UpdatePrefs()
 
 bool cProcessImageWin::Shutdown()
 {
+    UpdatePrefs();
+
 	return ZWin::Shutdown();
 }
 

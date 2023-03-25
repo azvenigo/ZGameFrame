@@ -47,7 +47,7 @@ public:
     void        SetSaveButtonMessage(const std::string& sMessage) { msSaveButtonMessage = sMessage; }
 
 
-    void        LoadImage(const std::string& sName);
+    bool        LoadImage(const std::string& sName);
     void        SetImage(tZBufferPtr pImage);
     tZBufferPtr GetImage() { return mpImage; }
 

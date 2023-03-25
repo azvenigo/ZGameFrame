@@ -250,7 +250,7 @@ void ZWinImage::ScrollTo(int64_t nX, int64_t nY)
     Invalidate();
 }
 
-void ZWinImage::LoadImage(const string& sName)
+bool ZWinImage::LoadImage(const string& sName)
 {
     mbVisible = false;
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
@@ -259,10 +259,15 @@ void ZWinImage::LoadImage(const string& sName)
     mpImage.reset(new ZBuffer());
 
     const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
-    mpImage->LoadBuffer(sName);
+    if (!mpImage->LoadBuffer(sName))
+    {
+        ZERROR("ERROR: Failed to load image:", sName);
+        return false;
+    }
 
     FitImageToWindow();
     mbVisible = true;
+    return true;
 }
 
 void ZWinImage::SetArea(const ZRect& newArea)
@@ -367,18 +372,21 @@ bool ZWinImage::Paint()
     if (mpImage)
     {
         const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
-        ZRect rSource(mpImage->GetArea());
+        if (mpImage->GetPixels())   
+        {
+            ZRect rSource(mpImage->GetArea());
 
-        if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
-        {
-            mpTransformTexture.get()->Blt(mpImage.get(), rSource, rDest);
-        }
-        else
-        {
-            tUVVertexArray verts;
-            gRasterizer.RectToVerts(mImageArea, verts);
-            ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
-            gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
+            if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
+            {
+                mpTransformTexture.get()->Blt(mpImage.get(), rSource, rDest);
+            }
+            else
+            {
+                tUVVertexArray verts;
+                gRasterizer.RectToVerts(mImageArea, verts);
+                ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
+                gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
+            }
         }
     }
 

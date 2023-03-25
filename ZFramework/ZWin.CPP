@@ -222,9 +222,9 @@ void  ZWin::CalcAbsoluteArea()
 	SetArea( ZRect(tempX, tempY, tempX + mArea.Width(), tempY + mArea.Height()));
 }*/
 
-void ZWin::Arrange(ZGUI::ePosition pos, const ZRect& outerRect, int64_t hPadding, int64_t vPadding)
+void ZWin::Arrange(ZGUI::ePosition pos, const ZRect& outerRect, int64_t padding)
 {
-    SetArea(ZGUI::Arrange(mArea, outerRect, pos, hPadding, vPadding));
+    SetArea(ZGUI::Arrange(mArea, outerRect, pos, padding));
 }
 
 

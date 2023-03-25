@@ -36,11 +36,11 @@ ZFontParams     gDefaultTitleFont("Gadugi", 40);
 //ZFontParams     gDefaultCaptionFont("Gadugi", 30, 400);
 ZFontParams     gDefaultTextFont("Gadugi", 20);
 
-ZGUI::Style     gStyleTooltip(ZFontParams("Verdana", 30), ZTextLook(ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::C, gDefaultTextAreaFill);
-ZGUI::Style     gStyleCaption(ZFontParams("Gadugi", 36, 400), ZTextLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, gDefaultDialogFill);
-ZGUI::Style     gStyleButton(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, gDefaultDialogFill);
-ZGUI::Style     gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, gDefaultDialogFill);
-ZGUI::Style     gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, gDefaultDialogFill);
+ZGUI::Style     gStyleTooltip(ZFontParams("Verdana", 30), ZTextLook(ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::C, 0, gDefaultTextAreaFill);
+ZGUI::Style     gStyleCaption(ZFontParams("Gadugi", 36, 400), ZTextLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, 0, gDefaultDialogFill);
+ZGUI::Style     gStyleButton(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, 0, gDefaultDialogFill);
+ZGUI::Style     gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, 0, gDefaultDialogFill);
+ZGUI::Style     gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, 0, gDefaultDialogFill);
 
 cResources::cResources()
 {

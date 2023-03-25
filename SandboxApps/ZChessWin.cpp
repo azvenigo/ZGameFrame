@@ -528,8 +528,8 @@ bool ZChessWin::Init()
 
         mpStatusWin = new ZWinLabel();
         mpStatusWin->msText = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::C, gDefaultTextAreaFill, true);
-        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::C, 0, gDefaultTextAreaFill, true);
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer));
         ChildAdd(mpStatusWin);
     }
 
@@ -588,12 +588,13 @@ void ZChessWin::UpdateSize()
     mrPaletteArea.SetRect(mrBoardArea.right, mrBoardArea.top, mrBoardArea.right + mnPalettePieceHeight, mrBoardArea.bottom);
 
     if (mpSwitchSidesButton)
-        mpSwitchSidesButton->Arrange(ZGUI::OLIC, mrBoardArea, gDefaultSpacer, gDefaultSpacer);
+        mpSwitchSidesButton->Arrange(ZGUI::OLIC, mrBoardArea, gDefaultSpacer);
 
     if (mpStatusWin)
     {
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
-        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer));
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::LT, 0, gDefaultTextAreaFill, true);
     }
 
 
@@ -713,8 +714,7 @@ bool ZChessWin::OnMouseUpL(int64_t x, int64_t y)
                         if (mpPGNWin)
                             mpPGNWin->AddAction(sAction, mBoard.GetHalfMoveNumber());
 
-                        if (mpStatusWin)
-                            mpStatusWin->msText = sAction;
+                        UpdateStatus(sAction);
 
                         const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
                         mHistory.resize(mBoard.GetHalfMoveNumber());
@@ -798,6 +798,49 @@ bool ZChessWin::Paint()
 
     mpTransformTexture->Fill(mAreaToDrawTo, 0xff444444);
     DrawBoard();
+
+    // Draw labels if not in demo mode
+    if (!mbDemoMode)
+    {
+        ZRect rMoveLabel(0,0,mnPieceHeight,mnPieceHeight/2);
+        tZFontPtr pLabelFont = gpFontSystem->GetFont(gDefaultTitleFont);
+        uint32_t nLabelPadding = (uint32_t)pLabelFont->Height();
+        if (mBoard.WhitesTurn())
+        {
+            string sLabel("White's Move");
+            if (!mbEditMode && mBoard.IsKingInCheck(true))
+            {
+                if (mBoard.IsCheckmate())
+                    sLabel = "Checkmate";
+                else
+                    sLabel = "White is in Check";
+            }
+
+            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
+            rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
+            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gDefaultSpacer);
+
+            mpTransformTexture->Fill(rMoveLabel, 0xffffffff);
+            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center);
+        }
+        else
+        {
+            string sLabel("Black's Move");
+            if (!mbEditMode && mBoard.IsKingInCheck(false))
+            {
+                if (mBoard.IsCheckmate())
+                    sLabel = "Checkmate";
+                else
+                    sLabel = "Black is in Check";
+            }
+            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
+            rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
+            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gDefaultSpacer);
+            mpTransformTexture->Fill(rMoveLabel, 0xff000000);
+            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, ZTextLook(), ZGUI::Center);
+        }
+    }
+
 
     if (mpDraggingPiece)
         mpTransformTexture->Blt(mpDraggingPiece.get(), mpDraggingPiece->GetArea(), mrDraggingPiece);
@@ -932,52 +975,6 @@ void ZChessWin::DrawBoard()
             }
         }
     }
-
-
-
-    // Draw labels if not in demo mode
-    if (!mbDemoMode)
-    {
-        ZRect rMoveLabel;
-        tZFontPtr pLabelFont = gpFontSystem->GetFont(gDefaultTitleFont);
-        uint32_t nLabelPadding = (uint32_t)pLabelFont->Height();
-        if (mBoard.WhitesTurn())
-        {
-            rMoveLabel.SetRect(SquareArea(ZPoint(0, 7)));
-            rMoveLabel.OffsetRect(-rMoveLabel.Width() - nLabelPadding * 2, 0);
-            string sLabel("White's Move");
-            if (!mbEditMode && mBoard.IsKingInCheck(true))
-            {
-                if (mBoard.IsCheckmate())
-                    sLabel = "Checkmate";
-                else
-                    sLabel = "White is in Check";
-            }
-
-            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
-            rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
-            mpTransformTexture->Fill(rMoveLabel, 0xffffffff);
-            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel,ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center);
-        }
-        else
-        {
-            rMoveLabel.SetRect(SquareArea(ZPoint(0, 0)));
-            rMoveLabel.OffsetRect(-rMoveLabel.Width() - nLabelPadding * 2, 0);
-            string sLabel("Black's Move");
-            if (!mbEditMode && mBoard.IsKingInCheck(false))
-            {
-                if (mBoard.IsCheckmate())
-                    sLabel = "Checkmate";
-                else
-                    sLabel = "Black is in Check";
-            }
-            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
-            rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
-            mpTransformTexture->Fill(rMoveLabel, 0xff000000);
-            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, ZTextLook(), ZGUI::Center);
-        }
-    }
-
 }
 
 
@@ -1009,7 +1006,8 @@ void ZChessWin::UpdateStatus(const std::string& sText, uint32_t col)
     if (mpStatusWin)
     {
         mpStatusWin->msText = sText;
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", 40, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::LT, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight/2, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::LT, 0, gDefaultTextAreaFill, true);
+        mpStatusWin->Invalidate();
     }
 }
 
@@ -1110,7 +1108,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "toggleeditmode")
     {
-        mpSwitchSidesButton->Arrange(ZGUI::OLIC, mrBoardArea, gDefaultSpacer, gDefaultSpacer);
+        mpSwitchSidesButton->Arrange(ZGUI::OLIC, mrBoardArea, gDefaultSpacer);
         mpSwitchSidesButton->SetVisible(mbEditMode);
         Invalidate();
         return true;
@@ -1132,8 +1130,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             {
                 if (mpPGNWin)
                     mpPGNWin->AddAction(sAction, mBoard.GetHalfMoveNumber());
-                if (mpStatusWin)
-                    mpStatusWin->msText = sAction;
+                UpdateStatus(sAction);
 
                 const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
                 mHistory.push_back(mBoard);

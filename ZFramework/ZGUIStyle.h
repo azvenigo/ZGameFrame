@@ -10,7 +10,7 @@ namespace ZGUI
     class Style
     {
     public:
-        Style(const ZFontParams& _fp = {}, const ZTextLook& _look = {}, ePosition _pos = ePosition::Unknown, uint32_t _bgCol = 0, bool _wrap = false);
+        Style(const ZFontParams& _fp = {}, const ZTextLook& _look = {}, ePosition _pos = ePosition::Unknown, int32_t _padding = 0, uint32_t _bgCol = 0, bool _wrap = false);
         Style::Style(const std::string& s);
 
         tZFontPtr Font();
@@ -20,6 +20,7 @@ namespace ZGUI
         ZFontParams fp;
         ZTextLook   look;
         ePosition   pos;
+        int32_t     padding;
         uint32_t    bgCol;
         bool        wrap;
 
