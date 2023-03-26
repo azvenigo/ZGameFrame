@@ -198,6 +198,22 @@ private:
     int64_t                 mAutoplayMSBetweenMoves;
 
 
+
+
+
+
+
+
+
+
+    std::string sTestString;
+
+
+
+
+
+
+
     // watch panel
     std::string msDebugStatus;
     std::string msFEN;

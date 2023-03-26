@@ -1075,6 +1075,9 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
         return false;
     }
 
+    if (params.sFacename.empty())
+        return false;
+
     mFontParams = params;
 
     mrScratchArea.SetRect(0, 0, mFontParams.nHeight * 5, mFontParams.nHeight * 2);     // may need to grow this if the font requested is ever needed to be larger
@@ -1605,6 +1608,8 @@ tZFontPtr ZFontSystem::LoadFont(const string& sFilename)
 #ifdef _WIN64
 tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
 {
+    ZASSERT(!params.sFacename.empty());
+
     if (IsCached(params))
     {
         tZFontPtr pLoaded = LoadFont(FontCacheFilename(params));

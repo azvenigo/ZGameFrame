@@ -46,8 +46,42 @@ protected:
 };
 
 
-/*class ZWinTextEdit : public ZWin
+class ZWinTextEdit : public ZWin
 {
-    
-};*/
+public:
+    ZWinTextEdit(std::string* pText);
+    virtual	bool    Init();
+
+    virtual void    SetArea(const ZRect& area);
+
+    virtual bool    OnChar(char c);
+    virtual bool    OnKeyDown(uint32_t c);
+    virtual bool    OnKeyUp(uint32_t c);
+
+
+    virtual bool    OnMouseDownL(int64_t x, int64_t y);
+    virtual bool    Process();
+
+
+    ZGUI::Style     mStyle;
+
+protected:
+    std::string*    mpText;
+
+    virtual bool    Paint();
+
+    void            HandleCursorMove(int64_t newCursorPos, bool bScrollView = true);
+    int64_t         FindNextBreak(int64_t nDir);
+    void            ConstrainCursorPosition();
+
+    int64_t         mCursorPosition;
+    int64_t         mnViewOffset;
+
+    ZRect           mrCursorArea;
+    ZRect           mrVisibleTextArea;
+    int64_t         mnLeftBoundary;
+    int64_t         mnRightBoundary;
+    bool            mbCursorVisible;
+    bool            mbCTRLDown;
+};
 
