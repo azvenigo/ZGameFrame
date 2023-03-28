@@ -60,6 +60,8 @@ public:
 
 
     virtual bool    OnMouseDownL(int64_t x, int64_t y);
+    virtual bool    OnMouseMove(int64_t x, int64_t y);
+    virtual bool    OnMouseUpL(int64_t x, int64_t y);
     virtual bool    Process();
 
 
@@ -69,6 +71,9 @@ protected:
     std::string*    mpText;
 
     virtual bool    Paint();
+    void            StartSelecting();
+    void            CancelSelecting();
+    void            DeleteSelection();
 
     void            HandleCursorMove(int64_t newCursorPos, bool bScrollView = true);
     int64_t         FindNextBreak(int64_t nDir);
@@ -83,5 +88,12 @@ protected:
     int64_t         mnRightBoundary;
     bool            mbCursorVisible;
     bool            mbCTRLDown;
+    bool            mbSHIFTDown;
+    bool            mbMouseDown;
+
+    bool            mbSelecting;
+    int64_t         mnSelectionStart;
+    int64_t         mnSelectionEnd;
+
 };
 

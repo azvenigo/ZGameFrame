@@ -95,6 +95,11 @@ ZWinTextEdit::ZWinTextEdit(string* pText)
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
     mbCTRLDown = false;
+    mbSelecting = false;
+    mbSHIFTDown = false;
+    mbMouseDown = false;
+    mnSelectionStart = -1;
+    mnSelectionEnd = -1;
 }
 
 bool ZWinTextEdit::Init()
@@ -108,14 +113,42 @@ bool ZWinTextEdit::Init()
 
 bool ZWinTextEdit::OnMouseDownL(int64_t x, int64_t y)
 {
+    SetCapture();
+
     int64_t nPixelsIntoString = (x - mrVisibleTextArea.left)+mnViewOffset;
     int64_t i;
     for (i = 0; i < mpText->length() && mStyle.Font()->StringWidth(mpText->substr(0, i)) < nPixelsIntoString; i++);
 
     HandleCursorMove(i, false);
 
+    mbMouseDown = true;
+
     return ZWin::OnMouseDownL(x, y);
 }
+
+bool ZWinTextEdit::OnMouseUpL(int64_t x, int64_t y)
+{
+    ReleaseCapture();
+    mbMouseDown = false;
+    return ZWin::OnMouseUpL(x, y);
+}
+
+bool ZWinTextEdit::OnMouseMove(int64_t x, int64_t y)
+{
+    if (mbMouseDown && AmCapturing())
+    {
+        StartSelecting();
+
+        int64_t nPixelsIntoString = (x - mrVisibleTextArea.left) + mnViewOffset;
+        int64_t i;
+        for (i = 0; i < mpText->length() && mStyle.Font()->StringWidth(mpText->substr(0, i)) < nPixelsIntoString; i++);
+
+        HandleCursorMove(i, false);
+    }
+
+    return ZWin::OnMouseMove(x, y);
+}
+
 
 bool ZWinTextEdit::Process()
 {
@@ -157,40 +190,27 @@ bool ZWinTextEdit::Paint()
 
     mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), *mpText, rOut, mStyle.look, mStyle.pos, &mAreaToDrawTo);
 
+    if (mnSelectionStart != mnSelectionEnd &&
+        mnSelectionStart >= 0 && mnSelectionEnd >= 0 &&
+        mnSelectionStart <= mpText->length() && mnSelectionEnd <= mpText->length())
+    {
+        int64_t nMin = min<int64_t>(mnSelectionStart, mnSelectionEnd);
+        int64_t nMax = max<int64_t>(mnSelectionStart, mnSelectionEnd);
+
+        int64_t nWidthBefore = mStyle.Font()->StringWidth(mpText->substr(0, nMin));
+        int64_t nWidthHighlighted = mStyle.Font()->StringWidth(mpText->substr(nMin, nMax - nMin));
+        ZRect rHighlight(0, mrVisibleTextArea.top, nWidthHighlighted, mrVisibleTextArea.bottom);
+        rHighlight.OffsetRect(nWidthBefore- mnViewOffset, 0);
+        rHighlight.IntersectRect(mrVisibleTextArea);
+        mpTransformTexture.get()->FillAlpha(rHighlight, 0x8800ffff);
+    }
+
+
     if (mbCursorVisible)
         mpTransformTexture.get()->Fill(mrCursorArea, 0xffffffff);
 
     return ZWin::Paint();
 }
-
-bool ZWinTextEdit::OnChar(char c)
-{
-    switch (c)
-    {
-    case VK_ESCAPE:
-        gMessageSystem.Post("quit_app_confirmed");
-        break;
-    case VK_BACK:
-        {
-            if (mCursorPosition > 0 && !mpText->empty())
-            {
-                mpText->erase(mCursorPosition - 1, 1);
-                HandleCursorMove(mCursorPosition - 1);
-
-            }
-        }
-        break;
-    default:
-        {
-            mpText->insert(mCursorPosition, 1, c);
-            HandleCursorMove(mCursorPosition + 1);
-        }
-        break;
-    }
-
-    return true;
-}
-
 
 
 int64_t ZWinTextEdit::FindNextBreak(int64_t nDir)
@@ -241,30 +261,163 @@ int64_t ZWinTextEdit::FindNextBreak(int64_t nDir)
 }
 
 
+bool ZWinTextEdit::OnChar(char c)
+{
+    if (mbSelecting)
+        DeleteSelection();
+
+    switch (c)
+    {
+
+    case VK_ESCAPE:
+        gMessageSystem.Post("quit_app_confirmed");
+        break;
+    default:
+        if (!mbCTRLDown && c > 31 && c < 128)   // only specific chars
+        {
+            mpText->insert(mCursorPosition, 1, c);
+            HandleCursorMove(mCursorPosition + 1);
+        }
+        break;
+    }
+
+
+    return true;
+}
+
+void ZWinTextEdit::StartSelecting()
+{
+    mbSelecting = true;
+    if (mnSelectionStart == -1)
+        mnSelectionStart = mCursorPosition;
+}
+
+void ZWinTextEdit::CancelSelecting()
+{
+    mbSelecting = false;
+    mnSelectionStart = -1;
+    mnSelectionEnd = -1;
+}
+
+
+void ZWinTextEdit::DeleteSelection()
+{
+    if (mbSelecting)
+    {
+        mbSelecting = false;
+
+        int64_t nMin = min<int64_t>(mnSelectionStart, mnSelectionEnd);
+        int64_t nMax = max<int64_t>(mnSelectionStart, mnSelectionEnd);
+        if (nMax > nMin)
+        {
+            mpText->erase(nMin, nMax - nMin);
+
+            if (mCursorPosition >= nMax)
+                HandleCursorMove(mCursorPosition - (nMax - nMin));
+        }
+        mnSelectionStart = -1;
+        mnSelectionEnd = -1;
+    }
+}
+
+
 bool ZWinTextEdit::OnKeyDown(uint32_t c)
 {
     switch (c)
     {
     case VK_LEFT:
+        if (mbSHIFTDown)
+            StartSelecting();
+        else
+            CancelSelecting();
+
         if (mbCTRLDown)
             HandleCursorMove(FindNextBreak(-1));
         else
             HandleCursorMove(mCursorPosition - 1);
         break;
     case VK_RIGHT:
+        if (mbSHIFTDown)
+            StartSelecting();
+        else
+            CancelSelecting();
+
         if (mbCTRLDown)
             HandleCursorMove(FindNextBreak(1));
         else
             HandleCursorMove(mCursorPosition + 1);
         break;
     case VK_HOME:
+        if (mbSHIFTDown)
+            StartSelecting();
+        else
+            CancelSelecting();
+
         HandleCursorMove(0);
         break;
     case VK_END:
+        if (mbSHIFTDown)
+            StartSelecting();
+        else
+            CancelSelecting();
+
         HandleCursorMove(mpText->length());
         break;
     case VK_CONTROL:
         mbCTRLDown = true;
+        break;
+    case VK_SHIFT:
+        mbSHIFTDown = true;
+        break;
+    case VK_DELETE:
+    {
+        if (mbSelecting)
+        {
+            DeleteSelection();
+        }
+        else if (mCursorPosition < mpText->size())
+        {
+            mpText->erase(mCursorPosition, 1);
+            HandleCursorMove(mCursorPosition);
+        }
+    }
+    break;
+    case VK_BACK:
+    {
+        if (mbSelecting)
+        {
+            DeleteSelection();
+        }
+        else if (mCursorPosition > 0 && !mpText->empty())
+        {
+            mpText->erase(mCursorPosition - 1, 1);
+            HandleCursorMove(mCursorPosition - 1);
+
+        }
+    }
+    break;
+    case 'a':
+    case 'A':
+        if (mbCTRLDown)
+        {
+            mnSelectionStart = 0;
+            mnSelectionEnd = mpText->length();
+            mbSelecting = true;
+        }
+    case 'c':
+    case 'C':
+        if (mbCTRLDown)
+        {
+            // do copy operation
+            int64_t nMin = min<int64_t>(mnSelectionStart, mnSelectionEnd);
+            int64_t nMax = max<int64_t>(mnSelectionStart, mnSelectionEnd);
+
+            if (nMin < nMax)
+            {
+                ZOUT("copying:", mpText->substr(nMin, nMax - nMin), "\n");
+            }
+            break;
+        }
         break;
     }
     return true;
@@ -276,6 +429,9 @@ bool ZWinTextEdit::OnKeyUp(uint32_t c)
     {
     case VK_CONTROL:
         mbCTRLDown = false;
+        break;
+    case VK_SHIFT:
+        mbSHIFTDown = false;
         break;
     }
     return ZWin::OnKeyUp(c);
@@ -331,6 +487,14 @@ void ZWinTextEdit::HandleCursorMove(int64_t newCursorPos, bool bScrollView)
     mrCursorArea.SetRect(nNewAbsPixelsToCursor - mnViewOffset, mrVisibleTextArea.top, nNewAbsPixelsToCursor - mnViewOffset + 2, mrVisibleTextArea.bottom);
 
     if (newCursorPos >= 0 && newCursorPos <= mpText->length())
+    {
         mCursorPosition = newCursorPos;
+
+        if (mbSelecting)
+        {
+            mnSelectionEnd = mCursorPosition;
+            ZOUT("select start:", mnSelectionStart, " end:", mnSelectionEnd,  "\n");
+        }
+    }
     Invalidate();
 }

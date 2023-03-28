@@ -385,6 +385,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 gMessageSystem.Post("chardown", "code", wParam);
             }
 		}
+        break;
 	case WM_KEYDOWN:
 		{
 	//		ZMessage message("keydown");
