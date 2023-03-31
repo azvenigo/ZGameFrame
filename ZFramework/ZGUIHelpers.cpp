@@ -188,7 +188,7 @@ namespace ZGUI
             pos = IRIB;
 
         // horizontal position
-        int64_t newX;
+        int64_t newX = ref.left;
         if (pos&HOutside)
         {
             if (pos&Left)
@@ -198,9 +198,9 @@ namespace ZGUI
             else
                 ZASSERT(false); // if outside it has to be either left or right... outside center isn't a thing....is it?
         }
-        else
+        else if (pos&HInside)
         {
-            ZASSERT(pos&HInside);
+//            ZASSERT(pos&HInside);
             if (pos&Left)
                 newX = ref.left + padding;
             else if (pos&HCenter)
@@ -213,7 +213,7 @@ namespace ZGUI
         }
 
         // vertical
-        int64_t newY;
+        int64_t newY = ref.top;
         if (pos&VOutside)
         {
             if (pos&Top)
@@ -223,7 +223,7 @@ namespace ZGUI
             else
                 ZASSERT(false); // outside center, again?
         }
-        else
+        else if (pos&VInside)
         {
             if (pos&Top)            // inside top
                 newY = ref.top + padding;

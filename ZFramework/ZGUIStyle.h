@@ -46,5 +46,6 @@ extern ZGUI::Style  gStyleCaption;
 extern ZGUI::Style  gStyleButton;
 extern ZGUI::Style  gStyleToggleChecked;
 extern ZGUI::Style  gStyleToggleUnchecked;
+extern ZGUI::Style  gStyleGeneralText;
 
 

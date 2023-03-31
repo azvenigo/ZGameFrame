@@ -114,17 +114,24 @@ bool ZWinTextEdit::Init()
 bool ZWinTextEdit::OnMouseDownL(int64_t x, int64_t y)
 {
     SetCapture();
+    if (mbSelecting)
+        CancelSelecting();
 
-    int64_t nPixelsIntoString = (x - mrVisibleTextArea.left)+mnViewOffset;
-    int64_t i;
-    for (i = 0; i < mpText->length() && mStyle.Font()->StringWidth(mpText->substr(0, i)) < nPixelsIntoString; i++);
-
-    HandleCursorMove(i, false);
+    HandleCursorMove(WindowToTextPosition(x), false);
 
     mbMouseDown = true;
 
     return ZWin::OnMouseDownL(x, y);
 }
+
+int64_t ZWinTextEdit::WindowToTextPosition(int64_t x)
+{
+    int64_t nPixelsIntoString = (x - mrVisibleTextArea.left) + mnViewOffset-StyleOffset();
+    int64_t i;
+    for (i = 0; i < (int64_t)mpText->length() && mStyle.Font()->StringWidth(mpText->substr(0, i)) < nPixelsIntoString; i++);
+    return i;
+}
+
 
 bool ZWinTextEdit::OnMouseUpL(int64_t x, int64_t y)
 {
@@ -139,11 +146,7 @@ bool ZWinTextEdit::OnMouseMove(int64_t x, int64_t y)
     {
         StartSelecting();
 
-        int64_t nPixelsIntoString = (x - mrVisibleTextArea.left) + mnViewOffset;
-        int64_t i;
-        for (i = 0; i < mpText->length() && mStyle.Font()->StringWidth(mpText->substr(0, i)) < nPixelsIntoString; i++);
-
-        HandleCursorMove(i, false);
+        HandleCursorMove(WindowToTextPosition(x), false);
     }
 
     return ZWin::OnMouseMove(x, y);
@@ -183,16 +186,26 @@ bool ZWinTextEdit::Paint()
     if (!mbInvalid)
         return false;
 
-    ZRect rOut(mrVisibleTextArea.left, mrVisibleTextArea.top, mrVisibleTextArea.right+mStyle.Font()->StringWidth(*mpText), mrVisibleTextArea.bottom);
-    rOut.OffsetRect(-mnViewOffset, 0);
+    int64_t nWidth = mStyle.Font()->StringWidth(*mpText);
+    ZRect rOut(mrVisibleTextArea.left-StyleOffset(), mrVisibleTextArea.top, mrVisibleTextArea.right+StyleOffset(), mrVisibleTextArea.bottom);
+
+    ZGUI::ePosition posToUse = mStyle.pos;
+    if (nWidth > mrVisibleTextArea.Width())
+    {
+        rOut.OffsetRect(-mnViewOffset, 0);
+        posToUse = (ZGUI::ePosition)((uint32_t)mStyle.pos & ~ZGUI::HC | ZGUI::L);  // remove horizontal center and left justify
+    }
+
+
+    ZRect rString(mStyle.Font()->GetOutputRect(rOut, (uint8_t*)mpText->c_str(), mpText->length(), posToUse, 0));
 
     mpTransformTexture.get()->Fill(mAreaToDrawTo, mStyle.bgCol);
 
-    mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), *mpText, rOut, mStyle.look, mStyle.pos, &mAreaToDrawTo);
+    mStyle.Font()->DrawText(mpTransformTexture.get(), *mpText, rString, mStyle.look, &mAreaToDrawTo);
 
     if (mnSelectionStart != mnSelectionEnd &&
         mnSelectionStart >= 0 && mnSelectionEnd >= 0 &&
-        mnSelectionStart <= mpText->length() && mnSelectionEnd <= mpText->length())
+        mnSelectionStart <= (int64_t)mpText->length() && mnSelectionEnd <= (int64_t)mpText->length())
     {
         int64_t nMin = min<int64_t>(mnSelectionStart, mnSelectionEnd);
         int64_t nMax = max<int64_t>(mnSelectionStart, mnSelectionEnd);
@@ -200,7 +213,7 @@ bool ZWinTextEdit::Paint()
         int64_t nWidthBefore = mStyle.Font()->StringWidth(mpText->substr(0, nMin));
         int64_t nWidthHighlighted = mStyle.Font()->StringWidth(mpText->substr(nMin, nMax - nMin));
         ZRect rHighlight(0, mrVisibleTextArea.top, nWidthHighlighted, mrVisibleTextArea.bottom);
-        rHighlight.OffsetRect(nWidthBefore- mnViewOffset, 0);
+        rHighlight.OffsetRect(mrVisibleTextArea.left+nWidthBefore- mnViewOffset+StyleOffset(), 0);
         rHighlight.IntersectRect(mrVisibleTextArea);
         mpTransformTexture.get()->FillAlpha(rHighlight, 0x8800ffff);
     }
@@ -219,15 +232,15 @@ int64_t ZWinTextEdit::FindNextBreak(int64_t nDir)
     if (nDir > 0)
     {
         nCursor++;
-        if (nCursor < mpText->length())
+        if (nCursor < (int64_t)mpText->length())
         {
             if (isalnum((int)(*mpText)[nCursor]))   // cursor is on an alphanumeric
             {
-                while (nCursor < mpText->length() && isalnum((int)(*mpText)[nCursor]))   // while an alphanumeric character, skip
+                while (nCursor < (int64_t)mpText->length() && isalnum((int)(*mpText)[nCursor]))   // while an alphanumeric character, skip
                     nCursor++;
             }
 
-            while (nCursor < mpText->length() && isblank((int)(*mpText)[nCursor]))    // while whitespace, skip
+            while (nCursor < (int64_t)mpText->length() && isblank((int)(*mpText)[nCursor]))    // while whitespace, skip
                 nCursor++;
         }
     }
@@ -254,8 +267,8 @@ int64_t ZWinTextEdit::FindNextBreak(int64_t nDir)
 
     if (nCursor < 0)
         return 0;
-    if (nCursor > mpText->length())
-        return mpText->length();
+    if (nCursor > (int64_t)mpText->length())
+        return (int64_t)mpText->length();
 
     return nCursor;
 }
@@ -263,9 +276,6 @@ int64_t ZWinTextEdit::FindNextBreak(int64_t nDir)
 
 bool ZWinTextEdit::OnChar(char c)
 {
-    if (mbSelecting)
-        DeleteSelection();
-
     switch (c)
     {
 
@@ -275,6 +285,9 @@ bool ZWinTextEdit::OnChar(char c)
     default:
         if (!mbCTRLDown && c > 31 && c < 128)   // only specific chars
         {
+            if (mbSelecting)
+                DeleteSelection();
+
             mpText->insert(mCursorPosition, 1, c);
             HandleCursorMove(mCursorPosition + 1);
         }
@@ -375,7 +388,7 @@ bool ZWinTextEdit::OnKeyDown(uint32_t c)
         {
             DeleteSelection();
         }
-        else if (mCursorPosition < mpText->size())
+        else if (mCursorPosition < (int64_t)mpText->size())
         {
             mpText->erase(mCursorPosition, 1);
             HandleCursorMove(mCursorPosition);
@@ -404,6 +417,7 @@ bool ZWinTextEdit::OnKeyDown(uint32_t c)
             mnSelectionEnd = mpText->length();
             mbSelecting = true;
         }
+        break;
     case 'c':
     case 'C':
         if (mbCTRLDown)
@@ -455,7 +469,7 @@ void ZWinTextEdit::HandleCursorMove(int64_t newCursorPos, bool bScrollView)
             if (nNewVisiblePixelsToCursor <= mnLeftBoundary && mnViewOffset > 0)  // crossing left
             {
                 // adjust view to put cursor at boundary
-                mnViewOffset = nNewAbsPixelsToCursor - mnLeftBoundary;
+                mnViewOffset = mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnLeftBoundary + StyleOffset();
             }
         }
         else // moving right
@@ -464,7 +478,7 @@ void ZWinTextEdit::HandleCursorMove(int64_t newCursorPos, bool bScrollView)
             {
                 if (nNewVisiblePixelsToCursor > mnRightBoundary) // moving right but cursor not at end... adjust 
                 {
-                    mnViewOffset = nNewAbsPixelsToCursor - mnRightBoundary;
+                    mnViewOffset = mrVisibleTextArea.left + nNewAbsPixelsToCursor - mnRightBoundary + StyleOffset();
                 }
             }
             else
@@ -472,21 +486,21 @@ void ZWinTextEdit::HandleCursorMove(int64_t newCursorPos, bool bScrollView)
                 // cursor at end
                 if (nNewVisiblePixelsToCursor > mrVisibleTextArea.right)
                 {
-                    mnViewOffset = nNewAbsPixelsToCursor - mrVisibleTextArea.right;
+                    mnViewOffset = mrVisibleTextArea.left + nNewAbsPixelsToCursor - mrVisibleTextArea.right+StyleOffset();
                 }
             }
         }
 
         if (mnViewOffset < 0)
             mnViewOffset = 0;
-        else if (mnViewOffset > 0 && mnViewOffset > nAbsStringPixels - mrVisibleTextArea.Width())
-            mnViewOffset = nAbsStringPixels - mrVisibleTextArea.Width();
+        else if (mnViewOffset > 0 && mnViewOffset > nAbsStringPixels - mrVisibleTextArea.Width() + StyleOffset())
+            mnViewOffset = nAbsStringPixels - mrVisibleTextArea.Width() + StyleOffset();
     }
 
 
-    mrCursorArea.SetRect(nNewAbsPixelsToCursor - mnViewOffset, mrVisibleTextArea.top, nNewAbsPixelsToCursor - mnViewOffset + 2, mrVisibleTextArea.bottom);
+    mrCursorArea.SetRect(mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset+StyleOffset(), mrVisibleTextArea.top, mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset + mrVisibleTextArea.Height()/32 + StyleOffset(), mrVisibleTextArea.bottom);
 
-    if (newCursorPos >= 0 && newCursorPos <= mpText->length())
+    if (newCursorPos >= 0 && newCursorPos <= (int64_t)mpText->length())
     {
         mCursorPosition = newCursorPos;
 
@@ -497,4 +511,21 @@ void ZWinTextEdit::HandleCursorMove(int64_t newCursorPos, bool bScrollView)
         }
     }
     Invalidate();
+}
+
+int64_t ZWinTextEdit::StyleOffset()
+{
+    if (mStyle.pos & ZGUI::HC)
+    {
+        int64_t nTextWidth = mStyle.Font()->StringWidth(*mpText);
+
+
+        // if the string is larger than the view width, treat it as a left justified
+        if (nTextWidth > mrVisibleTextArea.Width())
+            return 0;
+
+        int64_t nOffset = (mrVisibleTextArea.Width() - nTextWidth) / 2;
+        return nOffset;
+    }
+    return 0;
 }

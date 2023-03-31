@@ -526,9 +526,11 @@ bool ZChessWin::Init()
 
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
 
-        mpStatusWin = new ZWinLabel();
-        mpStatusWin->msText = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::C, 0, gDefaultTextAreaFill, true);
+        //mpStatusWin = new ZWinLabel();
+        mpStatusWin = new ZWinTextEdit(&msStatus);
+        //mpStatusWin->msText = "Welcome to ZChess";
+        msStatus = "Welcome to ZChess";
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::C, gDefaultSpacer, gDefaultTextAreaFill, false);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer));
         ChildAdd(mpStatusWin);
     }
@@ -594,7 +596,7 @@ void ZChessWin::UpdateSize()
     {
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer));
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::LT, 0, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::LT, gDefaultSpacer, gDefaultTextAreaFill, true);
     }
 
 
@@ -1005,7 +1007,8 @@ void ZChessWin::UpdateStatus(const std::string& sText, uint32_t col)
 {
     if (mpStatusWin)
     {
-        mpStatusWin->msText = sText;
+        //mpStatusWin->msText = sText;
+        msStatus = sText;
         mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight/2, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::LT, 0, gDefaultTextAreaFill, true);
         mpStatusWin->Invalidate();
     }

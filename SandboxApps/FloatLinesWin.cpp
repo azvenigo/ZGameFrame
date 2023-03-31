@@ -2,7 +2,7 @@
 #include "ZBuffer.h"
 #include "ZTypes.h"
 #include "ZMessageSystem.h"
-#include "ZAnimObjects.h"
+//#include "ZAnimObjects.h"
 #include "ZGraphicSystem.h"
 #include "Resources.h"
 #include "ZStringHelpers.h"
@@ -417,26 +417,6 @@ bool cFloatLinesWin::RandomizeSettings()
     mbReset = false;
     //mnTimeStampOfReset = ::GetTickCount();
     mnTimeStampOfReset = gTimer.GetMSSinceEpoch();
-
-
-    /*	cCEAnimObject_TextMover* pTextMover = new cCEAnimObject_TextMover(gpFontSystem->GetDefaultFont(5));
-
-        string sScore;
-        sScore.Sprintf("1234567890");
-
-        ZRect rText = gpFontSystem->GetDefaultFont(5)->GetOutputRect(GetArea(), sScore.c_str(), sScore.length(), cCEFont::kMiddleCenter);
-
-        pTextMover->SetText(sScore, 0xff2255ff, true);
-        pTextMover->SetLocation(rText.left, rText.top);
-        pTextMover->SetAlphaFade(255, 0, 5000);
-        pTextMover->SetPixelsPerSecond(0.0f,-25.0f);
-
-        mAnimator.KillAllObjects();
-        mAnimator.AddObject(pTextMover);*/
-
-
-
-
 
     return true;
 }

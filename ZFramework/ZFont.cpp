@@ -674,7 +674,7 @@ ZRect ZFont::GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars,
 	ZRect rText(0,0, StringWidth(string((char*)pChars,nNumChars)), mFontParams.nHeight);
 	rArea.DeflateRect(nPadding, nPadding);
 
-	int64_t nXCenter = rArea.left + (rArea.Width()  - rText.Width())/2;
+/*	int64_t nXCenter = rArea.left + (rArea.Width()  - rText.Width())/2;
 	int64_t nYCenter = rArea.top  + (rArea.Height() - mFontParams.nHeight)/2;
 
 	switch (pos)
@@ -710,7 +710,9 @@ ZRect ZFont::GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars,
 		break;
 	}
 
-	return rText;
+	return rText;*/
+
+    return ZGUI::Arrange(rText, rArea, pos, nPadding);
 }
 
 bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, const ZTextLook& look, ZGUI::ePosition pos, ZRect* pClip)

@@ -41,6 +41,7 @@ ZGUI::Style     gStyleCaption(ZFontParams("Gadugi", 36, 400), ZTextLook(ZTextLoo
 ZGUI::Style     gStyleButton(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, 0, gDefaultDialogFill);
 ZGUI::Style     gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, 0, gDefaultDialogFill);
 ZGUI::Style     gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, 0, gDefaultDialogFill);
+ZGUI::Style     gStyleGeneralText(ZFontParams("Verdana", 30), ZTextLook(ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, 0, 0, true);
 
 cResources::cResources()
 {

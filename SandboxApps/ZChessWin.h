@@ -177,7 +177,9 @@ private:
     ZRect mrPaletteArea;
     ZWinSizablePushBtn*     mpSwitchSidesButton;
 
-    ZWinLabel*              mpStatusWin;
+    //ZWinLabel*              mpStatusWin;
+    ZWinTextEdit*           mpStatusWin;
+    std::string             msStatus;
 
 
     ChessPiece              mPieceData[128]; // keyed by ascii chars for pieces, 'r', 'Q', 'P', etc.

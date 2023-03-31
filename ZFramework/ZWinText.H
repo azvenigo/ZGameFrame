@@ -78,6 +78,9 @@ protected:
     void            HandleCursorMove(int64_t newCursorPos, bool bScrollView = true);
     int64_t         FindNextBreak(int64_t nDir);
     void            ConstrainCursorPosition();
+    int64_t         StyleOffset();      // if style is centered, helps compute view offset
+
+    int64_t         WindowToTextPosition(int64_t x);
 
     int64_t         mCursorPosition;
     int64_t         mnViewOffset;
