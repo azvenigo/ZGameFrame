@@ -8,7 +8,7 @@
 #include "ZWinText.H"
 #include <list>
 
-
+class ZWinControlPanel;
 
 class ChessPiece
 {
@@ -175,7 +175,6 @@ private:
     ZRect mrBoardArea;
 
     ZRect mrPaletteArea;
-    ZWinSizablePushBtn*     mpSwitchSidesButton;
 
     //ZWinLabel*              mpStatusWin;
     ZWinTextEdit*           mpStatusWin;
@@ -193,6 +192,7 @@ private:
     ZPiecePromotionWin*     mpPiecePromotionWin;
     ZPGNWin* mpPGNWin;
     ZChoosePGNWin*          mpChoosePGNWin;
+    ZWinControlPanel*       mpEditBoardWin;
 
     std::vector<ChessBoard> mHistory;   // boards for each move in pgn history, etc.
     std::recursive_mutex    mHistoryMutex;

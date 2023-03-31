@@ -38,6 +38,8 @@ void ZWinControlPanel::FitToControls()
 
 ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const std::string& sMessage, const ZGUI::Style& style)
 {
+    ZASSERT(mbInitted);
+
     ZWinSizablePushBtn* pBtn;
 
     pBtn = new ZWinSizablePushBtn();
@@ -55,6 +57,8 @@ ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const st
 
 ZWinLabel* ZWinControlPanel::AddCaption(const std::string& sCaption, const ZGUI::Style& style)
 {
+    ZASSERT(mbInitted);
+
     ZWinLabel* pWin = new ZWinLabel();
     pWin->msText = sCaption;
     pWin->mStyle = style;
@@ -69,6 +73,8 @@ ZWinLabel* ZWinControlPanel::AddCaption(const std::string& sCaption, const ZGUI:
 
 ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, const std::string& sRadioGroup, const ZGUI::Style& checkedStyle, const ZGUI::Style& uncheckedStyle)
 {
+    ZASSERT(mbInitted);
+
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
     pCheck->SetRadioGroup(sRadioGroup);
@@ -104,7 +110,7 @@ bool ZWinControlPanel::Paint()
     if (!mbVisible)
         return false;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, gDefaultDialogFill);
+    mpTransformTexture->Fill(mAreaToDrawTo, mStyle.bgCol);
 
     return ZWin::Paint();
 }

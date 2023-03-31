@@ -220,7 +220,7 @@ bool ZWinTextEdit::Paint()
 
 
     if (mbCursorVisible)
-        mpTransformTexture.get()->Fill(mrCursorArea, 0xffffffff);
+        mpTransformTexture.get()->Fill(mrCursorArea, mStyle.look.colTop);
 
     return ZWin::Paint();
 }

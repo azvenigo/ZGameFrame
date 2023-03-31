@@ -16,7 +16,7 @@ class ZWinLabel;
 class ZWinControlPanel : public ZWin
 {
 public:
-    ZWinControlPanel() : mbHideOnMouseExit(false) {}
+    ZWinControlPanel() : mbHideOnMouseExit(false), mStyle(gDefaultDialogStyle) {}
 
     virtual bool        Init();
 
@@ -51,6 +51,8 @@ public:
     bool                Process();
     bool		        Paint();
 
+
+    ZGUI::Style         mStyle;
 
 private:
     ZRect   mrTrigger;

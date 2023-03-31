@@ -446,7 +446,7 @@ ZChessWin::ZChessWin()
     mpPiecePromotionWin = nullptr;
     mpPGNWin = nullptr;
     mpChoosePGNWin = nullptr;
-    mpSwitchSidesButton = nullptr;
+    mpEditBoardWin = nullptr;
     mpStatusWin = nullptr;
     mbDemoMode = false;
     mnDemoModeNextMoveTimeStamp = 0;
@@ -491,22 +491,41 @@ bool ZChessWin::Init()
         ZTextLook buttonLook(ZTextLook::kEmbossed, 0xff737373, 0xff737373);
         ZTextLook checkedButtonLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73);
 
-        pCP->AddCaption("Piece Height");
-        pCP->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, gStyleButton.Font());
-        pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "");
+        ZWin* pEditButton = pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "");
 
-        pCP->AddButton("Clear Board", ZMessage("clearboard", this));
-        pCP->AddButton("Reset Board", ZMessage("resetboard", this));
-        pCP->AddSpace(panelH / 30);
 
         pCP->AddSpace(panelH / 30);
         pCP->AddButton("Load Random Game", ZMessage("randgame", this));
         pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg, "");
 
-        pCP->AddCaption("Playback Speed");
+        pCP->AddCaption("Animation Speed");
         pCP->AddSlider(&mAutoplayMSBetweenMoves, kAutoplayMinMSBetweenMoves, kAutoplayMaxMSBetweenMoves, 1);
 
         ChildAdd(pCP);
+
+
+        ZRect rEditBoard(rControlPanel);
+        rEditBoard.OffsetRect(0, pEditButton->GetArea().bottom + gDefaultSpacer);
+        mpEditBoardWin = new ZWinControlPanel();
+        mpEditBoardWin->SetArea(rEditBoard);
+        mpEditBoardWin->Init();
+
+        mpEditBoardWin->mStyle.bgCol = 0xff737373;
+
+        mpEditBoardWin->AddCaption("Size");
+        mpEditBoardWin->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, gStyleButton.Font());
+
+        mpEditBoardWin->AddSpace(panelH / 30);
+
+        mpEditBoardWin->AddButton("Clear", ZMessage("clearboard", this));
+        mpEditBoardWin->AddButton("Reset", ZMessage("resetboard", this));
+
+        mpEditBoardWin->AddSpace(panelH / 30);
+        mpEditBoardWin->AddButton("Change Turn", ZMessage("changeturn", this));
+
+        ChildAdd(mpEditBoardWin, false);
+
+
 
 
         mpPGNWin = new ZPGNWin();
@@ -515,22 +534,13 @@ bool ZChessWin::Init()
         mpPGNWin->SetArea(rPGNPanel);
         ChildAdd(mpPGNWin);
 
-        mpSwitchSidesButton = new ZWinSizablePushBtn();
-        mpSwitchSidesButton->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-        mpSwitchSidesButton->SetArea(ZRect(0, 0, mnPieceHeight*1.5, mnPieceHeight / 1.5));
-        mpSwitchSidesButton->SetCaption("Change Turn");
-        mpSwitchSidesButton->SetMessage(ZMessage("changeturn", this));
-        mpSwitchSidesButton->mStyle = ZGUI::Style(gStyleButton.fp, ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xff000000));
-        ChildAdd(mpSwitchSidesButton, false);
-
-
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
 
         //mpStatusWin = new ZWinLabel();
         mpStatusWin = new ZWinTextEdit(&msStatus);
         //mpStatusWin->msText = "Welcome to ZChess";
         msStatus = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::C, gDefaultSpacer, gDefaultTextAreaFill, false);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZTextLook(ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, gDefaultSpacer, gDefaultTextAreaFill, false);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer));
         ChildAdd(mpStatusWin);
     }
@@ -588,9 +598,6 @@ void ZChessWin::UpdateSize()
     mnPalettePieceHeight = mnPieceHeight * 8 / 12;      // 12 possible pieces drawn over 8 squares
 
     mrPaletteArea.SetRect(mrBoardArea.right, mrBoardArea.top, mrBoardArea.right + mnPalettePieceHeight, mrBoardArea.bottom);
-
-    if (mpSwitchSidesButton)
-        mpSwitchSidesButton->Arrange(ZGUI::OLIC, mrBoardArea, gDefaultSpacer);
 
     if (mpStatusWin)
     {
@@ -1042,6 +1049,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         mBoard.ClearBoard();
         if (mpPGNWin)
             mpPGNWin->Clear();
+        msStatus.clear();
         InvalidateChildren();
         return true;
     }
@@ -1051,6 +1059,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         ClearHistory();
         if (mpPGNWin)
             mpPGNWin->Clear();
+        msStatus.clear();
         InvalidateChildren();
         return true;
     }
@@ -1111,8 +1120,8 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "toggleeditmode")
     {
-        mpSwitchSidesButton->Arrange(ZGUI::OLIC, mrBoardArea, gDefaultSpacer);
-        mpSwitchSidesButton->SetVisible(mbEditMode);
+        mpEditBoardWin->SetVisible(mbEditMode);
+        mpPGNWin->SetVisible(!mbEditMode);
         Invalidate();
         return true;
     }
