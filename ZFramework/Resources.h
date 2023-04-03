@@ -29,6 +29,7 @@ extern bool			gbFullScreen;
 extern tZBufferPtr  gDefaultDialogBackground;
 extern tZBufferPtr  gDimRectBackground;
 extern ZRect		grTextArea;
+extern ZRect        grDefaultDialogBackgroundEdgeRect;
 
 
 // Buttons

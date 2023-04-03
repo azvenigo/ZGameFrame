@@ -166,44 +166,41 @@ bool ZCEAnimObject_Sparkler::Paint()
 		{
 			ZFPoint& point = *pointIt;
 
-			//         Uint8 nColG = (Uint8) ((fBrightness) * 255.0f);
-			//         uint16_t nCol = mpBufferToDrawTo->ConvertRGB(255, nColG, 0);        // ramps from yellow to red as fBrightness decreases
-
 			int64_t nX = (int64_t) point.x;
 			int64_t nY = (int64_t) point.y;
 			if (pClip->PtInRect(nX, nY))
 			{
 				uint32_t* pBits = pDest + nY * nStride + nX;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = mpDestination->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
+				*pBits = COL::AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX+1, nY))
 			{
 				uint32_t* pBits = pDest + nY * nStride + nX+1;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = mpDestination->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
+				*pBits = COL::AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX-1, nY))
 			{
 				uint32_t* pBits = pDest + nY * nStride + nX-1;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = mpDestination->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
+				*pBits = COL::AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX, nY-1))
 			{
 				uint32_t* pBits = pDest + ((nY-1) * nStride) + nX;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = mpDestination->AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
+				*pBits = COL::AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX, nY+1))
 			{
 				uint32_t* pBits = pDest + ((nY+1) * nStride) + nX;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
-				*pBits = mpDestination->AlphaBlend_AddAlpha(0x8800FFFF, *pBits, nB1);
+				*pBits = COL::AlphaBlend_AddAlpha(0x8800FFFF, *pBits, nB1);
 			}
 
 			fBrightness *= 0.998f;

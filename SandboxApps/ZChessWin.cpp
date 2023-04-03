@@ -950,7 +950,7 @@ void ZChessWin::DrawBoard()
             uint32_t nSquareColor = SquareColor(grid);
             sMove lastMove = mBoard.GetLastMove();
             if (grid == lastMove.mSrc || grid == lastMove.mDest)
-                nSquareColor = ZBuffer::AlphaBlend_BlendAlpha(nSquareColor, 0xff0088ff, 128);
+                nSquareColor = COL::AlphaBlend_BlendAlpha(nSquareColor, 0xff0088ff, 128);
 
 
             mpTransformTexture->Fill(SquareArea(grid), nSquareColor);

@@ -406,7 +406,7 @@ bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, t
 			int64_t nTextureY = (int64_t) (fTextureV * fTextureH);
 			uint32_t nSourceCol = *(pSourcePixels + nTextureY*nTextureStride + nTextureX);
 			if (ARGB_A(nSourceCol) > 0)
-				*pDestPixels = pDestination->AlphaBlend_Col2Alpha(nSourceCol, *pDestPixels, nAlpha);
+				*pDestPixels = COL::AlphaBlend_Col2Alpha(nSourceCol, *pDestPixels, nAlpha);
 			pDestPixels++;
 			fTextureU += fTextureDX;
 			fTextureV += fTextureDV;

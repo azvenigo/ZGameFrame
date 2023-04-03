@@ -8,6 +8,7 @@
 #include "ZXMLNode.h"
 #include "ZWinControlPanel.h"
 #include "helpers/StringHelpers.h"
+#include "ZWinPaletteDialog.h"
 #include "Resources.h"
 
 #ifdef _WIN64        // for open/save file dialong
@@ -88,6 +89,7 @@ bool TextTestWin::Init()
     mbAcceptsFocus = true;
 
     mIdleSleepMS = 10000;
+    mFontColor = 0xff88ff88;
 
     msText = "Type here";
 
@@ -180,6 +182,8 @@ bool TextTestWin::Init()
     pCP->Init();
 
     ZTextLook captionLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
+
+    pCP->AddButton("Color", ZMessage("choosecolor", this), gStyleButton);
 
     pCP->AddCaption("Height");
 
@@ -385,6 +389,11 @@ bool TextTestWin::HandleMessage(const ZMessage& message)
     else if (sType == "savefont")
     {
         SaveFont();
+        return true;
+    }
+    else if (sType == "choosecolor")
+    {
+        ZWinPaletteDialog::ShowPaletteDialog("testcaption", ColorWatch(&mFontColor));
         return true;
     }
 #endif

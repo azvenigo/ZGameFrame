@@ -25,4 +25,6 @@ protected:
 	void  			ShowMainMenu();
 };
 
+extern ZMainWin* gpMainWin;
+
 

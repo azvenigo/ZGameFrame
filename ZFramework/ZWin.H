@@ -5,6 +5,7 @@
 #include "ZMessageSystem.h"
 #include "ZTransformable.h"
 #include "ZGUIHelpers.h"
+#include "ZGUIStyle.h"
 #include <mutex>
 #ifdef _WIN64
 #include "windows.h"		// Virtual Key Defs
@@ -72,7 +73,7 @@ public:
 	
 	virtual void		Arrange(ZGUI::ePosition pos, const ZRect &outerRect, int64_t padding = 0);
 	
-//	virtual void		MoveTo(int64_t newX, int64_t newY);
+	virtual void		MoveTo(int64_t newX, int64_t newY);
 //	virtual void		OffsetTo(int64_t deltaX, int64_t deltaY);
 	
 	virtual void		ScreenToWindowCoordinates(int64_t& x, int64_t& y);
@@ -192,6 +193,45 @@ private:
 	static ZWin*					mpFocusWin;	
 	static ZWin*					mpMouseOverWin;
 };
+
+
+
+
+class ZWinDialog : public ZWin
+{
+public:
+    enum eBehavior : uint8_t
+    {
+        None = 0,
+        Draggable           = 1,        // 1   
+        OKButton            = 1 << 1,   // 2
+        CancelButton        = 1 << 2,   // 4
+    };
+
+    ZWinDialog();
+
+    virtual	bool		Init();
+    virtual bool		OnMouseDownL(int64_t x, int64_t y);
+    virtual bool		OnMouseUpL(int64_t x, int64_t y);
+    virtual bool		OnMouseMove(int64_t x, int64_t y);
+    virtual bool        HandleMessage(const ZMessage& message);
+
+    virtual bool		OnKeyDown(uint32_t key);
+
+protected:
+    virtual bool		Paint();
+    void                OnOK();
+    void                OnCancel();
+
+//    virtual bool        Process();
+
+
+public:
+    uint8_t     mBehavior;
+    ZGUI::Style mStyle;
+};
+
+
 
 
 inline

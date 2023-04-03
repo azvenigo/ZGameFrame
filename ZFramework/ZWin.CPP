@@ -3,10 +3,14 @@
 #include "ZDebug.h"
 #include "ZGraphicSystem.h"
 #include "helpers/StringHelpers.h"
+#include "ZGUIHelpers.h"
+#include "ZGUIStyle.h"
 #include "ZAnimObjects.h"
 #include "ZAnimator.h"
 #include "ZXMLNode.h"
 #include "ZTimer.h"
+#include "ZWinBtn.H"
+#include "Resources.h"
 #include <iostream>
 #include "ZScreenBuffer.h"
 
@@ -777,12 +781,12 @@ void ZWin::SetArea( const ZRect& area )
     CalcAbsoluteArea();
 }
 
-/*void  ZWin::MoveTo(int64_t newX, int64_t newY) 
+void  ZWin::MoveTo(int64_t newX, int64_t newY) 
 {
-	SetArea(newX, newY, newX+mArea.Width(), newY+mArea.Height());
+	SetArea(ZRect(newX, newY, newX+mArea.Width(), newY+mArea.Height()));
 }
 
-void  ZWin::OffsetTo(int64_t deltaX, int64_t deltaY) 
+/*void  ZWin::OffsetTo(int64_t deltaX, int64_t deltaY) 
 {
 	SetArea( mArea.left + deltaX, mArea.top + deltaY, mArea.right + deltaX, mArea.bottom + deltaY );
 }
@@ -863,4 +867,134 @@ bool ZWin::WindowThreadProc(void* pContext)
 
 	return true;
 }
+
+
+
+ZWinDialog::ZWinDialog() : mStyle(gDefaultDialogStyle), mBehavior(eBehavior::None)
+{
+    mbAcceptsCursorMessages = true;
+    mbAcceptsFocus = true;
+}
+
+bool ZWinDialog::Init()
+{
+    ZRect rButton(0, 0, gDefaultSpacer * 8, gDefaultSpacer * 3);
+    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gDefaultSpacer);
+
+
+    if (mBehavior & eBehavior::CancelButton)
+    {
+        ZWinSizablePushBtn* pBtn;
+
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+        pBtn->SetCaption("Cancel");
+        pBtn->SetMessage(ZMessage("dlg_cancel", this));
+        pBtn->mStyle = gStyleButton;
+        pBtn->SetArea(rButton);
+        ChildAdd(pBtn);
+
+        rButton.OffsetRect(-rButton.Width() - gDefaultSpacer, 0);
+    }
+
+    if (mBehavior & eBehavior::OKButton)
+    {
+        ZWinSizablePushBtn* pBtn;
+
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+        pBtn->SetCaption("OK");
+        pBtn->SetMessage(ZMessage("dlg_ok", this));
+        pBtn->mStyle = gStyleButton;
+
+        pBtn->SetArea(rButton);
+        ChildAdd(pBtn);
+    }
+
+    return ZWin::Init();
+}
+
+bool ZWinDialog::Paint()
+{
+    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch);
+
+    return false;
+}
+
+bool ZWinDialog::OnMouseDownL(int64_t x, int64_t y)
+{
+    if ((mBehavior & eBehavior::Draggable) && SetCapture())
+    {
+        SetMouseDownPos(x, y);
+    }
+    return ZWin::OnMouseDownL(x, y);
+}
+
+bool ZWinDialog::OnMouseUpL(int64_t x, int64_t y)
+{
+    ReleaseCapture();
+    return ZWin::OnMouseUpL(x, y);
+}
+
+bool ZWinDialog::OnMouseMove(int64_t x, int64_t y)
+{
+    if (AmCapturing())
+    {
+        WindowToScreenCoordinates(x, y);
+
+        MoveTo(x - mMouseDownOffset.x, y - mMouseDownOffset.y);
+    }
+    return ZWin::OnMouseMove(x, y);
+}
+
+bool ZWinDialog::HandleMessage(const ZMessage& message)
+{
+    string sType = message.GetType();
+    if (sType == "dlg_ok")
+    {
+        OnOK();
+        return true;
+    }
+    else if (sType == "dlg_cancel")
+    {
+        OnCancel();
+        return true;
+    }
+
+
+    return ZWin::HandleMessage(message);
+}
+
+bool ZWinDialog::OnKeyDown(uint32_t key)
+{
+    switch (key)
+    {
+    case VK_ESCAPE:
+        OnCancel();
+        return true;
+    case VK_RETURN:
+        OnOK();
+        return true;
+    }
+
+    return ZWin::OnKeyDown(key);
+}
+
+void ZWinDialog::OnOK()
+{
+    // TODO, post whatever needed on ok
+
+    // post close
+
+    gMessageSystem.Post("kill_window", "name", msWinName);
+
+}
+
+void ZWinDialog::OnCancel()
+{
+    gMessageSystem.Post("kill_window", "name", msWinName);
+}
+
+
+
 

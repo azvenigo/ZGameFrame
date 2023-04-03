@@ -322,9 +322,9 @@ bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType
 			else if (nAlpha >= 5)
 			{
 				if (type == kAlphaDest)
-					*pDstBits = AlphaBlend_Col2Alpha(*pSrcBits, *pDstBits, nAlpha);
+					*pDstBits = COL::AlphaBlend_Col2Alpha(*pSrcBits, *pDstBits, nAlpha);
 				else
-					*pDstBits = AlphaBlend_Col1Alpha(*pSrcBits, *pDstBits, nAlpha);
+					*pDstBits = COL::AlphaBlend_Col1Alpha(*pSrcBits, *pDstBits, nAlpha);
 			}
 
 			pSrcBits++;
@@ -362,9 +362,9 @@ bool ZBuffer::BltAlphaNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, uint32_t n
 			if (ARGB_A(nColSrc) != 0)
 			{
 				if (type == kAlphaDest)
-					*pDstBits = AlphaBlend_Col2Alpha(*pSrcBits, *pDstBits, nAlpha);
+					*pDstBits = COL::AlphaBlend_Col2Alpha(*pSrcBits, *pDstBits, nAlpha);
 				else
-					*pDstBits = AlphaBlend_Col1Alpha(*pSrcBits, *pDstBits, nAlpha);
+					*pDstBits = COL::AlphaBlend_Col1Alpha(*pSrcBits, *pDstBits, nAlpha);
 			}
 
 			pSrcBits++;
@@ -520,7 +520,7 @@ bool ZBuffer::FillAlpha(ZRect& rDst, uint32_t nCol)
 				uint32_t* pDstBits = (uint32_t*) (mpPixels + ((y + rDst.top) * nDstStride) + rDst.left);
 				for (int64_t x = 0; x < nFillWidth; x++)
 				{
-					*pDstBits++ = AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
+					*pDstBits++ = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
 				}
 			}
 		}
@@ -530,18 +530,6 @@ bool ZBuffer::FillAlpha(ZRect& rDst, uint32_t nCol)
 }
 
 
-inline uint32_t ZBuffer::ConvertRGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
-{
-	return ARGB(a, r, g, b);
-}
-
-inline void ZBuffer::ConvertToRGB(uint32_t col, uint8_t& a, uint8_t& r, uint8_t& g, uint8_t& b)
-{
-	a = ARGB_A(col);
-	r = (uint8_t) (ARGB_R(col));
-	b = (uint8_t) (ARGB_B(col));
-	g = (uint8_t) (ARGB_G(col));
-}
 
 
 
@@ -839,14 +827,14 @@ void ZBuffer::FillInSpan(uint32_t* pDest, int64_t nNumPixels, double fR, double 
 		uint8_t nCurR;
 		uint8_t nCurG;
 		uint8_t nCurB;
-		ConvertToRGB(*pDest, nCurA, nCurR, nCurG, nCurB);
+		*pDest = ARGB(nCurA, nCurR, nCurG, nCurB);
 
 
 		uint8_t nDestR = static_cast<uint8_t>((uint32_t) ((fR * fA + (nCurR * (255.0f-fA)))) >> 8);
 		uint8_t nDestG = static_cast<uint8_t>((uint32_t) ((fG * fA + (nCurG * (255.0f-fA)))) >> 8);
 		uint8_t nDestB = static_cast<uint8_t>((uint32_t) ((fB * fA + (nCurB * (255.0f-fA)))) >> 8);
 
-		*pDest = ConvertRGB(255, nDestR, nDestG, nDestB);
+		*pDest = ARGB(255, nDestR, nDestG, nDestB);
 
 		pDest++;
 		nNumPixels--;

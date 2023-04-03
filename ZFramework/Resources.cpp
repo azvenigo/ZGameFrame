@@ -19,6 +19,7 @@ ZRect			grTextArea;
 uint32_t        gDefaultDialogFill(0xff575757);
 uint32_t        gDefaultTextAreaFill(0xff888888);
 uint32_t        gDefaultSpacer(16);
+ZRect           grDefaultDialogBackgroundEdgeRect(3,3,53,52);
 
 ZRect			grSliderBgEdge(gDefaultSpacer, gDefaultSpacer, gDefaultSpacer*3, gDefaultSpacer*3);
 ZRect			grSliderThumbEdge(9, 8, 43, 44);
@@ -70,6 +71,12 @@ bool cResources::Init(const string& sDefaultResourcePath)
     gDefaultTitleFont.nHeight = grFullArea.Height() / 54;
 //    gDefaultCaptionFont.nHeight = grFullArea.Height() / 60;
     gDefaultTextFont.nHeight = grFullArea.Height() / 108;
+
+
+    gDefaultDialogBackground.reset(new ZBuffer());
+    bResult &= AddResource(sDefaultResourcePath + "dialog_edge.png", gDefaultDialogBackground);
+    assert(bResult);
+
 
     gSliderBackground.reset(new ZBuffer());
 	bResult &= AddResource(sDefaultResourcePath+"slider_bg.png",gSliderBackground);

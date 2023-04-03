@@ -47,6 +47,7 @@ set (GUI_FILES
 ../ZFramework/ZWinWatchPanel.h      ../ZFramework/ZWinWatchPanel.cpp
 ../ZFramework/ZWinText.h            ../ZFramework/ZWinText.cpp
 ../ZFramework/ZWinFileDialog.h      ../ZFramework/platforms/windows/ZWinFileDialog_Windows.cpp
+../ZFramework/ZWinPaletteDialog.h   ../ZFramework/ZWinPaletteDialog.cpp
 
 ../ZFramework/ZBuffer.h             ../ZFramework/ZBuffer.cpp
 ../ZFramework/ZFloatColorBuffer.h   ../ZFramework/ZFloatColorBuffer.cpp
@@ -58,6 +59,7 @@ set (GUI_FILES
 ../ZFramework/ZRasterizer.h         ../ZFramework/ZRasterizer.cpp
 ../ZFramework/ZScreenBuffer.h       ../ZFramework/ZScreenBuffer.cpp
 ../ZFramework/ZFont.h               ../ZFramework/ZFont.cpp
+../ZFramework/ZColor.h
 )
 
 

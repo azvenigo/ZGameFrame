@@ -22,7 +22,6 @@
 using namespace std;
 
 extern ZRect                grFullArea;
-extern ZMainWin*            gpMainWin;
 extern ZWinControlPanel*    gpControlPanel;
 extern ZWinDebugConsole*    gpDebugConsole;
 extern ZGraphicSystem       gGraphicSystem;
