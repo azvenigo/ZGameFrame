@@ -57,5 +57,5 @@ namespace ZGUI
         return mpFont;
     }
 
-
+    Palette gDefaultPalette;
 };

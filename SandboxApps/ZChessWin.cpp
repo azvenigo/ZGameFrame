@@ -13,6 +13,7 @@
 #include "ZAnimator.h"
 #include "ZAnimObjects.h"
 #include "ZGUIHelpers.h"
+#include "ZWinPaletteDialog.h"
 
 using namespace std;
 
@@ -464,8 +465,8 @@ bool ZChessWin::Init()
 
     mnPieceHeight = mAreaToDrawTo.Height() / 12;
 
-    mLightSquareCol = 0xffeeeed5;
-    mDarkSquareCol = 0xff7d945d;
+    mpLightSquareCol = &ZGUI::gDefaultPalette.colors[4]; // index 4 is light square....tbd, index or by name?
+    mpDarkSquareCol = &ZGUI::gDefaultPalette.colors[5]; // index 4 is light square....tbd, index or by name?
 
     UpdateSize();
 
@@ -512,9 +513,6 @@ bool ZChessWin::Init()
 
         mpEditBoardWin->mStyle.bgCol = 0xff737373;
 
-        mpEditBoardWin->AddCaption("Size");
-        mpEditBoardWin->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, gStyleButton.Font());
-
         mpEditBoardWin->AddSpace(panelH / 30);
 
         mpEditBoardWin->AddButton("Clear", ZMessage("clearboard", this));
@@ -522,6 +520,13 @@ bool ZChessWin::Init()
 
         mpEditBoardWin->AddSpace(panelH / 30);
         mpEditBoardWin->AddButton("Change Turn", ZMessage("changeturn", this));
+
+        mpEditBoardWin->AddSpace(panelH / 30);
+        mpEditBoardWin->AddButton("Colors", ZMessage("showpalette", this));
+
+        mpEditBoardWin->AddSpace(panelH / 30);
+        mpEditBoardWin->AddCaption("Size");
+        mpEditBoardWin->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, gStyleButton.Font());
 
         ChildAdd(mpEditBoardWin, false);
 
@@ -872,9 +877,9 @@ ZRect ZChessWin::SquareArea(const ZPoint& grid)
 uint32_t ZChessWin::SquareColor(const ZPoint& grid)
 {
     if ((grid.x + grid.y % 2) % 2)
-        return mDarkSquareCol;
+        return *mpDarkSquareCol;
 
-    return mLightSquareCol;
+    return *mpLightSquareCol;
 }
 
 ZPoint ZChessWin::ScreenToSquareOffset(int64_t x, int64_t y)
@@ -1071,6 +1076,15 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             mBoard.SetWhitesTurn(!mBoard.WhitesTurn());
             InvalidateChildren();
         }
+        return true;
+    }
+    else if (sType == "showpalette")
+    {
+
+        tColorWatchVector colors = { ColorWatch(mpLightSquareCol, "light squares"),
+                                    ColorWatch(mpDarkSquareCol, "dark squares") };
+
+        ZWinPaletteDialog::ShowPaletteDialog("Board Colors", colors, 2);
         return true;
     }
     else if (sType == "loadgame")

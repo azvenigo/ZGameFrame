@@ -166,8 +166,8 @@ private:
 
     int64_t         mnPalettePieceHeight;
 
-    uint32_t        mLightSquareCol;
-    uint32_t        mDarkSquareCol;
+    uint32_t*       mpLightSquareCol;
+    uint32_t*       mpDarkSquareCol;
 
     char mPalettePieces[12] = { 'q', 'k', 'r', 'n', 'b', 'p', 'P', 'B', 'N', 'R', 'K', 'Q' };
 

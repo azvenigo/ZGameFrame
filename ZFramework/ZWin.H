@@ -220,8 +220,8 @@ public:
 
 protected:
     virtual bool		Paint();
-    void                OnOK();
-    void                OnCancel();
+    virtual void        OnOK();
+    virtual void        OnCancel();
 
 //    virtual bool        Process();
 

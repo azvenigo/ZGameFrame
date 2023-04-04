@@ -28,6 +28,14 @@ namespace ZGUI
         tZFontPtr   mpFont;
     };
 
+
+    class Palette
+    {
+    public:
+        std::vector<uint32_t> colors;
+    };
+
+    extern Palette gDefaultPalette;
 };
 
 

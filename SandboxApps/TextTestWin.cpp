@@ -393,7 +393,8 @@ bool TextTestWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "choosecolor")
     {
-        ZWinPaletteDialog::ShowPaletteDialog("testcaption", ColorWatch(&mFontColor));
+        tColorWatchVector watchlist = { ColorWatch(&mFontColor) };
+        ZWinPaletteDialog::ShowPaletteDialog("testcaption", watchlist);
         return true;
     }
 #endif

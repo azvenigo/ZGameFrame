@@ -1,6 +1,7 @@
 #include "ZTypes.h"
 #include "Resources.h"
 #include "ZBuffer.h"
+#include "helpers/Registry.h"
 
 using namespace std;
 
@@ -13,6 +14,7 @@ tZBufferPtr		gSliderBackground;
 tZBufferPtr		gDimRectBackground;
 tZBufferPtr		gStandardButtonUpEdgeImage;
 tZBufferPtr		gStandardButtonDownEdgeImage;
+
 
 
 ZRect			grTextArea;
@@ -46,6 +48,17 @@ ZGUI::Style     gStyleGeneralText(ZFontParams("Verdana", 30), ZTextLook(ZTextLoo
 ZGUI::Style     gDefaultDialogStyle(gDefaultTextFont, ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultDialogFill, true);
 
 
+std::vector<uint32_t> gDefaultColors =
+{
+    gDefaultDialogFill,     // 0
+    gDefaultTextAreaFill,   // 1
+    0xff008800,             // 2  checked button color
+    0xff888888,             // 3
+    0xffeeeed5,             // 4  chessboard lightsquare
+    0xff7d945d,             // 5  chessboard darksquare
+};
+
+
 cResources::cResources()
 {
 }
@@ -57,6 +70,12 @@ cResources::~cResources()
 bool cResources::Init(const string& sDefaultResourcePath)
 {
 	bool bResult = true;
+
+
+    // Read saved palette (or save default)
+    gRegistry.GetOrSetDefault("resources", "palette", ZGUI::gDefaultPalette.colors, gDefaultColors);
+
+
 
     // Adjust font sizes based on screen resolution
     gDefaultSpacer = grFullArea.Height() / 125;
@@ -126,6 +145,8 @@ bool cResources::Init(const string& sDefaultResourcePath)
 
 bool cResources::Shutdown()
 {
+    gRegistry["resources"]["palette"] = ZGUI::gDefaultPalette.colors;
+
     for (auto bufferIt : mBufferResourceMap)
 	{
         tZBufferPtr pBuffer = bufferIt.second;

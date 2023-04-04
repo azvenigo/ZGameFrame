@@ -667,6 +667,12 @@ void ZFont::DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>&
 }
 
 
+ZRect ZFont::StringRect(const std::string& sText)
+{
+    return ZRect(0, 0, StringWidth(sText), mFontParams.nHeight);
+}
+
+
 // This function helps format text by returning a rectangle where the text should be output
 // It will not clip, however... That should be done by the caller if necessary
 ZRect ZFont::GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding)

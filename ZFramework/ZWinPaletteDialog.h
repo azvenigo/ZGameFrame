@@ -9,12 +9,13 @@ typedef std::list<uint32_t> tColorList;
 
 struct ColorWatch
 {
-    ColorWatch(uint32_t* _pWatch = nullptr, const std::string& _sLabel = "") : mpWatchColor(_pWatch), msWatchLabel(_sLabel) {}
+    ColorWatch(uint32_t* _pWatch = nullptr, const std::string& _sLabel = "") : mpWatchColor(_pWatch), mnOriginalColor(*_pWatch), msWatchLabel(_sLabel) {}
     uint32_t* mpWatchColor;
+    uint32_t mnOriginalColor;   // before commiting an edit
     std::string msWatchLabel;
 };
 
-typedef std::list<ColorWatch> tColorWatchList;
+typedef std::vector<ColorWatch> tColorWatchVector;
 
 class ZWinPaletteDialog : public ZWinDialog
 {
@@ -31,18 +32,24 @@ public:
 
     ZGUI::Style mStyle;
 
-    static ZWinPaletteDialog* ShowPaletteDialog(std::string sCaption, ColorWatch& watch, size_t nRecentColors = 0);
+    static ZWinPaletteDialog* ShowPaletteDialog(std::string sCaption, tColorWatchVector& watch, size_t nRecentColors = 0);
 
 protected:
+    void        OnOK();
+    void        OnCancel();
+
     bool        Process();
     bool        Paint();
 
     void        SelectSV(int64_t x, int64_t y); // relative to mrSVArea
     void        SelectH(int64_t y); // relative to mrHArea.top
+    void        SelectFromPalette(int64_t x);
+    void        SelectPaletteIndex(size_t nIndex);
+    void        UpdatePalette();        // based on selected changes
 
     void        ComputeAreas();
 
-    tColorWatchList mWatchList;
+    tColorWatchVector mWatchArray;
     tColorList      mRecentColors;
 
     bool            mbSelectingSV;
@@ -57,7 +64,8 @@ protected:
 
     ZRect           mrSVArea;
     ZRect           mrHArea;
-    ZRect           mrSelectingColorArea;
+
+    size_t          mnSelectingColorIndex;
 
     ZRect           mrPaletteArea;
     ZRect           mrRecentColorsArea;
