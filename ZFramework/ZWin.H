@@ -228,6 +228,7 @@ protected:
 
 public:
     uint8_t     mBehavior;
+    std::string msOnOKMessage;
     ZGUI::Style mStyle;
 };
 

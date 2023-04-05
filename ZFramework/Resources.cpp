@@ -56,6 +56,8 @@ std::vector<uint32_t> gDefaultColors =
     0xff888888,             // 3
     0xffeeeed5,             // 4  chessboard lightsquare
     0xff7d945d,             // 5  chessboard darksquare
+    0xffffffff,             // 6  chess white piece
+    0xff000000              // 7  chess black piece
 };
 
 

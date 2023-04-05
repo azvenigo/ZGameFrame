@@ -9,9 +9,9 @@ typedef std::list<uint32_t> tColorList;
 
 struct ColorWatch
 {
-    ColorWatch(uint32_t* _pWatch = nullptr, const std::string& _sLabel = "") : mpWatchColor(_pWatch), mnOriginalColor(*_pWatch), msWatchLabel(_sLabel) {}
+    ColorWatch(uint32_t* _pWatch = nullptr, const std::string& _sLabel = "") : mpWatchColor(_pWatch), mOriginalColor(*_pWatch), msWatchLabel(_sLabel) {}
     uint32_t* mpWatchColor;
-    uint32_t mnOriginalColor;   // before commiting an edit
+    uint32_t mOriginalColor;   // before commiting an edit
     std::string msWatchLabel;
 };
 
@@ -32,7 +32,7 @@ public:
 
     ZGUI::Style mStyle;
 
-    static ZWinPaletteDialog* ShowPaletteDialog(std::string sCaption, tColorWatchVector& watch, size_t nRecentColors = 0);
+    static ZWinPaletteDialog* ShowPaletteDialog(std::string sCaption, tColorWatchVector& watch, std::string sOnOKMeessage = "", size_t nRecentColors = 0);
 
 protected:
     void        OnOK();
@@ -43,8 +43,8 @@ protected:
 
     void        SelectSV(int64_t x, int64_t y); // relative to mrSVArea
     void        SelectH(int64_t y); // relative to mrHArea.top
-    void        SelectFromPalette(int64_t x);
-    void        SelectPaletteIndex(size_t nIndex);
+    void        SelectFromPalette(int64_t x, int64_t y);
+    void        SelectPaletteIndex(size_t nIndex, bool bOriginalColor = false);
     void        UpdatePalette();        // based on selected changes
 
     void        ComputeAreas();

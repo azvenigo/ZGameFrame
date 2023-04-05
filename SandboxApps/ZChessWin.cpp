@@ -466,7 +466,9 @@ bool ZChessWin::Init()
     mnPieceHeight = mAreaToDrawTo.Height() / 12;
 
     mpLightSquareCol = &ZGUI::gDefaultPalette.colors[4]; // index 4 is light square....tbd, index or by name?
-    mpDarkSquareCol = &ZGUI::gDefaultPalette.colors[5]; // index 4 is light square....tbd, index or by name?
+    mpDarkSquareCol = &ZGUI::gDefaultPalette.colors[5]; 
+    mpWhiteCol = &ZGUI::gDefaultPalette.colors[6]; 
+    mpBlackCol = &ZGUI::gDefaultPalette.colors[7];
 
     UpdateSize();
 
@@ -582,19 +584,19 @@ void ZChessWin::UpdateSize()
     mpSymbolicFont->GenerateSymbolicGlyph('n', 9822);
     mpSymbolicFont->GenerateSymbolicGlyph('p', 9823);
 
-    mPieceData['K'].GenerateImageFromSymbolicFont('K', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['Q'].GenerateImageFromSymbolicFont('Q', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['R'].GenerateImageFromSymbolicFont('R', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['B'].GenerateImageFromSymbolicFont('B', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['N'].GenerateImageFromSymbolicFont('N', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['P'].GenerateImageFromSymbolicFont('P', mnPieceHeight, mpSymbolicFont, true);
+    mPieceData['K'].GenerateImageFromSymbolicFont('K', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['Q'].GenerateImageFromSymbolicFont('Q', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['R'].GenerateImageFromSymbolicFont('R', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['B'].GenerateImageFromSymbolicFont('B', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['N'].GenerateImageFromSymbolicFont('N', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['P'].GenerateImageFromSymbolicFont('P', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
 
-    mPieceData['k'].GenerateImageFromSymbolicFont('k', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['q'].GenerateImageFromSymbolicFont('q', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['r'].GenerateImageFromSymbolicFont('r', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['b'].GenerateImageFromSymbolicFont('b', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['n'].GenerateImageFromSymbolicFont('n', mnPieceHeight, mpSymbolicFont, true);
-    mPieceData['p'].GenerateImageFromSymbolicFont('p', mnPieceHeight, mpSymbolicFont, true);
+    mPieceData['k'].GenerateImageFromSymbolicFont('k', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['q'].GenerateImageFromSymbolicFont('q', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['r'].GenerateImageFromSymbolicFont('r', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['b'].GenerateImageFromSymbolicFont('b', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['n'].GenerateImageFromSymbolicFont('n', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
+    mPieceData['p'].GenerateImageFromSymbolicFont('p', mnPieceHeight, mpSymbolicFont, true, *mpWhiteCol, *mpBlackCol);
 
     mrBoardArea.SetRect(0, 0, mnPieceHeight * 8, mnPieceHeight * 8);
     mrBoardArea = mrBoardArea.CenterInRect(mAreaToDrawTo);
@@ -1082,9 +1084,19 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     {
 
         tColorWatchVector colors = { ColorWatch(mpLightSquareCol, "light squares"),
-                                    ColorWatch(mpDarkSquareCol, "dark squares") };
+                                    ColorWatch(mpDarkSquareCol, "dark squares"),
+                                    ColorWatch(mpWhiteCol, "white pieces"),
+                                    ColorWatch(mpBlackCol, "black pieces")
 
-        ZWinPaletteDialog::ShowPaletteDialog("Board Colors", colors, 2);
+        
+        };
+
+        ZWinPaletteDialog::ShowPaletteDialog("Board Colors", colors, ZMessage("palette_ok_ok", this), 2);
+        return true;
+    }
+    else if (sType == "palette_ok_ok")
+    {
+        UpdateSize();   // re-renders
         return true;
     }
     else if (sType == "loadgame")
@@ -1374,11 +1386,8 @@ void ZChessWin::ShowPromotingWin(const ZPoint& grid)
 }
 
 
-bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline)
+bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline, uint32_t whiteCol, uint32_t blackCol)
 {
-    uint32_t nLightPiece = 0xffffffff;
-    uint32_t nDarkPiece = 0xff000000;
-
     mpImage.reset(new ZBuffer());
     mpImage->Init(nSize, nSize);
 
@@ -1386,12 +1395,12 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
 
     ZRect rSquare(mpImage->GetArea());
 
-    uint32_t nCol = nLightPiece;
-    uint32_t nOutline = nDarkPiece;
+    uint32_t nCol = whiteCol;
+    uint32_t nOutline = 0xff000000;
     if (c == 'q' || c == 'k' || c == 'r' || c == 'n' || c == 'b' || c == 'p')
     {
-        nCol = nDarkPiece;
-        nOutline = nLightPiece;
+        nCol = blackCol;
+        nOutline = 0xffffffff;
     }
 
     if (bOutline)

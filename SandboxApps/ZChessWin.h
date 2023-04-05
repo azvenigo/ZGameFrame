@@ -22,7 +22,7 @@ public:
     }
 
 
-    bool    GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline);
+    bool    GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline, uint32_t whiteCol = 0xffffffff, uint32_t blackCol = 0xff000000);
 
 
     tZBufferPtr mpImage;
@@ -168,6 +168,8 @@ private:
 
     uint32_t*       mpLightSquareCol;
     uint32_t*       mpDarkSquareCol;
+    uint32_t*       mpWhiteCol;
+    uint32_t*       mpBlackCol;
 
     char mPalettePieces[12] = { 'q', 'k', 'r', 'n', 'b', 'p', 'P', 'B', 'N', 'R', 'K', 'Q' };
 

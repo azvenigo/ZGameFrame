@@ -48,7 +48,7 @@ bool ZWinPaletteDialog::OnMouseDownL(int64_t x, int64_t y)
     }
     else if (mrPaletteArea.PtInRect(x, y))
     {
-        SelectFromPalette(x - mrPaletteArea.left);
+        SelectFromPalette(x - mrPaletteArea.left, y - mrPaletteArea.top);
         return false;
     }
 
@@ -106,26 +106,39 @@ void ZWinPaletteDialog::UpdatePalette()
 }
 
 
-void ZWinPaletteDialog::SelectFromPalette(int64_t x)
+void ZWinPaletteDialog::SelectFromPalette(int64_t x, int64_t y)
 {
     if (x < 0)
         x = 0;
     else if (x > mrPaletteArea.Width())
         x = mrPaletteArea.Width();
 
-    size_t nSwatchWidth = mrPaletteArea.Width() / mWatchArray.size();
+    if (y < 0)
+        y = 0;
+    else if (y > mrPaletteArea.Height())
+        y = mrPaletteArea.Height();
 
+
+    size_t nSwatchWidth = mrPaletteArea.Width() / mWatchArray.size();
     size_t nIndex = x / nSwatchWidth;
-    SelectPaletteIndex(nIndex);
+
+    // if clicking on lower half, select the original
+    bool bOriginal = y > mrPaletteArea.Height() / 2;
+
+    SelectPaletteIndex(nIndex, bOriginal);
 }
 
-void ZWinPaletteDialog::SelectPaletteIndex(size_t nIndex)
+void ZWinPaletteDialog::SelectPaletteIndex(size_t nIndex, bool bOriginalColor)
 {
     if (nIndex < mWatchArray.size())
     {
         mnSelectingColorIndex = nIndex;
 
         ColorWatch& colWatch = mWatchArray[mnSelectingColorIndex];
+
+        if (bOriginalColor)
+            *colWatch.mpWatchColor = colWatch.mOriginalColor;
+
         uint32_t hsv = COL::ARGB_To_AHSV(*colWatch.mpWatchColor);
 
         mCurH = AHSV_H(hsv);
@@ -166,6 +179,7 @@ bool ZWinPaletteDialog::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 
 void ZWinPaletteDialog::OnOK()
 {
+    gMessageSystem.Post(msOnOKMessage);
     ZWinDialog::OnOK();
 }
 
@@ -174,8 +188,7 @@ void ZWinPaletteDialog::OnCancel()
     // revert the colors00000
     for (auto watch : mWatchArray)
     {
-        ColorWatch& colWatch = mWatchArray[mnSelectingColorIndex];
-        *colWatch.mpWatchColor = colWatch.mnOriginalColor;
+        *watch.mpWatchColor = watch.mOriginalColor;
     }
 
     ZWinDialog::OnCancel();
@@ -282,7 +295,7 @@ bool ZWinPaletteDialog::Paint()
         mStyle.Font()->DrawText(mpTransformTexture.get(), watch.msWatchLabel, ZGUI::Arrange(mStyle.Font()->StringRect(watch.msWatchLabel), rSwatch, ZGUI::ICOT, 0));
 
         rSwatchHalf.OffsetRect(0, rSwatchHalf.Height());
-        mpTransformTexture->Fill(rSwatchHalf, watch.mnOriginalColor);
+        mpTransformTexture->Fill(rSwatchHalf, watch.mOriginalColor);
 
         rSwatch.OffsetRect(rSwatch.Width(), 0);
     }
@@ -315,7 +328,7 @@ void ZWinPaletteDialog::ComputeAreas()
 }
 
 
-ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, tColorWatchVector& watchArray, size_t nRecentColors)
+ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, tColorWatchVector& watchArray, std::string sOnOKMeessage, size_t nRecentColors)
 {
     ZWinPaletteDialog* pDialog = new ZWinPaletteDialog();
 
@@ -328,6 +341,7 @@ ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, tC
     pDialog->mStyle = gDefaultDialogStyle;
     pDialog->mWatchArray = watchArray;
     pDialog->SetArea(r);
+    pDialog->msOnOKMessage = sOnOKMeessage;
     pDialog->msCaption = sCaption;
 
     gpMainWin->ChildAdd(pDialog);
