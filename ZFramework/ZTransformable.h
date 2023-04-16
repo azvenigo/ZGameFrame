@@ -95,6 +95,7 @@ private:
 	bool					mbFirstTransformation;
 	ZTransformation			mCurTransform;
 	ZTransformationList		mTransformationList;
+    std::recursive_mutex    mTransformationListMutex;
 
 
 };

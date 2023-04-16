@@ -200,7 +200,9 @@ bool ZTransformable::Tick()
 
 		mCurTransform.mnTimestamp = gTimer.GetElapsedTime();
 
-		if (mEndTransform.mnTimestamp - mCurTransform.mnTimestamp <= 0)
+        const std::lock_guard<std::recursive_mutex> lock(mTransformationListMutex);
+       
+        if (mEndTransform.mnTimestamp - mCurTransform.mnTimestamp <= 0)
 		{
 			if (mTransformationList.empty())
 			{
@@ -373,7 +375,9 @@ void ZTransformable::AddTransformation(ZTransformation trans, int64_t nDuration)
 {
 	ZASSERT(nDuration > 0);
 	trans.mnTimestamp = GetLastTransform().mnTimestamp + nDuration;
-	mTransformationList.push_back(trans);
+   
+    const std::lock_guard<std::recursive_mutex> lock(mTransformationListMutex);
+    mTransformationList.push_back(trans);
 
 	mTransformState = kTransforming;
 }
@@ -391,13 +395,17 @@ void ZTransformable::EndTransformation()
 	SetTransform(GetLastTransform());
 	mCurTransform.mnTimestamp = gTimer.GetElapsedTime();	// reset the current timestamp
 	mEndTransform = mCurTransform;
-	mTransformationList.clear();
+   
+    const std::lock_guard<std::recursive_mutex> lock(mTransformationListMutex);
+    mTransformationList.clear();
 	mTransformState = kFinished;
 }
 
 void ZTransformable::DoTransformation(const string& sRaw)
 {
-	mTransformationList.clear();
+    mTransformationListMutex.lock();
+    mTransformationList.clear();
+    mTransformationListMutex.unlock();
 
 	string sTempList(sRaw);
 	ZTransformation temp;
@@ -426,6 +434,8 @@ void ZTransformable::DoTransformation(const string& sRaw)
 
 ZTransformation& ZTransformable::GetLastTransform()
 {
+    const std::lock_guard<std::recursive_mutex> lock(mTransformationListMutex);
+
 	if (mTransformationList.empty())
 		return mEndTransform;
 

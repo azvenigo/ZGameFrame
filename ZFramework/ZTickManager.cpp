@@ -20,7 +20,7 @@ ZTickManager::~ZTickManager()
 bool ZTickManager::AddObject(ZTransformable* pObject)
 {
 //	ZDEBUG_OUT("cCETickManager::Tick - AddObject:%s\n", pObject->msDebugName.c_str());
-	//std::lock_guard<std::mutex> lock(mMutex);
+	std::lock_guard<std::mutex> lock(mMutex);
 
 	if (mTransformableObjectList.empty())		// special case if list is empty
 	{
@@ -42,7 +42,7 @@ bool ZTickManager::AddObject(ZTransformable* pObject)
 bool ZTickManager::RemoveObject(ZTransformable* pObject)
 {
 //	ZDEBUG_OUT("cCETickManager::Tick - RemoveObject:%s\n", pObject->msDebugName.c_str());
-	//std::lock_guard<std::mutex> lock(mMutex);
+	std::lock_guard<std::mutex> lock(mMutex);
 
 	tTransformableObjectList::iterator it = std::find(mTransformableObjectList.begin(), mTransformableObjectList.end(), pObject);
 	if (it != mTransformableObjectList.end())
@@ -60,7 +60,9 @@ bool ZTickManager::RemoveObject(ZTransformable* pObject)
 
 bool ZTickManager::Tick()
 {
-	bool bHasMoreTicks = false;
+    std::lock_guard<std::mutex> lock(mMutex);
+   
+    bool bHasMoreTicks = false;
 	for (tTransformableObjectList::iterator it = mTransformableObjectList.begin(); it != mTransformableObjectList.end();)
 	{
 		// Using itNext in case an iterator is invalidated by being erased from a callback
