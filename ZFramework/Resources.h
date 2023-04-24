@@ -51,7 +51,7 @@ extern tZBufferPtr  gSliderBackground;
 extern ZRect        grSliderBgEdge;
 extern ZRect        grSliderThumbEdge;
 
-
+extern ZGUI::Palette gAppPalette;
 
 typedef std::map<std::string, tZBufferPtr >	tBufferResourceMap;
 

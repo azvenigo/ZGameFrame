@@ -454,10 +454,10 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 
 	int64_t nX = 0;
 	if (message.HasParam("x"))
-		nX = StringHelpers::ToInt(message.GetParam("x"));
+		nX = SH::ToInt(message.GetParam("x"));
 	int64_t nY = 0;
 	if (message.HasParam("y"))
-		nY = StringHelpers::ToInt(message.GetParam("y"));
+		nY = SH::ToInt(message.GetParam("y"));
 
 	string sSubType = message.GetParam("subtype");
 
@@ -511,7 +511,7 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 		}
 		else if (sSubType == "wheel")
 		{
-			int64_t nDelta = StringHelpers::ToInt(message.GetParam("delta"));
+			int64_t nDelta = SH::ToInt(message.GetParam("delta"));
 			return OnMouseWheel(nX, nY, nDelta);
 		}
 		else if (sSubType == "hover")
@@ -800,7 +800,7 @@ bool ZWin::WindowThreadProc(void* pContext)
     HRESULT r;
     string sName;
     Sprintf(sName, "th_0x%x", (int) (int64_t)GetCurrentThread());
-    r = SetThreadDescription(GetCurrentThread(), StringHelpers::string2wstring(sName).c_str());
+    r = SetThreadDescription(GetCurrentThread(), SH::string2wstring(sName).c_str());
 
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
 #endif

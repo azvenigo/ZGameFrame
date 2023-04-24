@@ -64,19 +64,19 @@ void StringToInt64Array(const string& sVal, std::vector<int64_t>& intArray)
     char* pNext;
 
 #ifdef _WIN64
-    char* pVal = strtok_s((char*)sVal.c_str(), &StringHelpers::kCharSplitToken, &pNext);
+    char* pVal = strtok_s((char*)sVal.c_str(), &SH::kCharSplitToken, &pNext);
     while (pVal)
     {
         intArray.push_back(strtol(pVal, nullptr, 10));
-        pVal = strtok_s(nullptr, &StringHelpers::kCharSplitToken, &pNext);
+        pVal = strtok_s(nullptr, &SH::kCharSplitToken, &pNext);
     }
 #else
     rsize_t nRemainingChars = sVal.length();
-    char* pVal = strtok_s((char*) sVal.data(), &nRemainingChars, &StringHelpers::kCharSplitToken, &pNext);
+    char* pVal = strtok_s((char*) sVal.data(), &nRemainingChars, &SH::kCharSplitToken, &pNext);
     while (pVal)
     {
         intArray.push_back(strtol(pVal, nullptr, 10));
-        pVal = strtok_s(nullptr, 0, &StringHelpers::kCharSplitToken, &pNext);
+        pVal = strtok_s(nullptr, 0, &SH::kCharSplitToken, &pNext);
     }
 #endif
 }
@@ -89,7 +89,7 @@ string Int64ArrayToString(std::vector<int64_t>& intArray)
 
 	for (uint32_t i = 0; i < intArray.size(); i++)
 	{
-		sprintf_s(buf, "%lld%c", intArray[i], StringHelpers::kCharSplitToken);
+		sprintf_s(buf, "%lld%c", intArray[i], SH::kCharSplitToken);
 
 		sValue.append(buf);
 	}

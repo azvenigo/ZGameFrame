@@ -381,7 +381,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             else
             {
 //                ZMessage message("chardown");
-//                message.SetParam("code", StringHelpers::FromInt(wParam));
+//                message.SetParam("code", SH::FromInt(wParam));
                 gMessageSystem.Post("chardown", "code", wParam);
             }
 		}
@@ -389,7 +389,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		{
 	//		ZMessage message("keydown");
-//			message.SetParam("code", StringHelpers::FromInt(wParam));
+//			message.SetParam("code", SH::FromInt(wParam));
 //			gMessageSystem.Post(message);
             gMessageSystem.Post("keydown", "code", wParam);
     }
@@ -397,7 +397,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_KEYUP:
 		{
 	//		ZMessage message("keyup");
-		//	message.SetParam("code", StringHelpers::FromInt(wParam));
+		//	message.SetParam("code", SH::FromInt(wParam));
 			//gMessageSystem.Post(message);
             gMessageSystem.Post("keyup", "code", wParam);
     }
@@ -464,8 +464,8 @@ void Window_OnLButtonDown(UINT nX, UINT nY)
 	ZMessage cursorMessage;
 	cursorMessage.SetType("cursor_msg");
 	cursorMessage.SetParam("subtype", "l_down");
-	cursorMessage.SetParam("x", StringHelpers::FromInt((int) ((float) nX / gfMouseMultX)));
-	cursorMessage.SetParam("y", StringHelpers::FromInt((int) ((float) nY / gfMouseMultY)));
+	cursorMessage.SetParam("x", SH::FromInt((int) ((float) nX / gfMouseMultX)));
+	cursorMessage.SetParam("y", SH::FromInt((int) ((float) nY / gfMouseMultY)));
 	if (gpCaptureWin)
 		cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
 	else
@@ -479,8 +479,8 @@ void Window_OnLButtonUp(UINT nX, UINT nY)
 	ZMessage cursorMessage;
 	cursorMessage.SetType("cursor_msg");
 	cursorMessage.SetParam("subtype", "l_up");
-	cursorMessage.SetParam("x", StringHelpers::FromInt((int) ((float) nX / gfMouseMultX)));
-	cursorMessage.SetParam("y", StringHelpers::FromInt((int) ((float) nY / gfMouseMultY)));
+	cursorMessage.SetParam("x", SH::FromInt((int) ((float) nX / gfMouseMultX)));
+	cursorMessage.SetParam("y", SH::FromInt((int) ((float) nY / gfMouseMultY)));
 	if (gpCaptureWin)
 		cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
 	else
@@ -494,8 +494,8 @@ void Window_OnRButtonDown(UINT nX, UINT nY)
     ZMessage cursorMessage;
     cursorMessage.SetType("cursor_msg");
     cursorMessage.SetParam("subtype", "r_down");
-    cursorMessage.SetParam("x", StringHelpers::FromInt((int)((float)nX / gfMouseMultX)));
-    cursorMessage.SetParam("y", StringHelpers::FromInt((int)((float)nY / gfMouseMultY)));
+    cursorMessage.SetParam("x", SH::FromInt((int)((float)nX / gfMouseMultX)));
+    cursorMessage.SetParam("y", SH::FromInt((int)((float)nY / gfMouseMultY)));
     if (gpCaptureWin)
         cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
     else
@@ -509,8 +509,8 @@ void Window_OnRButtonUp(UINT nX, UINT nY)
     ZMessage cursorMessage;
     cursorMessage.SetType("cursor_msg");
     cursorMessage.SetParam("subtype", "r_up");
-    cursorMessage.SetParam("x", StringHelpers::FromInt((int)((float)nX / gfMouseMultX)));
-    cursorMessage.SetParam("y", StringHelpers::FromInt((int)((float)nY / gfMouseMultY)));
+    cursorMessage.SetParam("x", SH::FromInt((int)((float)nX / gfMouseMultX)));
+    cursorMessage.SetParam("y", SH::FromInt((int)((float)nY / gfMouseMultY)));
     if (gpCaptureWin)
         cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
     else
@@ -538,8 +538,8 @@ void Window_OnMouseMove(UINT nX, UINT nY)
         ZMessage cursorMessage;
         cursorMessage.SetType("cursor_msg");
         cursorMessage.SetParam("subtype", "move");
-        cursorMessage.SetParam("x", StringHelpers::FromInt((int)((float)nX / gfMouseMultX)));
-        cursorMessage.SetParam("y", StringHelpers::FromInt((int)((float)nY / gfMouseMultY)));
+        cursorMessage.SetParam("x", SH::FromInt((int)((float)nX / gfMouseMultX)));
+        cursorMessage.SetParam("y", SH::FromInt((int)((float)nY / gfMouseMultY)));
         if (gpCaptureWin)
             cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
         else
@@ -556,9 +556,9 @@ void Window_OnMouseWheel(UINT nX, UINT nY, INT nDelta)
 	ZMessage cursorMessage;
 	cursorMessage.SetType("cursor_msg");
 	cursorMessage.SetParam("subtype", "wheel");
-	cursorMessage.SetParam("x", StringHelpers::FromInt((int) ((float) nX / gfMouseMultX)));
-	cursorMessage.SetParam("y", StringHelpers::FromInt((int) ((float) nY / gfMouseMultY)));
-	cursorMessage.SetParam("delta", StringHelpers::FromInt(nDelta));
+	cursorMessage.SetParam("x", SH::FromInt((int) ((float) nX / gfMouseMultX)));
+	cursorMessage.SetParam("y", SH::FromInt((int) ((float) nY / gfMouseMultY)));
+	cursorMessage.SetParam("delta", SH::FromInt(nDelta));
 	if (gpCaptureWin)
 		cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
 	else

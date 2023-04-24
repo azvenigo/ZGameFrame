@@ -55,7 +55,7 @@ bool ZTransformation::operator==(const ZTransformation& trans)
 string ZTransformation::ToString()
 {
 	string sRaw;
-    sRaw = StringHelpers::FromInt(mPosition.x) + "," + StringHelpers::FromInt(mPosition.y) + "," + StringHelpers::FromDouble(mScale) + "," + StringHelpers::FromDouble(mRotation) + "," + StringHelpers::FromInt(mnTimestamp) + "," + StringHelpers::FromInt(mnAlpha) + ",\"" + msCompletionMessage + "\"";
+    sRaw = SH::FromInt(mPosition.x) + "," + SH::FromInt(mPosition.y) + "," + SH::FromDouble(mScale) + "," + SH::FromDouble(mRotation) + "," + SH::FromInt(mnTimestamp) + "," + SH::FromInt(mnAlpha) + ",\"" + msCompletionMessage + "\"";
 
 	return sRaw;
 }
@@ -63,23 +63,23 @@ string ZTransformation::ToString()
 void ZTransformation::FromString(string sRaw)
 {
 	string sTemp;
-    StringHelpers::SplitToken(sTemp, sRaw, ",");
-	mPosition.x = StringHelpers::ToInt(sTemp);
+    SH::SplitToken(sTemp, sRaw, ",");
+	mPosition.x = SH::ToInt(sTemp);
 
-    StringHelpers::SplitToken(sTemp, sRaw, ",");
-	mPosition.y = StringHelpers::ToInt(sTemp);
+    SH::SplitToken(sTemp, sRaw, ",");
+	mPosition.y = SH::ToInt(sTemp);
 
-    StringHelpers::SplitToken(sTemp, sRaw, ",");
-	mScale		= StringHelpers::ToDouble(sTemp);
+    SH::SplitToken(sTemp, sRaw, ",");
+	mScale		= SH::ToDouble(sTemp);
 
-    StringHelpers::SplitToken(sTemp, sRaw, ",");
-	mRotation	= StringHelpers::ToDouble(sTemp);
+    SH::SplitToken(sTemp, sRaw, ",");
+	mRotation	= SH::ToDouble(sTemp);
 
-    StringHelpers::SplitToken(sTemp, sRaw, ",");
-	mnTimestamp = StringHelpers::ToInt(sTemp);
+    SH::SplitToken(sTemp, sRaw, ",");
+	mnTimestamp = SH::ToInt(sTemp);
 
-    StringHelpers::SplitToken(sTemp, sRaw, ",");
-	mnAlpha		= (uint32_t) StringHelpers::ToInt(sTemp);
+    SH::SplitToken(sTemp, sRaw, ",");
+	mnAlpha		= (uint32_t) SH::ToInt(sTemp);
 
 	ZASSERT(sTemp[0] == '\"');
 	ZASSERT(sTemp[sTemp.length()-1] == '\"');
@@ -413,7 +413,7 @@ void ZTransformable::DoTransformation(const string& sRaw)
 	bool bFirst = true;
 	while (!sTempList.empty() && sTempList[0] == '[')
 	{
-        StringHelpers::SplitToken(sTransTemp, sTempList, "]");
+        SH::SplitToken(sTransTemp, sTempList, "]");
 		sTransTemp = sTransTemp.substr(1);	// remove the '['
 
 		temp.FromString(sTransTemp);

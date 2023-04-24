@@ -419,27 +419,27 @@ bool ZWinFormattedText::ParseDocument(ZXMLNode* pNode)
 	string sAttribute;
 	sAttribute = pNode->GetAttribute(ksTextEdgeTag);
 	if (!sAttribute.empty())
-		mbDrawBorder = StringHelpers::ToBool(sAttribute);
+		mbDrawBorder = SH::ToBool(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksTextFillTag);
 	if (!sAttribute.empty())
-		mbFillBackground = StringHelpers::ToBool(sAttribute);
+		mbFillBackground = SH::ToBool(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksTextFillColor);
 	if (!sAttribute.empty())
-		mnFillColor = (uint32_t) StringHelpers::ToInt(sAttribute);
+		mnFillColor = (uint32_t) SH::ToInt(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksTextScrollToBottom);
 	if (!sAttribute.empty())
-		mnScrollToOnInit = (uint32_t)StringHelpers::ToInt(sAttribute);
+		mnScrollToOnInit = (uint32_t)SH::ToInt(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksScrollable);
 	if (!sAttribute.empty())
-		mbScrollable = StringHelpers::ToBool(sAttribute);
+		mbScrollable = SH::ToBool(sAttribute);
 
 	sAttribute = pNode->GetAttribute(ksUnderlineLinksTag);
 	if (!sAttribute.empty())
-		mbUnderlineLinks = StringHelpers::ToBool(sAttribute);
+		mbUnderlineLinks = SH::ToBool(sAttribute);
 
 
 
@@ -515,7 +515,7 @@ bool ZWinFormattedText::ProcessLineNode(ZXMLNode* pTextNode)
 	tTextLine textLine;
 
 	string sParam;
-	bool bWrapLine = StringHelpers::ToBool(pTextNode->GetAttribute(ksWrapTag));
+	bool bWrapLine = SH::ToBool(pTextNode->GetAttribute(ksWrapTag));
 
 	tXMLNodeList elementNodeList;
 	pTextNode->GetChildren("text", elementNodeList);
@@ -563,19 +563,19 @@ void ZWinFormattedText::ExtractTextParameters(ZXMLNode* pTextNode)
 	sParam = pTextNode->GetAttribute(ksFontParamsTag);
 	if (!sParam.empty())
 	{
-        mCurrentFont = ZFontParams(StringHelpers::URL_Decode(sParam));
+        mCurrentFont = ZFontParams(SH::URL_Decode(sParam));
 	}
 
 	sParam = pTextNode->GetAttribute(ksColorTag);
 	if (!sParam.empty())
 	{
-        mCurrentLook.colTop = (uint32_t)StringHelpers::ToInt(sParam);
+        mCurrentLook.colTop = (uint32_t)SH::ToInt(sParam);
 	}
 
 	sParam = pTextNode->GetAttribute(ksColor2Tag);
 	if (!sParam.empty())
 	{
-        mCurrentLook.colBottom = (uint32_t)StringHelpers::ToInt(sParam);
+        mCurrentLook.colBottom = (uint32_t)SH::ToInt(sParam);
 	}
 	else
 	{
@@ -588,7 +588,7 @@ void ZWinFormattedText::ExtractTextParameters(ZXMLNode* pTextNode)
 
 /*	if (!sParam.empty())
 	{
-		StringHelpers::makelower(sParam);
+		SH::makelower(sParam);
 
 		if (sParam == "lt")         mCurrentTextPosition = ZGUI::LT;
 		else if (sParam == "ct")    mCurrentTextPosition = ZGUI::CT;
@@ -608,7 +608,7 @@ void ZWinFormattedText::ExtractTextParameters(ZXMLNode* pTextNode)
 	sParam = pTextNode->GetAttribute(ksDecoTag);
 	if (!sParam.empty())
 	{
-        StringHelpers::makelower(sParam);
+        SH::makelower(sParam);
 
 		if (sParam == "normal")        mCurrentLook.decoration = ZTextLook::kNormal;
 		else if (sParam == "shadowed") mCurrentLook.decoration = ZTextLook::kShadowed;

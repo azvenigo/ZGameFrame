@@ -1,4 +1,5 @@
 #include "ZGUIStyle.h"
+#include "helpers/StringHelpers.h"
 
 using namespace std;
 
@@ -14,7 +15,7 @@ namespace ZGUI
         wrap = _wrap;
     }
 
-    Style::Style(const std::string& s)
+    Style::Style(const string& s)
     {
         nlohmann::json j = nlohmann::json::parse(s);
 
@@ -57,5 +58,75 @@ namespace ZGUI
         return mpFont;
     }
 
-    Palette gDefaultPalette;
+    EditableColor::EditableColor(const string& _encoded_string)
+    {
+        nlohmann::json j = nlohmann::json::parse(_encoded_string);
+
+        name = j["n"];
+        col = j["c"];
+        default_color = j["d"];
+    }
+
+    EditableColor::operator string() const
+    {
+        nlohmann::json j;
+
+        j["n"] = name;
+        j["c"] = col;
+        j["d"] = default_color;
+
+        return j.dump();
+    }
+
+    Palette::Palette(const tColorMap& _map)
+    {
+        mColorMap = _map;
+    }
+
+
+    bool Palette::GetByName(const string& name, uint32_t& col)
+    {
+        for (int i = 0; i < mColorMap.size(); i++)
+        {
+            if (mColorMap[i].name == name)
+            {
+                col = mColorMap[i].col;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
+
+    // for json serialization
+    Palette::operator string() const
+    {
+        nlohmann::json j;
+        j["count"] = SH::FromInt(mColorMap.size());
+        for (int i = 0; i < mColorMap.size(); i++)
+        {
+            j[SH::FromInt(i)] = (string)mColorMap[i];
+        }
+
+        return j.dump();
+    }
+
+    Palette::Palette(const string& _encoded_string)
+    {
+        mColorMap.clear();
+        nlohmann::json j = nlohmann::json::parse(_encoded_string);
+
+        int count = SH::ToInt(j["count"]);
+
+        mColorMap.resize(count);
+
+        for (int i = 0; i < count; i++)
+        {
+            mColorMap[i] = EditableColor(j[SH::FromInt(i)]);
+        }
+    }
+
 };

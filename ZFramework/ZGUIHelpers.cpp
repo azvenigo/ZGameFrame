@@ -38,7 +38,7 @@ namespace ZGUI
 
     ePosition FromString(string s)
     {
-        StringHelpers::makelower(s);
+        SH::makelower(s);
 
         // Single position
         if (s == "l" || s == "Left")

@@ -275,12 +275,12 @@ namespace GDIHelpers
         switch (nType)
         {
         case PropertyTagTypeASCII:         return std::string((const char*)pValue, nLength);
-        case PropertyTagTypeByte:          return StringHelpers::FromBin((uint8_t*)pValue, nLength);
-        case PropertyTagTypeLong:          return StringHelpers::FromBin((uint8_t*)pValue, nLength);
-        case PropertyTagTypeRational:      return StringHelpers::FromBin((uint8_t*)pValue, nLength);
-        case PropertyTagTypeShort:         return StringHelpers::FromBin((uint8_t*)pValue, nLength);
-        case PropertyTagTypeSLONG:         return StringHelpers::FromBin((uint8_t*)pValue, nLength);
-        case PropertyTagTypeSRational:     return StringHelpers::FromBin((uint8_t*)pValue, nLength);
+        case PropertyTagTypeByte:          return SH::FromBin((uint8_t*)pValue, nLength);
+        case PropertyTagTypeLong:          return SH::FromBin((uint8_t*)pValue, nLength);
+        case PropertyTagTypeRational:      return SH::FromBin((uint8_t*)pValue, nLength);
+        case PropertyTagTypeShort:         return SH::FromBin((uint8_t*)pValue, nLength);
+        case PropertyTagTypeSLONG:         return SH::FromBin((uint8_t*)pValue, nLength);
+        case PropertyTagTypeSRational:     return SH::FromBin((uint8_t*)pValue, nLength);
         }
         return "";
     }

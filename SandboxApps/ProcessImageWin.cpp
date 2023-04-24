@@ -217,13 +217,13 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
         string sPropLineXMLNode("<line wrap=0>");
 
         sPropLineXMLNode += "<text color=0xffffffff color2=0xffffffff";
-        sPropLineXMLNode += " fontparams=" + StringHelpers::URL_Encode(fp);
+        sPropLineXMLNode += " fontparams=" + SH::URL_Encode(fp);
         sPropLineXMLNode += " position=lb>";
         sPropLineXMLNode += prop.sName;
         sPropLineXMLNode += "</text>";
 
         sPropLineXMLNode += "<text color=0xff000000 color2=0xff000000";
-        sPropLineXMLNode += " fontparams=" + StringHelpers::URL_Encode(fp);
+        sPropLineXMLNode += " fontparams=" + SH::URL_Encode(fp);
         sPropLineXMLNode += " position=rb>";
         sPropLineXMLNode += prop.sValue.substr(0,16);
         sPropLineXMLNode += "</text></line>";
@@ -1021,13 +1021,11 @@ bool cProcessImageWin::Init()
 
 
 
-    std::list<string> filenames;
+    list<string> filenames;
 
-    gRegistry.GetOrSetDefault("ProcessImageWin", "images", filenames, filenames);   // sets default to above list if none already set
-    
-    if (filenames.empty())
+    if (!gRegistry.Get("ProcessImageWin", "images", filenames))
     {
-        filenames = std::list<string>{
+        filenames = list<string>{
             "res/414A2616.jpg",
             "res/414A2617.jpg",
             "res/414A2618.jpg",
@@ -1038,10 +1036,12 @@ bool cProcessImageWin::Init()
             "res/414A2623.jpg",
             "res/414A2624.jpg"
         };
+        gRegistry.SetDefault("ProcessImageWin", "images", filenames); 
     }
+   
 
     // remove any filenames with missing files
-    std::list<string> checkedFilenames;
+    list<string> checkedFilenames;
     for (auto filename : filenames)
     {
         if (filesystem::exists(filename))

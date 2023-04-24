@@ -47,6 +47,9 @@ private:
 
 
 
+typedef std::pair<std::string, std::string> tPGNEntry;
+typedef std::list< tPGNEntry > tPGNEntries;
+
 class ZChoosePGNWin : public ZWin
 {
 public:
@@ -54,13 +57,23 @@ public:
 
     bool    Init();
     bool    Paint();
+    bool    Process();
     bool    HandleMessage(const ZMessage& message);
 
     bool    ListGamesFromPGN(std::string& sFilename, std::string& sPGNFile);
 
+    void    SelectEntry(size_t index);
+
 
 private:
+
+    void    RefreshList();
+
     ZWinFormattedText* mpGamesList;
+
+    tPGNEntries     mPGNEntries;
+    std::string     msFilter;
+    std::string     msLastFiltered; // when different, refreshes the list
 
     std::string     msCaption;
     uint32_t        mFillColor;
@@ -166,10 +179,12 @@ private:
 
     int64_t         mnPalettePieceHeight;
 
-    uint32_t*       mpLightSquareCol;
+    ZGUI::Palette   mPalette;
+
+/*    uint32_t*       mpLightSquareCol;
     uint32_t*       mpDarkSquareCol;
     uint32_t*       mpWhiteCol;
-    uint32_t*       mpBlackCol;
+    uint32_t*       mpBlackCol;*/
 
     char mPalettePieces[12] = { 'q', 'k', 'r', 'n', 'b', 'p', 'P', 'B', 'N', 'R', 'K', 'Q' };
 

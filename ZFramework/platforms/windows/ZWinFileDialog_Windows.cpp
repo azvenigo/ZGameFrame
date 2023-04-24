@@ -12,8 +12,8 @@ namespace ZWinFileDialog
 {
     bool ShowLoadDialog(std::string fileTypeDescription, std::string fileTypes, std::string& sFilenameResult)
     {
-        wstring sFileTypeDescription(StringHelpers::string2wstring(fileTypeDescription));
-        wstring sFileTypes(StringHelpers::string2wstring(fileTypes));
+        wstring sFileTypeDescription(SH::string2wstring(fileTypeDescription));
+        wstring sFileTypes(SH::string2wstring(fileTypes));
 
         bool bSuccess = false;
 
@@ -57,7 +57,7 @@ namespace ZWinFileDialog
                         hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
 
                         wstring wideFilename(pszFilePath);
-                        sFilenameResult = StringHelpers::wstring2string(wideFilename);
+                        sFilenameResult = SH::wstring2string(wideFilename);
 
                         pItem->Release();
                         bSuccess = true;
@@ -73,8 +73,8 @@ namespace ZWinFileDialog
 
     bool ShowMultiLoadDialog(std::string fileTypeDescription, std::string fileTypes, std::list<std::string>& resultFilenames)
     {
-        wstring sFileTypeDescription(StringHelpers::string2wstring(fileTypeDescription));
-        wstring sFileTypes(StringHelpers::string2wstring(fileTypes));
+        wstring sFileTypeDescription(SH::string2wstring(fileTypeDescription));
+        wstring sFileTypes(SH::string2wstring(fileTypes));
 
         bool bSuccess = false;
 
@@ -127,7 +127,7 @@ namespace ZWinFileDialog
                             pItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath);
 
                             wstring wideFilename(pszFilePath);
-                            resultFilenames.push_back(StringHelpers::wstring2string(wideFilename));
+                            resultFilenames.push_back(SH::wstring2string(wideFilename));
                             pItem->Release();
                             bSuccess = true;
                         }
@@ -143,8 +143,8 @@ namespace ZWinFileDialog
 
     bool ShowSaveDialog(std::string fileTypeDescription, std::string fileTypes, std::string& sFilenameResult)
     {
-        wstring sFileTypeDescription(StringHelpers::string2wstring(fileTypeDescription));
-        wstring sFileTypes(StringHelpers::string2wstring(fileTypes));
+        wstring sFileTypeDescription(SH::string2wstring(fileTypeDescription));
+        wstring sFileTypes(SH::string2wstring(fileTypes));
 
         bool bSuccess = false;
         HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
@@ -180,7 +180,7 @@ namespace ZWinFileDialog
                         hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
 
                         wstring wideFilename(pszFilePath);
-                        sFilenameResult = StringHelpers::wstring2string(wideFilename);
+                        sFilenameResult = SH::wstring2string(wideFilename);
 
                         pItem->Release();
                         bSuccess = true;

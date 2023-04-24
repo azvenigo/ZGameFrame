@@ -204,7 +204,7 @@ bool ZWinScriptedDialog::ExecuteScript(string sDialogScript)
 	// Window Attributes
 	SetWinName(pDialogNode->GetAttribute(ksElementWinName));
 	if (pDialogNode->HasAttribute(ksTransformable))
-		mbTransformable	= StringHelpers::ToBool(pDialogNode->GetAttribute(ksTransformable));
+		mbTransformable	= SH::ToBool(pDialogNode->GetAttribute(ksTransformable));
 
 	if (pDialogNode->HasAttribute(ksTransformIn))
 	{
@@ -224,7 +224,7 @@ bool ZWinScriptedDialog::ExecuteScript(string sDialogScript)
 	}
 
 	if (pDialogNode->HasAttribute(ksTransformInTime))
-		mnTransformInTime = StringHelpers::ToInt( pDialogNode->GetAttribute(ksTransformInTime));
+		mnTransformInTime = SH::ToInt( pDialogNode->GetAttribute(ksTransformInTime));
 
 	if (pDialogNode->HasAttribute(ksTransformOut))
 	{
@@ -244,14 +244,14 @@ bool ZWinScriptedDialog::ExecuteScript(string sDialogScript)
 	}
 
 	if (pDialogNode->HasAttribute(ksTransformOutTime))
-		mnTransformOutTime = StringHelpers::ToInt( pDialogNode->GetAttribute(ksTransformOutTime));
+		mnTransformOutTime = SH::ToInt( pDialogNode->GetAttribute(ksTransformOutTime));
 
 	if (pDialogNode->HasAttribute(ksElementDrawBackground))
-		mbDrawDefaultBackground = StringHelpers::ToBool(pDialogNode->GetAttribute(ksElementDrawBackground));
+		mbDrawDefaultBackground = SH::ToBool(pDialogNode->GetAttribute(ksElementDrawBackground));
 
 	if (pDialogNode->HasAttribute(ksElementBackgroundColor))
 	{
-		mnBackgroundColor = (uint32_t) StringHelpers::ToInt(pDialogNode->GetAttribute(ksElementBackgroundColor));
+		mnBackgroundColor = (uint32_t) SH::ToInt(pDialogNode->GetAttribute(ksElementBackgroundColor));
 		mbFillBackground = true;
 	}
 

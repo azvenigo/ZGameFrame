@@ -152,7 +152,7 @@ bool TextTestWin::Init()
     string sDialogScript("<scripteddialog winname=fontselectionwin area=" + RectToString(rFontSelectionWin) + " draw_background=1 bgcolor=0xff444444>");
     sDialogScript += "<textwin area=" + RectToString(rTextAreaWin) + " text_background_fill=1 text_fill_color=0xff444444 text_edge_blt=0 text_scrollable=1 underline_links=1 auto_scroll=1 auto_scroll_momentum=0.001>";
 
-    string sEncodedFontParams("fontparams="+StringHelpers::URL_Encode(gDefaultTextFont)+" ");
+    string sEncodedFontParams("fontparams="+SH::URL_Encode(gDefaultTextFont)+" ");
 
     for (int i = 0; i < gWindowsFontFacenames.size(); i++)
     {
@@ -355,7 +355,7 @@ bool TextTestWin::HandleMessage(const ZMessage& message)
     {
         if (message.HasParam("fontindex"))
         {
-            int32_t nIndex = (int32_t) StringHelpers::ToInt(message.GetParam("fontindex"));
+            int32_t nIndex = (int32_t) SH::ToInt(message.GetParam("fontindex"));
 
             if (nIndex >= 0 && nIndex < gWindowsFontFacenames.size())
             {
@@ -376,7 +376,7 @@ bool TextTestWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "togglekerning")
     {
-        mbEnableKerning = StringHelpers::ToBool(message.GetParam("enable"));
+        mbEnableKerning = SH::ToBool(message.GetParam("enable"));
         mpFont->SetEnableKerning(mbEnableKerning);
         Invalidate();
         return true;
@@ -448,7 +448,7 @@ bool TextTestWin::LoadFont()
                         PWSTR pszFilePath;
                         pItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath);
 
-                        filename = StringHelpers::wstring2string(pszFilePath);
+                        filename = SH::wstring2string(pszFilePath);
                         //                        wstring wideFilename(pszFilePath);
                         //                        filenames.push_back(WideToAscii(wideFilename));
                         pItem->Release();
@@ -502,7 +502,7 @@ bool TextTestWin::SaveFont()
             string sFilename;
             Sprintf(sFilename, "%s_%d.zfont", mpFont->GetFontParams().sFacename.c_str(), mpFont->GetFontParams().nHeight);
 
-            pFileSave->SetFileName(StringHelpers::string2wstring(sFilename).c_str());
+            pFileSave->SetFileName(SH::string2wstring(sFilename).c_str());
 
             // Show the Save dialog box.
             hr = pFileSave->Show(NULL);
@@ -517,7 +517,7 @@ bool TextTestWin::SaveFont()
                     PWSTR pszFilePath;
                     pItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath);
 
-                    filename = StringHelpers::wstring2string(pszFilePath);
+                    filename = SH::wstring2string(pszFilePath);
                     pItem->Release();
                 }
             }

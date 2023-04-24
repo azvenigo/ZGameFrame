@@ -94,17 +94,17 @@ void ZMessage::FromString(const string& sMessage)
 	mKeyValueMap.clear();
 
 	string sParse(sMessage);
-    StringHelpers::SplitToken(mType, sParse, ";");  // first element
+    SH::SplitToken(mType, sParse, ";");  // first element
 
 	bool bDone = false;
 	while (!bDone)
 	{
 		string sPair;
-		StringHelpers::SplitToken(sPair, sParse, ";");
+		SH::SplitToken(sPair, sParse, ";");
 		if (!sPair.empty())
 		{
 			string sKey;
-            StringHelpers::SplitToken(sKey, sPair, "=");
+            SH::SplitToken(sKey, sPair, "=");
 			ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
 			ZASSERT_MESSAGE(!sPair.empty(), "Value is empty!");
             if (sKey == "target")
@@ -112,7 +112,7 @@ void ZMessage::FromString(const string& sMessage)
             else if (sKey == "type")
                 mType = sPair;
             else
-                mKeyValueMap[sKey] = StringHelpers::URL_Decode(sPair);	// sParse now contains the value;
+                mKeyValueMap[sKey] = SH::URL_Decode(sPair);	// sParse now contains the value;
         }
 		else
 			bDone = true;
@@ -122,7 +122,7 @@ void ZMessage::FromString(const string& sMessage)
 	if (!sParse.empty())
 	{
 		string sKey;
-        StringHelpers::SplitToken(sKey, sParse, "=");
+        SH::SplitToken(sKey, sParse, "=");
 		ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
 		ZASSERT_MESSAGE(!sParse.empty(), "Value is empty!");
         if (sKey == "target")
@@ -130,7 +130,7 @@ void ZMessage::FromString(const string& sMessage)
         else if (sKey == "type")
             mType = sParse;
         else
-			mKeyValueMap[sKey] = StringHelpers::URL_Decode(sParse);	// sParse now contains the value;
+			mKeyValueMap[sKey] = SH::URL_Decode(sParse);	// sParse now contains the value;
 	}
 }
 
@@ -142,7 +142,7 @@ string ZMessage::ToString() const
 
 	for (tKeyValueMap::const_iterator it = mKeyValueMap.begin(); it != mKeyValueMap.end(); it++)
 	{
-		sRaw += (*it).first + "=" + StringHelpers::URL_Encode((*it).second) + ";";
+		sRaw += (*it).first + "=" + SH::URL_Encode((*it).second) + ";";
 	}
 
 	return sRaw.substr(0, sRaw.length()-1);	// return everything but the final ';'
@@ -287,5 +287,5 @@ void ZMessageSystem::Post(ZMessage& msg, IMessageTarget* pTarget)
 
 string ZMessageSystem::GenerateUniqueTargetName()
 {
-	return "target_" + StringHelpers::FromInt(mnUniqueTargetNameCount++);
+	return "target_" + SH::FromInt(mnUniqueTargetNameCount++);
 }

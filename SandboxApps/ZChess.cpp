@@ -1258,7 +1258,7 @@ string ChessBoard::ToPosition(const ZPoint& grid)
 
 ZPoint ChessBoard::FromPosition(string sPosition)
 {
-    StringHelpers::makelower(sPosition);
+    SH::makelower(sPosition);
 
     ZPoint grid(-1, -1);
     if (sPosition.length() == 2)
@@ -1343,8 +1343,8 @@ string ChessBoard::ToFEN()
     else
         sFEN += " - ";
 
-    sFEN += StringHelpers::FromInt(mHalfMovesSinceLastCaptureOrPawnAdvance) + " ";
-    sFEN += StringHelpers::FromInt(mFullMoveNumber);
+    sFEN += SH::FromInt(mHalfMovesSinceLastCaptureOrPawnAdvance) + " ";
+    sFEN += SH::FromInt(mFullMoveNumber);
 
     return sFEN;
 }
@@ -1421,10 +1421,10 @@ bool ChessBoard::FromFEN(const string& sFEN)
     nNextSpace = sFEN.find(' ', nIndex);
     string sHalfMoves(sFEN.substr(nIndex, nNextSpace - nIndex));
 
-    mHalfMovesSinceLastCaptureOrPawnAdvance = (uint32_t)StringHelpers::ToInt(sHalfMoves);
+    mHalfMovesSinceLastCaptureOrPawnAdvance = (uint32_t)SH::ToInt(sHalfMoves);
     nIndex += (int)sHalfMoves.length()+1;
 
-    mFullMoveNumber = (uint32_t)StringHelpers::ToInt(sFEN.substr(nIndex));      // last value
+    mFullMoveNumber = (uint32_t)SH::ToInt(sFEN.substr(nIndex));      // last value
     mHalfMoveNumber = mFullMoveNumber + (int)!mbWhitesTurn;  // +1 if it's black's turn
 
     ComputeSquaresUnderAttack();
@@ -1688,6 +1688,16 @@ std::string ZChessPGN::ToString()
     return sPGN;
 }
 
+bool ZChessPGN::IsKnownTag(const std::string& sTag)
+{
+    for (auto findTag : pgnTags)
+    {
+        if (sTag == findTag)
+            return true;
+    }
+
+    return false;
+}
 
 string ZChessPGN::GetTag(const std::string& sTag)
 {
@@ -1884,7 +1894,7 @@ bool ZPGNSANEntry::ParseLine(std::string sSANLine)
         return false;
     }
 
-    movenumber = StringHelpers::ToInt(sSANLine.substr(0, nMoveEndIndex));
+    movenumber = SH::ToInt(sSANLine.substr(0, nMoveEndIndex));
 
     nMoveEndIndex++;
 
@@ -1928,7 +1938,7 @@ bool ZPGNSANEntry::ParseLine(std::string sSANLine)
 
 string ZPGNSANEntry::ToString()
 {
-    string sAction(StringHelpers::FromInt(movenumber) + ". " + whiteAction + " ");
+    string sAction(SH::FromInt(movenumber) + ". " + whiteAction + " ");
     if (!whiteComment.empty())
         sAction += "{ " + whiteComment + " } ";
 
@@ -2063,7 +2073,7 @@ string ZPGNSANEntry::ActionFromMove(const sMove& move, ChessBoard board)
     else
     {
         sAction = string(&c, 1);
-        StringHelpers::makeupper(sAction);        
+        SH::makeupper(sAction);        
     }
 
     // castling

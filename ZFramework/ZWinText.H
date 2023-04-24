@@ -21,11 +21,7 @@ public:
         CloseOnClick        = 1 << 2,   // 4
     };
 
-    ZWinLabel(uint8_t _behavior = None) : mBehavior((eBehavior)_behavior)
-    {
-        mbAcceptsCursorMessages = true;
-    }
-
+    ZWinLabel(uint8_t _behavior = None);
 
     virtual bool		OnMouseDownL(int64_t x, int64_t y);
     virtual bool		OnMouseHover(int64_t x, int64_t y);

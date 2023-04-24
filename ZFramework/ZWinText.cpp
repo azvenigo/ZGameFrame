@@ -7,6 +7,14 @@
 
 using namespace std;
 
+ZWinLabel::ZWinLabel(uint8_t _behavior)
+{
+    mBehavior = (eBehavior)_behavior;
+    mbAcceptsCursorMessages = true;
+    mStyle = gStyleCaption;
+}
+
+
 bool ZWinLabel::OnMouseDownL(int64_t x, int64_t y)
 {
     if (mBehavior & CloseOnClick)
@@ -100,6 +108,7 @@ ZWinTextEdit::ZWinTextEdit(string* pText)
     mbMouseDown = false;
     mnSelectionStart = -1;
     mnSelectionEnd = -1;
+    mStyle = gDefaultWinTextEditStyle;
 }
 
 bool ZWinTextEdit::Init()
@@ -498,7 +507,7 @@ void ZWinTextEdit::HandleCursorMove(int64_t newCursorPos, bool bScrollView)
     }
 
 
-    mrCursorArea.SetRect(mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset+StyleOffset(), mrVisibleTextArea.top, mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset + mrVisibleTextArea.Height()/32 + StyleOffset(), mrVisibleTextArea.bottom);
+    mrCursorArea.SetRect(mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset+StyleOffset(), mrVisibleTextArea.top, mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset + mrVisibleTextArea.Height()/32 + StyleOffset()+1, mrVisibleTextArea.bottom);
 
     if (newCursorPos >= 0 && newCursorPos <= (int64_t)mpText->length())
     {

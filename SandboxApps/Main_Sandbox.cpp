@@ -79,7 +79,7 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight/2);
     gpControlPanel->AddButton("Checkerboard", "initchildwindows;mode=2;target=MainAppMessageTarget");
-    gpControlPanel->AddSlider(&gnCheckerWindowCount, 1, 250, 1, "", true, false);
+    gpControlPanel->AddSlider(&gnCheckerWindowCount, 1, 64, 1, "", true, false);
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->AddButton("Font Tool", "initchildwindows;mode=6;target=MainAppMessageTarget");
@@ -252,7 +252,7 @@ public:
 		string sType = message.GetType();
 		if (sType == "initchildwindows")
 		{
-            SandboxInitChildWindows((Sandbox::eSandboxMode) StringHelpers::ToInt(message.GetParam("mode")));
+            SandboxInitChildWindows((Sandbox::eSandboxMode) SH::ToInt(message.GetParam("mode")));
 		}
         else if (sType == "toggleconsole")
         {
@@ -298,7 +298,9 @@ bool Sandbox::SandboxInitialize()
     InitControlPanel();
 
     int32_t nMode;
-    gRegistry.GetOrSetDefault("sandbox", "mode", nMode, (int32_t) kImageProcess);
+    if (!gRegistry.Get("sandbox", "mode", nMode))
+        nMode = kImageProcess;
+
     SandboxInitChildWindows((eSandboxMode) nMode);
     return true;
 }

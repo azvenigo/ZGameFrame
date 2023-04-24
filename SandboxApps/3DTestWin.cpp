@@ -933,7 +933,11 @@ bool Z3DTestWin::Init()
     mbInvalidateParentWhenInvalid = true;
 
 
-    gRegistry.GetOrSetDefault("3dtestwin", "render_size", mnRenderSize, (int64_t) 256);
+    if (!gRegistry.Get("3dtestwin", "render_size", mnRenderSize))
+    {
+        mnRenderSize = 256;
+        gRegistry.SetDefault("3dtestwin", "render_size", mnRenderSize);
+    }
 
 
     mCubeVertices.resize(8);

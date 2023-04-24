@@ -87,7 +87,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 {
     mBufferProps.clear();
 #ifdef _WIN64
-	Bitmap bitmap(StringHelpers::string2wstring(sFilename).c_str());
+	Bitmap bitmap(SH::string2wstring(sFilename).c_str());
     if (bitmap.GetLastStatus() != Status::Ok)
     {
         //OutputDebugImmediate("ZBuffer::LoadBuffer failed to load %s. Status:%d\n", sFilename.c_str(), bitmap.GetLastStatus());
@@ -192,7 +192,7 @@ int GetEncoderClsid(const string& sFilename, CLSID* pClsid)
     }
 
     sExtension = sFilename.substr(nLastDot + 1);
-    StringHelpers::makelower(sExtension);
+    SH::makelower(sExtension);
 
     wstring wsFormat;
     if (sExtension == "jpg" || sExtension == "jpeg")
@@ -267,7 +267,7 @@ bool ZBuffer::SaveBuffer(const string& sFilename)
     GetEncoderClsid(sFilename, &encoderClsid);
 
     Bitmap bitmap(&bi, (void*) mpPixels);
-    bitmap.Save(StringHelpers::string2wstring(sFilename).c_str(), (const CLSID*)&encoderClsid);
+    bitmap.Save(SH::string2wstring(sFilename).c_str(), (const CLSID*)&encoderClsid);
 
     return true;
 }

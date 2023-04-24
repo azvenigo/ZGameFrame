@@ -208,7 +208,7 @@ const std::string pgnTags[] =
     "Event",
     "Site",
     "Date",
-    "Round"
+    "Round",
     "White",
     "WhiteElo",
     "Black",
@@ -244,6 +244,7 @@ public:
     bool WhiteWins() { return GetTag("Result") == "1-0"; }
     bool BlackWins() { return GetTag("Result") == "0-1"; }
 
+    bool IsKnownTag(const std::string& sTag);   // true if it's one of the configured tags above
     std::string GetTag(const std::string& sTag);
 
 

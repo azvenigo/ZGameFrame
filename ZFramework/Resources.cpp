@@ -46,19 +46,15 @@ ZGUI::Style     gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZTextLook(Z
 ZGUI::Style     gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, 0, gDefaultDialogFill);
 ZGUI::Style     gStyleGeneralText(ZFontParams("Verdana", 30), ZTextLook(ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, 0, 0, true);
 ZGUI::Style     gDefaultDialogStyle(gDefaultTextFont, ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultDialogFill, true);
+ZGUI::Style     gDefaultWinTextEditStyle(gDefaultTextFont, ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultTextAreaFill);
 
-
-std::vector<uint32_t> gDefaultColors =
+ZGUI::Palette gAppPalette{
 {
-    gDefaultDialogFill,     // 0
-    gDefaultTextAreaFill,   // 1
-    0xff008800,             // 2  checked button color
-    0xff888888,             // 3
-    0xffeeeed5,             // 4  chessboard lightsquare
-    0xff7d945d,             // 5  chessboard darksquare
-    0xffffffff,             // 6  chess white piece
-    0xff000000              // 7  chess black piece
-};
+    { "dialog_fill", gDefaultDialogFill },     // 0
+    { "text_area_fill", gDefaultTextAreaFill },   // 1
+    { "btn_col_checked", 0xff008800 },             // 2  checked button color
+    { "", 0xff888888 }             // 3
+} };
 
 
 cResources::cResources()
@@ -74,9 +70,11 @@ bool cResources::Init(const string& sDefaultResourcePath)
 	bool bResult = true;
 
 
-    // Read saved palette (or save default)
-    gRegistry.GetOrSetDefault("resources", "palette", ZGUI::gDefaultPalette.colors, gDefaultColors);
-
+    // Try and set the default palette....if false, it has already been persisted
+    if (gRegistry.Contains("resources", "palette"))
+        gAppPalette = ZGUI::Palette(gRegistry.GetValue("resources", "palette"));
+    else
+        gRegistry.SetDefault("resources", "palette", (string)gAppPalette);
 
 
     // Adjust font sizes based on screen resolution
@@ -147,7 +145,7 @@ bool cResources::Init(const string& sDefaultResourcePath)
 
 bool cResources::Shutdown()
 {
-    gRegistry["resources"]["palette"] = ZGUI::gDefaultPalette.colors;
+    gRegistry["resources"]["palette"] = (string)gAppPalette;
 
     for (auto bufferIt : mBufferResourceMap)
 	{

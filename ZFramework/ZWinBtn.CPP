@@ -415,7 +415,7 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 	msCaption = pNode->GetText();
 	msWinName = pNode->GetAttribute("winname");
 
-//	int64_t nFontID = StringHelpers::ToInt(pNode->GetAttribute("size"));
+//	int64_t nFontID = SH::ToInt(pNode->GetAttribute("size"));
     ZFontParams params(pNode->GetAttribute("fontparams"));
 
     mStyle = ZGUI::Style(pNode->GetAttribute("style"));
