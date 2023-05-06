@@ -56,7 +56,8 @@ namespace Sandbox
         kOneLifeWin = 5,
         kTextTestWin = 6,
         k3DTestWin = 7,
-        kChessWin = 8
+        kChessWin = 8,
+        kTestWin = 9
     };
 
     void SandboxShutdown();

@@ -187,16 +187,16 @@ bool TextTestWin::Init()
 
     pCP->AddCaption("Height");
 
-    pCP->AddSlider(&mCustomFontParams.nHeight, 8, 200, 2, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
+    pCP->AddSlider(&mCustomFontParams.nHeight, 8, 200, 2, 0.1, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
 
     pCP->AddCaption("Weight");
-    pCP->AddSlider(&mCustomFontParams.nWeight, 2, 9, 100, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
+    pCP->AddSlider(&mCustomFontParams.nWeight, 2, 9, 100, 0.1, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
 
     pCP->AddCaption("Tracking");
-    pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, "setfonttracking;target=TextTestWin", true, false, gStyleButton.Font());
+    pCP->AddSlider(&mCustomFontParams.nTracking, -20, 20, 1, 0.1, "setfonttracking;target=TextTestWin", true, false, gStyleButton.Font());
 
     pCP->AddCaption("Fixed Width");
-    pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
+    pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, 0.1, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
 
     pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
 

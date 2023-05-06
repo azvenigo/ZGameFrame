@@ -90,13 +90,20 @@ ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, co
 }
 
 
-ZWinSlider* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue, tZFontPtr pFont)
+ZWinSlider* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, double fThumbSizeRatio, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue, tZFontPtr pFont)
 {
     ZWinSlider* pSlider = new ZWinSlider(pnSliderValue);
     pSlider->SetArea(mrNextControl);
-    pSlider->SetDrawSliderValueFlag(bDrawValue, bMouseOnlyDrawValue, pFont);
-    pSlider->Init(gSliderThumbHorizontal, grSliderThumbEdge, gSliderBackground, grSliderBgEdge, ZWinSlider::kHorizontal);
-    pSlider->SetSliderRange(nMin, nMax, nMultiplier);
+
+    uint32_t nBehavior = ZWinSlider::kHorizontal;
+    if (bDrawValue && bMouseOnlyDrawValue)
+        nBehavior |= ZWinSlider::kDrawSliderValueOnMouseOver;
+    else if (bDrawValue)
+        nBehavior |= ZWinSlider::kDrawSliderValueAlways;
+    pSlider->SetBehavior(nBehavior, pFont);
+
+    pSlider->Init();
+    pSlider->SetSliderRange(nMin, nMax, nMultiplier, fThumbSizeRatio);
     pSlider->SetSliderSetMessage(sMessage);
     ChildAdd(pSlider);
 

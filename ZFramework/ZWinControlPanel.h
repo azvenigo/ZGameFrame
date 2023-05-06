@@ -41,6 +41,7 @@ public:
                                 int64_t nMin, 
                                 int64_t nMax, 
                                 int64_t nMultiplier, 
+                                double fThumbSizeRatio = 0.1,
                                 const std::string& sMessage = "", 
                                 bool bDrawValue = false, 
                                 bool bMouseOnlyDrawValue = false, 

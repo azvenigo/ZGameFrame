@@ -971,7 +971,7 @@ bool cProcessImageWin::Init()
     pLabel->msTooltipText= "Sets the radius for the operations below.";
     pLabel->mStyleTooltip = gStyleTooltip;
 
-    pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, "", true, false, gStyleButton.Font());
+    pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, 0.25, "", true, false, gStyleButton.Font());
 
     pCP->AddButton("Blur", "radiusblur;target=imageprocesswin");
     pCP->AddButton("Stack", "stackimages;target=imageprocesswin");
@@ -987,12 +987,12 @@ bool cProcessImageWin::Init()
 
     pCP->AddCaption("Experiments");
     pCP->AddButton("compute gradients", "computegradients;target=imageprocesswin");
-    pCP->AddSlider(&mnGradientLevels, 1, 50, 1, "", true, false, gStyleButton.Font());
+    pCP->AddSlider(&mnGradientLevels, 1, 50, 1, 0.25, "", true, false, gStyleButton.Font());
 
     pCP->AddSpace(16);
 
     pCP->AddButton("float color sandbox", "floatcolorsandbox;target=imageprocesswin");
-    pCP->AddSlider(&mnSubdivisionLevels, 1, 512, 1, "", true, false, gStyleButton.Font());
+    pCP->AddSlider(&mnSubdivisionLevels, 1, 512, 1, 0.25, "", true, false, gStyleButton.Font());
 
 
     ChildAdd(pCP);

@@ -273,10 +273,7 @@ bool ZTransformable::Tick()
 
             ZASSERT(fT >= 0.0 && fT <= 1.0);
             //ZDEBUG_OUT("fCurrent:%f fFull:%f  fRange:%f  fT:%f\n", fCurrent, fFullTime, fRange, fT);
-            if (fT < -0.0)
-                fT = 0.0;
-            else if (fT >= 1.0)
-                fT = 1.0;
+            limit<double>(fT, 0.0, 1.0);
 
 
             mCurTransform.mPosition.x = (int64_t)((double)mStartTransform.mPosition.x + (double)(mEndTransform.mPosition.x - mStartTransform.mPosition.x) * fT);

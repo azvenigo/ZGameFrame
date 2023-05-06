@@ -12,7 +12,7 @@
 #include "3DTestWin.h"
 #include "ZChessWin.h"
 #include "Resources.h"
-
+#include "TestWin.h"
 
 
 using namespace std;
@@ -72,14 +72,14 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->AddButton("LifeWin",        "initchildwindows;mode=5;target=MainAppMessageTarget");
-    gpControlPanel->AddSlider(&gnLifeGridSize, 1, 100, 5, "initchildwindows;mode=5;target=MainAppMessageTarget", true, false);
+    gpControlPanel->AddSlider(&gnLifeGridSize, 1, 100, 5, 0.2, "initchildwindows;mode=5;target=MainAppMessageTarget", true, false);
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
 
     gpControlPanel->AddButton("ImageProcessor", "initchildwindows;mode=4;target=MainAppMessageTarget");
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight/2);
     gpControlPanel->AddButton("Checkerboard", "initchildwindows;mode=2;target=MainAppMessageTarget");
-    gpControlPanel->AddSlider(&gnCheckerWindowCount, 1, 64, 1, "", true, false);
+    gpControlPanel->AddSlider(&gnCheckerWindowCount, 1, 64, 1, 0.2, "", true, false);
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->AddButton("Font Tool", "initchildwindows;mode=6;target=MainAppMessageTarget");
@@ -89,6 +89,9 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->AddButton("ChessWin", "initchildwindows;mode=8;target=MainAppMessageTarget");
+
+    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
+    gpControlPanel->AddButton("TestWin", "initchildwindows;mode=9;target=MainAppMessageTarget");
 
 
     gpControlPanel->FitToControls();
@@ -118,7 +121,14 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
 
     gRegistry["sandbox"]["mode"] = (int32_t)mode;
    
-    if (mode == eSandboxMode::kFloatLinesWin)
+    if (mode == eSandboxMode::kTestWin)
+    {
+        TestWin* pWin = new TestWin();
+        pWin->SetArea(grFullArea);
+        gpMainWin->ChildAdd(pWin);
+
+    }
+    else if (mode == eSandboxMode::kFloatLinesWin)
 	{
 
 		cFloatLinesWin* pWin = new cFloatLinesWin();

@@ -6,14 +6,14 @@
 #include <limits>
 #include <vector>
 
+// Helper template to ensure value is bounded between min and max
 template <class T>
-T limit(T val, T min, T max)
+void limit(T& val, T min, T max)
 {
     if (val < min)
-        return min;
+        val = min;
     else if (val > max)
-        return max;
-    return val;
+        val = max;
 };
 
 template <class T>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+<Type Name="tRect&lt;*&gt;">
+  <DisplayString>[{left},{top},{right},{bottom}]</DisplayString>
+  <Expand>
+	  <Item Name="L">left</Item>
+	  <Item Name="T">top</Item>
+	  <Item Name="R">right</Item>
+	  <Item Name="B">bottom</Item>
+  </Expand>
+</Type>
+
+</AutoVisualizer>

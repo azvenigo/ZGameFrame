@@ -651,7 +651,7 @@ bool ZChessWin::Init()
 
         mpEditBoardWin->AddSpace(panelH / 30);
         mpEditBoardWin->AddCaption("Size");
-        mpEditBoardWin->AddSlider(&mnPieceHeight, 1, 26, 10, ZMessage("updatesize", this), true, false, gStyleButton.Font());
+        mpEditBoardWin->AddSlider(&mnPieceHeight, 1, 26, 10, 0.2, ZMessage("updatesize", this), true, false, gStyleButton.Font());
 
         ChildAdd(mpEditBoardWin, false);
 

@@ -140,7 +140,7 @@ bool ZWinFormattedText::OnMouseDownL(int64_t x, int64_t y)
 		int64_t nMax;
         mpWinSlider->GetSliderRange(nMin, nMax);
 
-		mnMouseDownSliderVal = mpWinSlider->GetSliderValue();
+		mnMouseDownSliderVal = mnSliderVal;
 		nY -=  mnMouseDownSliderVal;
 	}
 
@@ -200,7 +200,7 @@ bool ZWinFormattedText::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelt
         mpWinSlider->GetSliderRange(nMin, nMax);
 		if (nMax-nMin > 0)
 		{
-            mpWinSlider->SetSliderValue(mpWinSlider->GetSliderValue() + nDelta);
+            mpWinSlider->SetSliderValue(mnSliderVal + nDelta);
 		}
 	}
 
@@ -245,13 +245,14 @@ void ZWinFormattedText::UpdateScrollbar()
         if (!mpWinSlider)
         {
             mpWinSlider = new ZWinSlider(&mnSliderVal);
-            mpWinSlider->Init(gSliderThumbVertical, grSliderThumbEdge, gSliderBackground, grSliderBgEdge);
-            mpWinSlider->SetDrawSliderValueFlag(false, false, gpFontSystem->GetFont(mCurrentFont));
+            mpWinSlider->SetBehavior(ZWinSlider::kInvalidateOnMove| ZWinSlider::kVertical);
+            mpWinSlider->Init();
             mpWinSlider->SetArea(ZRect(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height()));
             ChildAdd(mpWinSlider);
         }
 
-        mpWinSlider->SetSliderRange(0, nFullTextHeight-mrTextArea.Height());
+        double fThumbRatio = (double)mrTextArea.Height()/(double)nFullTextHeight;
+        mpWinSlider->SetSliderRange(0, nFullTextHeight-mrTextArea.Height(), 1, fThumbRatio);
 
 		if (mnScrollToOnInit > 0)
 		{
@@ -320,7 +321,7 @@ bool ZWinFormattedText::Paint()
 		int64_t nMax;
         mpWinSlider->GetSliderRange(nMin, nMax);
 
-		nY -=  (int64_t)mpWinSlider->GetSliderValue();
+		nY -= mnSliderVal;
 	}
 
     std::unique_lock<std::mutex> lk(mDocumentMutex);

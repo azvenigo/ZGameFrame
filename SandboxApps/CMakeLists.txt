@@ -31,6 +31,7 @@ TextTestWin.h TextTestWin.cpp
 ZChess.h ZChess.cpp
 ZChessWin.h ZChessWin.cpp
 Main_Sandbox.h Main_Sandbox.cpp Main_Win64.cpp 
+TestWin.h TestWin.cpp
 teapotdata.h
 )
 
@@ -88,6 +89,7 @@ set(ZFRAMEWORK_FILES
 ../ZFramework/ZXMLNode.h            ../ZFramework/ZXMLNode.cpp
 ../ZFramework/ZZipAPI.h             ../ZFramework/ZZipAPI.cpp
 ../ZFramework/platforms/windows/GDIImageTags.h
+../ZFramework/ZFramework.natvis
 )
 
 set(COMMON_FILES ../../ZLibraries/Common/helpers/FNMatch.h ../../ZLibraries/Common/helpers/FNMatch.cpp ../../ZLibraries/Common/helpers/HTTPCache.h ../../ZLibraries/Common/helpers/HTTPCache.cpp)
