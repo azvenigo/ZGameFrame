@@ -169,7 +169,7 @@ bool ZWinSlider::OnMouseMove(int64_t x, int64_t y)
         int64_t nThumbSize = ThumbSize();
         int64_t nValue = WindowToScaledValue(x-mSliderGrabAnchor.x+nThumbSize/2, y-mSliderGrabAnchor.y+nThumbSize/2);
 		SetSliderValue(nValue);
-        if (mBehavior == kInvalidateOnMove)
+        if (mBehavior & kInvalidateOnMove)
             mpParentWin->InvalidateChildren();
 	}
 
@@ -186,7 +186,10 @@ bool ZWinSlider::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 	    SetSliderValue(*mpnSliderValue  - PageSize());
     else
         SetSliderValue(*mpnSliderValue + PageSize());
-	return true;
+
+    if (mBehavior & kInvalidateOnMove)
+        mpParentWin->InvalidateChildren();
+    return true;
 }
 
 

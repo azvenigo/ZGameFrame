@@ -1030,26 +1030,26 @@ bool Z3DTestWin::Init()
         string sUpdateSphereCountMsg(ZMessage("updatespherecount", this));
 
         pCP->AddCaption("Sphere Count");
-        pCP->AddSlider(&mnTargetSphereCount, 1, 50, 1, 0.1, sUpdateSphereCountMsg, true, false, gStyleButton.Font());
+        pCP->AddSlider(&mnTargetSphereCount, 1, 50, 1, 0.25, sUpdateSphereCountMsg, true, false, gStyleButton.Font());
         //    pCP->AddSpace(16);
 
         pCP->AddCaption("Min Sphere Size");
-        pCP->AddSlider(&mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.1, sUpdateSphereCountMsg, true, false, gStyleButton.Font());
+        pCP->AddSlider(&mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.25, sUpdateSphereCountMsg, true, false, gStyleButton.Font());
 
         pCP->AddCaption("Max Sphere Size");
-        pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.1, sUpdateSphereCountMsg, true, false, gStyleButton.Font());
+        pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.25, sUpdateSphereCountMsg, true, false, gStyleButton.Font());
 
         pCP->AddCaption("Speed");
-        pCP->AddSlider(&mnRotateSpeed, 0, 100, 1, 0.1, "", true, false, gStyleButton.Font());
+        pCP->AddSlider(&mnRotateSpeed, 0, 100, 1, 0.25, "", true, false, gStyleButton.Font());
 
         pCP->AddCaption("Ray Depth");
-        pCP->AddSlider(&mnRayDepth, 0, 10, 1, 0.1, "", true, false, gStyleButton.Font());
+        pCP->AddSlider(&mnRayDepth, 0, 10, 1, 0.25, "", true, false, gStyleButton.Font());
 
 
 
         pCP->AddSpace(16);
         pCP->AddCaption("Render Size");
-        pCP->AddSlider(&mnRenderSize, 1, 128, 16, 0.1, ZMessage("updaterendersize", this), true);
+        pCP->AddSlider(&mnRenderSize, 1, 128, 16, 0.25, ZMessage("updaterendersize", this), true);
 
         ZTextLook toggleLook(ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
