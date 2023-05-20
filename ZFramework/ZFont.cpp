@@ -190,7 +190,7 @@ bool ZFont::LoadFont(const string& sFilename)
         pData += kMaxChars * sizeof(uint16_t);
 	}
 
-    ZOUT("Loaded ", sFilename, " in ", gTimer.GetUSSinceEpoch()-nStartTime, "us");
+//    ZOUT("Loaded ", sFilename, " in ", gTimer.GetUSSinceEpoch()-nStartTime, "us");
 
     mbInitted = true;
 	return true;
@@ -1607,7 +1607,7 @@ tZFontPtr ZFontSystem::LoadFont(const string& sFilename)
         return nullptr;
     }
     ZFontParams fp(pNewFont->GetFontParams());
-    ZDEBUG_OUT("Loaded font:%s size:%d\n", fp.sFacename, fp.nHeight);
+//    ZDEBUG_OUT("Loaded font:%s size:%d\n", fp.sFacename, fp.nHeight);
 
     mFontMap[pNewFont->GetFontParams()] = pNewFont;
     return pNewFont;
@@ -1669,7 +1669,7 @@ tZFontPtr ZFontSystem::GetFont(const ZFontParams& params)
     // If not found
     if (findIt == mFontMap.end())
     {
-        ZDEBUG_OUT("Uncached font requested.");
+//        ZDEBUG_OUT("Uncached font requested.");
         return CreateFont(params);
     }
 

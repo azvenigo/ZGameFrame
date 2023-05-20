@@ -430,19 +430,22 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 	return true;
 }
 
-
 bool ZWinSizablePushBtn::Paint()
 {
-	if (!mbInvalid)
-		return false;
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    if (!mbInvalid)
+        return false;
 
     if (!mpTransformTexture.get())
         return false;
-
     // experimentally blt parent's buffer to test transparency
-    if (mpParentWin)
-        mpTransformTexture.get()->Blt(mpParentWin->GetTransformTexture().get(), mAreaToDrawTo, mpTransformTexture.get()->GetArea());
-
+    if (mpParentWin && mpParentWin->IsVisible())
+    {
+        //        cout << "mpParentWin:" << (uint64_t)mpParentWin;
+        tZBufferPtr parentBuffer = mpParentWin->GetTransformTexture();
+        mpTransformTexture.get()->Blt(parentBuffer.get(), mAreaToDrawTo, mpTransformTexture.get()->GetArea());
+    }
+   
 	// Draw the button image
     tZBufferPtr pBufferToUse;
 

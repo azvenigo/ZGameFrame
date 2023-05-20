@@ -4,6 +4,11 @@
 #include "helpers/StringHelpers.h"
 #include "ZRasterizer.h"
 #include <math.h>
+#include <fstream>
+#include "easyexif/exif.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #ifdef _WIN64
 #include <GdiPlus.h>
@@ -83,10 +88,92 @@ bool ZBuffer::Shutdown()
 	return true;
 };
 
+
 bool ZBuffer::LoadBuffer(const string& sFilename)
 {
     mBufferProps.clear();
-#ifdef _WIN64
+
+#ifdef STB_IMAGE_IMPLEMENTATION
+    int width;
+    int height;
+    int channels;
+
+    if (!std::filesystem::exists(sFilename))
+    {
+        ZDEBUG_OUT("ZBuffer::LoadBuffer failed to load ", sFilename, "..does not exist\n");
+        return false;
+    }
+
+    size_t nFileSize = std::filesystem::file_size(sFilename);
+    std::ifstream imageFile(sFilename.c_str(), ios::in | ios::binary);    // open and set pointer at end
+    ZMemBufferPtr imageBuf(new ZMemBuffer(nFileSize));
+    imageFile.read((char*)imageBuf->data(), nFileSize);
+    imageBuf->seekp(nFileSize);
+
+    easyexif::EXIFInfo exifInfo;
+    exifInfo.parseFrom(imageBuf->data(), nFileSize);
+    
+
+
+//    uint8_t* pImage = stbi_load(sFilename.c_str(), &width, &height, &channels, 4);
+    uint8_t* pImage = stbi_load_from_memory(imageBuf->data(), nFileSize, &width, &height, &channels, 4);
+    if (!pImage)
+    {
+        ZDEBUG_OUT("ZBuffer::LoadBuffer failed to load ", sFilename, "\n");
+        return false;
+    }
+
+//    cout << "LoadBuffer() About to Shutdown\n";
+    Shutdown(); // Clear out any existing data
+
+    if (!Init(width, height))
+    {
+        stbi_image_free(pImage);
+        return false;
+    }
+//    cout << "LoadBuffer() After init\n";
+
+
+    uint32_t* pDest = mpPixels;
+    for (uint32_t* pSrc = (uint32_t*)pImage; pSrc < (uint32_t*)(pImage + width * height * 4); pSrc++)
+    {
+        uint32_t col = *pSrc;
+        uint32_t a = (col & 0xff000000);
+        uint32_t b = (col & 0x00ff0000) >> 16;
+        uint32_t r = (col & 0x000000ff) << 16;
+        uint32_t g = (col & 0x0000ff00);
+
+        uint32_t newCol = a | r | g | b;
+
+        *pDest = newCol;
+        pDest++;
+    }
+
+    stbi_image_free(pImage);
+
+    if (exifInfo.Orientation != 0)
+    {
+        eOrientation reverse;
+        
+        // for left and right, the reverse is the opposite rotation. For all others, it's the same operation to reverse
+        if ((eOrientation)exifInfo.Orientation == kLeft)
+            reverse = kRight;
+        else if ((eOrientation)exifInfo.Orientation == kRight)
+            reverse = kLeft;
+        else
+            reverse = (eOrientation)exifInfo.Orientation;
+
+
+        Rotate(reverse);
+    }
+
+
+    return true;
+
+
+
+
+#else 
 	Bitmap bitmap(SH::string2wstring(sFilename).c_str());
     if (bitmap.GetLastStatus() != Status::Ok)
     {
@@ -274,6 +361,7 @@ bool ZBuffer::SaveBuffer(const string& sFilename)
 #endif
 
 
+/*
 #ifdef _WIN64
 // TBD, do we want to keep loading from a resource?
 bool ZBuffer::LoadBuffer(uint32_t nResourceID)
@@ -298,6 +386,120 @@ bool ZBuffer::LoadBuffer(uint32_t nResourceID)
 	return true;
 }
 #endif
+*/
+
+bool ZBuffer::Rotate(eOrientation rotation)
+{
+    const std::lock_guard<std::recursive_mutex> lock(mMutex);
+
+    uint32_t nPixels = mSurfaceArea.Width() * mSurfaceArea.Height();
+
+    if (nPixels < 1)
+        return false;
+
+    if (rotation == kLeft || rotation == kLeftAndVFlip)
+    {
+        ZRect rOldArea(mSurfaceArea);
+        uint32_t oldW = rOldArea.Width();
+        uint32_t oldH = rOldArea.Height();
+        uint32_t newW = oldH;
+        uint32_t newH = oldW;
+        ZRect rNewArea(0, 0, newW, newH);
+
+        ZBuffer newBuf;
+        newBuf.Init(newW, newH);
+
+        for (int y = 0; y < oldH; y++)
+        {
+            for (int x = 0; x < oldW; x++)
+            {
+                newBuf.SetPixel(y, newH - x - 1, GetPixel(x, y));
+            }
+        }
+
+        mSurfaceArea = rNewArea;
+        memcpy(mpPixels, newBuf.GetPixels(), nPixels * sizeof(uint32_t));
+    }
+    if (rotation == kRight || rotation == kRightAndVFlip)
+    {
+        ZRect rOldArea(mSurfaceArea);
+        uint32_t oldW = rOldArea.Width();
+        uint32_t oldH = rOldArea.Height();
+        uint32_t newW = oldH;
+        uint32_t newH = oldW;
+        ZRect rNewArea(0, 0, newW, newH);
+
+        ZBuffer newBuf;
+        newBuf.Init(newW, newH);
+
+        for (int y = 0; y < oldH; y++)
+        {
+            for (int x = 0; x < oldW; x++)
+            {
+                newBuf.SetPixel(newW - y - 1, x, GetPixel(x, y));
+            }
+        }
+
+        mSurfaceArea = rNewArea;
+        memcpy(mpPixels, newBuf.GetPixels(), nPixels * sizeof(uint32_t));
+    }
+    if (rotation == k180)
+    {
+        ZBuffer newBuf;
+        uint32_t newW = mSurfaceArea.Width();
+        uint32_t newH = mSurfaceArea.Height();
+        newBuf.Init(newW, newH);
+
+        for (int y = 0; y < newH; y++)
+        {
+            for (int x = 0; x < newW; x++)
+            {
+                newBuf.SetPixel(newW - x - 1, newH - y - 1, GetPixel(x, y));
+            }
+        }
+
+        memcpy(mpPixels, newBuf.GetPixels(), nPixels * sizeof(uint32_t));
+    }
+    if (rotation == kVFlip || rotation == kLeftAndVFlip || rotation == kRightAndVFlip)
+    {
+        ZBuffer newBuf;
+        uint32_t newW = mSurfaceArea.Width();
+        uint32_t newH = mSurfaceArea.Height();
+        newBuf.Init(newW, newH);
+
+        for (int y = 0; y < newH; y++)
+        {
+            for (int x = 0; x < newW; x++)
+            {
+                newBuf.SetPixel(x, newH - y - 1, GetPixel(x, y));
+            }
+        }
+
+        memcpy(mpPixels, newBuf.GetPixels(), nPixels * sizeof(uint32_t));
+    }
+    if (rotation == kHFlip)
+    {
+        ZBuffer newBuf;
+        uint32_t newW = mSurfaceArea.Width();
+        uint32_t newH = mSurfaceArea.Height();
+        newBuf.Init(newW, newH);
+
+        for (int y = 0; y < newH; y++)
+        {
+            for (int x = 0; x < newW; x++)
+            {
+                newBuf.SetPixel(newW-x-1, y, GetPixel(x, y));
+            }
+        }
+
+        memcpy(mpPixels, newBuf.GetPixels(), nPixels * sizeof(uint32_t));
+    }
+
+    return true;
+}
+
+
+
 
 bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType type)
 {
@@ -335,7 +537,7 @@ bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType
 		pDstBits += (mSurfaceArea.Width() - nBltWidth);        // Next line in the destination buffer
 	}
 
-	return true;
+    return true;
 }
 
 
@@ -1126,3 +1328,4 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 
 	return true;
 }
+

@@ -117,6 +117,9 @@ bool ZWin::Shutdown()
 		if (gpMouseOverWin == this)
 			gpMouseOverWin = NULL;
 
+
+        const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+
 		mbInitted = false;
 	}
 	return true;
@@ -285,6 +288,7 @@ bool ZWin::ChildRemove(ZWin* child)
 			mChildList.erase( it );
 //			ZDEBUG_OUT("ChildRemove:0x%x\n", uint32_t(child));
 
+            const std::lock_guard<std::recursive_mutex> surfaceLock(child->mpTransformTexture.get()->GetMutex());
 			child->SetParentWin(NULL);
 			return true;
 		}
@@ -296,8 +300,11 @@ void ZWin::ChildDeleteAll()
 {
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
 
-	for (auto pChild : mChildList)		// signal all to shutdown first
-		pChild->SignalShutdown();
+    for (auto pChild : mChildList)		// signal all to shutdown first
+    {
+        pChild->SetVisible(false);
+        pChild->SignalShutdown();
+    }
 
 	while (!mChildList.empty())			// ChildDelete modifies the list so we can't use regular iteration
 		ChildDelete(*mChildList.begin());
@@ -824,6 +831,9 @@ bool ZWin::WindowThreadProc(void* pContext)
 				}
 			}
 		}
+
+        if (pThis->mbShutdownFlag)
+            break;
 
         bool bActive = pThis->Process();
         bActive |= pThis->Paint();

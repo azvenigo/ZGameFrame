@@ -256,14 +256,23 @@ bool ZWinImage::LoadImage(const string& sName)
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
 
     // if there's an old image, acquire the lock before freeing it
-    mpImage.reset(new ZBuffer());
 
-    const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
-    if (!mpImage->LoadBuffer(sName))
+    tZBufferPtr newImage(new ZBuffer());
+
+    if (!newImage->LoadBuffer(sName))
     {
         ZERROR("ERROR: Failed to load image:", sName);
         return false;
     }
+
+    if (mpImage)
+    {
+        const std::lock_guard<std::recursive_mutex> imageLock(mpImage.get()->GetMutex());
+        cout << "ZWinImage::swapping...\n";
+        mpImage.swap(newImage);
+    }
+    else
+        mpImage = newImage;
 
     FitImageToWindow();
     mbVisible = true;
@@ -360,20 +369,27 @@ bool ZWinImage::Paint()
         return false;
 
 
+    cout << "ZWinImage::Painting...\n";
+
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
-    ZOUT_LOCKLESS("painting ", msWinName);
 
     ZRect rDest(mpTransformTexture.get()->GetArea());
 
+    ZOUT_LOCKLESS("about to Fill texture:", mpTransformTexture.get()->GetPixels(), "pixels:", mpTransformTexture.get()->GetArea().Width() * mpTransformTexture.get()->GetArea().Height());
     mpTransformTexture.get()->Fill(mpTransformTexture.get()->GetArea(), mFillColor);
+    ZOUT_LOCKLESS("filled\n");
+
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
 
+    ZOUT_LOCKLESS("mpimage");
     if (mpImage)
     {
+        ZOUT_LOCKLESS("imageSurfaceLock get");
         const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
-        if (mpImage->GetPixels())   
+        if (mpImage->GetPixels())
         {
+            ZOUT_LOCKLESS("getpixels");
             ZRect rSource(mpImage->GetArea());
 
             if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
@@ -415,64 +431,21 @@ bool ZWinImage::Paint()
 	return ZWin::Paint();
 }
 
-bool ZWinImage::Rotate(eRotation rotation)
-{
-    if (rotation == kLeft)
-    {
-        ZBuffer buf;
-
-        ZRect rOldArea(mpImage->GetArea());
-        ZRect rNewArea(0, 0, rOldArea.Height(), rOldArea.Width());
-
-        buf.Init(rNewArea.Width(), rNewArea.Height());
-        for (int y = 0; y < rOldArea.Height(); y++)
-        {
-            for (int x = 0; x < rOldArea.Width(); x++)
-            {
-                buf.SetPixel(y, rNewArea.Height()-x-1, mpImage->GetPixel(x, y));
-            }
-        }
-
-        mpImage->Init(rNewArea.Width(), rNewArea.Height());
-        mpImage->Blt(&buf, rNewArea, rNewArea);
-
-//        mpImage = pBuf;
-    }
-    else if (rotation == kRight)
-    {
-        ZBuffer buf;
-
-        ZRect rOldArea(mpImage->GetArea());
-        ZRect rNewArea(0, 0, rOldArea.Height(), rOldArea.Width());
-
-        buf.Init(rNewArea.Width(), rNewArea.Height());
-        for (int y = 0; y < rOldArea.Height(); y++)
-        {
-            for (int x = 0; x < rOldArea.Width(); x++)
-            {
-                buf.SetPixel(rNewArea.Width()-y-1, x, mpImage->GetPixel(x, y));
-            }
-        }
-
-        mpImage->Init(rNewArea.Width(), rNewArea.Height());
-        mpImage->Blt(&buf, rNewArea, rNewArea);
-    }
-
-    FitImageToWindow();
-    return true;
-}
-
 bool ZWinImage::HandleMessage(const ZMessage& message)
 {
     string sType = message.GetType();
 
     if (sType == "rotate_left")
     {
-        return Rotate(kLeft);
+        mpImage->Rotate(ZBuffer::kLeft);
+        FitImageToWindow();
+        return true;
     }
     else if (sType == "rotate_right")
     {
-        return Rotate(kRight);
+        mpImage->Rotate(ZBuffer::kRight);
+        FitImageToWindow();
+        return true;
     }
 
     return ZWin::HandleMessage(message);

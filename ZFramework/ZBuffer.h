@@ -30,7 +30,7 @@ public:
     enum eRenderFlags
     {
         kRenderFlag_None            = 0,
-        kRenderFlag_ReadyToRender   = 1
+        kRenderFlag_ReadyToRender   = 1 
     };
 
     enum eBltEdgeMiddleType
@@ -38,6 +38,21 @@ public:
         kEdgeBltMiddle_None         = 0,
         kEdgeBltMiddle_Tile         = 1,
         kEdgeBltMiddle_Stretch      = 2
+    };
+
+
+    // Orientations defined as in EXIF spec
+    enum eOrientation
+    {
+        kUnknown        = 0,
+        kNone           = 1,
+        kHFlip          = 2,
+        k180            = 3,
+        kVFlip          = 4,
+        kLeftAndVFlip   = 5,
+        kLeft           = 6,
+        kRightAndVFlip  = 7,
+        kRight          = 8,
     };
 
 	ZBuffer();
@@ -51,6 +66,8 @@ public:
     virtual bool            CopyPixels(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip = NULL);		// like BLT but copies pixel values directly.... including alpha
     virtual uint32_t        GetPixel(int64_t x, int64_t y);
     virtual void            SetPixel(int64_t x, int64_t y, uint32_t nCol);
+    virtual bool            Rotate(eOrientation rotation);
+
 
     virtual ZRect&          GetArea() { return mSurfaceArea; }
 
@@ -85,7 +102,7 @@ public:
     // Load/Save
 	virtual bool            LoadBuffer(const std::string& sName);
 #ifdef _WIN64
-	virtual bool            LoadBuffer(uint32_t nResourceID);
+//	virtual bool            LoadBuffer(uint32_t nResourceID);
     virtual bool            SaveBuffer(const std::string& sName);
 #endif
 

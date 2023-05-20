@@ -8,15 +8,6 @@
 class ZWinImage : public ZWin
 {
 public:
-
-    enum eRotation
-    {
-        kNone   = 0,
-        kLeft   = 1,
-        kRight  = 2
-    };
-
-
     ZWinImage();
     ~ZWinImage();
 
@@ -51,7 +42,6 @@ public:
     void        SetImage(tZBufferPtr pImage);
     tZBufferPtr GetImage() { return mpImage; }
 
-    bool        Rotate(eRotation rotation);
     void        SetArea(const ZRect& newArea);
 
 
