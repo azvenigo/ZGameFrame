@@ -10,7 +10,7 @@ public:
 	ZPreferences();
 	~ZPreferences();
 
-	bool				Load(const std::string& sFilename);
+	bool				ViewImage(const std::string& sFilename);
 	bool				Save();	// Will only save if mbDirty is true
 
 	ZXMLNode*			GetPreferenceNode() { return &mPreferenceTree; }

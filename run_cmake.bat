@@ -1,2 +1,2 @@
-cmake -S SandboxApps\. -B build
+cmake -S . -B build
 @if %ERRORLEVEL% == 0 (start build) ELSE (pause)

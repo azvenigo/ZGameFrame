@@ -26,7 +26,7 @@ public:
    //bool		OnChar(char key);
    virtual bool	OnKeyDown(uint32_t key);
 
-   void		Load(std::string sName);
+   void		ViewImage(std::string sName);
    void		Save(std::string sName);
    
 private:

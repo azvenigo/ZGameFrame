@@ -3,7 +3,7 @@
 #include <commctrl.h>
 #include <fstream>
 
-#include "Main_Sandbox.h"
+#include "Main_ZImageViewer.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/CommandLineParser.h"
 #include "helpers/Registry.h"
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     // Enable exception handling
     SetUnhandledExceptionFilter([](PEXCEPTION_POINTERS exceptionInfo) -> LONG {
         std::cerr << "Unhandled exception: " << std::hex << exceptionInfo->ExceptionRecord->ExceptionCode << std::endl;
-        //while (1);
+//        while (1);
         return EXCEPTION_EXECUTE_HANDLER;
         });
 
@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
 
     string sUserPath(getenv("APPDATA"));
     std::filesystem::path fullPath(sUserPath);
-    fullPath += "/ZSandbox/prefs.json";
-    gsRegistryFile = fullPath.make_preferred().string();
+    fullPath += "/ZImageViewer/";
+    gsRegistryFile = fullPath.make_preferred().string() + "prefs.json";
 
     if (!gRegistry.ViewImage(gsRegistryFile))
     {
@@ -66,9 +66,11 @@ int main(int argc, char* argv[])
         std::filesystem::create_directories(regPath.parent_path());
     }
 
+    gRegistry["appdata"] = fullPath;
+
     std::string sImageFilename;
     CLP::CommandLineParser parser;
-    parser.RegisterAppDescription("Sandbox for ZFramework");
+    parser.RegisterAppDescription("ZImageViewer");
     parser.RegisterParam(CLP::ParamDesc("PATH", &sImageFilename, CLP::kOptional | CLP::kPositional, "Filename of image to load."));
 
     if (!parser.Parse(argc, argv))
@@ -77,7 +79,7 @@ int main(int argc, char* argv[])
         gbApplicationExiting = true;
     }
 
-    gRegistry["sandbox"]["imageviewer_filename"] = sImageFilename;
+    gRegistry["zimageviewer"]["imageviewer_filename"] = sImageFilename;
 
 
 
@@ -194,7 +196,7 @@ int main(int argc, char* argv[])
     }
 
 
-    Sandbox::SandboxShutdown();
+    ZImageViewer::Shutdown();
     gDebug.Flush();
     //    FlushDebugOutQueue();
 
@@ -269,6 +271,12 @@ void SizeWindowToClientArea(HWND hWnd, int left, int top, int nWidth, int nHeigh
 }
 
 
+int WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdline, int cmdshow)
+{
+    return main(__argc, __argv);
+}
+
+
 const char* szAppClass = "ProcessImage";
 BOOL WinInitInstance(HINSTANCE hInstance, int nCmdShow)
 {
@@ -324,14 +332,14 @@ BOOL WinInitInstance(HINSTANCE hInstance, int nCmdShow)
 	gGraphicSystem.SetHWND(ghWnd);
 
 #ifdef GENERATE_FRAMEWORK_FONTS
-    Sandbox::SandboxInitializeFonts();
+    ZImageViewer::InitializeFonts();
     GenerateFrameworkFonts();
 #endif
 
 
 
-    Sandbox::SandboxInitialize();
-    cout << "***AFTER SandboxInitialize. \n";
+    ZImageViewer::Initialize();
+    //cout << "***AFTER SandboxInitialize. \n";
 
 
 	ShowWindow(ghWnd, nCmdShow);
@@ -400,7 +408,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 			return TRUE;
 	case WM_DESTROY:
-		Sandbox::SandboxShutdown();
+        ZImageViewer::Shutdown();
 		break;
 	case WM_CHAR:
 		{

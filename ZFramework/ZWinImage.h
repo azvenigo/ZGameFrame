@@ -20,8 +20,14 @@ public:
     bool        OnMouseDownR(int64_t x, int64_t y);
     bool        OnMouseMove(int64_t x, int64_t y);
     bool        OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
+    bool        OnKeyDown(uint32_t c);
+    bool        OnKeyUp(uint32_t c);
+
+
 
     void        FitImageToWindow();
+
+    void        SetManipulationHotkey(uint32_t hotkey) { mManipulationHotkey = hotkey; if (hotkey) mbManipulate = false; }
 
     void        SetEnableControlPanel(bool bEnable) { mbControlPanelEnabled = bEnable; }
     void        SetZoomable(bool bZoomable, double fMinZoom = 0.01, double fMaxZoom = 1000.0) { mbZoomable = bZoomable; mfMinZoom = fMinZoom; mfMaxZoom = fMaxZoom; }
@@ -71,6 +77,9 @@ private:
     tZFontPtr           mpZoomCaptionFont;
     ZTextLook           mZoomCaptionLook;
     ZGUI::ePosition     mZoomCaptionPos;
+
+    uint32_t            mManipulationHotkey;
+    bool                mbManipulate;
 
     std::string         msCaption;
     tZFontPtr           mpCaptionFont;

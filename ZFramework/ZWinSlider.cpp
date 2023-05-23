@@ -210,11 +210,9 @@ bool ZWinSlider::OnMouseOut()
 
 bool ZWinSlider::Paint()
 {
-	if (!mbInvalid)
+	if (!mbInvalid || !mbInitted|| !mpTransformTexture.get())
 		return false;
 
-	if (!mpTransformTexture.get())
-		return false;
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
    

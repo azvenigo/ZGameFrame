@@ -37,7 +37,7 @@ bool ImageViewer::Init()
     return ZWin::Init();
 }
 
-bool ImageViewer::Load(const std::string& sFilename)
+bool ImageViewer::ViewImage(const std::string& sFilename)
 {
     msFilenameToLoad = sFilename;
     if (mbInitted)
@@ -62,7 +62,7 @@ bool ImageViewer::Load(const std::string& sFilename)
 bool ImageViewer::Process()
 {
     if (mpWinImage && msFilenameToLoad != msLoadedFilename)
-        Load(msFilenameToLoad);
+        ViewImage(msFilenameToLoad);
     return ZWin::Process();
 }
 

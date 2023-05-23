@@ -15,6 +15,7 @@ using namespace std;
 ZWinImage::ZWinImage()
 {
 	mbAcceptsCursorMessages = true;
+    mbAcceptsFocus = true;
     mpImage.reset();
     mbZoomable = false;
     mbControlPanelEnabled = false;
@@ -24,7 +25,8 @@ ZWinImage::ZWinImage()
     mfPerfectFitZoom = 1.0;
     mfMinZoom = 0.01;
     mfMaxZoom = 1000.0;
-
+    mManipulationHotkey = 0;
+    mbManipulate = true;    // true if hotkey is not set
 
     mbShowZoom = false;
     mbShow100Also = false;
@@ -175,55 +177,88 @@ bool ZWinImage::OnMouseMove(int64_t x, int64_t y)
 
 bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 {
-    if (mbZoomable && mImageArea.PtInRect(x, y))
+    // If a zoom hotkey is set, only zoom if it's being held
+    // or if no hotkey is set
+    if (mbZoomable)
     {
-        double fNewZoom = mfZoom;
-        if (nDelta < 0)
+        if (mbManipulate && mImageArea.PtInRect(x, y))
         {
-            fNewZoom *= 1.2f;
+            double fNewZoom = mfZoom;
+            if (nDelta < 0)
+            {
+                fNewZoom *= 1.2f;
+            }
+            else
+            {
+                fNewZoom *= 0.8f;
+            }
+
+            // snap zoom to some specific values like perfect fit, 1.00, 2.00, 4.00
+            if ((mfZoom > mfPerfectFitZoom && fNewZoom < mfPerfectFitZoom) || (mfZoom < mfPerfectFitZoom && fNewZoom > mfPerfectFitZoom))
+                fNewZoom = mfPerfectFitZoom;
+            else if ((mfZoom < 1.00 && fNewZoom > 1.00) || (mfZoom > 1.00 && fNewZoom < 1.00))
+                fNewZoom = 1.00;
+            else if ((mfZoom < 2.00 && fNewZoom > 2.00) || (mfZoom > 2.00 && fNewZoom < 2.00))
+                fNewZoom = 2.00;
+            else if ((mfZoom < 4.00 && fNewZoom > 4.00) || (mfZoom > 4.00 && fNewZoom < 4.00))
+                fNewZoom = 4.00;
+
+            SetZoom(fNewZoom);
+
+            ZRect rImage(mpImage.get()->GetArea());
+
+            double fZoomPointX = (double)(x - mImageArea.left);
+            double fZoomPointY = (double)(y - mImageArea.top);
+
+            double fZoomPointU = fZoomPointX / (double)mImageArea.Width();
+            double fZoomPointV = fZoomPointY / (double)mImageArea.Height();
+
+            double fNewWidth = rImage.Width() * fNewZoom;
+            double fNewHeight = rImage.Height() * fNewZoom;
+
+
+            int64_t nNewLeft = (int64_t)(x - (fNewWidth * fZoomPointU));
+            int64_t nNewRight = nNewLeft + (int64_t)fNewWidth;
+
+            int64_t nNewTop = (int64_t)(y - (fNewHeight * fZoomPointV));
+            int64_t nNewBottom = nNewTop + (int64_t)fNewHeight;
+
+            ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
+
+            mImageArea.SetRect(rNewArea);
+            return true;
         }
-        else
-        {
-            fNewZoom *= 0.8f;
-        }
+    }
 
-        // snap zoom to some specific values like perfect fit, 1.00, 2.00, 4.00
-        if ((mfZoom > mfPerfectFitZoom && fNewZoom < mfPerfectFitZoom) || (mfZoom < mfPerfectFitZoom && fNewZoom > mfPerfectFitZoom))
-            fNewZoom = mfPerfectFitZoom;
-        else if ((mfZoom < 1.00 && fNewZoom > 1.00) || (mfZoom > 1.00 && fNewZoom < 1.00))
-            fNewZoom = 1.00;
-        else if ((mfZoom < 2.00 && fNewZoom > 2.00) || (mfZoom > 2.00 && fNewZoom < 2.00))
-            fNewZoom = 2.00;
-        else if ((mfZoom < 4.00 && fNewZoom > 4.00) || (mfZoom > 4.00 && fNewZoom < 4.00))
-            fNewZoom = 4.00;
-
-        SetZoom(fNewZoom);
-
-        ZRect rImage(mpImage.get()->GetArea());
-
-        double fZoomPointX = (double)(x-mImageArea.left);
-        double fZoomPointY = (double)(y-mImageArea.top);
-
-        double fZoomPointU = fZoomPointX / (double)mImageArea.Width();
-        double fZoomPointV = fZoomPointY / (double)mImageArea.Height();
-
-        double fNewWidth = rImage.Width() * fNewZoom;
-        double fNewHeight = rImage.Height() * fNewZoom;
-
-
-        int64_t nNewLeft = (int64_t)(x - (fNewWidth * fZoomPointU));
-        int64_t nNewRight = nNewLeft + (int64_t)fNewWidth;
-
-        int64_t nNewTop = (int64_t)(y - (fNewHeight * fZoomPointV));
-        int64_t nNewBottom = nNewTop + (int64_t)fNewHeight;
-
-        ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
-
-        mImageArea.SetRect(rNewArea);
-	}
+    // fallthrough
+    if (mpParentWin)
+        mpParentWin->OnMouseWheel(x, y, nDelta);
 
 	return true;
 }
+
+bool ZWinImage::OnKeyDown(uint32_t c)
+{
+    if (c == mManipulationHotkey)
+        mbManipulate = true;
+
+    if (mpParentWin)
+        return mpParentWin->OnKeyDown(c);
+
+    return ZWin::OnKeyDown(c);
+}
+
+bool ZWinImage::OnKeyUp(uint32_t c)
+{
+    if (c == mManipulationHotkey)
+        mbManipulate = false;
+
+    if (mpParentWin)
+        return mpParentWin->OnKeyUp(c);
+
+    return ZWin::OnKeyUp(c);
+}
+
 
 void ZWinImage::ScrollTo(int64_t nX, int64_t nY)
 {
@@ -369,27 +404,27 @@ bool ZWinImage::Paint()
         return false;
 
 
-    cout << "ZWinImage::Painting...\n";
+//    cout << "ZWinImage::Painting...\n";
 
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
     ZRect rDest(mpTransformTexture.get()->GetArea());
 
-    ZOUT_LOCKLESS("about to Fill texture:", mpTransformTexture.get()->GetPixels(), "pixels:", mpTransformTexture.get()->GetArea().Width() * mpTransformTexture.get()->GetArea().Height());
+//    ZOUT_LOCKLESS("about to Fill texture:", mpTransformTexture.get()->GetPixels(), "pixels:", mpTransformTexture.get()->GetArea().Width() * mpTransformTexture.get()->GetArea().Height());
     mpTransformTexture.get()->Fill(mpTransformTexture.get()->GetArea(), mFillColor);
-    ZOUT_LOCKLESS("filled\n");
+//    ZOUT_LOCKLESS("filled\n");
 
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
 
-    ZOUT_LOCKLESS("mpimage");
+//    ZOUT_LOCKLESS("mpimage");
     if (mpImage)
     {
-        ZOUT_LOCKLESS("imageSurfaceLock get");
+//        ZOUT_LOCKLESS("imageSurfaceLock get");
         const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
         if (mpImage->GetPixels())
         {
-            ZOUT_LOCKLESS("getpixels");
+//            ZOUT_LOCKLESS("getpixels");
             ZRect rSource(mpImage->GetArea());
 
             if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
@@ -414,7 +449,7 @@ bool ZWinImage::Paint()
         mpCaptionFont->DrawText(mpTransformTexture.get(), msCaption, rCaption, mCaptionLook);
     }
 
-    if (mbShowZoom)
+    if (mbShowZoom || mbManipulate)
     {
         if ((mfZoom == 1.0 && mbShow100Also) || mfZoom != 1.0)
         {

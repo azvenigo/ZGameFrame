@@ -16,7 +16,7 @@ public:
    bool     Process();
    bool		Paint();
 
-   bool     Load(const std::string& sFilename);
+   bool     ViewImage(const std::string& sFilename);
 
    virtual bool	OnKeyDown(uint32_t key);
 

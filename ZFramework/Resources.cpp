@@ -165,6 +165,7 @@ bool cResources::Shutdown()
 
     gStandardButtonDownEdgeImage = nullptr;
 
+    ZOUT_LOCKLESS("cResources::Shutdown() complete");
 
 	return true;
 }
