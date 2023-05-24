@@ -17,14 +17,14 @@ bool is_ready(std::shared_future<R> const& f)
     return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
 
-ThreadPool gPool(4);
+ThreadPool gPool(16);
 
 ImageViewer::ImageViewer()
 {
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
     mIdleSleepMS = 13;
-    mMaxMemoryUsage = 1 * 1024 * 1024 * 1024;   // 1GiB
+    mMaxMemoryUsage = 2 * 1024 * 1024 * 1024LL;   // 2GiB
     mAtomicIndex = 0;
 }
  
@@ -124,9 +124,13 @@ bool ImageViewer::Init()
         mpWinImage = new ZWinImage();
         mpWinImage->SetArea(mAreaToDrawTo);
         mpWinImage->SetFill(0xff000000);
-        mpWinImage->SetManipulationHotkey(VK_CONTROL);
-        mpWinImage->SetZoomable(true, 0.05, 10.0);
-        mpWinImage->SetShowZoom(gDefaultWinTextEditStyle.Font(), gDefaultWinTextEditStyle.look, ZGUI::CB, true);
+        mpWinImage->mManipulationHotkey = VK_CONTROL;
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kShowOnHotkey|ZWinImage::kScrollable;
+
+        ZGUI::Style zoomStyle(gDefaultWinTextEditStyle);
+        zoomStyle.pos = ZGUI::CB;
+        mpWinImage->SetShowZoom(zoomStyle);
+
         ChildAdd(mpWinImage);
         mpWinImage->SetFocus();
     }
@@ -202,8 +206,6 @@ bool ImageViewer::AddToCache(std::filesystem::path imagePath)
     if (InCache(imagePath))
         return true;
 
-//    auto newPair = tNamedImagePair(imagePath, tImageFuture(std::move(std::async([=]() { ImageViewer::LoadImageProc(mSelectedFilename, this); }))));
-
     mImageCache.emplace_front( tNamedImagePair(imagePath, gPool.enqueue(&ImageViewer::LoadImageProc, imagePath, this)));
     return true;
 }
@@ -239,8 +241,6 @@ bool ImageViewer::Preload()
     {
         if (AddToCache(*selectedImage))
         {
-
-
             // now preload the next image
             selectedImage++;
             if (selectedImage != mImagesInFolder.end())
@@ -308,7 +308,9 @@ bool ImageViewer::Process()
 
             string sCaption = SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size()) + " " + mSelectedFilename.string();
 
-            mpWinImage->SetCaption(sCaption, gDefaultWinTextEditStyle.Font(), gDefaultWinTextEditStyle.look, ZGUI::LB);
+            ZGUI::Style captionStyle(gDefaultWinTextEditStyle);
+            captionStyle.pos = ZGUI::LB;
+            mpWinImage->SetCaption(sCaption, captionStyle);
         }
     }
     return ZWin::Process();
@@ -316,13 +318,6 @@ bool ImageViewer::Process()
 
 bool ImageViewer::Paint()
 {
-/*    if (!mbInvalid)
-        return false;
-
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
-
-    mpTransformTexture.get()->Fill(mAreaToDrawTo, 0xff003300);*/
-
     return ZWin::Paint();
 }
    

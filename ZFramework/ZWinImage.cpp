@@ -7,6 +7,7 @@
 #include "ZWinControlPanel.h"
 #include "ZWinBtn.H"
 #include "Resources.h"
+#include "ZGUIStyle.h"
 #include "ZDebug.h"
 
 extern ZAnimator gAnimator;
@@ -17,8 +18,6 @@ ZWinImage::ZWinImage()
 	mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
     mpImage.reset();
-    mbZoomable = false;
-    mbControlPanelEnabled = false;
     mnControlPanelButtonSide = 0;
     mnControlPanelFontHeight = 0;
 	mfZoom = 1.0;
@@ -26,13 +25,12 @@ ZWinImage::ZWinImage()
     mfMinZoom = 0.01;
     mfMaxZoom = 1000.0;
     mManipulationHotkey = 0;
-    mbManipulate = true;    // true if hotkey is not set
+    mbHotkeyActive = false;
+    mZoomStyle = gStyleCaption;
 
-    mbShowZoom = false;
-    mbShow100Also = false;
-    mZoomCaptionLook = ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000);
-    mZoomCaptionPos = ZGUI::LT;
     mpPanel = nullptr;
+
+    mBehavior = eBehavior::kNone;
 }
 
 ZWinImage::~ZWinImage()
@@ -43,7 +41,7 @@ bool ZWinImage::Init()
 {
     mIdleSleepMS = 10000;
 
-    if (mbControlPanelEnabled)
+    if (mBehavior & eBehavior::kShowControlPanel)
     {
         mpPanel = new ZWinControlPanel();
         mnControlPanelButtonSide = mAreaToDrawTo.Height() / 16;
@@ -129,6 +127,19 @@ bool ZWinImage::Init()
     return ZWin::Init();
 }
 
+
+void ZWinImage::SetShowZoom(const ZGUI::Style& style)
+{ 
+    mZoomStyle = style;
+}
+
+void ZWinImage::SetCaption(const std::string& sCaption, const ZGUI::Style& style)
+{
+    msCaption = sCaption;
+    mCaptionStyle = style;
+}
+
+
 bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 {
     ReleaseCapture();
@@ -139,13 +150,11 @@ bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 
 bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 {
-    if (mbZoomable && mImageArea.PtInRect(x,y))
+    if ((mBehavior & kScrollable) && mImageArea.PtInRect(x,y))
     {
         if (SetCapture())
         {
-//            OutputDebugLockless("capture x:%d, y:%d\n", mZoomOffset.x, mZoomOffset.y);
             SetMouseDownPos(mImageArea.left-x, mImageArea.top-y);
-//            mZoomOffsetAtMouseDown = mZoomOffset;
             return true;
         }
     }
@@ -155,7 +164,19 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 
 bool ZWinImage::OnMouseDownR(int64_t x, int64_t y)
 {
-    FitImageToWindow();
+    // toggle between 100% and fullscreen
+    if (mfZoom != 1.0)
+    {
+        mfZoom = 1.0;
+
+        mImageArea = mpImage->GetArea();
+        mImageArea = mImageArea.CenterInRect(mAreaToDrawTo);
+
+        Invalidate();
+    }
+    else
+        FitImageToWindow();
+
     return ZWin::OnMouseDownR(x, y);
 }
 
@@ -179,9 +200,10 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 {
     // If a zoom hotkey is set, only zoom if it's being held
     // or if no hotkey is set
-    if (mbZoomable)
+    bool bEnableZoom = (mBehavior & kZoom) || (mBehavior & kHotkeyZoom && mbHotkeyActive);
+    if (bEnableZoom)
     {
-        if (mbManipulate && mImageArea.PtInRect(x, y))
+        if (mImageArea.PtInRect(x, y))
         {
             double fNewZoom = mfZoom;
             if (nDelta < 0)
@@ -228,6 +250,8 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
             mImageArea.SetRect(rNewArea);
             return true;
         }
+
+        return true;
     }
 
     // fallthrough
@@ -240,7 +264,10 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 bool ZWinImage::OnKeyDown(uint32_t c)
 {
     if (c == mManipulationHotkey)
-        mbManipulate = true;
+    {
+        mbHotkeyActive = true;
+        Invalidate();
+    }
 
     if (mpParentWin)
         return mpParentWin->OnKeyDown(c);
@@ -251,7 +278,10 @@ bool ZWinImage::OnKeyDown(uint32_t c)
 bool ZWinImage::OnKeyUp(uint32_t c)
 {
     if (c == mManipulationHotkey)
-        mbManipulate = false;
+    {
+        mbHotkeyActive = false;
+        Invalidate();
+    }
 
     if (mpParentWin)
         return mpParentWin->OnKeyUp(c);
@@ -367,13 +397,10 @@ void ZWinImage::FitImageToWindow()
 }
 
 
-void ZWinImage::SetZoom(double fZoom) 
+void ZWinImage::SetZoom(double fZoom)
 { 
     mfZoom = fZoom;
-    if (mfZoom < mfMinZoom)
-        mfZoom = mfMinZoom;
-    else if (mfZoom > mfMaxZoom)
-        mfZoom = mfMaxZoom;
+    limit<double>(mfZoom, mfMinZoom, mfMaxZoom);
     Invalidate(); 
 }
 
@@ -386,6 +413,18 @@ double ZWinImage::GetZoom()
 void ZWinImage::SetImage(tZBufferPtr pImage)
 {
 //	mpImage.reset(pImage);
+
+    if (pImage->GetArea().Height() < mAreaToDrawTo.Height())    // if setting an image smaller than the screen, set new one unzoomed
+    {
+        mfZoom = 1.0;
+        mImageArea = pImage->GetArea();
+        mImageArea = mImageArea.CenterInRect(mAreaToDrawTo);
+        mpImage = pImage;
+        Invalidate();
+
+        return;
+    }
+
     mpImage = pImage;
     FitImageToWindow();
 }
@@ -443,24 +482,21 @@ bool ZWinImage::Paint()
 
     if (!msCaption.empty())
     {
-        assert(mpCaptionFont);
+        if (mBehavior & kShowCaption || (mBehavior & kShowOnHotkey && mbHotkeyActive))
+        {
 
-        ZRect rCaption(mpCaptionFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), msCaption.length(), mCaptionPos));
-        mpCaptionFont->DrawText(mpTransformTexture.get(), msCaption, rCaption, mCaptionLook);
+            ZRect rCaption(mCaptionStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), msCaption.length(), mCaptionStyle.pos));
+            mCaptionStyle.Font()->DrawText(mpTransformTexture.get(), msCaption, rCaption, mCaptionStyle.look);
+        }
     }
 
-    if (mbShowZoom || mbManipulate)
+    if (mBehavior & kShowZoomCaption || (mBehavior & kShowOnHotkey && mbHotkeyActive))
     {
-        if ((mfZoom == 1.0 && mbShow100Also) || mfZoom != 1.0)
-        {
-            assert(mpZoomCaptionFont);
+        string sZoom;
+        Sprintf(sZoom, "%d%%", (int32_t)(mfZoom * 100.0));
 
-            string sZoom;
-            Sprintf(sZoom, "%d%%", (int32_t)(mfZoom * 100.0));
-
-            ZRect rZoomCaption(mpZoomCaptionFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)sZoom.data(), sZoom.length(), mZoomCaptionPos));
-            mpZoomCaptionFont->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, mZoomCaptionLook);
-        }
+        ZRect rZoomCaption(mZoomStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sZoom.data(), sZoom.length(), mZoomStyle.pos));
+        mZoomStyle.Font()->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, mZoomStyle.look);
     }
 
 	return ZWin::Paint();

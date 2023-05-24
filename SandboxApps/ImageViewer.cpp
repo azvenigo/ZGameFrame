@@ -47,8 +47,8 @@ bool ImageViewer::ViewImage(const std::string& sFilename)
             msLoadedFilename = msFilenameToLoad;
             if (mpWinImage->LoadImage(msLoadedFilename))
             {
-                mpWinImage->SetEnableControlPanel(true);
-                mpWinImage->SetZoomable(true);
+                mpWinImage->mBehavior |= (ZWinImage::kZoom | ZWinImage::kShowControlPanel);
+
                 mpWinImage->SetFill(0x00000000);
                 Invalidate();
             }

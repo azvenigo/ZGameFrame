@@ -161,7 +161,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
                 Sprintf(sMessage, "closeimg;name=%s;target=imageprocesswin", filename.c_str());
                 pOriginalImageWin->SetCloseButtonMessage(sMessage);
 
-                pOriginalImageWin->SetEnableControlPanel(true);
+                pOriginalImageWin->mBehavior |= ZWinImage::kShowControlPanel;
                 pOriginalImageWin->SetFill(0x00000000);
                 ChildAdd(pOriginalImageWin);
 
@@ -1127,11 +1127,16 @@ void cProcessImageWin::ResetResultsBuffer()
 
         mpResultWin = new ZWinImage();
         mpResultWin->SetArea(mrResultImageDest);
-        mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont),ZTextLook(ZTextLook::kNormal, 0x44ffffff, 0x44ffffff), ZGUI::RB, true);
         mpResultWin->SetFill(0xff222222);
         mpResultWin->SetArea(mrResultImageDest);
-        mpResultWin->SetZoomable(true, 0.05, 100.0);
-        mpResultWin->SetEnableControlPanel(true);
+
+
+        //        mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont),ZTextLook(ZTextLook::kNormal, 0x44ffffff, 0x44ffffff), ZGUI::RB, true);
+        mpResultWin->SetShowZoom(gStyleCaption);
+        mpResultWin->mfMinZoom = 0.05;
+        mpResultWin->mfMaxZoom = 100.0;
+
+        mpResultWin->mBehavior |= ZWinImage::kShowControlPanel;
         mpResultWin->SetSaveButtonMessage("saveimg;target=imageprocesswin");
 
 
