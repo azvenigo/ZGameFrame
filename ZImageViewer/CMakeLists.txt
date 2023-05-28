@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 3.7.1)
 
 set(CMAKE_CXX_STANDARD 17)
 
+
 ################################################################################
 
 project(ZImageViewer)
@@ -25,6 +26,9 @@ endif()
 set(ZIMAGEVIEWER_SOURCES 
 Main_ZImageViewer.h Main_ZImageViewer.cpp Main_Win64.cpp 
 ImageViewer.h ImageViewer.cpp
+ZImageViewer.rc 
+resource_win64.h
+res/ZImageViewer.ico
 )
 
 set (GUI_FILES
@@ -159,6 +163,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS} ${EXTRA_CXX_FLAGS}")
 
 ####################
 # ADDITIONAL LIBRARIES
+
+
 
 ####################
 # PROJECT

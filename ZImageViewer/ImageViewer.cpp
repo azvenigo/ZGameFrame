@@ -45,16 +45,16 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     switch (key)
     {
     case VK_LEFT:
-        PrevImage();
+        SetPrevImage();
         break;
     case VK_RIGHT:
-        NextImage();
+        SetNextImage();
         break;
     case VK_HOME:
-        FirstImage();
+        SetFirstImage();
         break;
     case VK_END:
-        LastImage();
+        SetLastImage();
         break;
     }
 
@@ -65,13 +65,13 @@ bool ImageViewer::OnKeyDown(uint32_t key)
 bool ImageViewer::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 {
     if (nDelta < 0)
-        PrevImage();
+        SetPrevImage();
     else
-        NextImage();
+        SetNextImage();
     return ZWin::OnMouseWheel(x,y,nDelta);
 }
 
-void ImageViewer::FirstImage()
+void ImageViewer::SetFirstImage()
 {
     if (mImagesInFolder.empty())
         return;
@@ -80,7 +80,7 @@ void ImageViewer::FirstImage()
     Preload();
 }
 
-void ImageViewer::LastImage()
+void ImageViewer::SetLastImage()
 {
     if (mImagesInFolder.empty())
         return;
@@ -89,7 +89,7 @@ void ImageViewer::LastImage()
     Preload();
 }
 
-void ImageViewer::PrevImage()
+void ImageViewer::SetPrevImage()
 {
     tImageFilenames::iterator selectedImage = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mSelectedFilename);
 
@@ -102,7 +102,7 @@ void ImageViewer::PrevImage()
     Preload();
 }
 
-void ImageViewer::NextImage()
+void ImageViewer::SetNextImage()
 {
     tImageFilenames::iterator selectedImage = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mSelectedFilename);
 

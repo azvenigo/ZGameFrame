@@ -46,10 +46,11 @@ protected:
     static tZBufferPtr      LoadImageProc(std::filesystem::path& imagePath, ImageViewer* pThis);
 
     bool                    Preload();
-    void                    FirstImage();
-    void                    LastImage();
-    void                    NextImage();
-    void                    PrevImage();
+    void                    SetFirstImage();
+    void                    SetLastImage();
+    void                    SetNextImage();
+    void                    SetPrevImage();
+
 
     ZWinImage* mpWinImage;  
     std::filesystem::path   mSelectedFilename;
