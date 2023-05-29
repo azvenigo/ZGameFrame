@@ -114,5 +114,6 @@ extern ZGUI::Style  gStyleToggleUnchecked;
 extern ZGUI::Style  gStyleGeneralText;
 extern ZGUI::Style  gDefaultDialogStyle;
 extern ZGUI::Style  gDefaultWinTextEditStyle;
+extern ZGUI::Style  gDefaultGroupingStyle;
 
 

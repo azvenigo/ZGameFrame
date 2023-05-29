@@ -55,16 +55,22 @@ int main(int argc, char* argv[])
 
 
     string sUserPath(getenv("APPDATA"));
-    std::filesystem::path fullPath(sUserPath);
-    fullPath += "/ZSandbox/prefs.json";
-    gsRegistryFile = fullPath.make_preferred().string();
 
-    if (!gRegistry.ViewImage(gsRegistryFile))
+    std::filesystem::path fullPath(sUserPath);
+    fullPath += "/ZSandbox/";
+    gRegistry["appdata"] = fullPath.make_preferred().string();
+
+//    gRegistry.Set("app", "data", fullPath.string());
+
+    gsRegistryFile = fullPath.make_preferred().string() + "prefs.json";
+
+    if (!gRegistry.Load(gsRegistryFile))
     {
         ZDEBUG_OUT("No registry file at:%s creating path for one.");
         std::filesystem::path regPath(gsRegistryFile);
         std::filesystem::create_directories(regPath.parent_path());
     }
+
 
     std::string sImageFilename;
     CLP::CommandLineParser parser;

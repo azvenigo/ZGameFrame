@@ -270,7 +270,7 @@ public:
 
 MainAppMessageTarget gMainAppMessageTarget;
 
-/*void Sandbox::SandboxInitializeFonts()
+void Sandbox::SandboxInitializeFonts()
 {
     if (gpFontSystem)
         return;
@@ -278,7 +278,8 @@ MainAppMessageTarget gMainAppMessageTarget;
     gpFontSystem = new ZFontSystem();
 
     filesystem::path appPath;
-    gRegistry["apppath"].get_to(appPath);
+    assert(gRegistry.contains("appdata"));  // required environment var
+    gRegistry["appdata"].get_to(appPath);
 
     filesystem::path font_cache(appPath);
     font_cache.append("font_cache");
@@ -288,7 +289,7 @@ MainAppMessageTarget gMainAppMessageTarget;
     gpFontSystem->SetDefaultFont(gDefaultTextFont);
 
     gpFontSystem->Init();
-}*/
+}
 
 bool Sandbox::SandboxInitialize()
 {
@@ -301,7 +302,7 @@ bool Sandbox::SandboxInitialize()
 
     gResources.Init("res/default_resources/");// todo, move this define elsewhere?
 
-//    SandboxInitializeFonts();
+    SandboxInitializeFonts();
     gpMainWin = new ZMainWin();
     gpMainWin->SetArea(grFullArea);
     gpMainWin->Init();

@@ -50,13 +50,15 @@ bool ZWinImage::Init()
         limit<int64_t>(mnControlPanelButtonSide, 20, 64);
         limit<int64_t>(mnControlPanelFontHeight, 16, 48);
 
-        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + mnControlPanelButtonSide);
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + mnControlPanelButtonSide + 2* gDefaultSpacer);
         mpPanel->SetTriggerRect(mAreaAbsolute);
         //mpPanel->SetHideOnMouseExit(true);
         mpPanel->SetArea(rPanelArea);
         ChildAdd(mpPanel, (mBehavior&kShowOnHotkey == 0));
 
-        ZRect rButton(0, 0, mnControlPanelButtonSide, mnControlPanelButtonSide);
+        ZRect rButton(gDefaultSpacer, gDefaultSpacer, mnControlPanelButtonSide, mnControlPanelButtonSide);
+
+        ZRect rGroup(rButton);
 
         ZWinSizablePushBtn* pBtn;
 
@@ -105,19 +107,58 @@ bool ZWinImage::Init()
         pBtn->SetMessage(sMessage);
         mpPanel->ChildAdd(pBtn);
 
-        rButton.OffsetRect(mnControlPanelButtonSide, 0);
 
-        if (!msSaveButtonMessage.empty())
+        rGroup.right = rButton.right;
+        rGroup.bottom = rButton.bottom;
+        rGroup.InflateRect(gDefaultGroupingStyle.padding, gDefaultGroupingStyle.padding);
+        mpPanel->AddGrouping("Rotate", rGroup);
+        rButton.OffsetRect(gDefaultSpacer, 0);
+
+
+
+
+
+        rButton.OffsetRect(mnControlPanelButtonSide, 0);
+        rGroup = rButton;
+        if (mBehavior&kShowLoadButton)
         {
-            rButton.right = rButton.left + mnControlPanelButtonSide *3;
+            rButton.right = rButton.left + mnControlPanelButtonSide * 3;
 
             pBtn = new ZWinSizablePushBtn();
             pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-            pBtn->SetCaption("save"); 
+            pBtn->SetCaption("load");
+            pBtn->SetArea(rButton);
+            pBtn->SetMessage(msLoadButtonMessage);
+            mpPanel->ChildAdd(pBtn);
+
+            rButton.OffsetRect(rButton.Width(), 0);
+        }
+
+        if (mBehavior & kShowSaveButton)
+        {
+            rButton.right = rButton.left + mnControlPanelButtonSide * 3;
+
+            pBtn = new ZWinSizablePushBtn();
+            pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+            pBtn->SetCaption("save");
             pBtn->SetArea(rButton);
             pBtn->SetMessage(msSaveButtonMessage);
             mpPanel->ChildAdd(pBtn);
         }
+
+        rGroup.right = rButton.right;
+        rGroup.bottom = rButton.bottom;
+        rGroup.InflateRect(gDefaultGroupingStyle.padding, gDefaultGroupingStyle.padding);
+        mpPanel->AddGrouping("File", rGroup);
+        rButton.OffsetRect(gDefaultSpacer, 0);
+
+
+
+
+
+
+
+
     }
 
 

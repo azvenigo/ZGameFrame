@@ -47,6 +47,8 @@ ZGUI::Style     gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZTextLook
 ZGUI::Style     gStyleGeneralText(ZFontParams("Verdana", 30), ZTextLook(ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, 0, 0, true);
 ZGUI::Style     gDefaultDialogStyle(gDefaultTextFont, ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultDialogFill, true);
 ZGUI::Style     gDefaultWinTextEditStyle(gDefaultTextFont, ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultTextAreaFill);
+ZGUI::Style     gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZTextLook(ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 8);
+
 
 ZGUI::Palette gAppPalette{
 {

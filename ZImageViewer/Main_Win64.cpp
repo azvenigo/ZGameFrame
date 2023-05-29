@@ -55,18 +55,20 @@ int main(int argc, char* argv[])
 
 
     string sUserPath(getenv("APPDATA"));
+
     std::filesystem::path fullPath(sUserPath);
     fullPath += "/ZImageViewer/";
+    gRegistry["appdata"] = fullPath.string();
+
     gsRegistryFile = fullPath.make_preferred().string() + "prefs.json";
 
-    if (!gRegistry.ViewImage(gsRegistryFile))
+    if (!gRegistry.Load(gsRegistryFile))
     {
         ZDEBUG_OUT("No registry file at:%s creating path for one.");
         std::filesystem::path regPath(gsRegistryFile);
         std::filesystem::create_directories(regPath.parent_path());
     }
 
-    gRegistry["appdata"] = fullPath;
 
     std::string sImageFilename;
     CLP::CommandLineParser parser;

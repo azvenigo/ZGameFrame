@@ -797,6 +797,64 @@ bool ZBuffer::FillAlpha(ZRect& rDst, uint32_t nCol)
 	return true;
 }
 
+void  ZBuffer::DrawRectAlpha(ZRect& rRect, uint32_t nCol)
+{
+    ZRect rSrcArea(mSurfaceArea);
+
+    ZRect rClipped(rRect);
+    if (Clip(rSrcArea, rSrcArea, rClipped))
+    {
+        int64_t nDstStride = mSurfaceArea.Width();
+        int64_t nFillWidth = rClipped.Width();
+        int64_t nFillHeight = rClipped.Height();
+        int64_t nAlpha = ARGB_A(nCol);
+
+        uint32_t* pDstBits;
+
+        // draw top 
+        if (rRect.top > mSurfaceArea.top)   // if unclipped top is visible
+        {
+            pDstBits = (uint32_t*)(mpPixels + (rClipped.top * nDstStride) + rClipped.left);
+            for (int64_t x = 0; x < nFillWidth; x++)
+            {
+                *pDstBits++ = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
+            }
+        }
+
+        // draw left
+        if (rRect.left > mSurfaceArea.left) // if unclipped left is visible
+        {
+            pDstBits = (uint32_t*)(mpPixels + (rClipped.top * nDstStride) + rClipped.left);
+            for (int64_t y = 0; y < nFillHeight; y++)
+            {
+                *pDstBits = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
+                pDstBits += nDstStride;
+            }
+        }
+
+        // draw right
+        if (rRect.right < mSurfaceArea.right)   // if unclipped right is visible
+        {
+            pDstBits = (uint32_t*)(mpPixels + (rClipped.top * nDstStride) + rClipped.right);
+            for (int64_t y = 0; y < nFillHeight; y++)
+            {
+                *pDstBits = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
+                pDstBits += nDstStride;
+            }
+        }
+
+        // draw bottom
+        if (rRect.bottom < mSurfaceArea.bottom)     // if unclipped bottom is visible
+        {
+            pDstBits = (uint32_t*)(mpPixels + (rClipped.bottom * nDstStride) + rClipped.left);
+            for (int64_t x = 0; x < nFillWidth; x++)
+            {
+                *pDstBits++ = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
+            }
+        }
+    }
+}
+
 
 
 

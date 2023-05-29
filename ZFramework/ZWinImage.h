@@ -20,6 +20,8 @@ public:
         kShowCaption            = 1 << 4,   // 16
         kShowControlPanel       = 1 << 5,   // 32
         kShowOnHotkey           = 1 << 6,   // 64
+        kShowLoadButton         = 1 << 7,   // 128
+        kShowSaveButton         = 1 << 8,   // 256
 
     };
 
@@ -65,6 +67,7 @@ public:
     double      mfMaxZoom;
     std::string msMouseUpLMessage;
     std::string msCloseButtonMessage;
+    std::string msLoadButtonMessage;
     std::string msSaveButtonMessage;
 
     tZBufferPtr mpImage;

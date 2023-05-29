@@ -155,6 +155,7 @@ void ZImageViewer::InitializeFonts()
     gpFontSystem = new ZFontSystem();
 
     filesystem::path appDataPath;
+    assert(gRegistry.contains("appdata"));  // required environment var
     gRegistry["appdata"].get_to(appDataPath);
 
     filesystem::path font_cache(appDataPath);

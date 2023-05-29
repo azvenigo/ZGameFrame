@@ -176,7 +176,7 @@ bool ImageViewer::Init()
         mpWinImage->SetArea(mAreaToDrawTo);
         mpWinImage->SetFill(0xff000000);
         mpWinImage->mManipulationHotkey = VK_CONTROL;
-        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kShowOnHotkey|ZWinImage::kScrollable|ZWinImage::kShowControlPanel;
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kShowOnHotkey|ZWinImage::kScrollable|ZWinImage::kShowControlPanel|ZWinImage::kShowLoadButton|ZWinImage::kShowSaveButton;
         Sprintf(mpWinImage->msSaveButtonMessage, "saveimg;target=%s", msWinName.c_str());
 
 

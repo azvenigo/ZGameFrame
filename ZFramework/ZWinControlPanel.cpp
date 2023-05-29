@@ -112,12 +112,49 @@ ZWinSlider* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, in
     return pSlider;
 }
 
+void ZWinControlPanel::AddGrouping(const std::string& sCaption, const ZRect& rArea, const ZGUI::Style& groupingStyle)
+{
+    mGroupingBorders.push_back(GroupingBorder(sCaption, rArea, groupingStyle));
+}
+
+
 bool ZWinControlPanel::Paint()
 {
     if (!mbVisible)
         return false;
 
+    if (!mbInvalid)
+        return false;
+
+    if (!mpTransformTexture.get())
+        return false;
+
+
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+
+
     mpTransformTexture->Fill(mAreaToDrawTo, mStyle.bgCol);
+
+    for (auto group : mGroupingBorders)
+    {
+        // draw embossed rect
+        ZRect r(group.mArea);
+
+        mpTransformTexture->DrawRectAlpha(r, 0x88000000);
+        r.OffsetRect(1, 1);
+        mpTransformTexture->DrawRectAlpha(r, 0x88ffffff);
+
+        ZRect rCaption = group.mArea;
+        rCaption.InflateRect(-group.mStyle.padding, group.mStyle.padding);
+        
+
+        group.mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), group.msCaption, rCaption, group.mStyle.look, group.mStyle.pos);
+
+
+
+        // if caption set, draw that
+
+    }
 
     return ZWin::Paint();
 }

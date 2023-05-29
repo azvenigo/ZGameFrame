@@ -13,6 +13,20 @@ class ZWinCheck;
 class ZWinSlider;
 class ZWinLabel;
 
+
+class GroupingBorder
+{
+public:
+    GroupingBorder(const std::string& _caption = "", ZRect _area = {}, const ZGUI::Style& _style = {}) : msCaption(_caption), mArea(_area), mStyle(_style) {}
+
+    std::string     msCaption;
+    ZRect           mArea;
+    ZGUI::Style     mStyle;
+};
+
+typedef std::list<GroupingBorder> tGroupingBorders;
+
+
 class ZWinControlPanel : public ZWin
 {
 public:
@@ -47,6 +61,8 @@ public:
                                 bool bMouseOnlyDrawValue = false, 
                                 tZFontPtr pFont = nullptr);
 
+    void                AddGrouping(const std::string& sCaption, const ZRect& rArea, const ZGUI::Style& groupingStyle = gDefaultGroupingStyle);
+
     void                AddSpace(int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
 
     bool                Process();
@@ -62,6 +78,8 @@ private:
     int64_t mnControlHeight;
     ZRect   mrNextControl;       // area for next control to be added
     bool    mbHideOnMouseExit;
+
+    tGroupingBorders mGroupingBorders;
 };
 
 
