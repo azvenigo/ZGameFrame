@@ -28,7 +28,9 @@ ImageViewer::ImageViewer()
     mbAcceptsFocus = true;
     mIdleSleepMS = 13;
     mMaxMemoryUsage = 2 * 1024 * 1024 * 1024LL;   // 2GiB
+    mMaxCacheReadAhead = 10;
     mAtomicIndex = 0;
+    mLastAction = kNone;
     msWinName = "ZWinImageViewer";
 }
  
@@ -127,6 +129,7 @@ void ImageViewer::SetFirstImage()
         return;
 
     mFilenameToLoad = *mImagesInFolder.begin();
+    mLastAction = kBeginning;
     Preload();
 }
 
@@ -136,6 +139,7 @@ void ImageViewer::SetLastImage()
         return;
 
     mFilenameToLoad = *mImagesInFolder.rbegin();
+    mLastAction = kEnd;
     Preload();
 }
 
@@ -149,6 +153,7 @@ void ImageViewer::SetPrevImage()
         mFilenameToLoad = *selectedImage;
     }
 
+    mLastAction = kPrevImage;
     Preload();
 }
 
@@ -163,6 +168,7 @@ void ImageViewer::SetNextImage()
             mFilenameToLoad = *selectedImage;
     }
 
+    mLastAction = kNextImage;
     Preload();
 }
 
@@ -178,7 +184,9 @@ bool ImageViewer::Init()
 
         SetFocus();
         mpWinImage = new ZWinImage();
-        mpWinImage->SetArea(mAreaToDrawTo);
+        ZRect rImageArea(mAreaToDrawTo);
+//        rImageArea.left += 64;  // thumbs
+        mpWinImage->SetArea(rImageArea);
         mpWinImage->SetFill(0xff000000);
         mpWinImage->mManipulationHotkey = VK_CONTROL;
         mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kShowOnHotkey|ZWinImage::kScrollable|ZWinImage::kShowControlPanel|ZWinImage::kShowLoadButton|ZWinImage::kShowSaveButton;
@@ -232,6 +240,22 @@ bool ImageViewer::InCache(const std::filesystem::path& imagePath)
     return false;
 }
 
+bool ImageViewer::ImagePreloading()
+{
+    for (auto& p : mImageCache)
+    {
+        if (p.second.valid() && !is_ready(p.second))
+        {
+            return true;
+        }
+    }
+
+//    ZDEBUG_OUT_LOCKLESS("not preloading...\n");
+
+    return false;
+}
+
+
 int64_t ImageViewer::ImageIndexInFolder(std::filesystem::path imagePath)
 {
     int64_t i = 1;
@@ -251,7 +275,11 @@ tImageFuture* ImageViewer::GetCached(const std::filesystem::path& imagePath)
     for (auto& p : mImageCache)
     {
         if (p.first == imagePath)
-            return &p.second;
+        {
+            if (is_ready(p.second))
+                return &p.second;
+            return nullptr;
+        }
     }
 
     return nullptr;
@@ -267,6 +295,7 @@ bool ImageViewer::AddToCache(std::filesystem::path imagePath)
         return true;
 
     mImageCache.emplace_front( tNamedImagePair(imagePath, gPool.enqueue(&ImageViewer::LoadImageProc, imagePath, this)));
+    //ZOUT("Adding to cache: ", imagePath, " total in cache:", mImageCache.size(), "\n");
     return true;
 }
 
@@ -295,17 +324,55 @@ bool ImageViewer::Preload()
         ScanForImagesInFolder(mScannedFolder);
     }
 
+
     tImageFilenames::iterator selectedImage = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mFilenameToLoad);
 
-    if (selectedImage != mImagesInFolder.end())
+    if (mFilenameToLoad != mSelectedFilename)
     {
-        if (AddToCache(*selectedImage))
+        if (selectedImage != mImagesInFolder.end())
         {
-            // now preload the next image
-            selectedImage++;
-            if (selectedImage != mImagesInFolder.end())
+            if (AddToCache(*selectedImage))
             {
-                AddToCache(*selectedImage);
+                /*            // now preload the next image
+                            selectedImage++;
+                            if (selectedImage != mImagesInFolder.end())
+                            {
+                                AddToCache(*selectedImage);
+                            }*/
+            }
+        }
+    }
+    else
+    {
+        // if there's room in the cache and no images are loading, preload another
+        if (!ImagePreloading() && CurMemoryUsage() < mMaxMemoryUsage)
+        {
+            if (mLastAction == kNone || mLastAction == kNextImage)
+            {
+                for (int readAhead = 0; readAhead < mMaxCacheReadAhead && selectedImage != mImagesInFolder.end(); readAhead++)
+                {
+                    selectedImage++;
+                    if (selectedImage != mImagesInFolder.end() && !InCache(*selectedImage))
+                    {
+                        AddToCache(*selectedImage);
+                        break;
+                    }
+                }
+            }
+            else if (mLastAction == kPrevImage)
+            {
+                for (int readAhead = 0; readAhead < mMaxCacheReadAhead; readAhead++)
+                {
+                    if (selectedImage != mImagesInFolder.end() && selectedImage != mImagesInFolder.begin())
+                    {
+                        selectedImage--;
+                        if (!InCache(*selectedImage))
+                        {
+                            AddToCache(*selectedImage);
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -313,7 +380,7 @@ bool ImageViewer::Preload()
     while (CurMemoryUsage() > mMaxMemoryUsage && mImagesInFolder.size() > 1)
     {
         mImageCache.pop_back();
-        ZDEBUG_OUT("Images:", mImageCache.size(), " memory:", CurMemoryUsage(), "\n");
+        //ZDEBUG_OUT("Images:", mImageCache.size(), " memory:", CurMemoryUsage(), "\n");
     }
 
     return true;
@@ -349,7 +416,7 @@ bool ImageViewer::ScanForImagesInFolder(const std::filesystem::path& folder)
         if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
         {
             mImagesInFolder.push_back(filePath);
-            ZDEBUG_OUT("Found image:", filePath, "\n");
+            //ZDEBUG_OUT("Found image:", filePath, "\n");
         }
     }
 
@@ -361,7 +428,7 @@ bool ImageViewer::Process()
     if (mpWinImage && mFilenameToLoad != mSelectedFilename)
     {
         tImageFuture* pFuture = GetCached(mFilenameToLoad);
-        if (pFuture && is_ready(*pFuture))
+        if (pFuture)
         {
             mSelectedFilename = mFilenameToLoad;
             mpWinImage->SetImage(pFuture->get());
@@ -376,11 +443,49 @@ bool ImageViewer::Process()
             mpWinImage->SetCaption(sCaption, captionStyle);
         }
     }
+    else
+    {
+        Preload();
+    }
     return ZWin::Process();
 }
 
 bool ImageViewer::Paint()
 {
+/*    if (!mpTransformTexture)
+        return false;
+
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+
+    if (!mbVisible)
+        return false;
+
+    if (!mbInvalid)
+        return false;
+
+
+    ZRect rThumb(0, 0, 64, mArea.Height() / mImagesInFolder.size());
+
+    int i = 0;
+    for (auto& imgPath : mImagesInFolder)
+    {
+        tImageFuture* pImgFuture = GetCached((const std::filesystem::path&)imgPath);
+        if (pImgFuture)
+        {
+            tZBufferPtr pImg = pImgFuture->get();
+
+            mpTransformTexture->Blt(pImg.get(), pImg->GetArea(), rThumb);
+        }
+        else
+        {
+            mpTransformTexture->Fill(rThumb, ARGB(0xff, (i*13)%256, (i*17)%256, (i*29)%256));
+        }
+        i++;
+        rThumb.OffsetRect(0, rThumb.Height());
+    }
+
+    */
+
     return ZWin::Paint();
 }
    

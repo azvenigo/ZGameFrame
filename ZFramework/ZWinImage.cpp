@@ -320,7 +320,7 @@ bool ZWinImage::OnKeyDown(uint32_t c)
         mbHotkeyActive = true;
         if (mpPanel && mBehavior & kShowOnHotkey)
             mpPanel->SetVisible();
-        Invalidate();
+        mpParentWin->Invalidate();
     }
 
     if (mpParentWin)
@@ -336,7 +336,7 @@ bool ZWinImage::OnKeyUp(uint32_t c)
         mbHotkeyActive = false;
         if (mpPanel && mBehavior & kShowOnHotkey)
             mpPanel->SetVisible(false);
-        Invalidate();
+        mpParentWin->Invalidate();
     }
 
     if (mpParentWin)
@@ -468,21 +468,23 @@ void ZWinImage::SetZoom(double fZoom)
     limit<double>(mfZoom, mfMinZoom, mfMaxZoom);
 
     // Update image area
-    ZRect rImageArea(mpImage->GetArea());
-    double fRatio = (double)rImageArea.Width() / (double)rImageArea.Height();
-    int64_t nImageWidth = rImageArea.Width() * mfZoom;
-    int64_t nImageHeight = (int64_t)(nImageWidth / fRatio);
+    if (mpImage)
+    {
+        ZRect rImageArea(mpImage->GetArea());
+        double fRatio = (double)rImageArea.Width() / (double)rImageArea.Height();
+        int64_t nImageWidth = rImageArea.Width() * mfZoom;
+        int64_t nImageHeight = (int64_t)(nImageWidth / fRatio);
 
-    ZPoint tl(((mImageArea.left + mImageArea.right)-nImageWidth) / 2, ((mImageArea.top + mImageArea.bottom)-nImageHeight) / 2);
-    mImageArea.SetRect(tl.x, tl.y, tl.x + nImageWidth, tl.y + nImageHeight);
+        ZPoint tl(((mImageArea.left + mImageArea.right) - nImageWidth) / 2, ((mImageArea.top + mImageArea.bottom) - nImageHeight) / 2);
+        mImageArea.SetRect(tl.x, tl.y, tl.x + nImageWidth, tl.y + nImageHeight);
 
-    if (mfZoom == 1.0)
-        mViewState = kZoom100;
-    else if (rImageArea.Height() < mArea.Height() && mfZoom > 1.0)
-        mViewState = kZoomedInToSmallImage;
-    else if (rImageArea.Height() > mArea.Height() && mfZoom < 1.0)
-        mViewState = kZoomedOutOfLargeImage;
-
+        if (mfZoom == 1.0)
+            mViewState = kZoom100;
+        else if (rImageArea.Height() < mArea.Height() && mfZoom > 1.0)
+            mViewState = kZoomedInToSmallImage;
+        else if (rImageArea.Height() > mArea.Height() && mfZoom < 1.0)
+            mViewState = kZoomedOutOfLargeImage;
+    }
 
     Invalidate(); 
 }

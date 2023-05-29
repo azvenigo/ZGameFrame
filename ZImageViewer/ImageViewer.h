@@ -17,6 +17,18 @@ typedef std::list< tNamedImagePair >            tImageCache;
 
 class ImageViewer : public ZWin
 {
+    enum eLastAction : uint32_t
+    {
+        kNone           = 0,
+        kNextImage      = 1,
+        kPrevImage      = 2,
+        kPageForward    = 3,
+        kPageBack       = 4,
+        kBeginning      = 5,
+        kEnd            = 6
+    };
+
+
 public:
     ImageViewer();
     ~ImageViewer();
@@ -37,11 +49,13 @@ public:
 
 
    std::atomic<int64_t>     mMaxMemoryUsage;
+   std::atomic<int64_t>     mMaxCacheReadAhead;
 
 protected:
 
     bool                    ScanForImagesInFolder(const std::filesystem::path& folder);
     bool                    InCache(const std::filesystem::path& imagePath);
+    bool                    ImagePreloading();
     tImageFuture*           GetCached(const std::filesystem::path& imagePath);
     bool                    AddToCache(std::filesystem::path imagePath);
     int64_t                 CurMemoryUsage();       // only returns the in-memory bytes of buffers that have finished loading
@@ -64,6 +78,9 @@ protected:
     std::filesystem::path   mScannedFolder;
 
     tImageCache             mImageCache;
+
+    eLastAction             mLastAction;
+    //std::filesystem::path   mLastPreload;
 
     std::list<std::string>  mAcceptedExtensions = { "jpg", "jpeg", "png", "gif", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" };
     std::atomic<uint32_t>   mAtomicIndex;   // incrementing index for unloading oldest
