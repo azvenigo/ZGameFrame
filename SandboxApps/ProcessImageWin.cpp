@@ -153,13 +153,8 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
                 pOriginalImageWin->SetWinName(filename);
 
 
-                string sMessage;
-                Sprintf(sMessage, "selectimg;name=%s;target=imageprocesswin", filename.c_str());
-                pOriginalImageWin->SetMouseUpLMessage(sMessage);
-                //            pOriginalImageWin->SetMouseUpLMessage(ZMessage("selectimg", this, "name", filename));
-
-                Sprintf(sMessage, "closeimg;name=%s;target=imageprocesswin", filename.c_str());
-                pOriginalImageWin->SetCloseButtonMessage(sMessage);
+                Sprintf(pOriginalImageWin->msMouseUpLMessage, "selectimg;name=%s;target=imageprocesswin", filename.c_str());
+                Sprintf(pOriginalImageWin->msCloseButtonMessage, "closeimg;name=%s;target=imageprocesswin", filename.c_str());
 
                 pOriginalImageWin->mBehavior |= ZWinImage::kShowControlPanel;
                 pOriginalImageWin->SetFill(0x00000000);
@@ -174,7 +169,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
         }
     }
 
-    mrIntersectionWorkArea.SetRect((*mChildImageWins.begin())->GetImage()->GetArea());  // set the work area to the first image to generate the result buffer
+    mrIntersectionWorkArea.SetRect((*mChildImageWins.begin())->mpImage->GetArea());  // set the work area to the first image to generate the result buffer
     ResetResultsBuffer();
     Process_SelectImage(*filenames.begin());
 
@@ -239,17 +234,17 @@ void cProcessImageWin::Process_SelectImage(string sImageName)
     {
         if (pWin->GetWinName() == sImageName)
         {
-            mrIntersectionWorkArea.SetRect(pWin->GetImage().get()->GetArea());
+            mrIntersectionWorkArea.SetRect(pWin->mpImage.get()->GetArea());
 
             ZRect r(mrIntersectionWorkArea);
             mpResultBuffer.get()->GetMutex().lock();
             mpResultBuffer.get()->Init(r.Width(), r.Height());
-            mpResultBuffer.get()->Blt(pWin->GetImage().get(), r, r, &r);
+            mpResultBuffer.get()->Blt(pWin->mpImage.get(), r, r, &r);
             mpResultBuffer.get()->GetMutex().unlock();
 
             mpResultWin->SetImage(mpResultBuffer);
 
-            UpdateImageProps(pWin->GetImage().get());
+            UpdateImageProps(pWin->mpImage.get());
 
             InvalidateChildren();
             return;
@@ -716,7 +711,7 @@ void cProcessImageWin::StackImages(void* pContext)
     std::vector<tZBufferPtr> images;
     for (auto pWin : pJP->pThis->mChildImageWins)
     {
-        images.push_back(pWin->GetImage());
+        images.push_back(pWin->mpImage);
     }
 
     std::vector<double> imageContrasts;
@@ -1064,11 +1059,11 @@ void cProcessImageWin::ComputeIntersectedWorkArea()
         if (bFirstRect)
         {
             bFirstRect = false;
-            mrIntersectionWorkArea.SetRect(pWin->GetImage()->GetArea());
+            mrIntersectionWorkArea.SetRect(pWin->mpImage->GetArea());
         }
         else
         {
-            mrIntersectionWorkArea.IntersectRect(pWin->GetImage()->GetArea());
+            mrIntersectionWorkArea.IntersectRect(pWin->mpImage->GetArea());
         }
     }
     ZASSERT(mrIntersectionWorkArea.Width() > 0 && mrIntersectionWorkArea.Height() > 0);
@@ -1137,7 +1132,7 @@ void cProcessImageWin::ResetResultsBuffer()
         mpResultWin->mfMaxZoom = 100.0;
 
         mpResultWin->mBehavior |= ZWinImage::kShowControlPanel;
-        mpResultWin->SetSaveButtonMessage("saveimg;target=imageprocesswin");
+        mpResultWin->msSaveButtonMessage = "saveimg;target=imageprocesswin";
 
 
         ChildAdd(mpResultWin);

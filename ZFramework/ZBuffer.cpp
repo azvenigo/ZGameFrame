@@ -10,6 +10,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #ifdef _WIN64
 #include <GdiPlus.h>
 using namespace Gdiplus;
@@ -104,7 +107,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
         return false;
     }
 
-    size_t nFileSize = std::filesystem::file_size(sFilename);
+    uint32_t nFileSize = (uint32_t)std::filesystem::file_size(sFilename);
     std::ifstream imageFile(sFilename.c_str(), ios::in | ios::binary);    // open and set pointer at end
     ZMemBufferPtr imageBuf(new ZMemBuffer(nFileSize));
     imageFile.read((char*)imageBuf->data(), nFileSize);
@@ -267,6 +270,69 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 #endif
 }
 
+
+bool ZBuffer::SaveBuffer(const std::string& sName)
+{
+    std::filesystem::path filename(sName);
+    string sExt = filename.extension().string();
+    SH::makelower(sExt);
+
+    int w = (int)mSurfaceArea.Width();
+    int h = (int)mSurfaceArea.Height();
+
+    uint32_t* pSwizzled = new uint32_t[w * h];
+
+    uint32_t* pDest = pSwizzled;
+    for (uint32_t* pSrc = mpPixels; pSrc < (uint32_t*)(mpPixels + (w * h)); pSrc++)
+    {
+        uint32_t col = *pSrc;
+        uint32_t a = (col & 0xff000000);
+        uint32_t b = (col & 0x00ff0000) >> 16;
+        uint32_t r = (col & 0x000000ff) << 16;
+        uint32_t g = (col & 0x0000ff00);
+
+        uint32_t newCol = a | r | g | b;
+
+        *pDest = newCol;
+        pDest++;
+    }
+
+
+    int ret = 0;
+    if (sExt == ".png")
+        ret = stbi_write_png(sName.c_str(), w, h, 4, pSwizzled,w * 4);
+    else if (sExt == ".bmp")
+        ret = stbi_write_bmp(sName.c_str(), w, h, 4, pSwizzled);
+    else if (sExt == ".tga")
+        ret = stbi_write_bmp(sName.c_str(), w, h, 4, pSwizzled);
+    else if (sExt == ".jpg")
+        ret = stbi_write_jpg(sName.c_str(), w, h, 4, pSwizzled, 80);
+    else
+    {
+        ZERROR("ERROR: Unsupported image extension:", sName);
+        delete[] pSwizzled;
+        return false;
+    }
+
+    if (ret != 0)
+    {
+        ZERROR("ERROR: stb_image_write_xxx returned:", ret);
+        delete[] pSwizzled;
+        return false;
+    }
+
+    delete[] pSwizzled;
+    return true;
+}
+
+
+
+
+
+
+
+
+/*
 #ifdef _WIN64
 int GetEncoderClsid(const string& sFilename, CLSID* pClsid)
 {
@@ -359,7 +425,7 @@ bool ZBuffer::SaveBuffer(const string& sFilename)
     return true;
 }
 #endif
-
+*/
 
 /*
 #ifdef _WIN64
@@ -392,7 +458,7 @@ bool ZBuffer::Rotate(eOrientation rotation)
 {
     const std::lock_guard<std::recursive_mutex> lock(mMutex);
 
-    uint32_t nPixels = mSurfaceArea.Width() * mSurfaceArea.Height();
+    uint32_t nPixels = (uint32_t) (mSurfaceArea.Width() * mSurfaceArea.Height());
 
     if (nPixels < 1)
         return false;
@@ -400,8 +466,8 @@ bool ZBuffer::Rotate(eOrientation rotation)
     if (rotation == kLeft || rotation == kLeftAndVFlip)
     {
         ZRect rOldArea(mSurfaceArea);
-        uint32_t oldW = rOldArea.Width();
-        uint32_t oldH = rOldArea.Height();
+        uint32_t oldW = (uint32_t)rOldArea.Width();
+        uint32_t oldH = (uint32_t)rOldArea.Height();
         uint32_t newW = oldH;
         uint32_t newH = oldW;
         ZRect rNewArea(0, 0, newW, newH);
@@ -409,9 +475,9 @@ bool ZBuffer::Rotate(eOrientation rotation)
         ZBuffer newBuf;
         newBuf.Init(newW, newH);
 
-        for (int y = 0; y < oldH; y++)
+        for (uint32_t y = 0; y < oldH; y++)
         {
-            for (int x = 0; x < oldW; x++)
+            for (uint32_t x = 0; x < oldW; x++)
             {
                 newBuf.SetPixel(y, newH - x - 1, GetPixel(x, y));
             }
@@ -423,8 +489,8 @@ bool ZBuffer::Rotate(eOrientation rotation)
     if (rotation == kRight || rotation == kRightAndVFlip)
     {
         ZRect rOldArea(mSurfaceArea);
-        uint32_t oldW = rOldArea.Width();
-        uint32_t oldH = rOldArea.Height();
+        uint32_t oldW = (uint32_t)rOldArea.Width();
+        uint32_t oldH = (uint32_t)rOldArea.Height();
         uint32_t newW = oldH;
         uint32_t newH = oldW;
         ZRect rNewArea(0, 0, newW, newH);
@@ -432,9 +498,9 @@ bool ZBuffer::Rotate(eOrientation rotation)
         ZBuffer newBuf;
         newBuf.Init(newW, newH);
 
-        for (int y = 0; y < oldH; y++)
+        for (uint32_t y = 0; y < oldH; y++)
         {
-            for (int x = 0; x < oldW; x++)
+            for (uint32_t x = 0; x < oldW; x++)
             {
                 newBuf.SetPixel(newW - y - 1, x, GetPixel(x, y));
             }
@@ -446,13 +512,13 @@ bool ZBuffer::Rotate(eOrientation rotation)
     if (rotation == k180)
     {
         ZBuffer newBuf;
-        uint32_t newW = mSurfaceArea.Width();
-        uint32_t newH = mSurfaceArea.Height();
+        uint32_t newW = (uint32_t)mSurfaceArea.Width();
+        uint32_t newH = (uint32_t)mSurfaceArea.Height();
         newBuf.Init(newW, newH);
 
-        for (int y = 0; y < newH; y++)
+        for (uint32_t y = 0; y < newH; y++)
         {
-            for (int x = 0; x < newW; x++)
+            for (uint32_t x = 0; x < newW; x++)
             {
                 newBuf.SetPixel(newW - x - 1, newH - y - 1, GetPixel(x, y));
             }
@@ -463,13 +529,13 @@ bool ZBuffer::Rotate(eOrientation rotation)
     if (rotation == kVFlip || rotation == kLeftAndVFlip || rotation == kRightAndVFlip)
     {
         ZBuffer newBuf;
-        uint32_t newW = mSurfaceArea.Width();
-        uint32_t newH = mSurfaceArea.Height();
+        uint32_t newW = (uint32_t)mSurfaceArea.Width();
+        uint32_t newH = (uint32_t)mSurfaceArea.Height();
         newBuf.Init(newW, newH);
 
-        for (int y = 0; y < newH; y++)
+        for (uint32_t y = 0; y < newH; y++)
         {
-            for (int x = 0; x < newW; x++)
+            for (uint32_t x = 0; x < newW; x++)
             {
                 newBuf.SetPixel(x, newH - y - 1, GetPixel(x, y));
             }
@@ -480,13 +546,13 @@ bool ZBuffer::Rotate(eOrientation rotation)
     if (rotation == kHFlip)
     {
         ZBuffer newBuf;
-        uint32_t newW = mSurfaceArea.Width();
-        uint32_t newH = mSurfaceArea.Height();
+        uint32_t newW = (uint32_t) mSurfaceArea.Width();
+        uint32_t newH = (uint32_t) mSurfaceArea.Height();
         newBuf.Init(newW, newH);
 
-        for (int y = 0; y < newH; y++)
+        for (uint32_t y = 0; y < newH; y++)
         {
-            for (int x = 0; x < newW; x++)
+            for (uint32_t x = 0; x < newW; x++)
             {
                 newBuf.SetPixel(newW-x-1, y, GetPixel(x, y));
             }
@@ -1029,7 +1095,7 @@ void ZBuffer::FillInSpan(uint32_t* pDest, int64_t nNumPixels, double fR, double 
 		uint8_t nCurR;
 		uint8_t nCurG;
 		uint8_t nCurB;
-		*pDest = ARGB(nCurA, nCurR, nCurG, nCurB);
+        TO_ARGB(*pDest, nCurA, nCurR, nCurG, nCurB);
 
 
 		uint8_t nDestR = static_cast<uint8_t>((uint32_t) ((fR * fA + (nCurR * (255.0f-fA)))) >> 8);

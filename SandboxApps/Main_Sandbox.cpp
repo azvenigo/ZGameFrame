@@ -12,7 +12,6 @@
 #include "3DTestWin.h"
 #include "ZChessWin.h"
 #include "Resources.h"
-#include "ImageViewer.h"
 
 
 using namespace std;
@@ -116,27 +115,15 @@ void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
     SandboxDeleteAllButControlPanelAndDebugConsole();
 
     gRegistry["sandbox"]["mode"] = (int32_t)mode;
-    string sImageFilename = gRegistry.GetValue("sandbox", "imageviewer_filename");
 
-    if (!sImageFilename.empty())
-        mode = eSandboxMode::kImageViewer;
-
-    if (mode == eSandboxMode::kImageViewer)
-    {
-        ImageViewer* pWin = new ImageViewer();
-        pWin->SetArea(grFullArea);
-        gpMainWin->ChildAdd(pWin);
-        if (!sImageFilename.empty())
-            pWin->ViewImage(sImageFilename);
-    }
-/*    else if (mode == eSandboxMode::kTestWin)
+/*    if (mode == eSandboxMode::kTestWin)
     {
         TestWin* pWin = new TestWin();
         pWin->SetArea(grFullArea);
         gpMainWin->ChildAdd(pWin);
 
     }*/
-    else if (mode == eSandboxMode::kFloatLinesWin)
+    if (mode == eSandboxMode::kFloatLinesWin)
 	{
 
 		cFloatLinesWin* pWin = new cFloatLinesWin();

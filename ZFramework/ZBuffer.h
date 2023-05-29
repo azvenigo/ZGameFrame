@@ -101,9 +101,9 @@ public:
 
     // Load/Save
 	virtual bool            LoadBuffer(const std::string& sName);
+    virtual bool            SaveBuffer(const std::string& sName);
 #ifdef _WIN64
 //	virtual bool            LoadBuffer(uint32_t nResourceID);
-    virtual bool            SaveBuffer(const std::string& sName);
 #endif
 
     // Thread Safety

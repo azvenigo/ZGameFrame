@@ -46,16 +46,15 @@ bool ZWinImage::Init()
         mpPanel = new ZWinControlPanel();
         mnControlPanelButtonSide = mAreaToDrawTo.Height() / 16;
         mnControlPanelFontHeight = mAreaToDrawTo.Height() / 24;
-        if (mnControlPanelButtonSide < 20)
-            mnControlPanelButtonSide = 20;
-        if (mnControlPanelFontHeight < 16)
-            mnControlPanelFontHeight = 16;
 
-        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.bottom - mnControlPanelButtonSide, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
+        limit<int64_t>(mnControlPanelButtonSide, 20, 64);
+        limit<int64_t>(mnControlPanelFontHeight, 16, 48);
+
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + mnControlPanelButtonSide);
         mpPanel->SetTriggerRect(mAreaAbsolute);
-        mpPanel->SetHideOnMouseExit(true);
+        //mpPanel->SetHideOnMouseExit(true);
         mpPanel->SetArea(rPanelArea);
-        ChildAdd(mpPanel);
+        ChildAdd(mpPanel, (mBehavior&kShowOnHotkey == 0));
 
         ZRect rButton(0, 0, mnControlPanelButtonSide, mnControlPanelButtonSide);
 
@@ -73,7 +72,7 @@ bool ZWinImage::Init()
 
             rButton.OffsetRect(mnControlPanelButtonSide *2, 0);
         }
-
+        
 
 
 
@@ -263,9 +262,11 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 
 bool ZWinImage::OnKeyDown(uint32_t c)
 {
-    if (c == mManipulationHotkey)
+    if (c == mManipulationHotkey && mbHotkeyActive == false)
     {
         mbHotkeyActive = true;
+        if (mpPanel && mBehavior & kShowOnHotkey)
+            mpPanel->SetVisible();
         Invalidate();
     }
 
@@ -280,6 +281,8 @@ bool ZWinImage::OnKeyUp(uint32_t c)
     if (c == mManipulationHotkey)
     {
         mbHotkeyActive = false;
+        if (mpPanel && mBehavior & kShowOnHotkey)
+            mpPanel->SetVisible(false);
         Invalidate();
     }
 
@@ -443,13 +446,12 @@ bool ZWinImage::Paint()
         return false;
 
 
-//    cout << "ZWinImage::Painting...\n";
-
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
     ZRect rDest(mpTransformTexture.get()->GetArea());
 
-//    ZOUT_LOCKLESS("about to Fill texture:", mpTransformTexture.get()->GetPixels(), "pixels:", mpTransformTexture.get()->GetArea().Width() * mpTransformTexture.get()->GetArea().Height());
+//    static int i = 0;
+//    ZOUT_LOCKLESS(i++, "about to Fill texture:", mpTransformTexture.get()->GetPixels(), "pixels:", mpTransformTexture.get()->GetArea().Width() * mpTransformTexture.get()->GetArea().Height());
     mpTransformTexture.get()->Fill(mpTransformTexture.get()->GetArea(), mFillColor);
 //    ZOUT_LOCKLESS("filled\n");
 

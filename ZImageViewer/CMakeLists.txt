@@ -99,6 +99,7 @@ list(APPEND COMMON_FILES
 ../../ZLibraries/Common/helpers/Registry.cpp
 ../../ZLibraries/Common/json/json.hpp
 ../../ZLibraries/Common/stb/stb_image.h
+../../ZLibraries/Common/stb/stb_image_write.h
 ../../ZLibraries/Common/easyexif/exif.h ../../ZLibraries/Common/easyexif/exif.cpp
 
 )

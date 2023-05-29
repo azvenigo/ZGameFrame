@@ -4,8 +4,11 @@
 #include "ZWinImage.h"
 #include "Resources.h"
 #include "helpers/StringHelpers.h"
+#include "ZStringHelpers.h"
 #include "helpers/ThreadPool.h"
+#include "ZWinFileDialog.h"
 #include <algorithm>
+#include "helpers/Registry.h"
 
 
 using namespace std;
@@ -26,12 +29,25 @@ ImageViewer::ImageViewer()
     mIdleSleepMS = 13;
     mMaxMemoryUsage = 2 * 1024 * 1024 * 1024LL;   // 2GiB
     mAtomicIndex = 0;
+    msWinName = "ZWinImageViewer";
 }
  
 ImageViewer::~ImageViewer()
 {
 }
 
+
+bool ImageViewer::ShowOpenImageDialog()
+{
+    string sFilename;
+    if (ZWinFileDialog::ShowLoadDialog("Images", "*.jpg;*.jpeg;*.png;*.gif;*.tga;*.bmp;*.psd;*.hdr;*.pic;*.pnm", sFilename))
+    {
+        mFilenameToLoad = sFilename;
+        Preload();
+    }
+    return true;
+
+}
 
 bool ImageViewer::OnKeyDown(uint32_t key)
 {
@@ -56,6 +72,10 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     case VK_END:
         SetLastImage();
         break;
+    case 'o':
+    case 'O':
+        return ShowOpenImageDialog();
+        break;
     }
 
 
@@ -70,6 +90,31 @@ bool ImageViewer::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
         SetNextImage();
     return ZWin::OnMouseWheel(x,y,nDelta);
 }
+
+bool ImageViewer::HandleMessage(const ZMessage& message)
+{
+    string sType = message.GetType();
+
+    if (sType == "saveimg")
+    {
+        string sFilename;
+        if (ZWinFileDialog::ShowSaveDialog("Images", "*.jpg;*.jpeg;*.png;*.tga;*.bmp;*.hdr", sFilename))
+            SaveImage(sFilename);
+        return true;
+    }
+
+    return ZWin::HandleMessage(message);
+}
+
+bool ImageViewer::SaveImage(const std::filesystem::path& filename)
+{
+    if (filename.empty())
+        return false;
+
+    mpWinImage->mpImage.get()->SaveBuffer(filename.string());
+
+}
+
 
 void ImageViewer::SetFirstImage()
 {
@@ -120,12 +165,20 @@ bool ImageViewer::Init()
 {
     if (!mbInitted)
     {
+        string sLoaded;
+        if (gRegistry.Get("ZImageViewer", "image", sLoaded))
+        {
+            mFilenameToLoad = sLoaded;
+        }
+
         SetFocus();
         mpWinImage = new ZWinImage();
         mpWinImage->SetArea(mAreaToDrawTo);
         mpWinImage->SetFill(0xff000000);
         mpWinImage->mManipulationHotkey = VK_CONTROL;
-        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kShowOnHotkey|ZWinImage::kScrollable;
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kShowOnHotkey|ZWinImage::kScrollable|ZWinImage::kShowControlPanel;
+        Sprintf(mpWinImage->msSaveButtonMessage, "saveimg;target=%s", msWinName.c_str());
+
 
         ZGUI::Style zoomStyle(gDefaultWinTextEditStyle);
         zoomStyle.pos = ZGUI::CB;
@@ -143,6 +196,7 @@ bool ImageViewer::Init()
 bool ImageViewer::ViewImage(const std::filesystem::path& filename)
 {
     mFilenameToLoad = filename;
+
     Preload();
     return true;
 }
@@ -305,6 +359,9 @@ bool ImageViewer::Process()
         {
             mSelectedFilename = mFilenameToLoad;
             mpWinImage->SetImage(pFuture->get());
+
+            gRegistry["ZImageViewer"]["image"] = mSelectedFilename.string();
+
 
             string sCaption = SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size()) + " " + mSelectedFilename.string();
 

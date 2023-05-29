@@ -32,7 +32,6 @@ ZChess.h ZChess.cpp
 ZChessWin.h ZChessWin.cpp
 Main_Sandbox.h Main_Sandbox.cpp Main_Win64.cpp 
 TestWin.h TestWin.cpp
-ImageViewer.h ImageViewer.cpp
 teapotdata.h
 )
 
@@ -104,6 +103,7 @@ list(APPEND COMMON_FILES
 ../../ZLibraries/Common/helpers/Registry.cpp
 ../../ZLibraries/Common/json/json.hpp
 ../../ZLibraries/Common/stb/stb_image.h
+../../ZLibraries/Common/stb/stb_image_write.h
 ../../ZLibraries/Common/easyexif/exif.h ../../ZLibraries/Common/easyexif/exif.cpp
 
 )

@@ -26,11 +26,15 @@ public:
    bool		Paint();
 
    bool     ViewImage(const std::filesystem::path& filename);
+   bool     SaveImage(const std::filesystem::path& filename);
 
-   virtual bool	OnKeyDown(uint32_t key);
-   bool        OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
+   bool	    OnKeyDown(uint32_t key);
+   bool     OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
+   bool	    HandleMessage(const ZMessage& message);
 
    bool     AcceptedExtension(std::string sExt);
+   bool     ShowOpenImageDialog();
+
 
    std::atomic<int64_t>     mMaxMemoryUsage;
 

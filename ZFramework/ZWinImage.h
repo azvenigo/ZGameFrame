@@ -47,27 +47,27 @@ public:
     double      GetZoom();
 
     void        ScrollTo(int64_t nX, int64_t nY);
-    void        SetMouseUpLMessage(const std::string& sMessage) { msMouseUpLMessage = sMessage; }
 
 
     void        SetFill(uint32_t nCol) { mFillColor = nCol; Invalidate(); }
     void        SetShowZoom(const ZGUI::Style& style);
     void        SetCaption(const std::string& sCaption, const ZGUI::Style& captionStyle);
-    void        SetCloseButtonMessage(const std::string& sMessage) { msCloseButtonMessage = sMessage; }
-    void        SetSaveButtonMessage(const std::string& sMessage) { msSaveButtonMessage = sMessage; }
 
 
     bool        LoadImage(const std::string& sName);
     void        SetImage(tZBufferPtr pImage);
-    tZBufferPtr GetImage() { return mpImage; }
 
     void        SetArea(const ZRect& newArea);
-
 
     uint32_t    mBehavior;
     uint32_t    mManipulationHotkey;
     double      mfMinZoom;
     double      mfMaxZoom;
+    std::string msMouseUpLMessage;
+    std::string msCloseButtonMessage;
+    std::string msSaveButtonMessage;
+
+    tZBufferPtr mpImage;
 
 protected:
     bool HandleMessage(const ZMessage& message);
@@ -83,9 +83,6 @@ private:
     double              mfZoom;
     double              mfPerfectFitZoom;
     ZRect               mImageArea;
-    std::string         msMouseUpLMessage;
-    std::string         msCloseButtonMessage;
-    std::string         msSaveButtonMessage;
 
 
     //bool                mbShowZoom;
@@ -106,6 +103,5 @@ private:
 
     uint32_t            mFillColor;
 
-    tZBufferPtr         mpImage;
     ZWinControlPanel*   mpPanel;
 };
