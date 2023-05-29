@@ -95,6 +95,11 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
 {
     string sType = message.GetType();
 
+    if (sType == "loadimg")
+    {
+        ShowOpenImageDialog();
+        return true;
+    }
     if (sType == "saveimg")
     {
         string sFilename;
@@ -178,6 +183,7 @@ bool ImageViewer::Init()
         mpWinImage->mManipulationHotkey = VK_CONTROL;
         mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kShowOnHotkey|ZWinImage::kScrollable|ZWinImage::kShowControlPanel|ZWinImage::kShowLoadButton|ZWinImage::kShowSaveButton;
         Sprintf(mpWinImage->msSaveButtonMessage, "saveimg;target=%s", msWinName.c_str());
+        Sprintf(mpWinImage->msLoadButtonMessage, "loadimg;target=%s", msWinName.c_str());
 
 
         ZGUI::Style zoomStyle(gDefaultWinTextEditStyle);
