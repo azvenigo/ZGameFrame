@@ -58,9 +58,6 @@ int main(int argc, char* argv[])
 
     std::filesystem::path fullPath(sUserPath);
     fullPath += "/ZSandbox/";
-    gRegistry["appdata"] = fullPath.make_preferred().string();
-
-//    gRegistry.Set("app", "data", fullPath.string());
 
     gsRegistryFile = fullPath.make_preferred().string() + "prefs.json";
 
@@ -70,6 +67,12 @@ int main(int argc, char* argv[])
         std::filesystem::path regPath(gsRegistryFile);
         std::filesystem::create_directories(regPath.parent_path());
     }
+
+    gRegistry["appdata"] = fullPath.string();
+
+    std::filesystem::path appPath(argv[0]);
+    gRegistry["apppath"] = appPath.parent_path().string();
+
 
 
     std::string sImageFilename;

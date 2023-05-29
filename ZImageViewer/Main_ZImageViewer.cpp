@@ -178,7 +178,13 @@ bool ZImageViewer::Initialize()
         return false;
     }
 
-    gResources.Init("res/default_resources/");// todo, move this define elsewhere?
+    filesystem::path appPath;
+    assert(gRegistry.contains("apppath"));  // required environment var
+    gRegistry["apppath"].get_to(appPath);
+
+    appPath.append("res/default_resources/");
+
+    gResources.Init(appPath.string());// todo, move this define elsewhere?
 
     InitializeFonts();
     gpMainWin = new ZMainWin();
