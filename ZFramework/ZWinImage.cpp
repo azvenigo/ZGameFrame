@@ -19,9 +19,9 @@ ZWinImage::ZWinImage()
     mbAcceptsFocus = true;
     mpImage.reset();
     mnControlPanelButtonSide = 0;
-    mnControlPanelFontHeight = 0;
 	mfZoom = 1.0;
     mfPerfectFitZoom = 1.0;
+    mViewState = kFitToWindow;
     mfMinZoom = 0.01;
     mfMaxZoom = 1000.0;
     mManipulationHotkey = 0;
@@ -45,10 +45,12 @@ bool ZWinImage::Init()
     {
         mpPanel = new ZWinControlPanel();
         mnControlPanelButtonSide = mAreaToDrawTo.Height() / 16;
-        mnControlPanelFontHeight = mAreaToDrawTo.Height() / 24;
 
         limit<int64_t>(mnControlPanelButtonSide, 20, 64);
-        limit<int64_t>(mnControlPanelFontHeight, 16, 48);
+
+        ZGUI::Style wd1Style = ZGUI::Style(ZFontParams("Wingdings", mnControlPanelButtonSide/2));
+        ZGUI::Style wd3Style = ZGUI::Style(ZFontParams("Wingdings 3", mnControlPanelButtonSide*2/3));
+
 
         ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + mnControlPanelButtonSide + 2* gDefaultSpacer);
         mpPanel->SetTriggerRect(mAreaAbsolute);
@@ -56,56 +58,105 @@ bool ZWinImage::Init()
         mpPanel->SetArea(rPanelArea);
         ChildAdd(mpPanel, (mBehavior&kShowOnHotkey == 0));
 
+        ZWinSizablePushBtn* pBtn;
         ZRect rButton(gDefaultSpacer, gDefaultSpacer, mnControlPanelButtonSide, mnControlPanelButtonSide);
 
-        ZRect rGroup(rButton);
 
-        ZWinSizablePushBtn* pBtn;
 
-        if (!msCloseButtonMessage.empty())
+        ZRect rGroup(rButton);  // start the first grouping
+
+        if (mBehavior & (kShowCloseButton | kShowLoadButton | kShowSaveButton))
         {
 
-            pBtn = new ZWinSizablePushBtn();
-            pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-            pBtn->SetCaption("X"); 
-            pBtn->SetArea(rButton);
-            pBtn->SetMessage(msCloseButtonMessage);
-            mpPanel->ChildAdd(pBtn);
+            if (mBehavior & kShowCloseButton)
+            {
+                pBtn = new ZWinSizablePushBtn();
+                pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+                pBtn->SetCaption("X");
+                pBtn->SetArea(rButton);
+                pBtn->SetMessage(msCloseButtonMessage);
+                mpPanel->ChildAdd(pBtn);
 
-            rButton.OffsetRect(mnControlPanelButtonSide *2, 0);
+                rButton.OffsetRect(mnControlPanelButtonSide + gDefaultSpacer, 0);
+            }
+
+            if (mBehavior & kShowLoadButton)
+            {
+                pBtn = new ZWinSizablePushBtn();
+                pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+                pBtn->SetCaption("1");  // wingdings 1 open folder
+                pBtn->SetArea(rButton);
+                pBtn->mStyle = wd1Style;
+                pBtn->SetMessage(msLoadButtonMessage);
+                mpPanel->ChildAdd(pBtn);
+
+                rButton.OffsetRect(rButton.Width(), 0);
+            }
+
+            if (mBehavior & kShowSaveButton)
+            {
+                pBtn = new ZWinSizablePushBtn();
+                pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+                pBtn->SetCaption("<"); // wingdings 1 save
+                pBtn->mStyle = wd1Style;
+                pBtn->SetArea(rButton);
+                pBtn->SetMessage(msSaveButtonMessage);
+                mpPanel->ChildAdd(pBtn);
+            }
+
+            rGroup.right = rButton.right;
+            rGroup.bottom = rButton.bottom;
+            rGroup.InflateRect(gDefaultGroupingStyle.padding, gDefaultGroupingStyle.padding);
+            mpPanel->AddGrouping("File", rGroup);
+            rButton.OffsetRect(rButton.Width()+gDefaultSpacer*2, 0);
         }
-        
 
-
-
-
+        // Rotation Group
+        rGroup = rButton;   // start new grouping
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(":"); // wingdings rotate left
-        pBtn->mStyle = ZGUI::Style(ZFontParams("Wingdings 3", mnControlPanelFontHeight));
+        pBtn->mStyle = wd3Style;
         pBtn->SetArea(rButton);
-
-
         string sMessage;
         Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
         pBtn->SetMessage(sMessage);
         mpPanel->ChildAdd(pBtn);
 
-
-
-        rButton.OffsetRect(mnControlPanelButtonSide, 0);
+        rButton.OffsetRect(rButton.Width(), 0);
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(";"); // wingdings rotate right
-        pBtn->mStyle = ZGUI::Style(ZFontParams("Wingdings 3", mnControlPanelFontHeight));
+        pBtn->mStyle = wd3Style;
         pBtn->SetArea(rButton);
-
         Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
-
         pBtn->SetMessage(sMessage);
         mpPanel->ChildAdd(pBtn);
+
+        rButton.OffsetRect(rButton.Width(), 0);
+
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+        pBtn->SetCaption("1"); // wingdings flip H
+        pBtn->mStyle = wd3Style;
+        pBtn->SetArea(rButton);
+        Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
+        pBtn->SetMessage(sMessage);
+        mpPanel->ChildAdd(pBtn);
+
+        rButton.OffsetRect(rButton.Width(), 0);
+
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+        pBtn->SetCaption("2"); // wingdings flip V
+        pBtn->mStyle = wd3Style;
+        pBtn->SetArea(rButton);
+        Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
+        pBtn->SetMessage(sMessage);
+        mpPanel->ChildAdd(pBtn);
+
 
 
         rGroup.right = rButton.right;
@@ -114,45 +165,7 @@ bool ZWinImage::Init()
         mpPanel->AddGrouping("Rotate", rGroup);
         rButton.OffsetRect(gDefaultSpacer, 0);
 
-
-
-
-
         rButton.OffsetRect(mnControlPanelButtonSide, 0);
-        rGroup = rButton;
-        if (mBehavior&kShowLoadButton)
-        {
-            rButton.right = rButton.left + mnControlPanelButtonSide * 3;
-
-            pBtn = new ZWinSizablePushBtn();
-            pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-            pBtn->SetCaption("load");
-            pBtn->SetArea(rButton);
-            pBtn->SetMessage(msLoadButtonMessage);
-            mpPanel->ChildAdd(pBtn);
-
-            rButton.OffsetRect(rButton.Width(), 0);
-        }
-
-        if (mBehavior & kShowSaveButton)
-        {
-            rButton.right = rButton.left + mnControlPanelButtonSide * 3;
-
-            pBtn = new ZWinSizablePushBtn();
-            pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-            pBtn->SetCaption("save");
-            pBtn->SetArea(rButton);
-            pBtn->SetMessage(msSaveButtonMessage);
-            mpPanel->ChildAdd(pBtn);
-        }
-
-        rGroup.right = rButton.right;
-        rGroup.bottom = rButton.bottom;
-        rGroup.InflateRect(gDefaultGroupingStyle.padding, gDefaultGroupingStyle.padding);
-        mpPanel->AddGrouping("File", rGroup);
-        rButton.OffsetRect(gDefaultSpacer, 0);
-
-
 
 
 
@@ -205,17 +218,18 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 bool ZWinImage::OnMouseDownR(int64_t x, int64_t y)
 {
     // toggle between 100% and fullscreen
-    if (mfZoom != 1.0)
+    if (mViewState != kFitToWindow)
     {
-        mfZoom = 1.0;
-
-        mImageArea = mpImage->GetArea();
-        mImageArea = mImageArea.CenterInRect(mAreaToDrawTo);
-
-        Invalidate();
+        FitImageToWindow();
     }
     else
-        FitImageToWindow();
+    {
+        //mfZoom = 1.0;
+        SetZoom(1.0);
+
+//        mImageArea = mpImage->GetArea();
+//        mImageArea = mImageArea.CenterInRect(mAreaToDrawTo);
+    }
 
     return ZWin::OnMouseDownR(x, y);
 }
@@ -243,54 +257,52 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
     bool bEnableZoom = (mBehavior & kZoom) || (mBehavior & kHotkeyZoom && mbHotkeyActive);
     if (bEnableZoom)
     {
-        if (mImageArea.PtInRect(x, y))
+        // if the zoom point is outside of the image area, adjust so it's zooming around the closest pixel
+        limit<int64_t>(x, mImageArea.left, mImageArea.right);
+        limit<int64_t>(y, mImageArea.top, mImageArea.bottom);
+
+        double fNewZoom = mfZoom;
+        if (nDelta < 0)
         {
-            double fNewZoom = mfZoom;
-            if (nDelta < 0)
-            {
-                fNewZoom *= 1.2f;
-            }
-            else
-            {
-                fNewZoom *= 0.8f;
-            }
-
-            // snap zoom to some specific values like perfect fit, 1.00, 2.00, 4.00
-            if ((mfZoom > mfPerfectFitZoom && fNewZoom < mfPerfectFitZoom) || (mfZoom < mfPerfectFitZoom && fNewZoom > mfPerfectFitZoom))
-                fNewZoom = mfPerfectFitZoom;
-            else if ((mfZoom < 1.00 && fNewZoom > 1.00) || (mfZoom > 1.00 && fNewZoom < 1.00))
-                fNewZoom = 1.00;
-            else if ((mfZoom < 2.00 && fNewZoom > 2.00) || (mfZoom > 2.00 && fNewZoom < 2.00))
-                fNewZoom = 2.00;
-            else if ((mfZoom < 4.00 && fNewZoom > 4.00) || (mfZoom > 4.00 && fNewZoom < 4.00))
-                fNewZoom = 4.00;
-
-            SetZoom(fNewZoom);
-
-            ZRect rImage(mpImage.get()->GetArea());
-
-            double fZoomPointX = (double)(x - mImageArea.left);
-            double fZoomPointY = (double)(y - mImageArea.top);
-
-            double fZoomPointU = fZoomPointX / (double)mImageArea.Width();
-            double fZoomPointV = fZoomPointY / (double)mImageArea.Height();
-
-            double fNewWidth = rImage.Width() * fNewZoom;
-            double fNewHeight = rImage.Height() * fNewZoom;
-
-
-            int64_t nNewLeft = (int64_t)(x - (fNewWidth * fZoomPointU));
-            int64_t nNewRight = nNewLeft + (int64_t)fNewWidth;
-
-            int64_t nNewTop = (int64_t)(y - (fNewHeight * fZoomPointV));
-            int64_t nNewBottom = nNewTop + (int64_t)fNewHeight;
-
-            ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
-
-            mImageArea.SetRect(rNewArea);
-            return true;
+            fNewZoom *= 1.2f;
+        }
+        else
+        {
+            fNewZoom *= 0.8f;
         }
 
+        // snap zoom to some specific values like perfect fit, 1.00, 2.00, 4.00
+        if ((mfZoom > mfPerfectFitZoom && fNewZoom < mfPerfectFitZoom) || (mfZoom < mfPerfectFitZoom && fNewZoom > mfPerfectFitZoom))
+            fNewZoom = mfPerfectFitZoom;
+        else if ((mfZoom < 1.00 && fNewZoom > 1.00) || (mfZoom > 1.00 && fNewZoom < 1.00))
+            fNewZoom = 1.00;
+        else if ((mfZoom < 2.00 && fNewZoom > 2.00) || (mfZoom > 2.00 && fNewZoom < 2.00))
+            fNewZoom = 2.00;
+        else if ((mfZoom < 4.00 && fNewZoom > 4.00) || (mfZoom > 4.00 && fNewZoom < 4.00))
+            fNewZoom = 4.00;
+
+        ZRect rImage(mpImage.get()->GetArea());
+
+        double fZoomPointX = (double)(x - mImageArea.left);
+        double fZoomPointY = (double)(y - mImageArea.top);
+
+        double fZoomPointU = fZoomPointX / (double)mImageArea.Width();
+        double fZoomPointV = fZoomPointY / (double)mImageArea.Height();
+
+        double fNewWidth = rImage.Width() * fNewZoom;
+        double fNewHeight = rImage.Height() * fNewZoom;
+
+
+        int64_t nNewLeft = (int64_t)(x - (fNewWidth * fZoomPointU));
+        int64_t nNewRight = nNewLeft + (int64_t)fNewWidth;
+
+        int64_t nNewTop = (int64_t)(y - (fNewHeight * fZoomPointV));
+        int64_t nNewBottom = nNewTop + (int64_t)fNewHeight;
+
+        ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
+
+        mImageArea.SetRect(rNewArea);
+        SetZoom(fNewZoom);
         return true;
     }
 
@@ -435,16 +447,43 @@ void ZWinImage::FitImageToWindow()
     mfZoom = mfPerfectFitZoom;
     mImageArea.SetRect(nXOffset, nYOffset, nXOffset + nImageWidth, nYOffset + nImageHeight);
 
-
+    mViewState = kFitToWindow;
 
     Invalidate();
 }
+
+bool ZWinImage::IsSizedToWindow()
+{
+    if (!mpImage)
+        return false;
+
+    return (mArea.Width() == mImageArea.Width() || mArea.Height() == mImageArea.Height());  // if either width or height matches window, then it's sized
+}
+
 
 
 void ZWinImage::SetZoom(double fZoom)
 { 
     mfZoom = fZoom;
     limit<double>(mfZoom, mfMinZoom, mfMaxZoom);
+
+    // Update image area
+    ZRect rImageArea(mpImage->GetArea());
+    double fRatio = (double)rImageArea.Width() / (double)rImageArea.Height();
+    int64_t nImageWidth = rImageArea.Width() * mfZoom;
+    int64_t nImageHeight = (int64_t)(nImageWidth / fRatio);
+
+    ZPoint tl(((mImageArea.left + mImageArea.right)-nImageWidth) / 2, ((mImageArea.top + mImageArea.bottom)-nImageHeight) / 2);
+    mImageArea.SetRect(tl.x, tl.y, tl.x + nImageWidth, tl.y + nImageHeight);
+
+    if (mfZoom == 1.0)
+        mViewState = kZoom100;
+    else if (rImageArea.Height() < mArea.Height() && mfZoom > 1.0)
+        mViewState = kZoomedInToSmallImage;
+    else if (rImageArea.Height() > mArea.Height() && mfZoom < 1.0)
+        mViewState = kZoomedOutOfLargeImage;
+
+
     Invalidate(); 
 }
 
@@ -456,16 +495,13 @@ double ZWinImage::GetZoom()
 
 void ZWinImage::SetImage(tZBufferPtr pImage)
 {
-//	mpImage.reset(pImage);
-
     if (pImage->GetArea().Height() < mAreaToDrawTo.Height())    // if setting an image smaller than the screen, set new one unzoomed
     {
-        mfZoom = 1.0;
+        SetZoom(1.0);
         mImageArea = pImage->GetArea();
         mImageArea = mImageArea.CenterInRect(mAreaToDrawTo);
         mpImage = pImage;
         Invalidate();
-
         return;
     }
 
@@ -558,6 +594,18 @@ bool ZWinImage::HandleMessage(const ZMessage& message)
     else if (sType == "rotate_right")
     {
         mpImage->Rotate(ZBuffer::kRight);
+        FitImageToWindow();
+        return true;
+    }
+    else if (sType == "flipH")
+    {
+        mpImage->Rotate(ZBuffer::kHFlip);
+        FitImageToWindow();
+        return true;
+    }
+    else if (sType == "flipV")
+    {
+        mpImage->Rotate(ZBuffer::kVFlip);
         FitImageToWindow();
         return true;
     }

@@ -22,9 +22,16 @@ public:
         kShowOnHotkey           = 1 << 6,   // 64
         kShowLoadButton         = 1 << 7,   // 128
         kShowSaveButton         = 1 << 8,   // 256
-
+        kShowCloseButton        = 1 << 9,   // 512
     };
 
+    enum eViewState : uint32_t
+    {
+        kFitToWindow            = 1,
+        kZoom100                = 2,
+        kZoomedInToSmallImage   = 3,
+        kZoomedOutOfLargeImage  = 4,
+    };
 
 
     ZWinImage();
@@ -44,6 +51,7 @@ public:
 
 
     void        FitImageToWindow();
+    bool        IsSizedToWindow();
 
     void        SetZoom(double fZoom);
     double      GetZoom();
@@ -76,34 +84,20 @@ protected:
     bool HandleMessage(const ZMessage& message);
 
 private:
-    //bool                mbScrollable;
-    //bool                mbZoomable;
-    //bool                mbControlPanelEnabled;
-
     int64_t             mnControlPanelButtonSide;
-    int64_t             mnControlPanelFontHeight;
 
     double              mfZoom;
     double              mfPerfectFitZoom;
     ZRect               mImageArea;
+    eViewState          mViewState;
 
 
-    //bool                mbShowZoom;
-    //bool                mbShow100Also;
-//    tZFontPtr           mpZoomCaptionFont;
-//    ZTextLook           mZoomCaptionLook;
-//    ZGUI::ePosition     mZoomCaptionPos;
     ZGUI::Style         mZoomStyle;
     ZGUI::Style         mCaptionStyle;
 
     bool                mbHotkeyActive;
-    //bool                mbManipulate;
 
     std::string         msCaption;
-//    tZFontPtr           mpCaptionFont;
-//    ZTextLook           mCaptionLook;
-//    ZGUI::ePosition     mCaptionPos;
-
     uint32_t            mFillColor;
 
     ZWinControlPanel*   mpPanel;
