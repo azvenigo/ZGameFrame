@@ -26,6 +26,7 @@ endif()
 set(ZIMAGEVIEWER_SOURCES 
 Main_ZImageViewer.h Main_ZImageViewer.cpp Main_Win64.cpp 
 ImageViewer.h ImageViewer.cpp
+ConfirmDeleteDialog.h ConfirmDeleteDialog.cpp
 ZImageViewer.rc 
 resource_win64.h
 res/ZImageViewer.ico

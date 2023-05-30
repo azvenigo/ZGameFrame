@@ -62,6 +62,12 @@ protected:
     int64_t                 ImageIndexInFolder(std::filesystem::path imagePath);
 
     static tZBufferPtr      LoadImageProc(std::filesystem::path& imagePath, ImageViewer* pThis);
+    void                    UpdateCaptionStyle();
+
+    bool                    InDeletionList(std::filesystem::path& imagePath);
+    void                    ToggleDeletionList(std::filesystem::path& imagePath);
+
+    void                    DeleteConfimed();
 
     bool                    Preload();
     void                    SetFirstImage();
@@ -85,4 +91,7 @@ protected:
     std::list<std::string>  mAcceptedExtensions = { "jpg", "jpeg", "png", "gif", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" };
     std::atomic<uint32_t>   mAtomicIndex;   // incrementing index for unloading oldest
 
+
+    // image manipulation
+    tImageFilenames         mDeletionList;
 };

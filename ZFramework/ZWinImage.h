@@ -58,12 +58,6 @@ public:
 
     void        ScrollTo(int64_t nX, int64_t nY);
 
-
-    void        SetFill(uint32_t nCol) { mFillColor = nCol; Invalidate(); }
-    void        SetShowZoom(const ZGUI::Style& style);
-    void        SetCaption(const std::string& sCaption, const ZGUI::Style& captionStyle);
-
-
     bool        LoadImage(const std::string& sName);
     void        SetImage(tZBufferPtr pImage);
 
@@ -80,6 +74,19 @@ public:
 
     tZBufferPtr mpImage;
 
+
+    std::string         msCaption;
+    ZGUI::Style         mCaptionStyle;
+
+    std::string         msOverlayCaption;
+    ZGUI::Style         mOverlayCaptionStyle;
+
+    ZGUI::Style         mZoomStyle;
+
+
+    uint32_t            mFillColor;
+
+
 protected:
     bool HandleMessage(const ZMessage& message);
 
@@ -91,14 +98,8 @@ private:
     ZRect               mImageArea;
     eViewState          mViewState;
 
-
-    ZGUI::Style         mZoomStyle;
-    ZGUI::Style         mCaptionStyle;
-
     bool                mbHotkeyActive;
 
-    std::string         msCaption;
-    uint32_t            mFillColor;
 
     ZWinControlPanel*   mpPanel;
 };

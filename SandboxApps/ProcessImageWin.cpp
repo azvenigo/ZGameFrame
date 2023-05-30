@@ -157,7 +157,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
                 Sprintf(pOriginalImageWin->msCloseButtonMessage, "closeimg;name=%s;target=imageprocesswin", filename.c_str());
 
                 pOriginalImageWin->mBehavior |= ZWinImage::kShowControlPanel;
-                pOriginalImageWin->SetFill(0x00000000);
+                pOriginalImageWin->mFillColor = 0x00000000;
                 ChildAdd(pOriginalImageWin);
 
                 mChildImageWins.push_back(pOriginalImageWin);
@@ -1122,12 +1122,12 @@ void cProcessImageWin::ResetResultsBuffer()
 
         mpResultWin = new ZWinImage();
         mpResultWin->SetArea(mrResultImageDest);
-        mpResultWin->SetFill(0xff222222);
+        mpResultWin->mFillColor = 0xff222222;
         mpResultWin->SetArea(mrResultImageDest);
 
 
         //        mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont),ZTextLook(ZTextLook::kNormal, 0x44ffffff, 0x44ffffff), ZGUI::RB, true);
-        mpResultWin->SetShowZoom(gStyleCaption);
+        mpResultWin->mZoomStyle = gStyleCaption;
         mpResultWin->mfMinZoom = 0.05;
         mpResultWin->mfMaxZoom = 100.0;
 

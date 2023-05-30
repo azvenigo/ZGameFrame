@@ -58,8 +58,8 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel = new ZWinControlPanel();
     gpControlPanel->SetArea(rControlPanel);
-    gpControlPanel->SetTriggerRect(grControlPanelTrigger);
-    gpControlPanel->SetHideOnMouseExit(true);
+    gpControlPanel->mrTrigger = grControlPanelTrigger;
+    gpControlPanel->mbHideOnMouseExit = true;
 
     gpControlPanel->Init();
 

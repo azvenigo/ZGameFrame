@@ -161,7 +161,7 @@ bool ZWinControlPanel::Paint()
 
 bool ZWinControlPanel::Process()
 {
-    if (mbHideOnMouseExit && gpCaptureWin == nullptr)   // only process this if no window has capture
+    if (gpCaptureWin == nullptr)   // only process this if no window has capture
     {
         if (!mbVisible)
         {
@@ -176,7 +176,7 @@ bool ZWinControlPanel::Process()
             ZRect rOverArea(mrTrigger);
             rOverArea.UnionRect(mAreaAbsolute);
 
-            if (!rOverArea.PtInRect(gLastMouseMove))        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
+            if (!rOverArea.PtInRect(gLastMouseMove) && mbHideOnMouseExit)        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
             {
                 SetVisible(false);
                 return true;

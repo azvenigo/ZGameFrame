@@ -53,9 +53,9 @@ bool ZWinImage::Init()
 
 
         ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + mnControlPanelButtonSide + 2* gDefaultSpacer);
-        mpPanel->SetTriggerRect(mAreaAbsolute);
-        //mpPanel->SetHideOnMouseExit(true);
+        mpPanel->mbHideOnMouseExit = true;
         mpPanel->SetArea(rPanelArea);
+        mpPanel->mrTrigger = rPanelArea;
         ChildAdd(mpPanel, (mBehavior&kShowOnHotkey == 0));
 
         ZWinSizablePushBtn* pBtn;
@@ -166,32 +166,10 @@ bool ZWinImage::Init()
         rButton.OffsetRect(gDefaultSpacer, 0);
 
         rButton.OffsetRect(mnControlPanelButtonSide, 0);
-
-
-
-
-
-
     }
-
-
-
 
     return ZWin::Init();
 }
-
-
-void ZWinImage::SetShowZoom(const ZGUI::Style& style)
-{ 
-    mZoomStyle = style;
-}
-
-void ZWinImage::SetCaption(const std::string& sCaption, const ZGUI::Style& style)
-{
-    msCaption = sCaption;
-    mCaptionStyle = style;
-}
-
 
 bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 {
@@ -319,8 +297,11 @@ bool ZWinImage::OnKeyDown(uint32_t c)
     {
         mbHotkeyActive = true;
         if (mpPanel && mBehavior & kShowOnHotkey)
+        {
+            mpPanel->mbHideOnMouseExit = false;
             mpPanel->SetVisible();
-        mpParentWin->Invalidate();
+        }
+        mpParentWin->InvalidateChildren();
     }
 
     if (mpParentWin)
@@ -335,8 +316,10 @@ bool ZWinImage::OnKeyUp(uint32_t c)
     {
         mbHotkeyActive = false;
         if (mpPanel && mBehavior & kShowOnHotkey)
-            mpPanel->SetVisible(false);
-        mpParentWin->Invalidate();
+        {
+            mpPanel->mbHideOnMouseExit = true;
+        }
+        mpParentWin->InvalidateChildren();
     }
 
     if (mpParentWin)
@@ -407,8 +390,8 @@ void ZWinImage::SetArea(const ZRect& newArea)
 
     if (mpPanel)
     {
-        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.bottom - mnControlPanelButtonSide, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
-        mpPanel->SetTriggerRect(mAreaAbsolute);
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + mnControlPanelButtonSide + 2 * gDefaultSpacer);
+        mpPanel->mrTrigger = rPanelArea;
         mpPanel->SetArea(rPanelArea);
     }
 
@@ -565,11 +548,33 @@ bool ZWinImage::Paint()
     {
         if (mBehavior & kShowCaption || (mBehavior & kShowOnHotkey && mbHotkeyActive))
         {
-
-            ZRect rCaption(mCaptionStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), msCaption.length(), mCaptionStyle.pos));
-            mCaptionStyle.Font()->DrawText(mpTransformTexture.get(), msCaption, rCaption, mCaptionStyle.look);
+            if (mCaptionStyle.wrap)
+            {
+                mCaptionStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), msCaption, mAreaToDrawTo, mCaptionStyle.look, mCaptionStyle.pos);
+            }
+            else
+            {
+                ZRect rCaption(mCaptionStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), msCaption.length(), mCaptionStyle.pos));
+                mCaptionStyle.Font()->DrawText(mpTransformTexture.get(), msCaption, rCaption, mCaptionStyle.look);
+            }
         }
     }
+
+
+    if (!msOverlayCaption.empty())
+    {
+        if (mOverlayCaptionStyle.wrap)
+        {
+            mOverlayCaptionStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), msOverlayCaption, mAreaToDrawTo, mOverlayCaptionStyle.look, mOverlayCaptionStyle.pos);
+        }
+        else
+        {
+            ZRect rCaption(mCaptionStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), msCaption.length(), mCaptionStyle.pos));
+            mOverlayCaptionStyle.Font()->DrawText(mpTransformTexture.get(), msOverlayCaption, rCaption, mOverlayCaptionStyle.look);
+        }
+    }
+
+
 
     if (mBehavior & kShowZoomCaption || (mBehavior & kShowOnHotkey && mbHotkeyActive))
     {

@@ -7,6 +7,7 @@
 #include "ZStringHelpers.h"
 #include "helpers/ThreadPool.h"
 #include "ZWinFileDialog.h"
+#include "ConfirmDeleteDialog.h"
 #include <algorithm>
 #include "helpers/Registry.h"
 
@@ -56,7 +57,17 @@ bool ImageViewer::OnKeyDown(uint32_t key)
 #ifdef _WIN64
     if (key == VK_ESCAPE)
     {
-        gMessageSystem.Post("quit_app_confirmed");
+        if (mDeletionList.empty())
+        {
+            gMessageSystem.Post("quit_app_confirmed");
+        }
+        else
+        {
+            ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", mDeletionList);
+            pDialog->msOnConfirmDelete = ZMessage("delete_confirm", this);
+            pDialog->msOnCancel = ZMessage("delete_cancel_and_quit", this);
+            pDialog->msOnGoBack = ZMessage("delete_goback", this);
+        }
     }
 #endif
 
@@ -78,6 +89,11 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     case 'O':
         return ShowOpenImageDialog();
         break;
+    case VK_DELETE:
+        {
+            ToggleDeletionList(mSelectedFilename);
+            SetNextImage();
+        }
     }
 
 
@@ -109,9 +125,52 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             SaveImage(sFilename);
         return true;
     }
+    if (sType == "delete_confirm")
+    {
+        DeleteConfimed();
+        gMessageSystem.Post("quit_app_confirmed");
+        return true;
+    }
+    else if (sType == "delete_goback")
+    {
+        // Anything to do or just close the confirm dialog?
+        SetFocus();
+        return true;
+    }
+    else if (sType == "delete_cancel_and_quit")
+    {
+        gMessageSystem.Post("quit_app_confirmed");
+        return true;
+    }
 
     return ZWin::HandleMessage(message);
 }
+
+void ImageViewer::DeleteConfimed()
+{
+    char path[512];
+
+    for (auto f : mDeletionList)
+    {
+        SHFILEOPSTRUCT fileOp;
+        fileOp.hwnd = NULL;
+        fileOp.wFunc = FO_DELETE;
+
+        memset(path, 0, 512);
+        strcpy(path, f.string().c_str());
+
+        fileOp.pFrom = path;
+        fileOp.pTo = "Recycle Bin";
+        fileOp.fFlags = FOF_ALLOWUNDO|FOF_NOERRORUI | FOF_NOCONFIRMATION | FOF_SILENT;
+        int result = SHFileOperationA(&fileOp);
+
+        if (result != 0) 
+        {
+            ZERROR("Error deleting file:", f, "\n");
+        }
+    }
+}
+
 
 bool ImageViewer::SaveImage(const std::filesystem::path& filename)
 {
@@ -187,7 +246,7 @@ bool ImageViewer::Init()
         ZRect rImageArea(mAreaToDrawTo);
 //        rImageArea.left += 64;  // thumbs
         mpWinImage->SetArea(rImageArea);
-        mpWinImage->SetFill(0xff000000);
+        mpWinImage->mFillColor = 0xff000000;
         mpWinImage->mManipulationHotkey = VK_CONTROL;
         mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kShowOnHotkey|ZWinImage::kScrollable|ZWinImage::kShowControlPanel|ZWinImage::kShowLoadButton|ZWinImage::kShowSaveButton;
         Sprintf(mpWinImage->msSaveButtonMessage, "saveimg;target=%s", msWinName.c_str());
@@ -196,7 +255,8 @@ bool ImageViewer::Init()
 
         ZGUI::Style zoomStyle(gDefaultWinTextEditStyle);
         zoomStyle.pos = ZGUI::CB;
-        mpWinImage->SetShowZoom(zoomStyle);
+        zoomStyle.look = ZTextLook::kShadowed;
+        mpWinImage->mZoomStyle = zoomStyle;
 
         ChildAdd(mpWinImage);
         mpWinImage->SetFocus();
@@ -434,13 +494,7 @@ bool ImageViewer::Process()
             mpWinImage->SetImage(pFuture->get());
 
             gRegistry["ZImageViewer"]["image"] = mSelectedFilename.string();
-
-
-            string sCaption = SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size()) + " " + mSelectedFilename.string();
-
-            ZGUI::Style captionStyle(gDefaultWinTextEditStyle);
-            captionStyle.pos = ZGUI::LB;
-            mpWinImage->SetCaption(sCaption, captionStyle);
+            UpdateCaptionStyle();
         }
     }
     else
@@ -449,6 +503,52 @@ bool ImageViewer::Process()
     }
     return ZWin::Process();
 }
+
+void ImageViewer::UpdateCaptionStyle()
+{
+    if (mpWinImage)
+    {
+        string sCaption = SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size()) + " " + mSelectedFilename.string();
+        ZGUI::Style captionStyle(gDefaultWinTextEditStyle);
+        captionStyle.pos = ZGUI::LB;
+        captionStyle.look = ZTextLook::kShadowed;
+        mpWinImage->msCaption = sCaption;
+        mpWinImage->mCaptionStyle = captionStyle;
+
+
+        if (InDeletionList(mSelectedFilename))
+        {
+            string sCaption = "MARKED FOR DELETE";
+            mpWinImage->msOverlayCaption = sCaption;
+            mpWinImage->mOverlayCaptionStyle = ZGUI::Style(ZFontParams("Ariel Bold", 200, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0x88000000, true);
+        }
+        else
+        {
+            mpWinImage->msOverlayCaption = "";
+        }
+
+        mpWinImage->Invalidate();
+    }
+}
+
+bool ImageViewer::InDeletionList(std::filesystem::path& imagePath)
+{
+    tImageFilenames::iterator findit = std::find(mDeletionList.begin(), mDeletionList.end(), imagePath);
+    return findit != mDeletionList.end();
+}
+
+void ImageViewer::ToggleDeletionList(std::filesystem::path& imagePath)
+{
+    tImageFilenames::iterator findit = std::find(mDeletionList.begin(), mDeletionList.end(), imagePath);
+    if (findit == mDeletionList.end())
+        mDeletionList.push_back(imagePath);
+    else
+        mDeletionList.erase(findit);
+
+    UpdateCaptionStyle();
+    Invalidate();
+}
+
 
 bool ImageViewer::Paint()
 {

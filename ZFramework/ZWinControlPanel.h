@@ -34,11 +34,7 @@ public:
 
     virtual bool        Init();
 
-    void                SetTriggerRect(const ZRect& rTrigger) { mrTrigger.SetRect(rTrigger); }
-
     void                FitToControls();
-
-    void                SetHideOnMouseExit(bool bHideOnMouseExit) { mbHideOnMouseExit = bHideOnMouseExit; }
 
     ZWinLabel*          AddCaption(const std::string& sCaption, const ZGUI::Style& style = gStyleCaption);
     ZWinSizablePushBtn* AddButton(  const std::string& sCaption, const std::string& sMessage, const ZGUI::Style& style = gStyleButton);
@@ -70,14 +66,14 @@ public:
 
 
     ZGUI::Style         mStyle;
+    ZRect               mrTrigger;
+    bool                mbHideOnMouseExit;
 
 private:
-    ZRect   mrTrigger;
 
     int64_t mnBorderWidth;
     int64_t mnControlHeight;
     ZRect   mrNextControl;       // area for next control to be added
-    bool    mbHideOnMouseExit;
 
     tGroupingBorders mGroupingBorders;
 };
