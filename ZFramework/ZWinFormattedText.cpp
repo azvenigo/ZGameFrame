@@ -232,9 +232,6 @@ void ZWinFormattedText::UpdateScrollbar()
 
     mrTextBorderArea.SetRect(mAreaToDrawTo);
 
-    if (mbScrollable)
-        mrTextBorderArea.right -= kSliderWidth;
-
     mrTextArea.SetRect(mrTextBorderArea);
     if (mbDrawBorder)
         mrTextArea.DeflateRect(6, 6);
@@ -242,6 +239,10 @@ void ZWinFormattedText::UpdateScrollbar()
 
 	if (mbScrollable && nFullTextHeight > mrTextArea.Height())
 	{
+        mrTextBorderArea.right -= kSliderWidth;
+        mrTextArea.right -= kSliderWidth;
+
+
         if (!mpWinSlider)
         {
             mpWinSlider = new ZWinSlider(&mnSliderVal);

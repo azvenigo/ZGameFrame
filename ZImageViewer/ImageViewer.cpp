@@ -63,6 +63,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
         }
         else
         {
+            mFilenameToLoad = *mDeletionList.begin();
             ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", mDeletionList);
             pDialog->msOnConfirmDelete = ZMessage("delete_confirm", this);
             pDialog->msOnCancel = ZMessage("delete_cancel_and_quit", this);
@@ -134,12 +135,18 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     else if (sType == "delete_goback")
     {
         // Anything to do or just close the confirm dialog?
-        SetFocus();
+        if (mpWinImage)
+            mpWinImage->SetFocus();
         return true;
     }
     else if (sType == "delete_cancel_and_quit")
     {
         gMessageSystem.Post("quit_app_confirmed");
+        return true;
+    }
+    else if (sType == "select")
+    {
+        mFilenameToLoad = message.GetParam("filename");
         return true;
     }
 
@@ -518,7 +525,7 @@ void ImageViewer::UpdateCaptionStyle()
 
         if (InDeletionList(mSelectedFilename))
         {
-            string sCaption = "MARKED FOR DELETE";
+            string sCaption = "MARKED FOR DELETE\n" + mSelectedFilename.string();
             mpWinImage->msOverlayCaption = sCaption;
             mpWinImage->mOverlayCaptionStyle = ZGUI::Style(ZFontParams("Ariel Bold", 200, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0x88000000, true);
         }

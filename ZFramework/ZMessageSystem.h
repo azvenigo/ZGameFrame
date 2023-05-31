@@ -94,6 +94,7 @@ public:
 
 	void							RegisterTarget(IMessageTarget* pTarget);
 	void							UnregisterTarget(IMessageTarget* pTarget);
+    bool                            IsRegistered(const std::string& sTargetName);
 
 	void							AddNotification(const std::string& sMessageType, IMessageTarget* pTarget);
 	void							RemoveNotification(const std::string& sMessageType, IMessageTarget* pTarget);

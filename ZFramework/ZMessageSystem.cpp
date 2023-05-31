@@ -251,7 +251,7 @@ void ZMessageSystem::RemoveAllNotifications(IMessageTarget* pTarget)
 void ZMessageSystem::RegisterTarget(IMessageTarget* pTarget)
 {
 	ZASSERT(pTarget);
-	ZASSERT_MESSAGE(mNameToMessageTargetMap.find(pTarget->GetTargetName()) == mNameToMessageTargetMap.end(), string("Target \"" + pTarget->GetTargetName() + "\" already mapped!").c_str());
+	ZASSERT_MESSAGE(IsRegistered(pTarget->GetTargetName()), string("Target \"" + pTarget->GetTargetName() + "\" already mapped!").c_str());
 
 	mNameToMessageTargetMap[pTarget->GetTargetName()] = pTarget;
 }
@@ -262,6 +262,11 @@ void ZMessageSystem::UnregisterTarget(IMessageTarget* pTarget)
 	tNameToMessageTargetMap::iterator it = mNameToMessageTargetMap.find(pTarget->GetTargetName());
 	if (it != mNameToMessageTargetMap.end())
 		mNameToMessageTargetMap.erase(it);
+}
+
+bool ZMessageSystem::IsRegistered(const std::string& sTargetName)
+{
+    return mNameToMessageTargetMap.find(sTargetName) == mNameToMessageTargetMap.end();
 }
 
 

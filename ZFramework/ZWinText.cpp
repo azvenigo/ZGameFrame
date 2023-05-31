@@ -71,7 +71,18 @@ bool ZWinLabel::Paint()
         return false;
 
     if (ARGB_A(mStyle.bgCol) > 5)
+    {
         mpTransformTexture->Fill(mAreaToDrawTo, mStyle.bgCol);
+    }
+    else
+    {
+        // If transparent, copy the bits from underneath
+        if (mpParentWin && mpParentWin->IsVisible())
+        {
+            tZBufferPtr parentBuffer = mpParentWin->GetTransformTexture();
+            mpTransformTexture.get()->Blt(parentBuffer.get(), mAreaToBltTo, mpTransformTexture.get()->GetArea());
+        }
+    }
 
     if (mStyle.wrap)
     {

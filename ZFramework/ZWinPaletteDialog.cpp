@@ -4,6 +4,9 @@
 #include "Resources.h"
 #include "ZMainWin.h"
 
+using namespace std;
+
+const string kPaletteDialogName("PaletteDialog");
 
 ZWinPaletteDialog::ZWinPaletteDialog()
 {
@@ -12,6 +15,7 @@ ZWinPaletteDialog::ZWinPaletteDialog()
     mCurH = 0;
     mCurS = 0;
     mCurV = 0;
+    msWinName = kPaletteDialogName;
 
 }
 
