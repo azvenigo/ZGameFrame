@@ -46,6 +46,7 @@ bool ImageViewer::ShowOpenImageDialog()
     if (ZWinFileDialog::ShowLoadDialog("Images", "*.jpg;*.jpeg;*.png;*.gif;*.tga;*.bmp;*.psd;*.hdr;*.pic;*.pnm", sFilename))
     {
         mFilenameToLoad = sFilename;
+        mMoveToFolder.clear();
         Preload();
     }
     return true;
