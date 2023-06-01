@@ -141,6 +141,64 @@ namespace ZWinFileDialog
         return bSuccess;
     }
 
+    bool ShowSelectFolderDialog(std::string& sFilenameResult)
+    {
+        bool bSuccess = false;
+
+        HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+        if (SUCCEEDED(hr))
+        {
+            IFileOpenDialog* pFileOpen;
+
+            // Create the FileOpenDialog object.
+            hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+            if (SUCCEEDED(hr))
+            {
+                COMDLG_FILTERSPEC rgSpec[] =
+                {
+                          { L"All Files", L"*.*" }
+                };
+
+                pFileOpen->SetFileTypes(1, rgSpec);
+
+                DWORD dwOptions;
+                hr = pFileOpen->GetOptions(&dwOptions);
+                if (SUCCEEDED(hr))
+                {
+                    hr = pFileOpen->SetOptions(dwOptions | FOS_PICKFOLDERS);
+                }
+
+                // Show the Open dialog box.
+                hr = pFileOpen->Show(NULL);
+
+                // Get the file name from the dialog box.
+                if (SUCCEEDED(hr))
+                {
+                    IShellItem* pItem;
+                    hr = pFileOpen->GetResult(&pItem);
+                    if (SUCCEEDED(hr))
+                    {
+                        PWSTR pszFilePath;
+                        hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+                        wstring wideFilename(pszFilePath);
+                        sFilenameResult = SH::wstring2string(wideFilename);
+
+                        pItem->Release();
+                        bSuccess = true;
+                    }
+                }
+                pFileOpen->Release();
+            }
+            CoUninitialize();
+        }
+
+        return bSuccess;
+    }
+
+
+
     bool ShowSaveDialog(std::string fileTypeDescription, std::string fileTypes, std::string& sFilenameResult)
     {
         wstring sFileTypeDescription(SH::string2wstring(fileTypeDescription));

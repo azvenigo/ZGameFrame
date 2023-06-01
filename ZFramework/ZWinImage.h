@@ -5,6 +5,10 @@
 #include "ZTypes.h"
 #include "ZAnimObjects.h"
 #include "ZWinControlPanel.h"
+
+
+
+
 class ZWinImage : public ZWin
 {
 public:
@@ -19,7 +23,7 @@ public:
         kShowZoomCaption        = 1 << 3,   // 8
         kShowCaption            = 1 << 4,   // 16
         kShowControlPanel       = 1 << 5,   // 32
-        kShowOnHotkey           = 1 << 6,   // 64
+        kUIToggleOnHotkey       = 1 << 6,   // 64
         kShowLoadButton         = 1 << 7,   // 128
         kShowSaveButton         = 1 << 8,   // 256
         kShowCloseButton        = 1 << 9,   // 512
@@ -32,6 +36,9 @@ public:
         kZoomedInToSmallImage   = 3,
         kZoomedOutOfLargeImage  = 4,
     };
+
+
+
 
 
     ZWinImage();
@@ -64,7 +71,8 @@ public:
     void        SetArea(const ZRect& newArea);
 
     uint32_t    mBehavior;
-    uint32_t    mManipulationHotkey;
+    uint32_t    mToggleUIHotkey;
+    uint32_t    mZoomHotkey;
     double      mfMinZoom;
     double      mfMaxZoom;
     std::string msMouseUpLMessage;
@@ -75,11 +83,13 @@ public:
     tZBufferPtr mpImage;
 
 
-    std::string         msCaption;
+/*    std::string         msCaption;
     ZGUI::Style         mCaptionStyle;
 
     std::string         msOverlayCaption;
-    ZGUI::Style         mOverlayCaptionStyle;
+    ZGUI::Style         mOverlayCaptionStyle;*/
+
+    ZGUI::tTextboxMap   mCaptionMap;
 
     ZGUI::Style         mZoomStyle;
 
@@ -98,7 +108,8 @@ private:
     ZRect               mImageArea;
     eViewState          mViewState;
 
-    bool                mbHotkeyActive;
+    bool                mbShowUI;
+    bool                mbZoomHotkeyActive;
 
 
     ZWinControlPanel*   mpPanel;

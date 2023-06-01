@@ -62,12 +62,15 @@ protected:
     int64_t                 ImageIndexInFolder(std::filesystem::path imagePath);
 
     static tZBufferPtr      LoadImageProc(std::filesystem::path& imagePath, ImageViewer* pThis);
-    void                    UpdateCaptionStyle();
+    void                    UpdateCaptions();
 
     bool                    InDeletionList(std::filesystem::path& imagePath);
     void                    ToggleDeletionList(std::filesystem::path& imagePath);
 
     void                    DeleteConfimed();
+    void                    DeleteFile(std::filesystem::path& f);
+    void                    HandleMoveCommand();
+    void                    MoveSelectedFile(std::filesystem::path& newPath);
 
     bool                    Preload();
     void                    SetFirstImage();
@@ -82,6 +85,8 @@ protected:
 
     tImageFilenames         mImagesInFolder;
     std::filesystem::path   mScannedFolder;
+
+    std::filesystem::path   mMoveToFolder;
 
     tImageCache             mImageCache;
 

@@ -86,6 +86,17 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     case VK_END:
         SetLastImage();
         break;
+    case 'm':
+    case 'M':
+        if (mMoveToFolder.empty())
+        {
+            HandleMoveCommand();
+        }
+        else
+        {
+            MoveSelectedFile(mMoveToFolder);
+        }
+        break;
     case 'o':
     case 'O':
         return ShowOpenImageDialog();
@@ -126,6 +137,20 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             SaveImage(sFilename);
         return true;
     }
+    if (sType == "delete_single")
+    {
+        filesystem::path current = mSelectedFilename;
+        SetNextImage();
+        DeleteFile(current);
+
+        tImageFilenames::iterator it = find(mDeletionList.begin(), mDeletionList.end(), current);
+        if (it != mDeletionList.end())
+            it = mDeletionList.erase(it);
+
+        ScanForImagesInFolder(current.parent_path());
+
+        return true;
+    }
     if (sType == "delete_confirm")
     {
         DeleteConfimed();
@@ -149,32 +174,86 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         mFilenameToLoad = message.GetParam("filename");
         return true;
     }
+    else if (sType == "set_move_folder")
+    {
+        HandleMoveCommand();
+        return true;
+    }
 
     return ZWin::HandleMessage(message);
 }
 
+void ImageViewer::HandleMoveCommand()
+{
+    string sFolder;
+    if (ZWinFileDialog::ShowSelectFolderDialog(sFolder))
+    {
+        MoveSelectedFile(filesystem::path(sFolder));
+    }
+    if (mpWinImage)
+        mpWinImage->SetFocus();
+}
+
+void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
+{
+    mMoveToFolder = newPath;
+
+    filesystem::path nextImageFilename;
+    tImageFilenames::iterator current = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mSelectedFilename);
+    if (current != mImagesInFolder.end())
+    {
+        current++;
+        if (current != mImagesInFolder.end())
+            nextImageFilename = *current;
+    }
+
+    filesystem::path newName(newPath);
+    newName.append(mSelectedFilename.filename().string());
+    filesystem::rename(mSelectedFilename, newName);
+
+    ScanForImagesInFolder(mFilenameToLoad.parent_path());
+
+    // if we just moved the last image in the folder, need to select the new last one
+    if (nextImageFilename.empty())
+        SetLastImage();
+    else
+        mFilenameToLoad = nextImageFilename;
+
+
+    Invalidate();
+}
+
+
 void ImageViewer::DeleteConfimed()
 {
-    char path[512];
-
     for (auto f : mDeletionList)
     {
-        SHFILEOPSTRUCT fileOp;
-        fileOp.hwnd = NULL;
-        fileOp.wFunc = FO_DELETE;
+        DeleteFile(f);
+    }
 
-        memset(path, 0, 512);
-        strcpy(path, f.string().c_str());
+    mDeletionList.clear();
 
-        fileOp.pFrom = path;
-        fileOp.pTo = "Recycle Bin";
-        fileOp.fFlags = FOF_ALLOWUNDO|FOF_NOERRORUI | FOF_NOCONFIRMATION | FOF_SILENT;
-        int result = SHFileOperationA(&fileOp);
+    ScanForImagesInFolder(mSelectedFilename.parent_path());
+}
 
-        if (result != 0) 
-        {
-            ZERROR("Error deleting file:", f, "\n");
-        }
+void ImageViewer::DeleteFile(std::filesystem::path& f)
+{
+    SHFILEOPSTRUCT fileOp;
+    fileOp.hwnd = NULL;
+    fileOp.wFunc = FO_DELETE;
+
+    char path[512];
+    memset(path, 0, 512);
+    strcpy(path, f.string().c_str());
+
+    fileOp.pFrom = path;
+    fileOp.pTo = "Recycle Bin";
+    fileOp.fFlags = FOF_ALLOWUNDO | FOF_NOERRORUI | FOF_NOCONFIRMATION | FOF_SILENT;
+    int result = SHFileOperationA(&fileOp);
+
+    if (result != 0)
+    {
+        ZERROR("Error deleting file:", f, "\n");
     }
 }
 
@@ -254,8 +333,9 @@ bool ImageViewer::Init()
 //        rImageArea.left += 64;  // thumbs
         mpWinImage->SetArea(rImageArea);
         mpWinImage->mFillColor = 0xff000000;
-        mpWinImage->mManipulationHotkey = VK_CONTROL;
-        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kShowOnHotkey|ZWinImage::kScrollable|ZWinImage::kShowControlPanel|ZWinImage::kShowLoadButton|ZWinImage::kShowSaveButton;
+        mpWinImage->mToggleUIHotkey = VK_TAB;
+        mpWinImage->mZoomHotkey = VK_MENU;
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kUIToggleOnHotkey|ZWinImage::kScrollable|ZWinImage::kShowControlPanel|ZWinImage::kShowLoadButton|ZWinImage::kShowSaveButton;
         Sprintf(mpWinImage->msSaveButtonMessage, "saveimg;target=%s", msWinName.c_str());
         Sprintf(mpWinImage->msLoadButtonMessage, "loadimg;target=%s", msWinName.c_str());
 
@@ -501,7 +581,7 @@ bool ImageViewer::Process()
             mpWinImage->SetImage(pFuture->get());
 
             gRegistry["ZImageViewer"]["image"] = mSelectedFilename.string();
-            UpdateCaptionStyle();
+            UpdateCaptions();
         }
     }
     else
@@ -511,7 +591,7 @@ bool ImageViewer::Process()
     return ZWin::Process();
 }
 
-void ImageViewer::UpdateCaptionStyle()
+void ImageViewer::UpdateCaptions()
 {
     if (mpWinImage)
     {
@@ -519,20 +599,32 @@ void ImageViewer::UpdateCaptionStyle()
         ZGUI::Style captionStyle(gDefaultWinTextEditStyle);
         captionStyle.pos = ZGUI::LB;
         captionStyle.look = ZTextLook::kShadowed;
-        mpWinImage->msCaption = sCaption;
-        mpWinImage->mCaptionStyle = captionStyle;
+        mpWinImage->mCaptionMap["filename"].sText = sCaption;
+        mpWinImage->mCaptionMap["filename"].style = captionStyle;
 
 
         if (InDeletionList(mSelectedFilename))
         {
-            string sCaption = "MARKED FOR DELETE\n" + mSelectedFilename.string();
-            mpWinImage->msOverlayCaption = sCaption;
-            mpWinImage->mOverlayCaptionStyle = ZGUI::Style(ZFontParams("Ariel Bold", 200, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0x88000000, true);
+            mpWinImage->mCaptionMap["for_delete"].sText = "MARKED FOR DELETE\n" + mSelectedFilename.string();
+            mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0x88000000, true);
         }
         else
         {
-            mpWinImage->msOverlayCaption = "";
+            mpWinImage->mCaptionMap["for_delete"].Clear();
         }
+
+        if (!mDeletionList.empty())
+        {
+            mpWinImage->mBehavior |= ZWinImage::kShowCaption;
+            Sprintf(mpWinImage->mCaptionMap["deletion_summary"].sText, "%d Files marked for deletion", mDeletionList.size());
+            mpWinImage->mCaptionMap["deletion_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::RB, 0, 0x88000000, true);
+        }
+        else
+        {
+            mpWinImage->mBehavior &= ~ZWinImage::kShowCaption;
+            mpWinImage->mCaptionMap["deletion_summary"].Clear();
+        }
+
 
         mpWinImage->Invalidate();
     }
@@ -552,7 +644,7 @@ void ImageViewer::ToggleDeletionList(std::filesystem::path& imagePath)
     else
         mDeletionList.erase(findit);
 
-    UpdateCaptionStyle();
+    UpdateCaptions();
     Invalidate();
 }
 

@@ -429,6 +429,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
 		}
         break;
+    case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
 		{
 	//		ZMessage message("keydown");
@@ -437,7 +438,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             gMessageSystem.Post("keydown", "code", wParam);
     }
 		break;
-	case WM_KEYUP:
+    case WM_SYSKEYUP:
+    case WM_KEYUP:
 		{
 	//		ZMessage message("keyup");
 		//	message.SetParam("code", SH::FromInt(wParam));

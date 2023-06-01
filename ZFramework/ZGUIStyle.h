@@ -93,6 +93,29 @@ namespace ZGUI
 
         tColorMap mColorMap;
     };
+
+
+    typedef std::map<std::string, class TextBox> tTextboxMap; // named textbox to descriptor
+
+    class TextBox
+    {
+    public:
+        void        Paint(ZBuffer* pDst);
+        static void Paint(ZBuffer* pDst, tTextboxMap& textBoxMap);
+        void        Clear()
+        {
+            sText.clear();
+            style = {};
+            area = {};
+        }
+
+        std::string sText;
+        Style       style;
+        ZRect       area;
+    };
+
+
+
 };
 
 
