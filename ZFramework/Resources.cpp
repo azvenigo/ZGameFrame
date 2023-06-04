@@ -80,7 +80,7 @@ bool cResources::Init(const string& sDefaultResourcePath)
 
 
     // Adjust font sizes based on screen resolution
-    gDefaultSpacer = grFullArea.Height() / 125;
+    gDefaultSpacer = (uint32_t ) (grFullArea.Height() / 125);
 
     gStyleButton.fp.nHeight = grFullArea.Height() / 72;
     gStyleToggleChecked.fp.nHeight = grFullArea.Height() / 72;

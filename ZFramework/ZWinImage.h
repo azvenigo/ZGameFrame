@@ -45,6 +45,7 @@ public:
     ~ZWinImage();
 
     bool        Init();
+    void        Clear();
 
     bool        Paint();
     bool        InitFromXML(ZXMLNode* pNode);

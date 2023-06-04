@@ -210,6 +210,13 @@ bool ZWinImage::Init()
     return ZWin::Init();
 }
 
+void ZWinImage::Clear()
+{
+    mpImage.reset();
+    Invalidate();
+}
+
+
 bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 {
     ReleaseCapture();

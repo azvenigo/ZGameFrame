@@ -53,11 +53,13 @@ public:
 
 protected:
 
+    void                    Clear();
     bool                    ScanForImagesInFolder(const std::filesystem::path& folder);
     bool                    InCache(const std::filesystem::path& imagePath);
     bool                    ImagePreloading();
     tImageFuture*           GetCached(const std::filesystem::path& imagePath);
     bool                    AddToCache(std::filesystem::path imagePath);
+    bool                    RemoveFromCache(std::filesystem::path imagePath);
     int64_t                 CurMemoryUsage();       // only returns the in-memory bytes of buffers that have finished loading
     int64_t                 ImageIndexInFolder(std::filesystem::path imagePath);
 
@@ -70,6 +72,8 @@ protected:
     void                    DeleteConfimed();
     void                    DeleteFile(std::filesystem::path& f);
     void                    HandleMoveCommand();
+    void                    HandleDeleteCommand();
+
     void                    MoveSelectedFile(std::filesystem::path& newPath);
 
     bool                    Preload();
@@ -89,6 +93,7 @@ protected:
     std::filesystem::path   mMoveToFolder;
 
     tImageCache             mImageCache;
+    std::recursive_mutex    mImageCacheMutex;
 
     eLastAction             mLastAction;
     //std::filesystem::path   mLastPreload;

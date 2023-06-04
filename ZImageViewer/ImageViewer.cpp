@@ -104,8 +104,10 @@ bool ImageViewer::OnKeyDown(uint32_t key)
         break;
     case VK_DELETE:
         {
+        if (!mSelectedFilename.empty())
+        {
             ToggleDeletionList(mSelectedFilename);
-            SetNextImage();
+        }
         }
     }
 
@@ -140,16 +142,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     }
     if (sType == "delete_single")
     {
-        filesystem::path current = mSelectedFilename;
-        SetNextImage();
-        DeleteFile(current);
-
-        tImageFilenames::iterator it = find(mDeletionList.begin(), mDeletionList.end(), current);
-        if (it != mDeletionList.end())
-            it = mDeletionList.erase(it);
-
-        ScanForImagesInFolder(current.parent_path());
-
+        HandleDeleteCommand();
         return true;
     }
     if (sType == "delete_confirm")
@@ -184,19 +177,61 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     return ZWin::HandleMessage(message);
 }
 
+void ImageViewer::HandleDeleteCommand()
+{
+    if (mSelectedFilename.empty())
+    {
+        ZERROR("No image selected for delete");
+        return;
+    }
+
+    filesystem::path current = mSelectedFilename;
+    SetNextImage();
+    DeleteFile(current);
+
+    tImageFilenames::iterator it = find(mDeletionList.begin(), mDeletionList.end(), current);
+    if (it != mDeletionList.end())
+        it = mDeletionList.erase(it);
+
+    ScanForImagesInFolder(current.parent_path());
+}
+
 void ImageViewer::HandleMoveCommand()
 {
+    if (mSelectedFilename.empty())
+    {
+        ZERROR("No image selected to move");
+        return;
+    }
+
     string sFolder;
     if (ZWinFileDialog::ShowSelectFolderDialog(sFolder))
     {
+        if (filesystem::path(sFolder) == mSelectedFilename.parent_path())
+        {
+            // do not set move to folder to the same as current
+            mMoveToFolder.clear();
+            return;
+        }
         MoveSelectedFile(filesystem::path(sFolder));
     }
+    else
+    {
+        mMoveToFolder.clear();
+    }
+
     if (mpWinImage)
         mpWinImage->SetFocus();
 }
 
 void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
 {
+    if (mSelectedFilename.empty() || !std::filesystem::exists(mSelectedFilename))
+    {
+        ZERROR("No image selected to move");
+        return;
+    }
+
     mMoveToFolder = newPath;
 
     filesystem::path nextImageFilename;
@@ -212,13 +247,20 @@ void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
     newName.append(mSelectedFilename.filename().string());
     filesystem::rename(mSelectedFilename, newName);
 
+    RemoveFromCache(mSelectedFilename);
+
     ScanForImagesInFolder(mFilenameToLoad.parent_path());
 
     // if we just moved the last image in the folder, need to select the new last one
     if (nextImageFilename.empty())
+    {
         SetLastImage();
+    }
     else
+    {
         mFilenameToLoad = nextImageFilename;
+        mSelectedFilename.clear();
+    }
 
 
     Invalidate();
@@ -264,15 +306,17 @@ bool ImageViewer::SaveImage(const std::filesystem::path& filename)
     if (filename.empty())
         return false;
 
-    mpWinImage->mpImage.get()->SaveBuffer(filename.string());
-
+    return mpWinImage->mpImage.get()->SaveBuffer(filename.string());
 }
 
 
 void ImageViewer::SetFirstImage()
 {
     if (mImagesInFolder.empty())
+    {
+        Clear();
         return;
+    }
 
     mFilenameToLoad = *mImagesInFolder.begin();
     mLastAction = kBeginning;
@@ -282,7 +326,10 @@ void ImageViewer::SetFirstImage()
 void ImageViewer::SetLastImage()
 {
     if (mImagesInFolder.empty())
+    {
+        Clear();
         return;
+    }
 
     mFilenameToLoad = *mImagesInFolder.rbegin();
     mLastAction = kEnd;
@@ -291,6 +338,12 @@ void ImageViewer::SetLastImage()
 
 void ImageViewer::SetPrevImage()
 {
+    if (mImagesInFolder.empty())
+    {
+        Clear();
+        return;
+    }
+
     tImageFilenames::iterator selectedImage = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mSelectedFilename);
 
     if (selectedImage != mImagesInFolder.end() && selectedImage != mImagesInFolder.begin())
@@ -305,6 +358,12 @@ void ImageViewer::SetPrevImage()
 
 void ImageViewer::SetNextImage()
 {
+    if (mImagesInFolder.empty())
+    {
+        Clear();
+        return;
+    }
+
     tImageFilenames::iterator selectedImage = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mSelectedFilename);
 
     if (selectedImage != mImagesInFolder.end())
@@ -379,6 +438,8 @@ tZBufferPtr ImageViewer::LoadImageProc(std::filesystem::path& imagePath, ImageVi
 
 bool ImageViewer::InCache(const std::filesystem::path& imagePath)
 {
+    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+
     for (auto& p : mImageCache)
     {
         if (p.first == imagePath)
@@ -390,6 +451,8 @@ bool ImageViewer::InCache(const std::filesystem::path& imagePath)
 
 bool ImageViewer::ImagePreloading()
 {
+    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+
     for (auto& p : mImageCache)
     {
         if (p.second.valid() && !is_ready(p.second))
@@ -406,6 +469,8 @@ bool ImageViewer::ImagePreloading()
 
 int64_t ImageViewer::ImageIndexInFolder(std::filesystem::path imagePath)
 {
+    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+
     int64_t i = 1;
     for (auto& image : mImagesInFolder)
     {
@@ -420,6 +485,8 @@ int64_t ImageViewer::ImageIndexInFolder(std::filesystem::path imagePath)
 
 tImageFuture* ImageViewer::GetCached(const std::filesystem::path& imagePath)
 {
+    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+
     for (auto& p : mImageCache)
     {
         if (p.first == imagePath)
@@ -439,6 +506,8 @@ bool ImageViewer::AddToCache(std::filesystem::path imagePath)
     if (imagePath.empty())
         return false;
 
+    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+
     if (InCache(imagePath))
         return true;
 
@@ -447,9 +516,23 @@ bool ImageViewer::AddToCache(std::filesystem::path imagePath)
     return true;
 }
 
+bool ImageViewer::RemoveFromCache(std::filesystem::path imagePath)
+{
+    if (imagePath.empty())
+        return false;
+
+    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+
+    mImageCache.remove_if([&](auto& p) {return p.first == imagePath; });
+
+    return false;
+}
+
 
 int64_t ImageViewer::CurMemoryUsage()
 {
+    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+
     int64_t nLoaded = 0;
     for (auto& p : mImageCache)
     {
@@ -470,6 +553,12 @@ bool ImageViewer::Preload()
     {
         mScannedFolder = mFilenameToLoad.parent_path();
         ScanForImagesInFolder(mScannedFolder);
+    }
+
+    if (mImagesInFolder.empty())
+    {
+        Clear();
+        return true;
     }
 
 
@@ -525,6 +614,8 @@ bool ImageViewer::Preload()
         }
     }
 
+    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+
     while (CurMemoryUsage() > mMaxMemoryUsage && mImagesInFolder.size() > 1)
     {
         mImageCache.pop_back();
@@ -550,6 +641,24 @@ bool ImageViewer::AcceptedExtension(std::string sExt)
     }
 
     return false;
+}
+
+void ImageViewer::Clear()
+{
+    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+    mImageCache.clear();
+    mImagesInFolder.clear();
+    mSelectedFilename.clear();
+
+    if (mpWinImage)
+    {
+        mpWinImage->Clear();
+        mpWinImage->mBehavior |= ZWinImage::kShowCaption;
+        mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
+        mpWinImage->mCaptionMap["no_image"].style = gStyleCaption;
+    }
+
+    Invalidate();
 }
 
 
@@ -580,8 +689,10 @@ bool ImageViewer::Process()
         {
             mSelectedFilename = mFilenameToLoad;
             mpWinImage->SetImage(pFuture->get());
+            mpWinImage->mCaptionMap["no_image"].Clear();
 
             gRegistry["ZImageViewer"]["image"] = mSelectedFilename.string();
+
             UpdateCaptions();
         }
     }
@@ -606,7 +717,7 @@ void ImageViewer::UpdateCaptions()
 
         if (InDeletionList(mSelectedFilename))
         {
-            mpWinImage->mCaptionMap["for_delete"].sText = "MARKED FOR DELETE\n" + mSelectedFilename.string();
+            mpWinImage->mCaptionMap["for_delete"].sText = mSelectedFilename.filename().string() + "\nMARKED FOR DELETE";
             mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0x88000000, true);
         }
         else
@@ -624,6 +735,18 @@ void ImageViewer::UpdateCaptions()
         {
             mpWinImage->mBehavior &= ~ZWinImage::kShowCaption;
             mpWinImage->mCaptionMap["deletion_summary"].Clear();
+        }
+
+        if (!mMoveToFolder.empty())
+        {
+            mpWinImage->mBehavior |= ZWinImage::kShowCaption;
+            Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> Move to: %s", mMoveToFolder.string().c_str());
+            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZTextLook(ZTextLook::kShadowed, 0xffff88ff, 0xffff88ff), ZGUI::RT, 32, 0x88000000, true);
+        }
+        else
+        {
+            mpWinImage->mBehavior &= ~ZWinImage::kShowCaption;
+            mpWinImage->mCaptionMap["move_to_folder"].Clear();
         }
 
 
@@ -652,7 +775,7 @@ void ImageViewer::ToggleDeletionList(std::filesystem::path& imagePath)
 
 bool ImageViewer::Paint()
 {
-/*    if (!mpTransformTexture)
+    if (!mpTransformTexture)
         return false;
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
@@ -664,7 +787,13 @@ bool ImageViewer::Paint()
         return false;
 
 
-    ZRect rThumb(0, 0, 64, mArea.Height() / mImagesInFolder.size());
+    if (mImagesInFolder.empty())
+    {
+        gStyleCaption.Font()->DrawTextParagraph(mpTransformTexture.get(), "No images", mAreaToDrawTo, gStyleCaption.look, ZGUI::C);
+    }
+
+
+/*    ZRect rThumb(0, 0, 64, mArea.Height() / mImagesInFolder.size());
 
     int i = 0;
     for (auto& imgPath : mImagesInFolder)
