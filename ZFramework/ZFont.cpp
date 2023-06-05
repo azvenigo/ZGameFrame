@@ -111,6 +111,8 @@ bool ZFont::LoadFont(const string& sFilename)
 
     uint32_t nFileSize = (uint32_t) fontFile.tellg();
     fontFile.seekg(0, ios::beg);
+    if (nFileSize == 0)
+        return false;
 
 	ZASSERT(nFileSize < 10000000);	// 10 meg font?  really?
 
@@ -118,11 +120,13 @@ bool ZFont::LoadFont(const string& sFilename)
 
     ZMemBufferPtr compressedBuffer( new ZMemBuffer(nFileSize));
     fontFile.read((char*)compressedBuffer->data(), nFileSize);
-    assert(fontFile.gcount() == nFileSize);
+    if (fontFile.gcount() != nFileSize)
+        return 0;
     compressedBuffer->seekp(nFileSize);
 
     ZMemBufferPtr uncompressedBuffer(new ZMemBuffer);
-    ZZipAPI::Decompress(compressedBuffer, uncompressedBuffer, true);
+    bool res = ZZipAPI::Decompress(compressedBuffer, uncompressedBuffer, true);
+    assert(res);
 #else
     
     ZMemBufferPtr uncompressedBuffer(new ZMemBuffer);
@@ -1118,7 +1122,7 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
     if (mFontParams.sFacename.find("Wingdings") != string::npos)
         nCharSet = SYMBOL_CHARSET;
 
-    //mWinHDC = GetDC(ghWnd);
+    mWinHDC = GetDC(ghWnd);
     mhWinTargetBitmap = CreateDIBSection(mWinHDC, &mDIBInfo, DIB_RGB_COLORS, (void**)&mpBits, NULL, 0);
 
     mhWinTargetDC = CreateCompatibleDC(mWinHDC);

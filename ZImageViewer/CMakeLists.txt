@@ -24,7 +24,7 @@ endif()
 # ZImageViewer
 
 set(ZIMAGEVIEWER_SOURCES 
-Main_ZImageViewer.h Main_ZImageViewer.cpp Main_Win64.cpp 
+Main_ZImageViewer.h Main_ZImageViewer.cpp
 ImageViewer.h ImageViewer.cpp
 ConfirmDeleteDialog.h ConfirmDeleteDialog.cpp
 ZImageViewer.rc 
@@ -85,7 +85,9 @@ set(ZFRAMEWORK_FILES
 ../ZFramework/ZTransformable.h      ../ZFramework/ZTransformable.cpp
 ../ZFramework/ZXMLNode.h            ../ZFramework/ZXMLNode.cpp
 ../ZFramework/ZZipAPI.h             ../ZFramework/ZZipAPI.cpp
+../ZFramework/ZInput.h              ../ZFramework/ZInput.cpp
 ../ZFramework/platforms/windows/GDIImageTags.h
+../ZFramework/platforms/windows/Main_Win64.cpp
 ../ZFramework/ZFramework.natvis
 )
 

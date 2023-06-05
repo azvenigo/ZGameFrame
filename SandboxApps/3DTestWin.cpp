@@ -12,11 +12,10 @@
 #include "ZWinControlPanel.h"
 #include "Resources.h"
 #include "helpers/Registry.h"
+#include "ZInput.h"
 
 using namespace std;
 using namespace Z3D;
-
-extern ZPoint gLastMouseMove;
 
 
 

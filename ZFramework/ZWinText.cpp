@@ -3,6 +3,7 @@
 #include "ZWinText.h"
 #include "ZTimer.h"
 #include <cctype>
+#include "ZInput.h"
 
 
 using namespace std;
@@ -51,9 +52,9 @@ bool ZWinLabel::OnMouseHover(int64_t x, int64_t y)
 
 bool ZWinLabel::Process()
 {
-    if (mBehavior & CloseOnMouseOut && gpCaptureWin == nullptr)   // only process this if no window has capture
+    if (mBehavior & CloseOnMouseOut && gInput.captureWin == nullptr)   // only process this if no window has capture
     {
-        if (!mAreaAbsolute.PtInRect(gLastMouseMove))        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
+        if (!mAreaAbsolute.PtInRect(gInput.lastMouseMove))        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
         {
             SetVisible(false);
             mBehavior = None;   // no further actions
@@ -175,7 +176,8 @@ bool ZWinTextEdit::OnMouseMove(int64_t x, int64_t y)
 
 bool ZWinTextEdit::Process()
 {
-    if (GetFocus() == this)
+   
+    if (gInput.keyboardFocusWin == this)
     {
         mbCursorVisible = (gTimer.GetMSSinceEpoch() / 250) % 2;
         Invalidate();

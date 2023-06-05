@@ -4,6 +4,7 @@
 #include "ZGraphicSystem.h"
 #include "ZStringHelpers.h"
 #include "Resources.h"
+#include "ZInput.h"
 
 
 #ifdef _DEBUG
@@ -225,7 +226,7 @@ bool ZWinSlider::Paint()
 
 
     bool bDrawLabel = mBehavior & kDrawSliderValueAlways;
-    bDrawLabel |= (mBehavior & kDrawSliderValueOnMouseOver && (gpMouseOverWin == this || gpCaptureWin == this));
+    bDrawLabel |= (mBehavior & kDrawSliderValueOnMouseOver && (gInput.mouseOverWin == this || gInput.captureWin == this));
 
 	if (bDrawLabel && mpFont)
 	{

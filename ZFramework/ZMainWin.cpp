@@ -82,20 +82,14 @@ bool ZMainWin::HandleMessage(const ZMessage& message)
 	}
 	else if (sType == "chardown")
 	{
-		if (GetFocus())
-			GetFocus()->OnChar((char) SH::ToInt(message.GetParam("code")));
 		return true;
 	}
 	else if (sType == "keydown")
 	{
-		if (GetFocus())
-			GetFocus()->OnKeyDown((uint32_t) SH::ToInt(message.GetParam("code")));
 		return true;
 	}
 	else if (sType == "keyup")
 	{
-		if (GetFocus())
-			GetFocus()->OnKeyUp((uint32_t) SH::ToInt(message.GetParam("code")));
 		return true;
 	}
 	else if (sType == "quit_app_confirmed")

@@ -17,12 +17,7 @@
 #include "ZWinDebugConsole.h"
 
 
-
-
-using namespace std;
-
-extern ZRect                grFullArea;
-extern ZWinControlPanel*    gpControlPanel;
+/*extern ZRect                grFullArea;
 extern ZWinDebugConsole*    gpDebugConsole;
 extern ZGraphicSystem       gGraphicSystem;
 extern ZGraphicSystem*      gpGraphicSystem;
@@ -37,13 +32,12 @@ extern std::list<string>    gDebugOutQueue;
 extern std::mutex           gDebugOutMutex;
 extern ZMessageSystem       gMessageSystem;
 extern ZTickManager         gTickManager;
-extern ZAnimator            gAnimator;
 extern int64_t              gnCheckerWindowCount;
 extern int64_t              gnRandomWindowCount;
 extern int64_t              gnLifeGridSize;
 extern ZWin*                gpCaptureWin;
 extern ZWin*                gpMouseOverWin;
-extern ZPoint               gLastMouseMove;
+extern ZPoint               gLastMouseMove;*/
 
 namespace Sandbox
 {
@@ -61,11 +55,13 @@ namespace Sandbox
         kImageViewer = 10
     };
 
-    void SandboxShutdown();
     void InitControlPanel();
-    void SandboxDeleteAllButControlPanelAndDebugConsole();
-    void SandboxInitChildWindows(eSandboxMode mode);
-    void SandboxInitializeFonts();
-    bool SandboxInitialize();
-    void SandboxShutdown();
+    void DeleteAllButControlPanelAndDebugConsole();
+    void InitChildWindows(eSandboxMode mode);
+};
+
+namespace ZFrameworkApp
+{
+    bool Initialize(int argc, char* argv[], std::filesystem::path userDataPath);
+    void Shutdown();
 };

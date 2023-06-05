@@ -17,18 +17,13 @@
 #include "ZWinDebugConsole.h"
 
 
-
-
-using namespace std;
-
-extern ZRect                grFullArea;
+/*extern ZRect                grFullArea;
 extern ZWinControlPanel*    gpControlPanel;
 extern ZWinDebugConsole*    gpDebugConsole;
 extern ZGraphicSystem       gGraphicSystem;
 extern ZGraphicSystem*      gpGraphicSystem;
 extern ZRasterizer          gRasterizer;
 extern bool                 gbGraphicSystemResetNeeded;
-extern bool                 gbApplicationExiting;
 extern bool                 gbPaused;
 extern ZTimer               gTimer;
 extern int64_t              gnFramesPerSecond;
@@ -44,14 +39,19 @@ extern int64_t              gnLifeGridSize;
 extern ZWin*                gpCaptureWin;
 extern ZWin*                gpMouseOverWin;
 extern ZPoint               gLastMouseMove;
+*/
 
 namespace ZImageViewer
 {
-    void Shutdown();
     void InitControlPanel();
     void DeleteAllButControlPanelAndDebugConsole();
     void InitChildWindows();
     void InitializeFonts();
-    bool Initialize();
+};
+
+
+namespace ZFrameworkApp
+{
+    bool Initialize(int argc, char* argv[], std::filesystem::path userDataPath);
     void Shutdown();
 };

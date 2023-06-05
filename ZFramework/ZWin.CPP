@@ -13,12 +13,11 @@
 #include "Resources.h"
 #include <iostream>
 #include "ZScreenBuffer.h"
+#include "ZInput.h"
 
 extern ZAnimator		gAnimator;
 extern ZTimer			gTimer;
-extern ZPoint			gLastMouseMove;
 
-ZWin* ZWin::mpFocusWin	= NULL;
 extern bool gbApplicationExiting;
 
 const int64_t kDefaultTransformTime = 500;
@@ -58,11 +57,11 @@ ZWin::~ZWin()
 {
 	gAnimator.KillContextObjects(this);
 
-	if (mpFocusWin == this)
-		mpFocusWin = NULL;
+	if (gInput.keyboardFocusWin == this)
+        gInput.keyboardFocusWin = nullptr;
 
-	if (gpCaptureWin == this)
-		gpCaptureWin = NULL;
+    if (gInput.captureWin == this)
+        gInput.captureWin = nullptr;
 }
 
 bool ZWin::Init() 
@@ -114,8 +113,8 @@ bool ZWin::Shutdown()
 
         ChildDeleteAll();
 
-		if (gpMouseOverWin == this)
-			gpMouseOverWin = NULL;
+		if (gInput.mouseOverWin == this)
+            gInput.mouseOverWin = NULL;
 
 
         const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
@@ -428,7 +427,7 @@ bool ZWin::SetFocus()
     mWorkToDoCV.notify_one();
     if (mbAcceptsFocus)
 	{
-		mpFocusWin = this;
+        gInput.keyboardFocusWin = this;
 		return true;
 	}
 
@@ -606,23 +605,23 @@ void ZWin::SetAreaToDrawToRecursive()
 }
 bool ZWin::SetCapture()
 {
-	if (gpCaptureWin)
+	if (gInput.captureWin)
 		return false;
-	gpCaptureWin = this;
+    gInput.captureWin = this;
 	return true;
 }
 
 bool ZWin::ReleaseCapture()
 {
-	if (gpCaptureWin != this)
+	if (gInput.captureWin != this)
 		return false;
-	gpCaptureWin = NULL;
+    gInput.captureWin = NULL;
 	return true;
 }
 
 bool ZWin::AmCapturing()
 {
-	return (gpCaptureWin == this);
+	return (gInput.captureWin == this);
 }
 
 bool  ZWin::OnMouseDownL(int64_t, int64_t)
@@ -688,11 +687,6 @@ bool ZWin::OnMouseIn()
     return true;
 }
 
-const ZPoint& ZWin::GetLastMouseMove()
-{
-	return gLastMouseMove;
-}
-
 string ZWin::GetFullWinName()
 {
 	string sFullName(msWinName);
@@ -731,7 +725,22 @@ bool ZWin::HandleMessage(const ZMessage& message)
 		ProcessCursorMessage(message);
 		return true;
 	}
-	else if (sType == "kill_child")
+    else if (sType == "keydown")
+    {
+        OnKeyDown((uint32_t)SH::ToInt(message.GetParam("code")));
+        return true;
+    }
+    else if (sType == "keyup")
+    {
+        OnKeyUp((uint32_t)SH::ToInt(message.GetParam("code")));
+        return true;
+    }
+    else if (sType == "chardown")
+    {
+        OnChar((uint32_t)SH::ToInt(message.GetParam("code")));
+        return true;
+    }
+    else if (sType == "kill_child")
 	{
         ZWin* pChild = GetChildWindowByWinName(message.GetParam("child"));
         if (pChild)

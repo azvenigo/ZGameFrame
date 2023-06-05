@@ -4,8 +4,8 @@
 #include "ZWinSlider.h"
 #include "ZWinFormattedText.h"
 #include "Resources.h"
+#include "ZInput.h"
 
-extern ZPoint gLastMouseMove;
 using namespace std;
 
 bool ZWinControlPanel::Init()
@@ -115,6 +115,7 @@ ZWinSlider* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, in
 void ZWinControlPanel::AddGrouping(const std::string& sCaption, const ZRect& rArea, const ZGUI::Style& groupingStyle)
 {
     mGroupingBorders.push_back(GroupingBorder(sCaption, rArea, groupingStyle));
+    Invalidate();
 }
 
 
@@ -161,11 +162,11 @@ bool ZWinControlPanel::Paint()
 
 bool ZWinControlPanel::Process()
 {
-    if (gpCaptureWin == nullptr)   // only process this if no window has capture
+    if (gInput.captureWin == nullptr)   // only process this if no window has capture
     {
         if (!mbVisible)
         {
-            if (mrTrigger.PtInRect(gLastMouseMove))
+            if (mrTrigger.PtInRect(gInput.lastMouseMove))
             {
                 SetVisible();
                 return true;
@@ -176,7 +177,7 @@ bool ZWinControlPanel::Process()
             ZRect rOverArea(mrTrigger);
             rOverArea.UnionRect(mAreaAbsolute);
 
-            if (!rOverArea.PtInRect(gLastMouseMove) && mbHideOnMouseExit)        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
+            if (!rOverArea.PtInRect(gInput.lastMouseMove) && mbHideOnMouseExit)        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
             {
                 SetVisible(false);
                 return true;

@@ -3,11 +3,26 @@
 #include <commctrl.h>
 #include <fstream>
 
-#include "Main_ZImageViewer.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/CommandLineParser.h"
 #include "helpers/Registry.h"
 #include "ZDebug.h"
+#include "ZInput.h"
+#include "ZTickManager.h"
+#include "ZGraphicSystem.h"
+#include "ZScreenBuffer.h"
+#include "ZTimer.h"
+#include "ZMainWin.h"
+#include "ZAnimator.h"
+
+namespace ZFrameworkApp
+{
+    extern bool Initialize(int argc, char* argv[], std::filesystem::path userDataPath);
+    extern void Shutdown();
+};
+
+extern ZTickManager            gTickManager;
+extern ZAnimator            gAnimator;
 
 using namespace std;
 
@@ -15,27 +30,23 @@ using namespace std;
 ATOM					MyRegisterClass(HINSTANCE, LPTSTR);
 BOOL					WinInitInstance(HINSTANCE, int);
 bool                    gbFullScreen = true;
+extern bool             gbGraphicSystemResetNeeded; 
+extern bool                    gbApplicationExiting = false;
+ZRect                   grFullArea;
+
+extern bool                    gbPaused = false;
 HINSTANCE		        g_hInst;				// The current instance
 HWND			        ghWnd;
 
 LRESULT CALLBACK		WndProc(HWND, UINT, WPARAM, LPARAM);
-void					Window_OnLButtonUp(UINT nX, UINT nY);
-void					Window_OnLButtonDown(UINT nX, UINT nY);
-void					Window_OnRButtonDown(UINT nX, UINT nY);
-void					Window_OnRButtonUp(UINT nX, UINT nY);
-void					Window_OnMouseMove(UINT nX, UINT nY);
-void					Window_OnMouseWheel(UINT nX, UINT nY, INT nDelta);
-void					CheckMouseForHover();
 
 const uint64_t          kMinUSBetweenLoops = 8333;  // 120 fps max?
-uint64_t                gnLastMouseMoveTime = 0;
-uint32_t                kMouseHoverInitialTime = 333;
-bool                    gbMouseHoverPosted = true;		// flag for knowing whether a "hover" message had been posted to the window currently under the mouse
+
+ZInput                  gInput;
 // For resizing the window... it scales the mouse movements
 float                   gfMouseMultX = 1.0f;
 float                   gfMouseMultY = 1.0f;
 
-std::string             gsRegistryFile;
 ZDebug                  gDebug;
 
 
@@ -53,48 +64,21 @@ int main(int argc, char* argv[])
     MSG msg;
     memset(&msg, 0, sizeof(msg));
 
-
-    string sUserPath(getenv("APPDATA"));
-
-    std::filesystem::path fullPath(sUserPath);
-    fullPath += "/ZImageViewer/";
-    gsRegistryFile = fullPath.make_preferred().string() + "prefs.json";
-
-    if (!gRegistry.Load(gsRegistryFile))
-    {
-        ZDEBUG_OUT("No registry file at:%s creating path for one.");
-        std::filesystem::path regPath(gsRegistryFile);
-        std::filesystem::create_directories(regPath.parent_path());
-    }
-
-    gRegistry["appdata"] = fullPath.string();
-
-    std::filesystem::path appPath(argv[0]);
-    gRegistry["apppath"] = appPath.parent_path().string();
-
-
-    std::string sImageFilename;
-    CLP::CommandLineParser parser;
-    parser.RegisterAppDescription("ZImageViewer");
-    parser.RegisterParam(CLP::ParamDesc("PATH", &sImageFilename, CLP::kOptional | CLP::kPositional, "Filename of image to load."));
-
-    if (!parser.Parse(argc, argv))
-    {
-        ZERROR("ERROR parsing commandline.");
-        gbApplicationExiting = true;
-    }
-
-    gRegistry["zimageviewer"]["imageviewer_filename"] = sImageFilename;
-
-
-
-
-
     // Perform application initialization:
     if (!WinInitInstance(hInstance, SW_SHOWNORMAL))
-    {
         return FALSE;
-    }
+
+
+    string sUserPath(getenv("APPDATA"));
+    std::filesystem::path userDataPath(sUserPath);
+
+
+
+
+
+    if (!ZFrameworkApp::Initialize(argc, argv, userDataPath))
+        return FALSE;
+    //cout << "***AFTER SandboxInitialize. \n";
 
 
     uint64_t nTimeStamp = 0;
@@ -127,7 +111,7 @@ int main(int argc, char* argv[])
 
             if (!gbApplicationExiting)  // have to check again because the state may have changed during the messagesystem process
             {
-                CheckMouseForHover();
+                gInput.Process();
 
                 ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
                 if (pScreenBuffer)
@@ -201,11 +185,10 @@ int main(int argc, char* argv[])
     }
 
 
-    ZImageViewer::Shutdown();
+    ZFrameworkApp::Shutdown();
     gDebug.Flush();
     //    FlushDebugOutQueue();
 
-    gRegistry.Save(gsRegistryFile);
     return 0;
 }
 
@@ -331,21 +314,13 @@ BOOL WinInitInstance(HINSTANCE hInstance, int nCmdShow)
 
 
 
-
 	SizeWindowToClientArea(ghWnd, (int) (nScreenWidth - grFullArea.Width())/2, (int) (nScreenHeight-grFullArea.Height())/2, (int) grFullArea.Width(), (int) grFullArea.Height());
 
 	gGraphicSystem.SetHWND(ghWnd);
 
-#ifdef GENERATE_FRAMEWORK_FONTS
-    ZImageViewer::InitializeFonts();
-    GenerateFrameworkFonts();
-#endif
 
-
-
-    ZImageViewer::Initialize();
-    //cout << "***AFTER SandboxInitialize. \n";
-
+    HCURSOR hCursor = ::LoadCursor(NULL, IDC_ARROW);
+    ::SetCursor(hCursor);
 
 	ShowWindow(ghWnd, nCmdShow);
 	UpdateWindow(ghWnd);
@@ -353,40 +328,6 @@ BOOL WinInitInstance(HINSTANCE hInstance, int nCmdShow)
 	return TRUE;
 }
 
-void CheckMouseForHover()
-{
-	uint64_t nCurTime = gTimer.GetElapsedTime();
-
-	if (!gbMouseHoverPosted && nCurTime - gnLastMouseMoveTime > kMouseHoverInitialTime)
-	{
-		ZWin* pMouseOverWin = gpMainWin->GetChildWindowByPoint(gLastMouseMove.x, gLastMouseMove.y);
-		if (pMouseOverWin)
-			pMouseOverWin->OnMouseHover((int64_t) ((float) gLastMouseMove.x / gfMouseMultX), (int64_t) ((float) gLastMouseMove.y / gfMouseMultY));
-
-		gbMouseHoverPosted = true;
-	}
-}
-
-void CheckForMouseOverNewWindow()
-{
-	ZWin* pMouseOverWin = gpMainWin->GetChildWindowByPoint(gLastMouseMove.x, gLastMouseMove.y);
-
-	// Check whether a "cursor out" message needs to be sent.  (i.e. a previous window had the cursor over it but no longer)
-	if (gpMouseOverWin != pMouseOverWin)
-	{
-		gbMouseHoverPosted = false;	// Only post a mouse hover message if the cursor has moved into a new window
-
-		// Mouse Out of old window
-		if (gpMouseOverWin)
-			gpMouseOverWin->OnMouseOut();
-
-		gpMouseOverWin = pMouseOverWin;
-
-		// Mouse In to new window
-		if (pMouseOverWin)
-			pMouseOverWin->OnMouseIn();
-	}
-}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -413,10 +354,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 			return TRUE;
 	case WM_DESTROY:
-        ZImageViewer::Shutdown();
+        ZFrameworkApp::Shutdown();
 		break;
 	case WM_CHAR:
-		{
+        gInput.OnChar((uint32_t)wParam);
+/*		{
             if (wParam == '`')
             {
                 gMessageSystem.Post("toggleconsole");
@@ -427,40 +369,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //                message.SetParam("code", SH::FromInt(wParam));
                 gMessageSystem.Post("chardown", "code", wParam);
             }
-		}
+		}*/
         break;
     case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
-		{
-	//		ZMessage message("keydown");
-//			message.SetParam("code", SH::FromInt(wParam));
-//			gMessageSystem.Post(message);
-            gMessageSystem.Post("keydown", "code", wParam);
-    }
+        gInput.OnKeyDown((uint32_t)wParam);
 		break;
     case WM_SYSKEYUP:
     case WM_KEYUP:
-		{
-	//		ZMessage message("keyup");
-		//	message.SetParam("code", SH::FromInt(wParam));
-			//gMessageSystem.Post(message);
-            gMessageSystem.Post("keyup", "code", wParam);
-    }
+        gInput.OnKeyUp((uint32_t)wParam);
 		break;
 	case WM_LBUTTONDOWN:
-		Window_OnLButtonDown(LOWORD(lParam), HIWORD(lParam));
+        gInput.OnLButtonDown((int64_t)((float)LOWORD(lParam) / gfMouseMultX), (int64_t)((float)HIWORD(lParam) / gfMouseMultY));
 		break;
 	case WM_LBUTTONUP:
-		Window_OnLButtonUp(LOWORD(lParam), HIWORD(lParam));
-		break;
+        gInput.OnLButtonUp((int64_t)((float)LOWORD(lParam) / gfMouseMultX), (int64_t)((float)HIWORD(lParam) / gfMouseMultY));
+        break;
     case WM_RBUTTONDOWN:
-        Window_OnRButtonDown(LOWORD(lParam), HIWORD(lParam));
+        gInput.OnRButtonDown((int64_t)((float)LOWORD(lParam) / gfMouseMultX), (int64_t)((float)HIWORD(lParam) / gfMouseMultY));
         break;
     case WM_RBUTTONUP:
-        Window_OnRButtonUp(LOWORD(lParam), HIWORD(lParam));
+        gInput.OnRButtonUp((int64_t)((float)LOWORD(lParam) / gfMouseMultX), (int64_t)((float)HIWORD(lParam) / gfMouseMultY));
         break;
     case WM_MOUSEMOVE:
-		Window_OnMouseMove(LOWORD(lParam), HIWORD(lParam));
+        gInput.OnMouseMove((int64_t)((float)LOWORD(lParam) / gfMouseMultX), (int64_t)((float)HIWORD(lParam) / gfMouseMultY));
 		break;
 	case WM_MOUSEWHEEL:
 		{
@@ -470,8 +402,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			clientTopLeft.x = 0;
 			clientTopLeft.y = 0;
 			ClientToScreen(hWnd, &clientTopLeft);
-			Window_OnMouseWheel(GET_X_LPARAM(lParam) - clientTopLeft.x, GET_Y_LPARAM(lParam) - clientTopLeft.y, -GET_WHEEL_DELTA_WPARAM(wParam));	// we use negative delta since wheel up is a positive number
-		}
+            gInput.OnMouseWheel((int64_t)((GET_X_LPARAM(lParam) - clientTopLeft.x) / gfMouseMultX), (int64_t)((GET_Y_LPARAM(lParam) - clientTopLeft.y) / gfMouseMultY), (int64_t)-GET_WHEEL_DELTA_WPARAM(wParam));	// we use negative delta since wheel up is a positive number
+    }
 		break;
 	case WM_KILLFOCUS:
 //		ZDEBUG_OUT("WM_KILLFOCUS\n");
@@ -479,10 +411,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		gTimer.Stop();
 		break;
 	case WM_SETFOCUS:
-        gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
-		gbPaused = false;
-		gTimer.Start();
-		gMessageSystem.Post("pause;set=0");
+    {
+        ZScreenBuffer* pSB = gGraphicSystem.GetScreenBuffer();
+        if (pSB)
+            pSB->SetVisibilityComputingFlag(true);
+        gbPaused = false;
+        gTimer.Start();
+        gMessageSystem.Post("pause;set=0");
+    }
 		break;
 	case WM_ACTIVATE:
 		if (LOWORD(wParam) == WA_INACTIVE)
@@ -502,114 +438,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 	return 0;
-}
-
-void Window_OnLButtonDown(UINT nX, UINT nY)
-{
-	ZMessage cursorMessage;
-	cursorMessage.SetType("cursor_msg");
-	cursorMessage.SetParam("subtype", "l_down");
-	cursorMessage.SetParam("x", SH::FromInt((int) ((float) nX / gfMouseMultX)));
-	cursorMessage.SetParam("y", SH::FromInt((int) ((float) nY / gfMouseMultY)));
-	if (gpCaptureWin)
-		cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
-	else
-		cursorMessage.SetTarget(gpMainWin->GetTargetName());
-
-	gMessageSystem.Post(cursorMessage);
-}
-
-void Window_OnLButtonUp(UINT nX, UINT nY)
-{
-	ZMessage cursorMessage;
-	cursorMessage.SetType("cursor_msg");
-	cursorMessage.SetParam("subtype", "l_up");
-	cursorMessage.SetParam("x", SH::FromInt((int) ((float) nX / gfMouseMultX)));
-	cursorMessage.SetParam("y", SH::FromInt((int) ((float) nY / gfMouseMultY)));
-	if (gpCaptureWin)
-		cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
-	else
-		cursorMessage.SetTarget(gpMainWin->GetTargetName());
-
-	gMessageSystem.Post(cursorMessage);
-}
-
-void Window_OnRButtonDown(UINT nX, UINT nY)
-{
-    ZMessage cursorMessage;
-    cursorMessage.SetType("cursor_msg");
-    cursorMessage.SetParam("subtype", "r_down");
-    cursorMessage.SetParam("x", SH::FromInt((int)((float)nX / gfMouseMultX)));
-    cursorMessage.SetParam("y", SH::FromInt((int)((float)nY / gfMouseMultY)));
-    if (gpCaptureWin)
-        cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
-    else
-        cursorMessage.SetTarget(gpMainWin->GetTargetName());
-
-    gMessageSystem.Post(cursorMessage);
-}
-
-void Window_OnRButtonUp(UINT nX, UINT nY)
-{
-    ZMessage cursorMessage;
-    cursorMessage.SetType("cursor_msg");
-    cursorMessage.SetParam("subtype", "r_up");
-    cursorMessage.SetParam("x", SH::FromInt((int)((float)nX / gfMouseMultX)));
-    cursorMessage.SetParam("y", SH::FromInt((int)((float)nY / gfMouseMultY)));
-    if (gpCaptureWin)
-        cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
-    else
-        cursorMessage.SetTarget(gpMainWin->GetTargetName());
-
-    gMessageSystem.Post(cursorMessage);
-}
-
-void Window_OnMouseMove(UINT nX, UINT nY)
-{
-	{
-#ifdef FLOATLINES_WINDOW
-//		::SetCursor(NULL);
-#else
-		HCURSOR hCursor = ::LoadCursor(NULL, IDC_ARROW);
-		::SetCursor(hCursor);
-#endif
-	}
-
-    if (gLastMouseMove.x != nX || gLastMouseMove.y != nY)
-    {
-        gLastMouseMove.Set(nX, nY);
-        gnLastMouseMoveTime = gTimer.GetElapsedTime();
-
-        ZMessage cursorMessage;
-        cursorMessage.SetType("cursor_msg");
-        cursorMessage.SetParam("subtype", "move");
-        cursorMessage.SetParam("x", SH::FromInt((int)((float)nX / gfMouseMultX)));
-        cursorMessage.SetParam("y", SH::FromInt((int)((float)nY / gfMouseMultY)));
-        if (gpCaptureWin)
-            cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
-        else
-            cursorMessage.SetTarget(gpMainWin->GetTargetName());
-
-        gMessageSystem.Post(cursorMessage);
-
-        CheckForMouseOverNewWindow();
-    }
-}
-
-void Window_OnMouseWheel(UINT nX, UINT nY, INT nDelta)
-{
-	ZMessage cursorMessage;
-	cursorMessage.SetType("cursor_msg");
-	cursorMessage.SetParam("subtype", "wheel");
-	cursorMessage.SetParam("x", SH::FromInt((int) ((float) nX / gfMouseMultX)));
-	cursorMessage.SetParam("y", SH::FromInt((int) ((float) nY / gfMouseMultY)));
-	cursorMessage.SetParam("delta", SH::FromInt(nDelta));
-	if (gpCaptureWin)
-		cursorMessage.SetTarget(gpCaptureWin->GetTargetName());
-	else
-		cursorMessage.SetTarget(gpMainWin->GetTargetName());
-
-	gMessageSystem.Post(cursorMessage);
 }
 
 #endif // _WIN64

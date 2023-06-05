@@ -30,7 +30,7 @@ ProcessImageWin.h ProcessImageWin.cpp
 TextTestWin.h TextTestWin.cpp
 ZChess.h ZChess.cpp
 ZChessWin.h ZChessWin.cpp
-Main_Sandbox.h Main_Sandbox.cpp Main_Win64.cpp 
+Main_Sandbox.h Main_Sandbox.cpp
 TestWin.h TestWin.cpp
 teapotdata.h
 )
@@ -60,6 +60,7 @@ set (GUI_FILES
 ../ZFramework/ZRasterizer.h         ../ZFramework/ZRasterizer.cpp
 ../ZFramework/ZScreenBuffer.h       ../ZFramework/ZScreenBuffer.cpp
 ../ZFramework/ZFont.h               ../ZFramework/ZFont.cpp
+../ZFramework/ZInput.h              ../ZFramework/ZInput.cpp
 ../ZFramework/ZColor.h
 )
 
@@ -89,6 +90,7 @@ set(ZFRAMEWORK_FILES
 ../ZFramework/ZXMLNode.h            ../ZFramework/ZXMLNode.cpp
 ../ZFramework/ZZipAPI.h             ../ZFramework/ZZipAPI.cpp
 ../ZFramework/platforms/windows/GDIImageTags.h
+../ZFramework/platforms/windows/Main_Win64.cpp
 ../ZFramework/ZFramework.natvis
 )
 

@@ -204,7 +204,6 @@ bool ZWinImage::Init()
         rGroup.left = rButton.left;
         rGroup.InflateRect(gDefaultGroupingStyle.padding, gDefaultGroupingStyle.padding);
         mpPanel->AddGrouping("Manage", rGroup);
-
     }
 
     return ZWin::Init();

@@ -17,7 +17,7 @@
 using namespace std;
 
 // Global Variables:
-ZRect                   grFullArea;
+//ZRect                   grFullArea;
 ZMainWin*               gpMainWin;
 ZWinControlPanel*       gpControlPanel;
 ZWinDebugConsole*       gpDebugConsole;
@@ -25,8 +25,7 @@ ZGraphicSystem          gGraphicSystem;
 ZGraphicSystem*         gpGraphicSystem = &gGraphicSystem;
 ZRasterizer             gRasterizer;
 bool                    gbGraphicSystemResetNeeded(false);
-bool                    gbApplicationExiting = false;
-bool                    gbPaused = false;
+//extern bool             gbApplicationExiting = false;
 ZTimer                  gTimer(true);
 int64_t                 gnFramesPerSecond = 0;
 ZFontSystem*            gpFontSystem = nullptr;
@@ -43,9 +42,6 @@ ZTickManager            gTickManager;
 ZAnimator               gAnimator;
 int64_t                 gnCheckerWindowCount = 8;
 int64_t                 gnLifeGridSize = 500;
-ZWin*                   gpCaptureWin = nullptr;
-ZWin*                   gpMouseOverWin = nullptr;
-ZPoint                  gLastMouseMove;
 REG::Registry           gRegistry;
 
 
@@ -100,7 +96,7 @@ void Sandbox::InitControlPanel()
 
 }
 
-void Sandbox::SandboxDeleteAllButControlPanelAndDebugConsole()
+void Sandbox::DeleteAllButControlPanelAndDebugConsole()
 {
     gpMainWin->ChildRemove(gpControlPanel);
     gpMainWin->ChildRemove(gpDebugConsole);
@@ -108,11 +104,11 @@ void Sandbox::SandboxDeleteAllButControlPanelAndDebugConsole()
 }
 
 
-void Sandbox::SandboxInitChildWindows(Sandbox::eSandboxMode mode)
+void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
 {
     assert(gpControlPanel);     // needs to exist before this
 
-    SandboxDeleteAllButControlPanelAndDebugConsole();
+    DeleteAllButControlPanelAndDebugConsole();
 
     gRegistry["sandbox"]["mode"] = (int32_t)mode;
 
@@ -257,7 +253,7 @@ public:
 		string sType = message.GetType();
 		if (sType == "initchildwindows")
 		{
-            SandboxInitChildWindows((Sandbox::eSandboxMode) SH::ToInt(message.GetParam("mode")));
+            InitChildWindows((Sandbox::eSandboxMode) SH::ToInt(message.GetParam("mode")));
 		}
         else if (sType == "toggleconsole")
         {
@@ -270,28 +266,7 @@ public:
 
 MainAppMessageTarget gMainAppMessageTarget;
 
-void Sandbox::SandboxInitializeFonts()
-{
-    if (gpFontSystem)
-        return;
-
-    gpFontSystem = new ZFontSystem();
-
-    filesystem::path appPath;
-    assert(gRegistry.contains("appdata"));  // required environment var
-    gRegistry["appdata"].get_to(appPath);
-
-    filesystem::path font_cache(appPath);
-    font_cache.append("font_cache");
-
-    std::filesystem::create_directory(font_cache);    // ensure font cache exists...keep in working folder or move elsewhere?
-    gpFontSystem->SetCacheFolder(font_cache.string());
-    gpFontSystem->SetDefaultFont(gDefaultTextFont);
-
-    gpFontSystem->Init();
-}
-
-bool Sandbox::SandboxInitialize()
+bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path userDataPath)
 {
     gGraphicSystem.SetArea(grFullArea);
     if (!gGraphicSystem.Init())
@@ -302,24 +277,63 @@ bool Sandbox::SandboxInitialize()
 
     gResources.Init("res/default_resources/");// todo, move this define elsewhere?
 
-    SandboxInitializeFonts();
+
+
+    filesystem::path appDataPath(userDataPath);
+    appDataPath += "/ZSandbox/";
+
+    filesystem::path prefsPath = appDataPath.make_preferred().string() + "prefs.json";
+    if (!gRegistry.Load(prefsPath.string()))
+    {
+        ZDEBUG_OUT("No registry file at:%s creating path for one.");
+        std::filesystem::create_directories(prefsPath.parent_path());
+    }
+
+    std::filesystem::path appPath(argv[0]);
+    gRegistry["apppath"] = appPath.parent_path().string();
+    gRegistry["appDataPath"] = appDataPath.string();
+
+
+
+
+    gpFontSystem = new ZFontSystem();
+    filesystem::path font_cache(appDataPath);
+    font_cache.append("font_cache");
+
+
+
+
+
+
+
+
+
+
+
+    std::filesystem::create_directory(font_cache);    // ensure font cache exists...keep in working folder or move elsewhere?
+    gpFontSystem->SetCacheFolder(font_cache.string());
+    gpFontSystem->SetDefaultFont(gDefaultTextFont);
+
+    gpFontSystem->Init();
+
+
     gpMainWin = new ZMainWin();
     gpMainWin->SetArea(grFullArea);
     gpMainWin->Init();
 
-    InitControlPanel();
+    Sandbox::InitControlPanel();
 
     int32_t nMode;
     if (!gRegistry.Get("sandbox", "mode", nMode))
-        nMode = kImageProcess;
+        nMode = Sandbox::kImageProcess;
 
-    SandboxInitChildWindows((eSandboxMode) nMode);
+    Sandbox::InitChildWindows((Sandbox::eSandboxMode) nMode);
     return true;
 }
 
-void Sandbox::SandboxShutdown()
+void ZFrameworkApp::Shutdown()
 {
-    gbApplicationExiting = true;
+//    gbApplicationExiting = true;
 
     if (gpMainWin)
     {

@@ -20,10 +20,6 @@ class ZScreenBuffer;
 
 typedef std::list<ZWin*> tWinList;
 
-extern ZWin* gpCaptureWin;
-extern ZWin* gpMouseOverWin;
-extern ZPoint gLastMouseMove;
-
 
 ////////////////////////////////////////////////////
 // class ZWin
@@ -125,7 +121,6 @@ public:
 	virtual bool		OnMouseOut();
 	
 	bool				SetFocus();
-	ZWin*				GetFocus() { return mpFocusWin; }
 
 	virtual bool		SetCapture();
 	virtual bool		ReleaseCapture();
@@ -188,10 +183,6 @@ public:
 	int64_t							mnTransformInTime;
 	int64_t							mnTransformOutTime;
 	bool							mbAcceptsFocus;
-
-private:
-	static ZWin*					mpFocusWin;	
-	static ZWin*					mpMouseOverWin;
 };
 
 

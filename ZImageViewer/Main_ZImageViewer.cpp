@@ -1,6 +1,7 @@
 #include "Main_ZImageViewer.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
+#include "helpers/CommandLineParser.h"
 
 #include "ZWinDebugConsole.h"
 #include "Resources.h"
@@ -10,16 +11,13 @@
 using namespace std;
 
 // Global Variables:
-ZRect                   grFullArea;
+extern ZRect            grFullArea;
 ZMainWin*               gpMainWin;
-ZWinControlPanel*       gpControlPanel;
 ZWinDebugConsole*       gpDebugConsole;
 ZGraphicSystem          gGraphicSystem;
 ZGraphicSystem*         gpGraphicSystem = &gGraphicSystem;
 ZRasterizer             gRasterizer;
 bool                    gbGraphicSystemResetNeeded(false);
-bool                    gbApplicationExiting = false;
-bool                    gbPaused = false;
 ZTimer                  gTimer(true);
 int64_t                 gnFramesPerSecond = 0;
 ZFontSystem*            gpFontSystem = nullptr;
@@ -38,6 +36,7 @@ ZWin*                   gpCaptureWin = nullptr;
 ZWin*                   gpMouseOverWin = nullptr;
 ZPoint                  gLastMouseMove;
 REG::Registry           gRegistry;
+std::string             gsRegistryFile;
 
 
 void ZImageViewer::InitControlPanel()
@@ -47,44 +46,6 @@ void ZImageViewer::InitControlPanel()
     int64_t panelH = grFullArea.Height() / 2;
     ZRect rControlPanel(grFullArea.right - panelW, 0, grFullArea.right, panelH);     // upper right for now
 
-/*    gpControlPanel = new ZWinControlPanel();
-    gpControlPanel->SetArea(rControlPanel);
-    gpControlPanel->SetTriggerRect(grControlPanelTrigger);
-    gpControlPanel->SetHideOnMouseExit(true);
-
-    gpControlPanel->Init();
-
-    gpControlPanel->AddButton("Quit", "quit_app_confirmed");
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-
-
-    gpControlPanel->AddButton("FloatLinesWin",  "initchildwindows;mode=1;target=MainAppMessageTarget");
-
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("LifeWin",        "initchildwindows;mode=5;target=MainAppMessageTarget");
-    gpControlPanel->AddSlider(&gnLifeGridSize, 1, 100, 5, 0.2, "initchildwindows;mode=5;target=MainAppMessageTarget", true, false);
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-
-    gpControlPanel->AddButton("ImageProcessor", "initchildwindows;mode=4;target=MainAppMessageTarget");
-
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight/2);
-    gpControlPanel->AddButton("Checkerboard", "initchildwindows;mode=2;target=MainAppMessageTarget");
-    gpControlPanel->AddSlider(&gnCheckerWindowCount, 1, 64, 1, 0.2, "", true, false);
-
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("Font Tool", "initchildwindows;mode=6;target=MainAppMessageTarget");
-
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("3DTestWin", "initchildwindows;mode=7;target=MainAppMessageTarget");
-
-    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
-    gpControlPanel->AddButton("ChessWin", "initchildwindows;mode=8;target=MainAppMessageTarget");
-
-    gpControlPanel->FitToControls();
-
-    gpMainWin->ChildAdd(gpControlPanel);*/
-
-
     gpDebugConsole = new ZWinDebugConsole();
     gpDebugConsole->SetArea(ZRect(grFullArea.left, grFullArea.top, grFullArea.right, grFullArea.Height() / 2));
     gpMainWin->ChildAdd(gpDebugConsole, false);
@@ -93,7 +54,6 @@ void ZImageViewer::InitControlPanel()
 
 void ZImageViewer::DeleteAllButControlPanelAndDebugConsole()
 {
-//    gpMainWin->ChildRemove(gpControlPanel);
     gpMainWin->ChildRemove(gpDebugConsole);
     gpMainWin->ChildDeleteAll();
 }
@@ -101,8 +61,6 @@ void ZImageViewer::DeleteAllButControlPanelAndDebugConsole()
 
 void ZImageViewer::InitChildWindows()
 {
-//    assert(gpControlPanel);     // needs to exist before this
-
     DeleteAllButControlPanelAndDebugConsole();
 
     string sImageFilename = gRegistry.GetValue("zimageviewer", "imageviewer_filename");
@@ -113,7 +71,6 @@ void ZImageViewer::InitChildWindows()
     if (!sImageFilename.empty())
         pWin->ViewImage(sImageFilename);
 
-//    gpMainWin->ChildAdd(gpControlPanel);
     gpMainWin->ChildAdd(gpDebugConsole, false);
 }
 
@@ -147,17 +104,53 @@ public:
 
 MainAppMessageTarget gMainAppMessageTarget;
 
-void ZImageViewer::InitializeFonts()
+
+bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path userDataPath)
 {
-    if (gpFontSystem)
-        return;
+    gGraphicSystem.SetArea(grFullArea);
+    if (!gGraphicSystem.Init())
+    {
+        assert(false);
+        return false;
+    }
+
+
+
+
+    filesystem::path appDataPath(userDataPath);
+    appDataPath += "/ZImageViewer/";
+
+    filesystem::path prefsPath = appDataPath.make_preferred().string() + "prefs.json";
+    if (!gRegistry.Load(prefsPath.string()))
+    {
+        ZDEBUG_OUT("No registry file at:%s creating path for one.");
+        std::filesystem::create_directories(prefsPath.parent_path());
+    }
+
+    std::filesystem::path appPath(argv[0]);
+    gRegistry["apppath"] = appPath.parent_path().string();
+    gRegistry["appDataPath"] = appDataPath.string();
+
+
+    std::string sImageFilename;
+    CLP::CommandLineParser parser;
+    parser.RegisterAppDescription("ZImageViewer");
+    parser.RegisterParam(CLP::ParamDesc("PATH", &sImageFilename, CLP::kOptional | CLP::kPositional, "Filename of image to load."));
+
+    if (!parser.Parse(argc, argv))
+    {
+        ZERROR("ERROR parsing commandline.");
+        return false;
+    }
+
+    gRegistry["zimageviewer"]["imageviewer_filename"] = sImageFilename;
+
+
+    filesystem::path resourcesPath(appPath.parent_path());
+    resourcesPath.append("res/default_resources/");
+    gResources.Init(resourcesPath.string());// todo, move this define elsewhere?
 
     gpFontSystem = new ZFontSystem();
-
-    filesystem::path appDataPath;
-    assert(gRegistry.contains("appdata"));  // required environment var
-    gRegistry["appdata"].get_to(appDataPath);
-
     filesystem::path font_cache(appDataPath);
     font_cache.append("font_cache");
 
@@ -167,39 +160,21 @@ void ZImageViewer::InitializeFonts()
     gpFontSystem->SetDefaultFont(gDefaultTextFont);
 
     gpFontSystem->Init();
-}
 
-bool ZImageViewer::Initialize()
-{
-    gGraphicSystem.SetArea(grFullArea);
-    if (!gGraphicSystem.Init())
-    {
-        assert(false);
-        return false;
-    }
-
-    filesystem::path appPath;
-    assert(gRegistry.contains("apppath"));  // required environment var
-    gRegistry["apppath"].get_to(appPath);
-
-    appPath.append("res/default_resources/");
-
-    gResources.Init(appPath.string());// todo, move this define elsewhere?
-
-    InitializeFonts();
     gpMainWin = new ZMainWin();
     gpMainWin->SetArea(grFullArea);
     gpMainWin->Init();
 
-    InitControlPanel();
+    ZImageViewer::InitControlPanel();
 
-    InitChildWindows();
+    ZImageViewer::InitChildWindows();
+
     return true;
 }
 
-void ZImageViewer::Shutdown()
+void ZFrameworkApp::Shutdown()
 {
-    gbApplicationExiting = true;
+    gRegistry.Save(gsRegistryFile);
 
     if (gpMainWin)
     {
