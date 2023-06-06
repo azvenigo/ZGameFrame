@@ -110,8 +110,6 @@ private:
     eViewState          mViewState;
 
     bool                mbShowUI;
-    bool                mbZoomHotkeyActive;
-
 
     ZWinControlPanel*   mpPanel;
 };

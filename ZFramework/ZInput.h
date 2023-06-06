@@ -3,10 +3,8 @@
 #include "ZTypes.h"
 #include "ZMessageSystem.h"
 #include <map>
-#include "ZWin.H"
 
-
-typedef std::map<uint32_t, bool> tKeyDownMap;
+class ZWin;
 
 class ZInput
 {
@@ -31,8 +29,10 @@ public:
 
     void    Process();
 
+    bool    IsKeyDown(uint8_t k) { return (keyState[k] & 0x80) != 0; }
 
-    tKeyDownMap     keyDownMap;
+
+    uint8_t         keyState[256];
     ZPoint          lastMouseMove;
     uint64_t        lastMouseMoveTime;
 

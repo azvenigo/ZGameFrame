@@ -43,7 +43,10 @@ ImageViewer::~ImageViewer()
 bool ImageViewer::ShowOpenImageDialog()
 {
     string sFilename;
-    if (ZWinFileDialog::ShowLoadDialog("Images", "*.jpg;*.jpeg;*.png;*.gif;*.tga;*.bmp;*.psd;*.hdr;*.pic;*.pnm", sFilename))
+    string sDefaultFolder;
+    if (!mSelectedFilename.empty())
+        sDefaultFolder = mSelectedFilename.parent_path().string();
+    if (ZWinFileDialog::ShowLoadDialog("Images", "*.jpg;*.jpeg;*.png;*.gif;*.tga;*.bmp;*.psd;*.hdr;*.pic;*.pnm", sFilename, sDefaultFolder))
     {
         mFilenameToLoad = sFilename;
         mMoveToFolder.clear();
@@ -75,6 +78,11 @@ bool ImageViewer::OnKeyDown(uint32_t key)
 
     switch (key)
     {
+    case VK_UP:
+        if (gInput.IsKeyDown(VK_MENU))
+        {
+            HandleNavigateToParentFolder();
+        }
     case VK_LEFT:
         SetPrevImage();
         break;
@@ -194,6 +202,15 @@ void ImageViewer::HandleDeleteCommand()
         it = mDeletionList.erase(it);
 
     ScanForImagesInFolder(current.parent_path());
+}
+
+void ImageViewer::HandleNavigateToParentFolder()
+{
+    if (mSelectedFilename.empty())
+        return;
+
+    ScanForImagesInFolder(mSelectedFilename.parent_path().parent_path());
+    SetFirstImage();
 }
 
 void ImageViewer::HandleMoveCommand()

@@ -73,6 +73,7 @@ protected:
     void                    DeleteFile(std::filesystem::path& f);
     void                    HandleMoveCommand();
     void                    HandleDeleteCommand();
+    void                    HandleNavigateToParentFolder();
 
     void                    MoveSelectedFile(std::filesystem::path& newPath);
 

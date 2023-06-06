@@ -6,6 +6,7 @@
 #include "ZTransformable.h"
 #include "ZGUIHelpers.h"
 #include "ZGUIStyle.h"
+#include "ZInput.h"
 #include <mutex>
 #ifdef _WIN64
 #include "windows.h"		// Virtual Key Defs

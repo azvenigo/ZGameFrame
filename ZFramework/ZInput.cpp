@@ -5,6 +5,8 @@
 
 void ZInput::OnKeyDown(uint32_t key)
 {
+    keyState[(uint8_t)key] |= 0x80;
+
     IMessageTarget* pTarget = keyboardFocusWin;
     if (!pTarget)
         pTarget = gpMainWin;
@@ -14,6 +16,8 @@ void ZInput::OnKeyDown(uint32_t key)
 
 void ZInput::OnKeyUp(uint32_t key)
 {
+    keyState[(uint8_t)key] &= ~0x80;
+
     IMessageTarget* pTarget = keyboardFocusWin;
     if (!pTarget)
         pTarget = gpMainWin;

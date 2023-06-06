@@ -9,6 +9,7 @@
 #include "Resources.h"
 #include "ZGUIStyle.h"
 #include "ZDebug.h"
+#include "ZInput.h"
 
 extern ZAnimator gAnimator;
 using namespace std;
@@ -27,7 +28,6 @@ ZWinImage::ZWinImage()
     mToggleUIHotkey = 0;
     mZoomHotkey = 0;
     mbShowUI = true;
-    mbZoomHotkeyActive = false;
     mZoomStyle = gStyleCaption;
 
     mpPanel = nullptr;
@@ -212,6 +212,7 @@ bool ZWinImage::Init()
 void ZWinImage::Clear()
 {
     mpImage.reset();
+    mCaptionMap.clear();
     Invalidate();
 }
 
@@ -277,7 +278,7 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 {
     // If a zoom hotkey is set, only zoom if it's being held
     // or if no hotkey is set
-    bool bEnableZoom = (mBehavior & kZoom) || (mBehavior & kHotkeyZoom && mbZoomHotkeyActive);
+    bool bEnableZoom = (mBehavior & kZoom) || (mBehavior & kHotkeyZoom && gInput.IsKeyDown(mZoomHotkey));
     if (bEnableZoom && mpImage)
     {
         // if the zoom point is outside of the image area, adjust so it's zooming around the closest pixel
@@ -349,21 +350,6 @@ bool ZWinImage::OnKeyDown(uint32_t c)
         }
         mpParentWin->InvalidateChildren();
     }
-    else if (c == mZoomHotkey)
-    {
-        mbZoomHotkeyActive = true;
-    }
-
-/*    if (c == mManipulationHotkey && mbHotkeyActive == false)
-    {
-        mbHotkeyActive = true;
-        if (mpPanel && mBehavior & kShowOnHotkey)
-        {
-            mpPanel->mbHideOnMouseExit = false;
-            mpPanel->SetVisible();
-        }
-        mpParentWin->InvalidateChildren();
-    }*/
 
     if (mpParentWin)
         return mpParentWin->OnKeyDown(c);
@@ -376,7 +362,6 @@ bool ZWinImage::OnKeyUp(uint32_t c)
 
     if (c == mZoomHotkey)
     {
-        mbZoomHotkeyActive = false;
         mpParentWin->InvalidateChildren();
     }
 
@@ -600,17 +585,23 @@ bool ZWinImage::Paint()
                 gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
             }
         }
+
+        // Show Zoom?
+        if (mBehavior & kShowCaption || (mBehavior & kUIToggleOnHotkey && mbShowUI))
+        {
+            string sZoom;
+            Sprintf(sZoom, "%d%%", (int32_t)(mfZoom * 100.0));
+            ZRect rZoomCaption(mZoomStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sZoom.data(), sZoom.length(), mZoomStyle.pos));
+            mZoomStyle.Font()->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, mZoomStyle.look);
+        }
+
     }
 
     if (mBehavior & kShowCaption || (mBehavior & kUIToggleOnHotkey && mbShowUI))
     {
         ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);
-        string sZoom;
-        Sprintf(sZoom, "%d%%", (int32_t)(mfZoom * 100.0));
-
-        ZRect rZoomCaption(mZoomStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sZoom.data(), sZoom.length(), mZoomStyle.pos));
-        mZoomStyle.Font()->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, mZoomStyle.look);
     }
+
 
 	return ZWin::Paint();
 }

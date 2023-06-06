@@ -10,10 +10,12 @@ using namespace std;
 
 namespace ZWinFileDialog
 {
-    bool ShowLoadDialog(std::string fileTypeDescription, std::string fileTypes, std::string& sFilenameResult)
+    bool ShowLoadDialog(std::string fileTypeDescription, std::string fileTypes, std::string& sFilenameResult, std::string sDefaultFolder)
     {
         wstring sFileTypeDescription(SH::string2wstring(fileTypeDescription));
         wstring sFileTypes(SH::string2wstring(fileTypes));
+
+
 
         bool bSuccess = false;
 
@@ -41,6 +43,16 @@ namespace ZWinFileDialog
                 if (SUCCEEDED(hr))
                 {
                     hr = pFileOpen->SetOptions(dwOptions | FOS_ALLOWMULTISELECT);
+                }
+
+                if (!sDefaultFolder.empty())
+                {
+                    wstring sDefaultFolderW(SH::string2wstring(sDefaultFolder));
+                    IShellItem* pShellItem = nullptr;
+                    SHCreateItemFromParsingName(sDefaultFolderW.c_str(), nullptr, IID_IShellItem, (void**)(&pShellItem));
+
+                    pFileOpen->SetFolder(pShellItem);
+                    pShellItem->Release();
                 }
 
                 // Show the Open dialog box.
@@ -71,7 +83,7 @@ namespace ZWinFileDialog
         return bSuccess;
     }
 
-    bool ShowMultiLoadDialog(std::string fileTypeDescription, std::string fileTypes, std::list<std::string>& resultFilenames)
+    bool ShowMultiLoadDialog(std::string fileTypeDescription, std::string fileTypes, std::list<std::string>& resultFilenames, std::string sDefaultFolder)
     {
         wstring sFileTypeDescription(SH::string2wstring(fileTypeDescription));
         wstring sFileTypes(SH::string2wstring(fileTypes));
@@ -105,6 +117,17 @@ namespace ZWinFileDialog
                 {
                     hr = pFileOpen->SetOptions(dwOptions | FOS_ALLOWMULTISELECT);
                 }
+
+                if (!sDefaultFolder.empty())
+                {
+                    wstring sDefaultFolderW(SH::string2wstring(sDefaultFolder));
+                    IShellItem* pShellItem = nullptr;
+                    SHCreateItemFromParsingName(sDefaultFolderW.c_str(), nullptr, IID_IShellItem, (void**)(&pShellItem));
+
+                    pFileOpen->SetFolder(pShellItem);
+                    pShellItem->Release();
+                }
+
 
                 // Show the Open dialog box.
                 hr = pFileOpen->Show(NULL);
@@ -141,7 +164,7 @@ namespace ZWinFileDialog
         return bSuccess;
     }
 
-    bool ShowSelectFolderDialog(std::string& sFilenameResult)
+    bool ShowSelectFolderDialog(std::string& sFilenameResult, std::string sDefaultFolder)
     {
         bool bSuccess = false;
 
@@ -167,6 +190,16 @@ namespace ZWinFileDialog
                 if (SUCCEEDED(hr))
                 {
                     hr = pFileOpen->SetOptions(dwOptions | FOS_PICKFOLDERS);
+                }
+
+                if (!sDefaultFolder.empty())
+                {
+                    wstring sDefaultFolderW(SH::string2wstring(sDefaultFolder));
+                    IShellItem* pShellItem = nullptr;
+                    SHCreateItemFromParsingName(sDefaultFolderW.c_str(), nullptr, IID_IShellItem, (void**)(&pShellItem));
+
+                    pFileOpen->SetFolder(pShellItem);
+                    pShellItem->Release();
                 }
 
                 // Show the Open dialog box.
@@ -199,7 +232,7 @@ namespace ZWinFileDialog
 
 
 
-    bool ShowSaveDialog(std::string fileTypeDescription, std::string fileTypes, std::string& sFilenameResult)
+    bool ShowSaveDialog(std::string fileTypeDescription, std::string fileTypes, std::string& sFilenameResult, std::string sDefaultFolder)
     {
         wstring sFileTypeDescription(SH::string2wstring(fileTypeDescription));
         wstring sFileTypes(SH::string2wstring(fileTypes));
@@ -223,6 +256,16 @@ namespace ZWinFileDialog
                 };
 
                 pDialog->SetFileTypes(2, rgSpec);
+
+                if (!sDefaultFolder.empty())
+                {
+                    wstring sDefaultFolderW(SH::string2wstring(sDefaultFolder));
+                    IShellItem* pShellItem = nullptr;
+                    SHCreateItemFromParsingName(sDefaultFolderW.c_str(), nullptr, IID_IShellItem, (void**)(&pShellItem));
+
+                    pDialog->SetFolder(pShellItem);
+                    pShellItem->Release();
+                }
 
                 // Show the Open dialog box.
                 hr = pDialog->Show(NULL);

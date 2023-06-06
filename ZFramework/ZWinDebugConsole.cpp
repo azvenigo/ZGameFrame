@@ -4,6 +4,7 @@
 #include "ZMessageSystem.h"
 #include "ZWinSlider.h"
 #include "Resources.h"
+#include "ZInput.h"
 
 using namespace std;
 

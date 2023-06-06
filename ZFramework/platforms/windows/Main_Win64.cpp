@@ -358,18 +358,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_CHAR:
         gInput.OnChar((uint32_t)wParam);
-/*		{
+        {
             if (wParam == '`')
             {
                 gMessageSystem.Post("toggleconsole");
             }
-            else
-            {
-//                ZMessage message("chardown");
-//                message.SetParam("code", SH::FromInt(wParam));
-                gMessageSystem.Post("chardown", "code", wParam);
-            }
-		}*/
+        }
         break;
     case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
@@ -413,6 +407,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SETFOCUS:
     {
         ZScreenBuffer* pSB = gGraphicSystem.GetScreenBuffer();
+        GetKeyboardState((BYTE*) gInput.keyState);   // set up keystate for any keys up or down while window didn't have focus
+
         if (pSB)
             pSB->SetVisibilityComputingFlag(true);
         gbPaused = false;
