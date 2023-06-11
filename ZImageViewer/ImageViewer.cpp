@@ -431,6 +431,20 @@ bool ImageViewer::Init()
     return ZWin::Init();
 }
 
+bool ImageViewer::OnParentAreaChange()
+{
+    if (!mpTransformTexture)
+        return false;
+
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    SetArea(mpParentWin->GetArea());
+    UpdateCaptions();
+    ZWin::OnParentAreaChange();
+
+    return true;
+}
+
+
 bool ImageViewer::ViewImage(const std::filesystem::path& filename)
 {
     mFilenameToLoad = filename;
@@ -570,6 +584,7 @@ bool ImageViewer::Preload()
     {
         mScannedFolder = mFilenameToLoad.parent_path();
         ScanForImagesInFolder(mScannedFolder);
+        SetFirstImage();
     }
 
     if (mImagesInFolder.empty())
@@ -666,15 +681,10 @@ void ImageViewer::Clear()
     mImageCache.clear();
     mImagesInFolder.clear();
     mSelectedFilename.clear();
-
     if (mpWinImage)
-    {
         mpWinImage->Clear();
-        mpWinImage->mBehavior |= ZWinImage::kShowCaption;
-        mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
-        mpWinImage->mCaptionMap["no_image"].style = gStyleCaption;
-    }
 
+    UpdateCaptions();
     Invalidate();
 }
 
@@ -732,7 +742,7 @@ void ImageViewer::UpdateCaptions()
         mpWinImage->mCaptionMap["filename"].style = captionStyle;
 
 
-        bool bShowCapitons = false;
+        bool bShowCapitons = (mpWinImage->mBehavior & ZWinImage::kShowCaption)!=0;
         if (InDeletionList(mSelectedFilename))
         {
             bShowCapitons = true;
@@ -752,7 +762,6 @@ void ImageViewer::UpdateCaptions()
         }
         else
         {
-            mpWinImage->mBehavior &= ~ZWinImage::kShowCaption;
             mpWinImage->mCaptionMap["deletion_summary"].Clear();
         }
 
@@ -765,6 +774,13 @@ void ImageViewer::UpdateCaptions()
         else
         {
             mpWinImage->mCaptionMap["move_to_folder"].Clear();
+        }
+
+        if (mImagesInFolder.empty())
+        {
+            bShowCapitons = true;
+            mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
+            mpWinImage->mCaptionMap["no_image"].style = gStyleCaption;
         }
 
 

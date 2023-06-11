@@ -570,6 +570,15 @@ bool ZWin::ComputeVisibility()
 	return true;
 }
 
+bool ZWin::OnParentAreaChange()
+{
+    Invalidate();
+    for (auto pChild : mChildList)
+        pChild->OnParentAreaChange();
+
+    return true;
+}
+
 
 
 void ZWin::SetAreaToDrawTo() 
@@ -783,7 +792,7 @@ void ZWin::Invalidate()
 void ZWin::InvalidateChildren()
 {
     Invalidate();
-    for (auto pChild : mChildList)		// signal all to shutdown first
+    for (auto pChild : mChildList)
         pChild->InvalidateChildren();
 }
 

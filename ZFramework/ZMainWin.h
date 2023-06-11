@@ -13,16 +13,16 @@ class ZMainWin : public ZWin
 public:
 	ZMainWin();
 
-	bool			Init();
-	bool			Shutdown();
-	bool			Paint();
-	//bool			OnMouseDownL(int64_t x, int64_t y);
-    bool            ComputeVisibility();
+	bool    Init();
+	bool    Shutdown();
+	bool    Paint();
+    bool    ComputeVisibility();
+    void    SetArea(const ZRect& newArea);
 
 
 protected:
-	virtual bool	HandleMessage(const ZMessage& message);
-	void  			ShowMainMenu();
+	bool    HandleMessage(const ZMessage& message);
+	void    ShowMainMenu();
 };
 
 extern ZMainWin* gpMainWin;

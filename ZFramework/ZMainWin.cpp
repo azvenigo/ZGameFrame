@@ -55,6 +55,13 @@ bool ZMainWin::Paint()
 	return ZWin::Paint();
 }             
 
+void ZMainWin::SetArea(const ZRect& newArea)
+{
+    ZWin::SetArea(newArea);
+    OnParentAreaChange();   // update all children
+}
+
+
 bool ZMainWin::ComputeVisibility()
 {
     // Main window not visible......bypassing  adding our rect

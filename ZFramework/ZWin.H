@@ -136,6 +136,8 @@ public:
 	
 	virtual bool		ComputeVisibility();		// Add my own area to ZScreenBuffer's ScreenRect container, then call all children (that will be on top of me) recursively to do the same
 
+    virtual bool        OnParentAreaChange();       // Called recursively for any window that needs to rearrange itself due to parent area changing
+
 protected:
     virtual bool        Process();              // for doing any computation/simulation/etc. Returns true if anything was done
 	virtual bool		Paint();

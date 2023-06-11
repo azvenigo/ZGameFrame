@@ -41,6 +41,17 @@ ZWinImage::~ZWinImage()
 bool ZWinImage::Init()
 {
     mIdleSleepMS = 10000;
+    ResetControlPanel();
+    return ZWin::Init();
+}
+
+void ZWinImage::ResetControlPanel()
+{
+    if (mpPanel)
+    {
+        ChildDelete(mpPanel);
+        mpPanel = nullptr;
+    }
 
     if (mBehavior & eBehavior::kShowControlPanel)
     {
@@ -48,12 +59,12 @@ bool ZWinImage::Init()
         int64_t nControlPanelSide = mAreaToDrawTo.Height() / 24;
         limit<int64_t>(nControlPanelSide, 64, 128);
 
-        int64_t nGroupSide = nControlPanelSide - gnDefaultGroupInlaySize*2;
+        int64_t nGroupSide = nControlPanelSide - gnDefaultGroupInlaySize * 2;
 
 
 
-        ZGUI::Style wd1Style = ZGUI::Style(ZFontParams("Wingdings", nGroupSide *2/4));
-        ZGUI::Style wd3Style = ZGUI::Style(ZFontParams("Wingdings 3", nGroupSide *2/3));
+        ZGUI::Style wd1Style = ZGUI::Style(ZFontParams("Wingdings", nGroupSide * 2 / 4));
+        ZGUI::Style wd3Style = ZGUI::Style(ZFontParams("Wingdings 3", nGroupSide * 2 / 3));
 
 
         ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
@@ -65,9 +76,9 @@ bool ZWinImage::Init()
 
         ZWinSizablePushBtn* pBtn;
 
-        ZRect rGroup(gnDefaultGroupInlaySize, gnDefaultGroupInlaySize, -1, nControlPanelSide-gnDefaultGroupInlaySize);  // start the first grouping
+        ZRect rGroup(gnDefaultGroupInlaySize, gnDefaultGroupInlaySize, -1, nControlPanelSide - gnDefaultGroupInlaySize);  // start the first grouping
 
-        ZRect rButton(rGroup.left + gnDefaultGroupInlaySize, rGroup.top + gnDefaultGroupInlaySize, rGroup.left+nGroupSide, rGroup.bottom - gnDefaultGroupInlaySize/2);
+        ZRect rButton(rGroup.left + gnDefaultGroupInlaySize, rGroup.top + gnDefaultGroupInlaySize, rGroup.left + nGroupSide, rGroup.bottom - gnDefaultGroupInlaySize / 2);
 
         if (mBehavior & (kShowCloseButton | kShowLoadButton | kShowSaveButton))
         {
@@ -108,7 +119,7 @@ bool ZWinImage::Init()
                 mpPanel->ChildAdd(pBtn);
             }
 
-            rGroup.right = rButton.right+ gnDefaultGroupInlaySize;
+            rGroup.right = rButton.right + gnDefaultGroupInlaySize;
             mpPanel->AddGrouping("File", rGroup);
         }
 
@@ -116,7 +127,7 @@ bool ZWinImage::Init()
 
 
         // Management
-        rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize*4, 0);
+        rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
         rButton.right = rButton.left + rButton.Width() * 3 / 2;     // wider buttons for management
 
         rGroup.left = rButton.left - gnDefaultGroupInlaySize;
@@ -160,8 +171,8 @@ bool ZWinImage::Init()
 
 
         // Rotation Group
-        rButton.OffsetRect(rButton.Width()+ gnDefaultGroupInlaySize*8, 0);
-        rGroup.left = rButton.left- gnDefaultGroupInlaySize;   // start new grouping
+        rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 8, 0);
+        rGroup.left = rButton.left - gnDefaultGroupInlaySize;   // start new grouping
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
@@ -209,12 +220,18 @@ bool ZWinImage::Init()
 
         rGroup.right = rButton.right + gnDefaultGroupInlaySize;
         mpPanel->AddGrouping("Rotate", rGroup);
-
-
     }
-
-    return ZWin::Init();
 }
+
+
+bool ZWinImage::OnParentAreaChange()
+{
+    SetArea(mpParentWin->GetArea());
+    ResetControlPanel();
+    FitImageToWindow();
+    return ZWin::OnParentAreaChange();
+}
+
 
 void ZWinImage::Clear()
 {

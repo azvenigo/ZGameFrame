@@ -46,6 +46,7 @@ public:
 
    bool     AcceptedExtension(std::string sExt);
    bool     ShowOpenImageDialog();
+   bool     OnParentAreaChange();
 
 
    std::atomic<int64_t>     mMaxMemoryUsage;

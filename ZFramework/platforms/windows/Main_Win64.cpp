@@ -33,6 +33,8 @@ bool                    gbFullScreen = true;
 extern bool             gbGraphicSystemResetNeeded; 
 extern bool             gbApplicationExiting = false;
 ZRect                   grFullArea;
+ZPoint                  gInitWindowSize;
+ZPoint                  gWindowedModeOffset;    // for switching between full/windowed
 
 extern bool             gbPaused = false;
 HINSTANCE               g_hInst;				// The current instance
@@ -284,12 +286,12 @@ BOOL WinInitInstance(int argc, char* argv[])
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
 
 
-    int64_t nScreenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int64_t nScreenHeight = GetSystemMetrics(SM_CYSCREEN);
+    gInitWindowSize.x = GetSystemMetrics(SM_CXSCREEN);
+    gInitWindowSize.y = GetSystemMetrics(SM_CYSCREEN);
 
     CLP::CommandLineParser parser;
-    parser.RegisterParam(CLP::ParamDesc("width", &nScreenWidth, CLP::kNamed));
-    parser.RegisterParam(CLP::ParamDesc("height", &nScreenHeight, CLP::kNamed));
+    parser.RegisterParam(CLP::ParamDesc("width", &gInitWindowSize.x, CLP::kNamed));
+    parser.RegisterParam(CLP::ParamDesc("height", &gInitWindowSize.y, CLP::kNamed));
     parser.RegisterParam(CLP::ParamDesc("fullscreen", &gbFullScreen, CLP::kNamed));
     parser.Parse(argc, argv);
 
@@ -304,15 +306,17 @@ BOOL WinInitInstance(int argc, char* argv[])
     }
 
 
-    grFullArea.SetRect(0, 0, nScreenWidth, nScreenHeight);
+    grFullArea.SetRect(0, 0, gInitWindowSize.x, gInitWindowSize.y);
     /*	if (gbFullScreen)
 		grFullArea.SetRect(0, 0, nScreenWidth, nScreenHeight);
 	else
 		grFullArea.SetRect(0, 0, (long) (nScreenWidth * 0.75), (long)(nScreenHeight * 0.75));*/
 
 
+    gWindowedModeOffset.Set((GetSystemMetrics(SM_CXSCREEN) - grFullArea.Width()) / 2, (GetSystemMetrics(SM_CYSCREEN) - grFullArea.Height()) / 2);
 
-	SizeWindowToClientArea(ghWnd, (int) (nScreenWidth - grFullArea.Width())/2, (int) (nScreenHeight-grFullArea.Height())/2, (int) grFullArea.Width(), (int)     grFullArea.Height());
+
+	SizeWindowToClientArea(ghWnd, gWindowedModeOffset.x, gWindowedModeOffset.y, (int) grFullArea.Width(), (int)     grFullArea.Height());
 
 	gGraphicSystem.SetHWND(ghWnd);
 
@@ -324,6 +328,56 @@ BOOL WinInitInstance(int argc, char* argv[])
 	UpdateWindow(ghWnd);
 
 	return TRUE;
+}
+
+void HandleFullScreenSwitch()
+{
+    gbPaused = true;
+    gbFullScreen = !gbFullScreen;
+
+    if (gbFullScreen)
+    {
+        MONITORINFO mi;
+        mi.cbSize = sizeof(mi);
+
+        HMONITOR h = MonitorFromWindow(ghWnd, MONITOR_DEFAULTTONEAREST);
+        GetMonitorInfo(h, &mi);
+
+        
+
+
+        grFullArea.SetRect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        DWORD nStyle = GetWindowLong(ghWnd, GWL_STYLE);
+        DWORD dwRemove = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+        nStyle &= ~dwRemove;
+        SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
+        MoveWindow(ghWnd, mi.rcMonitor.left, mi.rcMonitor.top, grFullArea.Width(), grFullArea.Height(), TRUE);
+    }
+    else
+    {
+        RECT rW;
+        rW.left = gWindowedModeOffset.x;
+        rW.top = gWindowedModeOffset.y;
+        rW.right = gWindowedModeOffset.x+gInitWindowSize.x;
+        rW.bottom = gWindowedModeOffset.y+gInitWindowSize.y;
+        grFullArea.SetRect(0, 0, gInitWindowSize.x, gInitWindowSize.y);
+
+        DWORD nStyle = GetWindowLong(ghWnd, GWL_STYLE);
+        DWORD dwAdd = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+        nStyle |= dwAdd;
+        SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
+
+//        SetWindowLongPtr(ghWnd, GWL_STYLE, WS_SYSMENU);
+        AdjustWindowRect(&rW, dwAdd, FALSE);
+        MoveWindow(ghWnd, rW.left, rW.top, rW.right - rW.left, rW.bottom - rW.top, TRUE);
+    }
+
+
+    gpGraphicSystem->HandleModeChanges();
+    gpMainWin->SetArea(grFullArea);
+    gpMainWin->InvalidateChildren();
+    gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
+    gbPaused = false;
 }
 
 
@@ -338,8 +392,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message) 
 	{
     case WM_WINDOWPOSCHANGED:
+    {
+        if (!gbFullScreen)
+        {
+            WINDOWPOS* pWP = (WINDOWPOS*)lParam;
+            gWindowedModeOffset.Set(pWP->x, pWP->y);
+        }
         if (gpMainWin)
             gpMainWin->InvalidateChildren();
+    }
         break;
 	case WM_COMMAND:
 		wmId    = LOWORD(wParam); 
@@ -365,6 +426,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (wParam == '`')
             {
                 gMessageSystem.Post("toggleconsole");
+            }
+            else if (wParam == 'f' || wParam == 'F')
+            {
+                HandleFullScreenSwitch();
             }
         }
         break;

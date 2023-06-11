@@ -70,6 +70,8 @@ public:
     void        SetImage(tZBufferPtr pImage);
 
     void        SetArea(const ZRect& newArea);
+    bool        OnParentAreaChange();
+    void        ResetControlPanel();
 
     uint32_t    mBehavior;
     uint32_t    mToggleUIHotkey;
