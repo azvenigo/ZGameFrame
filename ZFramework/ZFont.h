@@ -317,6 +317,7 @@ private:
 
     tZFontPtr       mpDefault;
     tZFontMap       mFontMap;
+    std::recursive_mutex mFontMapMutex;
 
     // caching
     std::string     msCacheFolder;

@@ -732,8 +732,10 @@ void ImageViewer::UpdateCaptions()
         mpWinImage->mCaptionMap["filename"].style = captionStyle;
 
 
+        bool bShowCapitons = false;
         if (InDeletionList(mSelectedFilename))
         {
+            bShowCapitons = true;
             mpWinImage->mCaptionMap["for_delete"].sText = mSelectedFilename.filename().string() + "\nMARKED FOR DELETE";
             mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0x88000000, true);
         }
@@ -744,7 +746,7 @@ void ImageViewer::UpdateCaptions()
 
         if (!mDeletionList.empty())
         {
-            mpWinImage->mBehavior |= ZWinImage::kShowCaption;
+            bShowCapitons = true;
             Sprintf(mpWinImage->mCaptionMap["deletion_summary"].sText, "%d Files marked for deletion", mDeletionList.size());
             mpWinImage->mCaptionMap["deletion_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::RB, 0, 0x88000000, true);
         }
@@ -756,15 +758,23 @@ void ImageViewer::UpdateCaptions()
 
         if (!mMoveToFolder.empty())
         {
-            mpWinImage->mBehavior |= ZWinImage::kShowCaption;
+            bShowCapitons = true;
             Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> Move to: %s", mMoveToFolder.string().c_str());
             mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZTextLook(ZTextLook::kShadowed, 0xffff88ff, 0xffff88ff), ZGUI::RT, 32, 0x88000000, true);
         }
         else
         {
-            mpWinImage->mBehavior &= ~ZWinImage::kShowCaption;
             mpWinImage->mCaptionMap["move_to_folder"].Clear();
         }
+
+
+
+
+        if (bShowCapitons)
+            mpWinImage->mBehavior |= ZWinImage::kShowCaption;
+        else
+            mpWinImage->mBehavior &= ~ZWinImage::kShowCaption;
+
 
 
         mpWinImage->Invalidate();

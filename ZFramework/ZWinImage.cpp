@@ -19,7 +19,6 @@ ZWinImage::ZWinImage()
 	mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
     mpImage.reset();
-    mnControlPanelButtonSide = 0;
 	mfZoom = 1.0;
     mfPerfectFitZoom = 1.0;
     mViewState = kFitToWindow;
@@ -46,15 +45,18 @@ bool ZWinImage::Init()
     if (mBehavior & eBehavior::kShowControlPanel)
     {
         mpPanel = new ZWinControlPanel();
-        mnControlPanelButtonSide = mAreaToDrawTo.Height() / 16;
+        int64_t nControlPanelSide = mAreaToDrawTo.Height() / 24;
+        limit<int64_t>(nControlPanelSide, 64, 128);
 
-        limit<int64_t>(mnControlPanelButtonSide, 20, 64);
-
-        ZGUI::Style wd1Style = ZGUI::Style(ZFontParams("Wingdings", mnControlPanelButtonSide/2));
-        ZGUI::Style wd3Style = ZGUI::Style(ZFontParams("Wingdings 3", mnControlPanelButtonSide*2/3));
+        int64_t nGroupSide = nControlPanelSide - gnDefaultGroupInlaySize*2;
 
 
-        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + mnControlPanelButtonSide + 2* gDefaultSpacer);
+
+        ZGUI::Style wd1Style = ZGUI::Style(ZFontParams("Wingdings", nGroupSide *2/4));
+        ZGUI::Style wd3Style = ZGUI::Style(ZFontParams("Wingdings 3", nGroupSide *2/3));
+
+
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
         mpPanel->mbHideOnMouseExit = true;
         mpPanel->mbHideOnMouseExit = !mbShowUI; // if UI is toggled on, then don't hide panel on mouse out
         mpPanel->SetArea(rPanelArea);
@@ -62,11 +64,10 @@ bool ZWinImage::Init()
         ChildAdd(mpPanel);
 
         ZWinSizablePushBtn* pBtn;
-        ZRect rButton(gDefaultSpacer, gDefaultSpacer, mnControlPanelButtonSide, mnControlPanelButtonSide);
 
+        ZRect rGroup(gnDefaultGroupInlaySize, gnDefaultGroupInlaySize, -1, nControlPanelSide-gnDefaultGroupInlaySize);  // start the first grouping
 
-
-        ZRect rGroup(rButton);  // start the first grouping
+        ZRect rButton(rGroup.left + gnDefaultGroupInlaySize, rGroup.top + gnDefaultGroupInlaySize, rGroup.left+nGroupSide, rGroup.bottom - gnDefaultGroupInlaySize/2);
 
         if (mBehavior & (kShowCloseButton | kShowLoadButton | kShowSaveButton))
         {
@@ -80,7 +81,7 @@ bool ZWinImage::Init()
                 pBtn->SetMessage(msCloseButtonMessage);
                 mpPanel->ChildAdd(pBtn);
 
-                rButton.OffsetRect(mnControlPanelButtonSide + gDefaultSpacer, 0);
+                rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize, 0);
             }
 
             if (mBehavior & kShowLoadButton)
@@ -107,22 +108,66 @@ bool ZWinImage::Init()
                 mpPanel->ChildAdd(pBtn);
             }
 
-            rGroup.right = rButton.right;
-            rGroup.bottom = rButton.bottom;
-            rGroup.InflateRect(gDefaultGroupingStyle.padding, gDefaultGroupingStyle.padding);
+            rGroup.right = rButton.right+ gnDefaultGroupInlaySize;
             mpPanel->AddGrouping("File", rGroup);
-            rButton.OffsetRect(rButton.Width()+gDefaultSpacer*2, 0);
         }
 
+        string sMessage;
+
+
+        // Management
+        rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize*4, 0);
+        rButton.right = rButton.left + rButton.Width() * 3 / 2;     // wider buttons for management
+
+        rGroup.left = rButton.left - gnDefaultGroupInlaySize;
+
+
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+        pBtn->SetCaption("Move");
+        pBtn->mStyle = gStyleButton;
+        //        pBtn->mStyle.look.colTop = 0xffff0000;
+        //        pBtn->mStyle.look.colBottom = 0xffff0000;
+        pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+        pBtn->SetArea(rButton);
+        Sprintf(sMessage, "set_move_folder;target=%s", mpParentWin->GetTargetName().c_str());
+        pBtn->SetMessage(sMessage);
+        mpPanel->ChildAdd(pBtn);
+
+
+
+        rButton.OffsetRect(rButton.Width(), 0);
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+        pBtn->SetCaption("Del");
+        pBtn->mStyle = gStyleButton;
+        pBtn->mStyle.look.colTop = 0xffff0000;
+        pBtn->mStyle.look.colBottom = 0xffff0000;
+        pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+        pBtn->SetArea(rButton);
+        Sprintf(sMessage, "delete_single;target=%s", mpParentWin->GetTargetName().c_str());
+        pBtn->SetMessage(sMessage);
+        mpPanel->ChildAdd(pBtn);
+
+
+
+
+        rGroup.right = rButton.right + gnDefaultGroupInlaySize;
+        mpPanel->AddGrouping("Manage", rGroup);
+
+
+
+
+
         // Rotation Group
-        rGroup = rButton;   // start new grouping
+        rButton.OffsetRect(rButton.Width()+ gnDefaultGroupInlaySize*8, 0);
+        rGroup.left = rButton.left- gnDefaultGroupInlaySize;   // start new grouping
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption(":"); // wingdings rotate left
         pBtn->mStyle = wd3Style;
         pBtn->SetArea(rButton);
-        string sMessage;
         Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
         pBtn->SetMessage(sMessage);
         mpPanel->ChildAdd(pBtn);
@@ -162,48 +207,10 @@ bool ZWinImage::Init()
 
 
 
-        rGroup.right = rButton.right;
-        rGroup.bottom = rButton.bottom;
-        rGroup.InflateRect(gDefaultGroupingStyle.padding, gDefaultGroupingStyle.padding);
+        rGroup.right = rButton.right + gnDefaultGroupInlaySize;
         mpPanel->AddGrouping("Rotate", rGroup);
-        rButton.OffsetRect(gDefaultSpacer, 0);
 
 
-
-        // Management
-        rButton.MoveRect(rPanelArea.right - mnControlPanelButtonSide - gDefaultSpacer*2, gDefaultSpacer);
-        rButton.left -= mnControlPanelButtonSide;
-
-        rGroup = rButton;
-
-        pBtn = new ZWinSizablePushBtn();
-        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-        pBtn->SetCaption("Del"); 
-        pBtn->mStyle = gStyleButton;
-        pBtn->mStyle.look.colTop = 0xffff0000;
-        pBtn->mStyle.look.colBottom = 0xffff0000;
-        pBtn->SetArea(rButton);
-        Sprintf(sMessage, "delete_single;target=%s", mpParentWin->GetTargetName().c_str());
-        pBtn->SetMessage(sMessage);
-        mpPanel->ChildAdd(pBtn);
-
-        rButton.OffsetRect(-rButton.Width(), 0);
-
-        pBtn = new ZWinSizablePushBtn();
-        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-        pBtn->SetCaption("Move");
-        pBtn->mStyle = gStyleButton;
-//        pBtn->mStyle.look.colTop = 0xffff0000;
-//        pBtn->mStyle.look.colBottom = 0xffff0000;
-        pBtn->SetArea(rButton);
-        Sprintf(sMessage, "set_move_folder;target=%s", mpParentWin->GetTargetName().c_str());
-        pBtn->SetMessage(sMessage);
-        mpPanel->ChildAdd(pBtn);
-
-
-        rGroup.left = rButton.left;
-        rGroup.InflateRect(gDefaultGroupingStyle.padding, gDefaultGroupingStyle.padding);
-        mpPanel->AddGrouping("Manage", rGroup);
     }
 
     return ZWin::Init();
@@ -433,7 +440,10 @@ void ZWinImage::SetArea(const ZRect& newArea)
 
     if (mpPanel)
     {
-        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + mnControlPanelButtonSide + 2 * gDefaultSpacer);
+        int64_t nControlPanelSide = mAreaToDrawTo.Height() / 16;
+        limit<int64_t>(nControlPanelSide, 20, 64);
+
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
         mpPanel->mrTrigger = rPanelArea;
         mpPanel->SetArea(rPanelArea);
     }

@@ -1123,7 +1123,9 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
         nCharSet = SYMBOL_CHARSET;
 
     mWinHDC = GetDC(ghWnd);
+    assert(mpBits == nullptr);
     mhWinTargetBitmap = CreateDIBSection(mWinHDC, &mDIBInfo, DIB_RGB_COLORS, (void**)&mpBits, NULL, 0);
+    assert(mpBits != nullptr);
 
     mhWinTargetDC = CreateCompatibleDC(mWinHDC);
     mhWinFont = CreateFontA( 
@@ -1627,6 +1629,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
         tZFontPtr pLoaded = LoadFont(FontCacheFilename(params));
         if (pLoaded)
         {
+            const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
             mFontMap[pLoaded->GetFontParams()] = pLoaded;
             return pLoaded;
         }
@@ -1640,6 +1643,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
     ZFontParams fp(pNewFont->GetFontParams());
     ZDEBUG_OUT("Created font:%s size:%d\n", fp.sFacename, fp.nHeight);
 
+    const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
     mFontMap[pNewFont->GetFontParams()].reset(pNewFont);
 
     if (!msCacheFolder.empty())
@@ -1655,6 +1659,8 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
 
 tZFontPtr ZFontSystem::GetFont(const std::string& sFontName, int32_t nFontSize)
 {
+    const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
+
     for (auto findIt : mFontMap)
     {
         const ZFontParams& fp = findIt.first;
@@ -1668,6 +1674,7 @@ tZFontPtr ZFontSystem::GetFont(const std::string& sFontName, int32_t nFontSize)
 
 tZFontPtr ZFontSystem::GetFont(const ZFontParams& params)
 {
+    const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
     auto findIt = mFontMap.find(params);
 
     // If not found

@@ -19,11 +19,11 @@ extern uint32_t     gDefaultTextAreaFill;
 
 // Resolution Dependent
 extern uint32_t     gDefaultSpacer;
+extern uint32_t     gnDefaultGroupInlaySize;
 
 
 // Application
 extern ZRect		grFullArea;
-extern bool			gbFullScreen;
 
 // Dialog
 extern tZBufferPtr  gDefaultDialogBackground;

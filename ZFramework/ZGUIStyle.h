@@ -127,7 +127,6 @@ extern ZFontParams  gDefaultTextFont;
 
 extern ZFontParams  gDefaultTooltipFont;
 extern ZTextLook    gDefaultToolitipLook;
-extern uint32_t     gDefaultTooltipFill;
 
 extern ZGUI::Style  gStyleTooltip;
 extern ZGUI::Style  gStyleCaption;

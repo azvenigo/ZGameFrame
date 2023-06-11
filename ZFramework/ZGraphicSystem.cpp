@@ -7,8 +7,6 @@
 #include <GdiPlus.h>
 #endif
 
-//extern bool gbFullScreen;
-
 #ifdef _DEBUG
 #define new new(_NORMAL_BLOCK, THIS_FILE, __LINE__)
 #undef THIS_FILE
@@ -34,7 +32,6 @@ ZGraphicSystem::ZGraphicSystem()
 	mpD3DDevice				= NULL;
 	ZeroMemory(&mPresentParams, sizeof(mPresentParams));
 #endif
-	//mbInitSettingFullScreen = gbFullScreen;
 	mpScreenBuffer			= NULL;
   
 }

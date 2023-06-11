@@ -102,8 +102,6 @@ protected:
     bool HandleMessage(const ZMessage& message);
 
 private:
-    int64_t             mnControlPanelButtonSide;
-
     double              mfZoom;
     double              mfPerfectFitZoom;
     ZRect               mImageArea;

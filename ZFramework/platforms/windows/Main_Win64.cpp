@@ -21,24 +21,24 @@ namespace ZFrameworkApp
     extern void Shutdown();
 };
 
-extern ZTickManager            gTickManager;
-extern ZAnimator            gAnimator;
+extern ZTickManager     gTickManager;
+extern ZAnimator        gAnimator;
 
 using namespace std;
 
 
 ATOM					MyRegisterClass(HINSTANCE, LPTSTR);
-BOOL					WinInitInstance(HINSTANCE, int);
+BOOL					WinInitInstance(int argc, char* argv[]);
 bool                    gbFullScreen = true;
 extern bool             gbGraphicSystemResetNeeded; 
-extern bool                    gbApplicationExiting = false;
+extern bool             gbApplicationExiting = false;
 ZRect                   grFullArea;
 
-extern bool                    gbPaused = false;
-HINSTANCE		        g_hInst;				// The current instance
-HWND			        ghWnd;
+extern bool             gbPaused = false;
+HINSTANCE               g_hInst;				// The current instance
+HWND                    ghWnd;
 
-LRESULT CALLBACK		WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK        WndProc(HWND, UINT, WPARAM, LPARAM);
 
 const uint64_t          kMinUSBetweenLoops = 8333;  // 120 fps max?
 
@@ -60,12 +60,8 @@ int main(int argc, char* argv[])
         return EXCEPTION_EXECUTE_HANDLER;
         });
 
-    HINSTANCE hInstance = GetModuleHandle(nullptr);
-    MSG msg;
-    memset(&msg, 0, sizeof(msg));
-
     // Perform application initialization:
-    if (!WinInitInstance(hInstance, SW_SHOWNORMAL))
+    if (!WinInitInstance(argc, argv))
         return FALSE;
 
 
@@ -84,6 +80,8 @@ int main(int argc, char* argv[])
     uint64_t nTimeStamp = 0;
 
     // Main message loop:
+    MSG msg;
+    memset(&msg, 0, sizeof(msg));
     while (msg.message != WM_QUIT && !gbApplicationExiting)
     {
         if (gbPaused)
@@ -265,56 +263,56 @@ int WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdline, int cmdshow)
 }
 
 
-const char* szAppClass = "ProcessImage";
-BOOL WinInitInstance(HINSTANCE hInstance, int nCmdShow)
+const char* szAppClass = "ZImageViewer";
+BOOL WinInitInstance(int argc, char* argv[])
 {
-	g_hInst = hInstance;		// Store instance handle in our global variable
+    g_hInst = GetModuleHandle(nullptr);
 
 	WNDCLASS	wc;
-
 	wc.style = 0;
 	wc.lpfnWndProc = (WNDPROC)WndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
-	wc.hInstance = hInstance;
-	wc.hIcon = LoadIcon(hInstance, "Application Name");
-	wc.hCursor = LoadCursor(hInstance, IDC_ARROW);
+	wc.hInstance = g_hInst;
+	wc.hIcon = LoadIcon(g_hInst, szAppClass);
+	wc.hCursor = LoadCursor(g_hInst, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wc.lpszMenuName = 0;
 	wc.lpszClassName = szAppClass;
-
 	RegisterClass(&wc);
 
-    DPI_AWARENESS_CONTEXT oldContext = SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+    SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
 
-	if (gbFullScreen)
-	{
-		ghWnd = CreateWindow(szAppClass, szAppClass, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
-	}
-	else
-	{
-		ghWnd = CreateWindow(szAppClass, szAppClass, WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
-	}
-	if (!ghWnd)
-	{	
-		return FALSE;
-	}
-	//When the main window is created using CW_USEDEFAULT the height of the menubar (if one
-	// is created is not taken into account). So we resize the window after creating it
-	// if a menubar is present
-	RECT rc;
-	GetWindowRect(ghWnd, &rc);
-	int nScreenWidth  = GetSystemMetrics(SM_CXSCREEN);
-	int nScreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-	if (gbFullScreen)
+    int64_t nScreenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int64_t nScreenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+    CLP::CommandLineParser parser;
+    parser.RegisterParam(CLP::ParamDesc("width", &nScreenWidth, CLP::kNamed));
+    parser.RegisterParam(CLP::ParamDesc("height", &nScreenHeight, CLP::kNamed));
+    parser.RegisterParam(CLP::ParamDesc("fullscreen", &gbFullScreen, CLP::kNamed));
+    parser.Parse(argc, argv);
+
+    if (gbFullScreen)
+        ghWnd = CreateWindow(szAppClass, szAppClass, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
+    else
+        ghWnd = CreateWindow(szAppClass, szAppClass, WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
+
+    if (!ghWnd)
+    {
+        return FALSE;
+    }
+
+
+    grFullArea.SetRect(0, 0, nScreenWidth, nScreenHeight);
+    /*	if (gbFullScreen)
 		grFullArea.SetRect(0, 0, nScreenWidth, nScreenHeight);
 	else
-		grFullArea.SetRect(0, 0, (long) (nScreenWidth * 0.75), (long)(nScreenHeight * 0.75));
+		grFullArea.SetRect(0, 0, (long) (nScreenWidth * 0.75), (long)(nScreenHeight * 0.75));*/
 
 
 
-	SizeWindowToClientArea(ghWnd, (int) (nScreenWidth - grFullArea.Width())/2, (int) (nScreenHeight-grFullArea.Height())/2, (int) grFullArea.Width(), (int) grFullArea.Height());
+	SizeWindowToClientArea(ghWnd, (int) (nScreenWidth - grFullArea.Width())/2, (int) (nScreenHeight-grFullArea.Height())/2, (int) grFullArea.Width(), (int)     grFullArea.Height());
 
 	gGraphicSystem.SetHWND(ghWnd);
 
@@ -322,7 +320,7 @@ BOOL WinInitInstance(HINSTANCE hInstance, int nCmdShow)
     HCURSOR hCursor = ::LoadCursor(NULL, IDC_ARROW);
     ::SetCursor(hCursor);
 
-	ShowWindow(ghWnd, nCmdShow);
+	ShowWindow(ghWnd, SW_SHOW);
 	UpdateWindow(ghWnd);
 
 	return TRUE;
@@ -336,8 +334,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	int wmId, wmEvent;
 
+    static int count = 0;
 	switch (message) 
 	{
+    case WM_WINDOWPOSCHANGED:
+        if (gpMainWin)
+            gpMainWin->InvalidateChildren();
+        break;
 	case WM_COMMAND:
 		wmId    = LOWORD(wParam); 
 		wmEvent = HIWORD(wParam); 
@@ -352,7 +355,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_PAINT:
-			return TRUE;
+		return TRUE;
 	case WM_DESTROY:
         ZFrameworkApp::Shutdown();
 		break;
@@ -411,6 +414,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         if (pSB)
             pSB->SetVisibilityComputingFlag(true);
+
+        if (gpMainWin)
+            gpMainWin->InvalidateChildren();
         gbPaused = false;
         gTimer.Start();
         gMessageSystem.Post("pause;set=0");

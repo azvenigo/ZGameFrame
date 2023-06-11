@@ -21,6 +21,7 @@ ZRect			grTextArea;
 uint32_t        gDefaultDialogFill(0xff575757);
 uint32_t        gDefaultTextAreaFill(0xff888888);
 uint32_t        gDefaultSpacer(16);
+uint32_t        gnDefaultGroupInlaySize(8);
 ZRect           grDefaultDialogBackgroundEdgeRect(3,3,53,52);
 
 ZRect			grSliderBgEdge(gDefaultSpacer, gDefaultSpacer, gDefaultSpacer*3, gDefaultSpacer*3);
@@ -81,6 +82,7 @@ bool cResources::Init(const string& sDefaultResourcePath)
 
     // Adjust font sizes based on screen resolution
     gDefaultSpacer = (uint32_t ) (grFullArea.Height() / 125);
+    gnDefaultGroupInlaySize = gDefaultSpacer *4/ 5;
 
     gStyleButton.fp.nHeight = grFullArea.Height() / 72;
     gStyleToggleChecked.fp.nHeight = grFullArea.Height() / 72;
