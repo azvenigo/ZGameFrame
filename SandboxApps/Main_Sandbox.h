@@ -62,6 +62,7 @@ namespace Sandbox
 
 namespace ZFrameworkApp
 {
+    bool InitRegistry(std::filesystem::path userDataPath);
     bool Initialize(int argc, char* argv[], std::filesystem::path userDataPath);
     void Shutdown();
 };

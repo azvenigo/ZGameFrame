@@ -52,6 +52,7 @@ namespace ZImageViewer
 
 namespace ZFrameworkApp
 {
+    bool InitRegistry(std::filesystem::path userDataPath);  // pre-init
     bool Initialize(int argc, char* argv[], std::filesystem::path userDataPath);
     void Shutdown();
 };

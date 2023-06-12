@@ -427,6 +427,8 @@ bool ImageViewer::Init()
     }
 
     Preload();
+    if (mFilenameToLoad.empty())
+        SetFirstImage();
 
     return ZWin::Init();
 }
@@ -584,7 +586,6 @@ bool ImageViewer::Preload()
     {
         mScannedFolder = mFilenameToLoad.parent_path();
         ScanForImagesInFolder(mScannedFolder);
-        SetFirstImage();
     }
 
     if (mImagesInFolder.empty())

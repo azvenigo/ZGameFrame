@@ -220,6 +220,17 @@ void ZWinImage::ResetControlPanel()
 
         rGroup.right = rButton.right + gnDefaultGroupInlaySize;
         mpPanel->AddGrouping("Rotate", rGroup);
+
+        rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gnDefaultGroupInlaySize);
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+        pBtn->SetCaption("F"); 
+        pBtn->mStyle = gStyleButton;
+        pBtn->SetArea(rButton);
+        Sprintf(sMessage, "toggle_fullscreen");
+        pBtn->SetMessage(sMessage);
+        mpPanel->ChildAdd(pBtn);
+
     }
 }
 

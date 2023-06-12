@@ -266,6 +266,22 @@ public:
 
 MainAppMessageTarget gMainAppMessageTarget;
 
+bool ZFrameworkApp::InitRegistry(std::filesystem::path userDataPath)
+{
+    filesystem::path appDataPath(userDataPath);
+    appDataPath += "/ZSandbox/";
+
+    filesystem::path prefsPath = appDataPath.make_preferred().string() + "prefs.json";
+    if (!gRegistry.Load(prefsPath.string()))
+    {
+        ZDEBUG_OUT("No registry file at:%s creating path for one.");
+        std::filesystem::create_directories(prefsPath.parent_path());
+    }
+
+    return true;
+}
+
+
 bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path userDataPath)
 {
     gGraphicSystem.SetArea(grFullArea);
@@ -281,13 +297,6 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 
     filesystem::path appDataPath(userDataPath);
     appDataPath += "/ZSandbox/";
-
-    filesystem::path prefsPath = appDataPath.make_preferred().string() + "prefs.json";
-    if (!gRegistry.Load(prefsPath.string()))
-    {
-        ZDEBUG_OUT("No registry file at:%s creating path for one.");
-        std::filesystem::create_directories(prefsPath.parent_path());
-    }
 
     std::filesystem::path appPath(argv[0]);
     gRegistry["apppath"] = appPath.parent_path().string();

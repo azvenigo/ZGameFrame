@@ -36,7 +36,6 @@ ZWin*                   gpCaptureWin = nullptr;
 ZWin*                   gpMouseOverWin = nullptr;
 ZPoint                  gLastMouseMove;
 REG::Registry           gRegistry;
-std::string             gsRegistryFile;
 
 
 void ZImageViewer::InitControlPanel()
@@ -105,18 +104,8 @@ public:
 MainAppMessageTarget gMainAppMessageTarget;
 
 
-bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path userDataPath)
+bool ZFrameworkApp::InitRegistry(std::filesystem::path userDataPath)
 {
-    gGraphicSystem.SetArea(grFullArea);
-    if (!gGraphicSystem.Init())
-    {
-        assert(false);
-        return false;
-    }
-
-
-
-
     filesystem::path appDataPath(userDataPath);
     appDataPath += "/ZImageViewer/";
 
@@ -127,10 +116,26 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
         std::filesystem::create_directories(prefsPath.parent_path());
     }
 
+    return true;
+}
+
+
+bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path userDataPath)
+{
+    gGraphicSystem.SetArea(grFullArea);
+    if (!gGraphicSystem.Init())
+    {
+        assert(false);
+        return false;
+    }
+
+    filesystem::path appDataPath(userDataPath);
+    appDataPath += "/ZImageViewer/";
+
+
     std::filesystem::path appPath(argv[0]);
     gRegistry["apppath"] = appPath.parent_path().string();
     gRegistry["appDataPath"] = appDataPath.string();
-
 
     std::string sImageFilename;
     CLP::CommandLineParser parser;
@@ -174,7 +179,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 
 void ZFrameworkApp::Shutdown()
 {
-    gRegistry.Save(gsRegistryFile);
+    gRegistry.Save();
 
     if (gpMainWin)
     {
