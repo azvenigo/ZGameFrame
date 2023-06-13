@@ -614,8 +614,8 @@ bool ZChessWin::Init()
 
         pCP->Init();
 
-        ZTextLook buttonLook(ZTextLook::kEmbossed, 0xff737373, 0xff737373);
-        ZTextLook checkedButtonLook(ZTextLook::kEmbossed, 0xff737373, 0xff73ff73);
+        ZGUI::ZTextLook buttonLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
+        ZGUI::ZTextLook checkedButtonLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff73ff73);
 
         ZWin* pEditButton = pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "");
 
@@ -670,8 +670,8 @@ bool ZChessWin::Init()
         mpStatusWin = new ZWinTextEdit(&msStatus);
         //mpStatusWin->msText = "Welcome to ZChess";
         msStatus = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZTextLook(ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, gDefaultSpacer, gDefaultTextAreaFill, false);
-        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer));
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, gDefaultSpacer, gDefaultSpacer, gDefaultTextAreaFill, false);
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
         ChildAdd(mpStatusWin);
     }
 
@@ -735,8 +735,8 @@ void ZChessWin::UpdateSize()
     if (mpStatusWin)
     {
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
-        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer));
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::LT, gDefaultSpacer, gDefaultTextAreaFill, true);
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, gDefaultSpacer, gDefaultSpacer, gDefaultTextAreaFill, true);
     }
 
 
@@ -960,10 +960,10 @@ bool ZChessWin::Paint()
 
             rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
-            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gDefaultSpacer);
+            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gDefaultSpacer, gDefaultSpacer);
 
             mpTransformTexture->Fill(rMoveLabel, 0xffffffff);
-            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center);
+            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
         }
         else
         {
@@ -977,9 +977,9 @@ bool ZChessWin::Paint()
             }
             rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
-            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gDefaultSpacer);
+            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gDefaultSpacer, gDefaultSpacer);
             mpTransformTexture->Fill(rMoveLabel, 0xff000000);
-            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, ZTextLook(), ZGUI::Center);
+            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
         }
     }
 
@@ -1150,7 +1150,7 @@ void ZChessWin::UpdateStatus(const std::string& sText, uint32_t col)
     {
         //mpStatusWin->msText = sText;
         msStatus = sText;
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight/2, 600), ZTextLook(ZTextLook::kShadowed), ZGUI::LT, 0, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight/2, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, 0, 0, gDefaultTextAreaFill, true);
         mpStatusWin->Invalidate();
     }
 }
@@ -1536,21 +1536,29 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
         nOutline = 0xffffffff;
     }
 
+    ZGUI::Style style;
+    style.look = ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, nCol, nCol);
+    style.pos = ZGUI::Center;
+
     if (bOutline)
     {
+        ZGUI::Style outlineStyle(style);
+        outlineStyle.look = ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, nOutline, nOutline);
+
+
         int64_t nOffset = nSize / 64;
         ZRect rOutline(rSquare);
         rOutline.OffsetRect(-nOffset, -nOffset);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, ZTextLook(ZTextLook::kNormal, nOutline, nOutline), ZGUI::Center);
+        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, &outlineStyle);
         rOutline.OffsetRect(nOffset * 2, 0);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, ZTextLook(ZTextLook::kNormal, nOutline, nOutline), ZGUI::Center);
+        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, &outlineStyle);
         rOutline.OffsetRect(0, nOffset * 2);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, ZTextLook(ZTextLook::kNormal, nOutline, nOutline), ZGUI::Center);
+        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, &outlineStyle);
         rOutline.OffsetRect(-nOffset * 2, 0);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, ZTextLook(ZTextLook::kNormal, nOutline, nOutline), ZGUI::Center);
+        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, &outlineStyle);
     }
 
-    pFont->DrawTextParagraph(mpImage.get(), s, rSquare, ZTextLook(ZTextLook::kNormal, nCol, nCol), ZGUI::Center);
+    pFont->DrawTextParagraph(mpImage.get(), s, rSquare, &style);
     return true;
 }
 

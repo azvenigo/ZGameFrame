@@ -6,6 +6,7 @@
 #include "ZFont.h"
 #include <list>
 #include <string>
+#include "ZGUIStyle.h"
 
 class ZBuffer;
 
@@ -46,7 +47,7 @@ protected:
 class ZAnimObject_TextMover : public ZAnimObject
 {
 public:
-    ZAnimObject_TextMover(tZFontPtr pFont, const ZTextLook& look = {});
+    ZAnimObject_TextMover(ZGUI::Style _style = {});
 
     virtual bool    Paint();
 
@@ -57,8 +58,7 @@ public:
 
 protected:
     std::string     msText;
-    tZFontPtr       mpFont;
-    ZTextLook       mTextLook;
+    ZGUI::Style     mStyle;
     int64_t			mnStartAlpha;
     int64_t			mnEndAlpha;
     int64_t         mnTotalFadeTime;
@@ -119,7 +119,7 @@ class ZAnimObject_TextPulser : public ZAnimObject
 {
 public:
    // cCEAnimObject
-   ZAnimObject_TextPulser(tZFontPtr pFont, const ZTextLook& look = {});
+    ZAnimObject_TextPulser(ZGUI::Style _style = {});
 
    virtual bool Paint();
 
@@ -128,9 +128,8 @@ public:
    void			SetPulse(int64_t nMinAlpha, int64_t nMaxAlpha, double fPeriod);
 
 protected:
-    tZFontPtr   mpFont;
-    ZTextLook   mLook;
     std::string msText;
+    ZGUI::Style mStyle;
 
     double		mfPeriod;
     int64_t		mnMinAlpha;

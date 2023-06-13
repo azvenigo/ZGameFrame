@@ -368,7 +368,7 @@ BOOL WinInitInstance(int argc, char* argv[])
         return FALSE;
     }
 
-
+    ZGUI::ComputeSizes();
 
 	gGraphicSystem.SetHWND(ghWnd);
 
@@ -386,6 +386,8 @@ void HandleWindowSizeChanged(bool bSwitchingFullScreen = false)
 {
     if (!gpGraphicSystem || !gpMainWin)
         return;
+
+    ZGUI::ComputeSizes();
 
     gbPaused = true;
 
@@ -411,7 +413,6 @@ void HandleWindowSizeChanged(bool bSwitchingFullScreen = false)
         rW.top = grWindowArea.top;
         rW.right = grWindowArea.right;
         rW.bottom = grWindowArea.bottom;
-        grFullArea.SetRect(0, 0, grWindowArea.Width(), grWindowArea.Height());
 
         DWORD nStyle = GetWindowLong(ghWnd, GWL_STYLE);
         DWORD dwAdd = WS_OVERLAPPEDWINDOW;
@@ -419,9 +420,10 @@ void HandleWindowSizeChanged(bool bSwitchingFullScreen = false)
         SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
 
 //        SetWindowLongPtr(ghWnd, GWL_STYLE, WS_SYSMENU);
-        if (bSwitchingFullScreen)
-            AdjustWindowRect(&rW, dwAdd, FALSE);
+//        if (bSwitchingFullScreen)
+//            AdjustWindowRect(&rW, dwAdd, FALSE);
         MoveWindow(ghWnd, rW.left, rW.top, rW.right - rW.left, rW.bottom - rW.top, TRUE);
+
 
 //        gRegistry.Set("appwin", "width", gInitWindowSize.x);
 //        gRegistry.Set("appwin", "height", gInitWindowSize.y);
@@ -429,6 +431,10 @@ void HandleWindowSizeChanged(bool bSwitchingFullScreen = false)
         gRegistry.Set("appwin", "window_t", grWindowArea.top);
         gRegistry.Set("appwin", "window_r", grWindowArea.right);
         gRegistry.Set("appwin", "window_b", grWindowArea.bottom);
+
+        RECT rClient;
+        GetClientRect(ghWnd, &rClient);
+        grFullArea.SetRect(0, 0, rClient.right, rClient.bottom);
     }
 
     gRegistry.Set("appwin", "fullscreen", gbFullScreen);
@@ -458,13 +464,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         if (!gbFullScreen)
         {
-            POINT pt;
-            pt.x = 0;
-            pt.y = 0;
-            ClientToScreen(ghWnd, &pt);
-            grWindowArea.MoveRect(pt.x, pt.y);
 
             WINDOWPOS* pWP = (WINDOWPOS*)lParam;
+            grWindowArea.MoveRect(pWP->x, pWP->y);
             if (pWP->cx != grWindowArea.Width() || pWP->cy != grWindowArea.Height())
             {
                 grWindowArea.right = grWindowArea.left + pWP->cx;
@@ -480,7 +482,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SYSCOMMAND:
         DefWindowProc(hWnd, message, wParam, lParam);
         if (wParam == SC_MAXIMIZE || wParam == SC_RESTORE)
+        {
             HandleWindowSizeChanged();
+        }
         break;
     case WM_ERASEBKGND:
         return 1;

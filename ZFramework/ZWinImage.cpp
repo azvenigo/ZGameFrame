@@ -630,7 +630,7 @@ bool ZWinImage::Paint()
             string sZoom;
             Sprintf(sZoom, "%d%%", (int32_t)(mfZoom * 100.0));
             ZRect rZoomCaption(mZoomStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sZoom.data(), sZoom.length(), mZoomStyle.pos));
-            mZoomStyle.Font()->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, mZoomStyle.look);
+            mZoomStyle.Font()->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, &mZoomStyle.look);
         }
 
     }

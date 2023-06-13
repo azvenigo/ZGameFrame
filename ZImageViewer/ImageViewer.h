@@ -90,7 +90,7 @@ protected:
     std::filesystem::path   mFilenameToLoad;
 
     tImageFilenames         mImagesInFolder;
-    std::filesystem::path   mScannedFolder;
+    std::filesystem::path   mCurrentFolder;
 
     std::filesystem::path   mMoveToFolder;
 

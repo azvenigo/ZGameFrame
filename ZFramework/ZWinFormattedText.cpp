@@ -18,7 +18,7 @@ extern ZRect				grDimRectEdge;
 
 const int64_t               kSliderWidth = 20;
 const ZGUI::ePosition       kDefaultTextPosition = ZGUI::LB; // we use bottom left by default in case there are multiple size fonts per text line
-const ZTextLook		        kDefaultLook = { ZTextLook::kNormal, 0xff000000, 0xff000000 };
+const ZGUI::ZTextLook       kDefaultLook = { ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000 };
 
 
 const string				ksLineTag("line");
@@ -343,7 +343,7 @@ bool ZWinFormattedText::Paint()
 
 				int64_t nShadowOffset = max((int) pFont->Height()/16, (int) 1);
 
-				pFont->DrawText(mpTransformTexture.get(), entry.sText, rText, entry.look, &rClip);
+				pFont->DrawText(mpTransformTexture.get(), entry.sText, rText, &entry.look, &rClip);
 
 				if (mbUnderlineLinks && !entry.sLink.empty())
 				{
@@ -352,7 +352,7 @@ bool ZWinFormattedText::Paint()
 					rUnderline.IntersectRect(&rClip);
                     mpTransformTexture.get()->Fill(rUnderline, entry.look.colBottom);
 
-					if (entry.look.decoration == ZTextLook::kShadowed)
+					if (entry.look.decoration == ZGUI::ZTextLook::kShadowed)
 					{
 						rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
 						rUnderline.IntersectRect(&rClip);
@@ -457,7 +457,7 @@ bool ZWinFormattedText::ParseDocument(ZXMLNode* pNode)
 	return true;
 }
 
-/*void ZWinFormattedText::AddLineNode(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
+/*void ZWinFormattedText::AddLineNode(string sLine, ZFontParams fontParams, const ZGUI::ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
 {
     // Treat the line as a line node
     ZXMLNode lineNode;
@@ -480,7 +480,7 @@ void ZWinFormattedText::AddLineNode(string sLine)
 }
 
 
-void ZWinFormattedText::AddMultiLine(string sLine, ZFontParams fontParams, const ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
+void ZWinFormattedText::AddMultiLine(string sLine, ZFontParams fontParams, const ZGUI::ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
 {
     tTextLine textLine;
     // Insert as much text on each line as will fit
@@ -612,9 +612,9 @@ void ZWinFormattedText::ExtractTextParameters(ZXMLNode* pTextNode)
 	{
         SH::makelower(sParam);
 
-		if (sParam == "normal")        mCurrentLook.decoration = ZTextLook::kNormal;
-		else if (sParam == "shadowed") mCurrentLook.decoration = ZTextLook::kShadowed;
-		else if (sParam == "embossed") mCurrentLook.decoration = ZTextLook::kEmbossed;
+		if (sParam == "normal")        mCurrentLook.decoration = ZGUI::ZTextLook::kNormal;
+		else if (sParam == "shadowed") mCurrentLook.decoration = ZGUI::ZTextLook::kShadowed;
+		else if (sParam == "embossed") mCurrentLook.decoration = ZGUI::ZTextLook::kEmbossed;
 		else
 		{
 			ZASSERT(false);  // unknown decoration type

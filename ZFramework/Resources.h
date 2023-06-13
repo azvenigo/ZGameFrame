@@ -13,13 +13,13 @@ class ZBuffer;
 
 
 // Default configuration
-extern uint32_t     gDefaultDialogFill;
+/*extern uint32_t     gDefaultDialogFill;
 extern uint32_t     gDefaultTextAreaFill;
 
 
 // Resolution Dependent
 extern uint32_t     gDefaultSpacer;
-extern uint32_t     gnDefaultGroupInlaySize;
+extern uint32_t     gnDefaultGroupInlaySize;*/
 
 
 // Application
@@ -28,7 +28,6 @@ extern ZRect		grFullArea;
 // Dialog
 extern tZBufferPtr  gDefaultDialogBackground;
 extern tZBufferPtr  gDimRectBackground;
-extern ZRect		grTextArea;
 extern ZRect        grDefaultDialogBackgroundEdgeRect;
 
 
@@ -50,8 +49,6 @@ extern tZBufferPtr  gSliderThumbVertical;
 extern tZBufferPtr  gSliderBackground;
 extern ZRect        grSliderBgEdge;
 extern ZRect        grSliderThumbEdge;
-
-extern ZGUI::Palette gAppPalette;
 
 typedef std::map<std::string, tZBufferPtr >	tBufferResourceMap;
 

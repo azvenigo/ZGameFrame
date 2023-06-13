@@ -9,6 +9,7 @@
 #include "ZTransformable.h"
 #include "math.h"
 #include "ZStringHelpers.h"
+#include "ZGUIStyle.h"
 #include "ZRandom.h"
 
 #ifdef _DEBUG
@@ -29,10 +30,8 @@ ZAnimObject::~ZAnimObject()
 {
 }
 
-ZAnimObject_TextMover::ZAnimObject_TextMover(tZFontPtr pFont, const ZTextLook& look) : ZAnimObject()
+ZAnimObject_TextMover::ZAnimObject_TextMover(ZGUI::Style _style) : ZAnimObject()
 {
-	mpFont = pFont;
-    mTextLook = look;
 	mfX  = 0;
 	mfY  = 0;
 	mfDX = 0;
@@ -41,6 +40,7 @@ ZAnimObject_TextMover::ZAnimObject_TextMover(tZFontPtr pFont, const ZTextLook& l
 	mnEndAlpha = 0;
 	mnRemainingAlphaFadeTime = 0;
 	mbAlphaFading = false;
+    mStyle = _style;
 }
 
 
@@ -85,16 +85,17 @@ bool ZAnimObject_TextMover::Paint()
 		double fT = (double) (mnTotalFadeTime - mnRemainingAlphaFadeTime) / (double) mnTotalFadeTime;
 		int64_t nAlpha = (int64_t) (mnStartAlpha + (mnEndAlpha - mnStartAlpha) * fT);
 
-        ZTextLook useLook(mTextLook);
-		useLook.colTop = ARGB((uint8_t) nAlpha, ARGB_R(mTextLook.colTop), ARGB_G(mTextLook.colTop), ARGB_B(mTextLook.colTop));
-        useLook.colBottom= ARGB((uint8_t) nAlpha, ARGB_R(mTextLook.colBottom), ARGB_G(mTextLook.colBottom), ARGB_B(mTextLook.colBottom));
-		mpFont->DrawText(mpDestination.get(), msText, mrArea, useLook);
+        ZGUI::Style useStyle(mStyle);
+
+		useStyle.look.colTop = ARGB((uint8_t) nAlpha, ARGB_R(useStyle.look.colTop), ARGB_G(useStyle.look.colTop), ARGB_B(useStyle.look.colTop));
+        useStyle.look.colBottom = ARGB((uint8_t) nAlpha, ARGB_R(useStyle.look.colBottom), ARGB_G(useStyle.look.colBottom), ARGB_B(useStyle.look.colBottom));
+		useStyle.Font()->DrawText(mpDestination.get(), msText, mrArea, &useStyle.look);
 
 		return true;
 	}
 
 	// Plain Draw
-	mpFont->DrawText(mpDestination.get(), msText, mrArea, mTextLook);
+    mStyle.Font()->DrawText(mpDestination.get(), msText, mrArea, &mStyle.look);
 
 	return true;
 }
@@ -108,7 +109,7 @@ void ZAnimObject_TextMover::SetText(const string& sText)
 	int64_t nY = (int64_t) mfY;
 
 	// Now calculate (or recalculate) our area
-	mrArea.SetRect(nX, nY, nX + mpFont->StringWidth(msText), nY + mpFont->Height());
+	mrArea.SetRect(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
 }
 
 void ZAnimObject_TextMover::SetLocation(int64_t nX, int64_t nY)
@@ -116,7 +117,7 @@ void ZAnimObject_TextMover::SetLocation(int64_t nX, int64_t nY)
 	mfX = (double) nX;
 	mfY = (double) nY;
 
-	mrArea.SetRect(nX, nY, nX + mpFont->StringWidth(msText), nY + mpFont->Height());
+	mrArea.SetRect(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
 }
 
 void ZAnimObject_TextMover::SetPixelsPerSecond(double fDX, double fDY)
@@ -331,13 +332,12 @@ void ZCEAnimObject_Sparkler::ProcessSparkles()
 
 
 // cCEAnimObject
-ZAnimObject_TextPulser::ZAnimObject_TextPulser(tZFontPtr pFont, const ZTextLook& look) : ZAnimObject()
+ZAnimObject_TextPulser::ZAnimObject_TextPulser(ZGUI::Style _style) : ZAnimObject()
 {
-	mpFont = pFont;
-    mLook = look;
 	mnMaxAlpha = 255;
 	mnMinAlpha = 0;
 	mfPeriod = 10.0;
+    mStyle = _style;
 }
 
 bool ZAnimObject_TextPulser::Paint()
@@ -347,13 +347,15 @@ bool ZAnimObject_TextPulser::Paint()
 	double pulse = 0.5 * (1.0 + (double) sin(((double) gTimer.GetElapsedTime()) / mfPeriod));
 	int64_t nAlpha = (int64_t) ((double) mnMinAlpha + ((double)mnMaxAlpha - (double)mnMinAlpha) * pulse );
 
-    ZTextLook useLook(mLook);
 
-	useLook.colTop = ARGB((uint8_t) nAlpha, ARGB_R(useLook.colTop), ARGB_G(useLook.colTop), ARGB_B(useLook.colTop));
-    useLook.colBottom = ARGB((uint8_t)nAlpha, ARGB_R(useLook.colBottom), ARGB_G(useLook.colBottom), ARGB_B(useLook.colBottom));
+    ZGUI::Style useStyle(mStyle);
+
+	useStyle.look.colTop = ARGB((uint8_t) nAlpha, ARGB_R(useStyle.look.colTop), ARGB_G(useStyle.look.colTop), ARGB_B(useStyle.look.colTop));
+    useStyle.look.colBottom = ARGB((uint8_t)nAlpha, ARGB_R(useStyle.look.colBottom), ARGB_G(useStyle.look.colBottom), ARGB_B(useStyle.look.colBottom));
+    useStyle.pos = ZGUI::C;
 
 
-	mpFont->DrawTextParagraph(mpDestination.get(), msText, mrArea, useLook, ZGUI::Center);
+    mStyle.Font()->DrawTextParagraph(mpDestination.get(), msText, mrArea, &useStyle);
 
 	return true;
 
@@ -364,11 +366,9 @@ void ZAnimObject_TextPulser::SetText(const string& sText)
 {
 	msText = sText;
 
-	ZASSERT(mpFont);
-
 	// Now calculate (or recalculate) our area
-	mrArea.bottom = mrArea.top + mpFont->Height();
-	mrArea.left   = mrArea.left + mpFont->StringWidth(msText);
+	mrArea.bottom = mrArea.top + mStyle.Font()->Height();
+	mrArea.left   = mrArea.left + mStyle.Font()->StringWidth(msText);
 }
 
 void ZAnimObject_TextPulser::SetPulse(int64_t nMinAlpha, int64_t nMaxAlpha, double fPeriod)

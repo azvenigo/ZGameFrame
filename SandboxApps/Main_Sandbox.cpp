@@ -48,6 +48,17 @@ REG::Registry           gRegistry;
 void Sandbox::InitControlPanel()
 {
 
+    int64_t controlW = grFullArea.Width() / 10;
+    int64_t controlH = grFullArea.Height() / 20;
+    int64_t controlTriggerW = 64;
+    int64_t controlTriggerH = 64;
+
+    grControlPanelArea.SetRect(grFullArea.right - controlW, 0, grFullArea.right, controlH);
+    grControlPanelTrigger.SetRect(grFullArea.right - controlTriggerW, 0, grFullArea.right, controlTriggerH);
+    gnControlPanelButtonHeight = grFullArea.Height() / 50;
+    gnControlPanelEdge = grFullArea.Height() / 100;
+
+
     int64_t panelW = grFullArea.Width() / 8;    
     int64_t panelH = grFullArea.Height() / 2;
     ZRect rControlPanel(grFullArea.right - panelW, 0, grFullArea.right, panelH);     // upper right for now

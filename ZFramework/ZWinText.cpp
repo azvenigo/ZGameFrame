@@ -87,12 +87,12 @@ bool ZWinLabel::Paint()
 
     if (mStyle.wrap)
     {
-        mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), msText, mAreaToDrawTo, mStyle.look, mStyle.pos);
+        mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), msText, mAreaToDrawTo, &mStyle);
     }
     else
     {
         ZRect rOut = mStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)msText.c_str(), msText.length(), mStyle.pos);
-        mStyle.Font()->DrawText(mpTransformTexture.get(), msText, rOut, mStyle.look);
+        mStyle.Font()->DrawText(mpTransformTexture.get(), msText, rOut, &mStyle.look);
     }
 
     return ZWin::Paint();
@@ -195,8 +195,8 @@ void ZWinTextEdit::SetArea(const ZRect& area)
 {
     ZWin::SetArea(area);
     mrVisibleTextArea = mAreaToDrawTo;
-    mrVisibleTextArea.DeflateRect(mStyle.padding, mStyle.padding);
-    mrVisibleTextArea = ZGUI::Arrange(mrVisibleTextArea, mAreaToDrawTo, mStyle.pos, mStyle.padding);
+    mrVisibleTextArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+    mrVisibleTextArea = ZGUI::Arrange(mrVisibleTextArea, mAreaToDrawTo, mStyle.pos, mStyle.paddingH, mStyle.paddingV);
 
     mnLeftBoundary = mrVisibleTextArea.Width() / 4; // 25%
     mnRightBoundary = (mrVisibleTextArea.Width() * 3) / 4;  // 75%
@@ -223,7 +223,7 @@ bool ZWinTextEdit::Paint()
 
     mpTransformTexture.get()->Fill(mAreaToDrawTo, mStyle.bgCol);
 
-    mStyle.Font()->DrawText(mpTransformTexture.get(), *mpText, rString, mStyle.look, &mAreaToDrawTo);
+    mStyle.Font()->DrawText(mpTransformTexture.get(), *mpText, rString, &mStyle.look, &mAreaToDrawTo);
 
     if (mnSelectionStart != mnSelectionEnd &&
         mnSelectionStart >= 0 && mnSelectionEnd >= 0 &&

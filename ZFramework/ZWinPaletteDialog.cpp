@@ -213,7 +213,7 @@ bool ZWinPaletteDialog::Paint()
     ZWinDialog::Paint();
 
     tZFontPtr pTitleFont = gpFontSystem->GetFont(gDefaultTitleFont);
-    pTitleFont->DrawText(mpTransformTexture.get(), msCaption, ZGUI::Arrange(pTitleFont->StringRect(msCaption), mAreaToDrawTo, ZGUI::ICIT, gDefaultSpacer), ZTextLook(ZTextLook::kShadowed, 0xffeeeeee, 0xffaaaaaa));
+    pTitleFont->DrawText(mpTransformTexture.get(), msCaption, ZGUI::Arrange(pTitleFont->StringRect(msCaption), mAreaToDrawTo, ZGUI::ICIT, gDefaultSpacer, gDefaultSpacer), &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffeeeeee, 0xffaaaaaa));
 
 
     double fScalar = 1023.0/(double)mrSVArea.Height();
@@ -268,23 +268,6 @@ bool ZWinPaletteDialog::Paint()
     ColorWatch& colWatch = mWatchArray[mnSelectingColorIndex];
     uint32_t hsv = COL::ARGB_To_AHSV(*colWatch.mpWatchColor);
 
-/*    ZRect rOriginal(mrSelectingColorArea);
-    rOriginal.right = rOriginal.left + mrSelectingColorArea.Width() / 2;
-    mpTransformTexture->Fill(rOriginal, *colWatch.mpWatchColor);
-    // raw "cur" caption
-    mStyle.Font()->DrawText(mpTransformTexture.get(), "cur", ZGUI::Arrange(mStyle.Font()->StringRect("cur"), rOriginal, ZGUI::ICOT, 0));
-
-    ZRect rNew(mrSelectingColorArea);
-    rNew.left = mrSelectingColorArea.left + mrSelectingColorArea.Width() / 2;
-    rNew.right = mrSelectingColorArea.right;
-    mpTransformTexture->Fill(rNew, COL::AHSV_To_ARGB(0xff, mCurH, mCurS, mCurV));
-    mStyle.Font()->DrawText(mpTransformTexture.get(), "new", ZGUI::Arrange(mStyle.Font()->StringRect("new"), rNew, ZGUI::ICOT, 0));
-    
-
-
-    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mrSelectingColorArea, ZBuffer::kEdgeBltMiddle_None);
-    */
-
 
 
     size_t nWatchedColors = mWatchArray.size();
@@ -296,7 +279,7 @@ bool ZWinPaletteDialog::Paint()
         rSwatchHalf.bottom = rSwatch.top + rSwatch.Height() / 2;
 
         mpTransformTexture->Fill(rSwatchHalf, *watch.mpWatchColor);
-        mStyle.Font()->DrawText(mpTransformTexture.get(), watch.msWatchLabel, ZGUI::Arrange(mStyle.Font()->StringRect(watch.msWatchLabel), rSwatch, ZGUI::ICOT, 0));
+        mStyle.Font()->DrawText(mpTransformTexture.get(), watch.msWatchLabel, ZGUI::Arrange(mStyle.Font()->StringRect(watch.msWatchLabel), rSwatch, ZGUI::ICOT));
 
         rSwatchHalf.OffsetRect(0, rSwatchHalf.Height());
         mpTransformTexture->Fill(rSwatchHalf, watch.mOriginalColor);
@@ -307,9 +290,9 @@ bool ZWinPaletteDialog::Paint()
     ZRect rCaption(mrPaletteArea);
     rCaption.bottom = (mrPaletteArea.top + mrPaletteArea.bottom) / 2;
 
-    mStyle.Font()->DrawText(mpTransformTexture.get(), "new", ZGUI::Arrange(mStyle.Font()->StringRect("new"), rCaption, ZGUI::ORIC, gDefaultSpacer));
+    mStyle.Font()->DrawText(mpTransformTexture.get(), "new", ZGUI::Arrange(mStyle.Font()->StringRect("new"), rCaption, ZGUI::ORIC, gDefaultSpacer, gDefaultSpacer));
     rCaption.OffsetRect(0, rCaption.Height());
-    mStyle.Font()->DrawText(mpTransformTexture.get(), "old", ZGUI::Arrange(mStyle.Font()->StringRect("old"), rCaption, ZGUI::ORIC, gDefaultSpacer));
+    mStyle.Font()->DrawText(mpTransformTexture.get(), "old", ZGUI::Arrange(mStyle.Font()->StringRect("old"), rCaption, ZGUI::ORIC, gDefaultSpacer, gDefaultSpacer));
 
 
     mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mrPaletteArea, ZBuffer::kEdgeBltMiddle_None);

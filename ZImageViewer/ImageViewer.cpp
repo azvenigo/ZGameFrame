@@ -209,7 +209,7 @@ void ImageViewer::HandleNavigateToParentFolder()
     if (mSelectedFilename.empty())
         return;
 
-    ScanForImagesInFolder(mSelectedFilename.parent_path().parent_path());
+    ScanForImagesInFolder(mCurrentFolder.parent_path());
     SetFirstImage();
 }
 
@@ -419,7 +419,7 @@ bool ImageViewer::Init()
 
         ZGUI::Style zoomStyle(gDefaultWinTextEditStyle);
         zoomStyle.pos = ZGUI::CB;
-        zoomStyle.look = ZTextLook::kShadowed;
+        zoomStyle.look = ZGUI::ZTextLook::kShadowed;
         mpWinImage->mZoomStyle = zoomStyle;
 
         ChildAdd(mpWinImage);
@@ -440,8 +440,8 @@ bool ImageViewer::OnParentAreaChange()
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
     SetArea(mpParentWin->GetArea());
-    UpdateCaptions();
     ZWin::OnParentAreaChange();
+    UpdateCaptions();
 
     return true;
 }
@@ -582,10 +582,10 @@ int64_t ImageViewer::CurMemoryUsage()
 
 bool ImageViewer::Preload()
 {
-    if (mScannedFolder != mFilenameToLoad.parent_path())
+    if (mCurrentFolder != mFilenameToLoad.parent_path())
     {
-        mScannedFolder = mFilenameToLoad.parent_path();
-        ScanForImagesInFolder(mScannedFolder);
+        mCurrentFolder = mFilenameToLoad.parent_path();
+        ScanForImagesInFolder(mCurrentFolder);
     }
 
     if (mImagesInFolder.empty())
@@ -695,6 +695,7 @@ bool ImageViewer::ScanForImagesInFolder(const std::filesystem::path& folder)
     bool bFolderScan = std::filesystem::is_directory(folder);
 
     mImagesInFolder.clear();
+    mDeletionList.clear();
 
     for (auto filePath : std::filesystem::directory_iterator(folder))
     {
@@ -735,12 +736,22 @@ void ImageViewer::UpdateCaptions()
 {
     if (mpWinImage)
     {
-        string sCaption = SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size()) + " " + mSelectedFilename.string();
-        ZGUI::Style captionStyle(gDefaultWinTextEditStyle);
-        captionStyle.pos = ZGUI::LB;
-        captionStyle.look = ZTextLook::kShadowed;
-        mpWinImage->mCaptionMap["filename"].sText = sCaption;
-        mpWinImage->mCaptionMap["filename"].style = captionStyle;
+        ZGUI::Style folderStyle(gStyleButton);
+        folderStyle.pos = ZGUI::LT;
+        folderStyle.paddingV = mAreaToDrawTo.Height() / 24;
+        folderStyle.look = ZGUI::ZTextLook::kShadowed;
+        mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
+        mpWinImage->mCaptionMap["folder"].style = folderStyle;
+
+
+
+        string sFilename = SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size()) + " " + mSelectedFilename.filename().string();
+        ZGUI::Style filenameStyle(gDefaultWinTextEditStyle);
+        filenameStyle.pos = ZGUI::LB;
+        filenameStyle.look = ZGUI::ZTextLook::kShadowed;
+        filenameStyle.paddingH = folderStyle.Font()->StringWidth(mpWinImage->mCaptionMap["folder"].sText) + gDefaultSpacer*4;
+        mpWinImage->mCaptionMap["filename"].sText = sFilename;
+        mpWinImage->mCaptionMap["filename"].style = filenameStyle;
 
 
         bool bShowCapitons = (mpWinImage->mBehavior & ZWinImage::kShowCaption)!=0;
@@ -748,7 +759,7 @@ void ImageViewer::UpdateCaptions()
         {
             bShowCapitons = true;
             mpWinImage->mCaptionMap["for_delete"].sText = mSelectedFilename.filename().string() + "\nMARKED FOR DELETE";
-            mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0x88000000, true);
+            mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0, 0x88000000, true);
         }
         else
         {
@@ -759,7 +770,7 @@ void ImageViewer::UpdateCaptions()
         {
             bShowCapitons = true;
             Sprintf(mpWinImage->mCaptionMap["deletion_summary"].sText, "%d Files marked for deletion", mDeletionList.size());
-            mpWinImage->mCaptionMap["deletion_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZTextLook(ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::RB, 0, 0x88000000, true);
+            mpWinImage->mCaptionMap["deletion_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::RB, 0, 0, 0x88000000, true);
         }
         else
         {
@@ -770,7 +781,7 @@ void ImageViewer::UpdateCaptions()
         {
             bShowCapitons = true;
             Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> Move to: %s", mMoveToFolder.string().c_str());
-            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZTextLook(ZTextLook::kShadowed, 0xffff88ff, 0xffff88ff), ZGUI::RT, 32, 0x88000000, true);
+            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff88ff, 0xffff88ff), ZGUI::RT, 32, 32, 0x88000000, true);
         }
         else
         {
@@ -833,7 +844,7 @@ bool ImageViewer::Paint()
 
     if (mImagesInFolder.empty())
     {
-        gStyleCaption.Font()->DrawTextParagraph(mpTransformTexture.get(), "No images", mAreaToDrawTo, gStyleCaption.look, ZGUI::C);
+        gStyleCaption.Font()->DrawTextParagraph(mpTransformTexture.get(), "No images", mAreaToDrawTo, &gStyleCaption);
     }
 
 

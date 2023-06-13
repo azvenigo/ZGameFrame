@@ -233,7 +233,7 @@ bool ZWinSlider::Paint()
 		string sLabel;
 		Sprintf(sLabel, "%d", *mpnSliderValue);
 		ZRect rText(mpFont->GetOutputRect(rThumb, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center));
-        mpFont->DrawText(mpTransformTexture.get(), sLabel, rText, ZTextLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff));
+        mpFont->DrawText(mpTransformTexture.get(), sLabel, rText, &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff));
 	}
 
 

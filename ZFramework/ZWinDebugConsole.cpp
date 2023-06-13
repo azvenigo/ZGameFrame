@@ -184,7 +184,7 @@ bool ZWinDebugConsole::Paint()
         {
             ZRect rLine(mrTextArea.left, nCurLineBottom - nLines * mFont->Height(), mrTextArea.right, nCurLineBottom);
             string sPartial(msg.sLine.substr(nOffset, nCharsPerLine));
-            mFont->DrawTextA(mpTransformTexture.get(), sPartial, rLine, ZTextLook(ZTextLook::kNormal, msg.nLevel, msg.nLevel));
+            mFont->DrawTextA(mpTransformTexture.get(), sPartial, rLine, &ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, msg.nLevel, msg.nLevel));
             nOffset += sPartial.length();
             rLine.top += nHeight;
             nCurLineBottom -= nHeight;

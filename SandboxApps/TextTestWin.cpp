@@ -181,7 +181,7 @@ bool TextTestWin::Init()
 
     pCP->Init();
 
-    ZTextLook captionLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
+    ZGUI::ZTextLook captionLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
 
     pCP->AddButton("Color", ZMessage("choosecolor", this), gStyleButton);
 
@@ -259,7 +259,8 @@ bool TextTestWin::Paint()
     assert(mpFont);
     int32_t nLines = (int32_t) (mpFont->CalculateNumberOfLines(rText.Width(), (uint8_t*)sTemp.data(), sTemp.length()));
     
-    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp, rText, ZTextLook(ZTextLook::kNormal, 0xFF000000, 0xFF000000));
+    ZGUI::Style style(mpFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::LT);
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp, rText, &style);
 
 
 
@@ -269,7 +270,8 @@ bool TextTestWin::Paint()
 
     
     Sprintf(sTemp, "Font: %s Size:%d", mpFont->GetFontParams().sFacename.c_str(), mpFont->Height());
-    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp.c_str(), rText, ZTextLook(ZTextLook::kNormal, 0xFF880044, 0xFF000000));
+    ZGUI::Style sampleStyle(mpFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xFF880044, 0xFF000000));
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sTemp.c_str(), rText, &sampleStyle);
     rText.OffsetRect(0, mpFont->Height()*2);
 
     string sSampleText("The quick brown fox jumped over the lazy dog.\nA Relic is Relish of Radishes! Show me the $$$$");
@@ -281,18 +283,20 @@ bool TextTestWin::Paint()
         if (RANDBOOL)
             nCol2 = nCol1;
 
+        ZGUI::Style style(mpFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, nCol1, nCol2), ZGUI::LT);
+
         if (RANDBOOL)
-            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, ZTextLook(ZTextLook::kShadowed,nCol1, nCol2), ZGUI::LT);
+            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, &style);
         else
-            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, ZTextLook(ZTextLook::kShadowed, nCol1, nCol2), ZGUI::LT);
+            mpFont->DrawTextParagraph(mpTransformTexture.get(), sSampleText, rText, &style);
 
         int64_t nLines = mpFont->CalculateNumberOfLines(rText.Width(), (uint8_t*)sSampleText.data(), sSampleText.length());
         rText.OffsetRect(0, mpFont->Height() * nLines);
     }
 
 
-        TIME_SECTION_START(TextTestLines);
-    mpFont->DrawTextParagraph(mpTransformTexture.get(), sAliceText, rText, ZTextLook(ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::LT);
+    TIME_SECTION_START(TextTestLines);
+    mpFont->DrawTextParagraph(mpTransformTexture.get(), sAliceText, rText, &style);
 
   TIME_SECTION_END(TextTestLines);
   

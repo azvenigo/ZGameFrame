@@ -14,6 +14,7 @@
 #include <iostream>
 #include "ZScreenBuffer.h"
 #include "ZInput.h"
+#include "ZGUIStyle.h"
 
 extern ZAnimator		gAnimator;
 extern ZTimer			gTimer;

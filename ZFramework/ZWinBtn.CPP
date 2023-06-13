@@ -474,7 +474,7 @@ bool ZWinSizablePushBtn::Paint()
 		if (mDrawState == kDown)
 			rText.OffsetRect(nOffset,nOffset);
 
-		mStyle.Font()->DrawText(mpTransformTexture.get(), sCaptionToDraw, rText, mStyle.look);
+		mStyle.Font()->DrawText(mpTransformTexture.get(), sCaptionToDraw, rText, &mStyle.look);
 	}
 
 	return ZWin::Paint();

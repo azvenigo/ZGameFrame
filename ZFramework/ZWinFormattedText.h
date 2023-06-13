@@ -13,7 +13,7 @@ struct sTextEntry
 {
     std::string         sText;
 	ZFontParams         fontParams;
-    ZTextLook           look;
+    ZGUI::ZTextLook     look;
     ZGUI::ePosition     pos;
     std::string         sLink;
 };
@@ -38,7 +38,7 @@ public:
     virtual void        SetFill(uint32_t nCol, bool bEnable = true) { mnFillColor = nCol; mbFillBackground = bEnable && ARGB_A(mnFillColor) > 5; }
 
     virtual void		AddLineNode(std::string sLine);
-    virtual void		AddMultiLine(std::string sLine, ZFontParams fontParams, const ZTextLook& look = {}, ZGUI::ePosition = ZGUI::LB, const std::string& sLink = "");
+    virtual void		AddMultiLine(std::string sLine, ZFontParams fontParams, const ZGUI::ZTextLook& look = {}, ZGUI::ePosition = ZGUI::LB, const std::string& sLink = "");
     int64_t   			GetFullDocumentHeight() { return mnFullDocumentHeight; }
 
 	void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
@@ -78,7 +78,7 @@ private:
 
 	// Storage for text parameters while parsing the document
 	ZFontParams		    mCurrentFont;
-    ZTextLook           mCurrentLook;
+    ZGUI::ZTextLook     mCurrentLook;
 	ZGUI::ePosition	    mCurrentTextPosition;
 	bool				mbScrollable;
     std::string         msLink;

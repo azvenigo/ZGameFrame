@@ -21,6 +21,7 @@
 #include "helpers/Registry.h"
 #include "ZWinFileDialog.h"
 #include "ZWinText.H"
+#include "ZGUIStyle.h"
 
 
 using namespace std;
@@ -998,7 +999,7 @@ bool cProcessImageWin::Init()
     ZWinWatchPanel* pWP = new ZWinWatchPanel();
     pWP->SetArea(mrWatchPanel);
     pWP->Init();
-    pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, ZTextLook(ZTextLook::kEmbossed, 0xff000000, 0xff000000));
+    pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff000000, 0xff000000));
     ChildAdd(pWP);
 
     ZRect rImageProps(gDefaultSpacer, gDefaultTextFont.nHeight*2, mrWatchPanel.Width() - gDefaultSpacer, mrWatchPanel.Height() - gDefaultSpacer);

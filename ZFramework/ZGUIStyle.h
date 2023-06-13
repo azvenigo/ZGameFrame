@@ -9,10 +9,33 @@
 
 namespace ZGUI
 {
+    void ComputeSizes();    // To be called by application whenever creating or changing screen size to calculate proper sizing
+
+
+    class ZTextLook
+    {
+    public:
+        enum eDeco : uint8_t
+        {
+            kNormal = 0,
+            kShadowed = 1,
+            kEmbossed = 2
+        };
+
+        ZTextLook(eDeco _decoration = kNormal, uint32_t _colTop = 0xffffffff, uint32_t _colBottom = 0xffffffff);
+        ZTextLook(const std::string& s);
+        operator std::string() const;
+
+        uint32_t    colTop;
+        uint32_t    colBottom;
+        eDeco       decoration;
+    };
+
+
     class Style
     {
     public:
-        Style(const ZFontParams& _fp = {}, const ZTextLook& _look = {}, ePosition _pos = ePosition::Unknown, int32_t _padding = 0, uint32_t _bgCol = 0, bool _wrap = false);
+        Style(const ZFontParams& _fp = {}, const ZTextLook& _look = {}, ePosition _pos = ePosition::Unknown, int32_t _paddingH = 0, int32_t _paddingV = 0, uint32_t _bgCol = 0, bool _wrap = false);
         Style::Style(const std::string& s);
 
         tZFontPtr Font();
@@ -22,7 +45,8 @@ namespace ZGUI
         ZFontParams fp;
         ZTextLook   look;
         ePosition   pos;
-        int32_t     padding;
+        int32_t     paddingH;
+        int32_t     paddingV;
         uint32_t    bgCol;
         bool        wrap;
 
@@ -121,6 +145,17 @@ namespace ZGUI
 
 //////////////////////////////////////////////////////////////////
 // Default styles to be instantiated by app
+
+extern ZRect		grFullArea;
+extern uint32_t     gDefaultSpacer;
+
+
+extern uint32_t     gDefaultDialogFill;
+extern uint32_t     gDefaultTextAreaFill;
+extern uint32_t     gnDefaultGroupInlaySize;
+
+
+
 extern ZFontParams  gDefaultButtonFont;
 extern ZFontParams  gDefaultTitleFont;
 extern ZFontParams  gDefaultTextFont;

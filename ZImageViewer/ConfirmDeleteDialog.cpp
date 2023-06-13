@@ -51,39 +51,10 @@ bool ConfirmDeleteDialog::Init()
         ChildAdd(pLabel);
 
 
-
-
-        ZRect rFileList(gDefaultSpacer, gDefaultSpacer + rLabel.bottom, mAreaToDrawTo.Width() - gDefaultSpacer, mAreaToDrawTo.bottom - gDefaultSpacer*10);
-
-        mpFilesList = new ZWinFormattedText();
-        mpFilesList->SetArea(rFileList);
-        mpFilesList->SetFill(gDefaultTextAreaFill);
-        mpFilesList->SetDrawBorder();
-
-        mpFilesList->Clear();
-
-        ZFontParams font;
-        font.sFacename = "Verdana";
-        font.nHeight = 30;
-
-        size_t nCount = 1;
-        for (auto& entry : mFiles)
-        {
-            string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(font) + " position=lb link=select;filename=" + SH::URL_Encode(entry.string()) + ";target=ZWinImageViewer>[" + SH::FromInt(nCount) + "] " + entry.filename().string() + "</text></line>";
-            nCount++;
-            mpFilesList->AddLineNode(sListBoxEntry);
-        }
-
-        mpFilesList->SetScrollable();
-        mpFilesList->SetUnderlineLinks(false);
-
-        ChildAdd(mpFilesList);
-
-
-        int nButtonWidth = (rFileList.Width() - gDefaultSpacer * 2) / 3;
+        int nButtonWidth = (mAreaToDrawTo.Width() - gDefaultSpacer * 4) / 3;
 
         ZRect rButton(0, 0, nButtonWidth, gDefaultSpacer * 3);
-        rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gDefaultSpacer);
+        rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gDefaultSpacer, gDefaultSpacer);
 
 
         ZWinSizablePushBtn* pBtn;
@@ -122,6 +93,38 @@ bool ConfirmDeleteDialog::Init()
 
         pBtn->SetArea(rButton);
         ChildAdd(pBtn);
+
+
+
+        ZRect rFileList(gDefaultSpacer, gDefaultSpacer + rLabel.bottom, mAreaToDrawTo.Width() - gDefaultSpacer, rButton.top - gDefaultSpacer);
+
+        mpFilesList = new ZWinFormattedText();
+        mpFilesList->SetArea(rFileList);
+        mpFilesList->SetFill(gDefaultTextAreaFill);
+        mpFilesList->SetDrawBorder();
+
+        mpFilesList->Clear();
+
+        ZFontParams font;
+        font.sFacename = "Verdana";
+        font.nHeight = 30;
+
+        size_t nCount = 1;
+        for (auto& entry : mFiles)
+        {
+            string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(font) + " position=lb link=select;filename=" + SH::URL_Encode(entry.string()) + ";target=ZWinImageViewer>[" + SH::FromInt(nCount) + "] " + entry.filename().string() + "</text></line>";
+            nCount++;
+            mpFilesList->AddLineNode(sListBoxEntry);
+        }
+
+        mpFilesList->SetScrollable();
+        mpFilesList->SetUnderlineLinks(false);
+
+        ChildAdd(mpFilesList);
+
+
+
+
     }
 
     SetFocus();
@@ -211,8 +214,11 @@ ConfirmDeleteDialog* ConfirmDeleteDialog::ShowDialog(const std::string& sCaption
 
     ZRect rMain(gpMainWin->GetArea());
 
-    ZRect r(0, 0, rMain.Width() / 4, rMain.Height() / 2.5);
-    r = ZGUI::Arrange(r, rMain, ZGUI::RB, rMain.Height()/20);
+    int64_t nWidth = rMain.Width() / 4;
+    limit<int64_t>(nWidth, 800, 2048);
+
+    ZRect r(0, 0, nWidth, nWidth*3/4);
+    r = ZGUI::Arrange(r, rMain, ZGUI::RB, rMain.Height()/20, rMain.Height() / 20);
 
     pDialog->mBehavior |= ZWinDialog::eBehavior::Draggable;
     pDialog->mStyle = gDefaultDialogStyle;

@@ -3,14 +3,95 @@
 
 using namespace std;
 
+uint32_t        gDefaultDialogFill(0xff575757);
+uint32_t        gDefaultTextAreaFill(0xff888888);
+uint32_t        gDefaultSpacer(16);
+uint32_t        gnDefaultGroupInlaySize(8);
+ZRect           grDefaultDialogBackgroundEdgeRect(3, 3, 53, 52);
+
+//Fonts
+ZFontParams     gDefaultTitleFont("Gadugi", 40);
+ZFontParams     gDefaultTextFont("Gadugi", 20);
+
+ZGUI::Style gStyleTooltip(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::C, 0, 0, gDefaultTextAreaFill);
+ZGUI::Style gStyleCaption(ZFontParams("Gadugi", 36, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, 0, 0, gDefaultDialogFill);
+ZGUI::Style gStyleButton(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, 0, 0, gDefaultDialogFill);
+ZGUI::Style gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, 0, 0, gDefaultDialogFill);
+ZGUI::Style gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, 0, 0, gDefaultDialogFill);
+ZGUI::Style gStyleGeneralText(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, 0, 0, 0, true);
+ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultSpacer, gDefaultDialogFill, true);
+ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultSpacer, gDefaultTextAreaFill);
+ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 8, 8);
+
+ZGUI::Palette gAppPalette{
+{
+    { "dialog_fill", gDefaultDialogFill },     // 0
+    { "text_area_fill", gDefaultTextAreaFill },   // 1
+    { "btn_col_checked", 0xff008800 },             // 2  checked button color
+    { "", 0xff888888 }             // 3
+} };
+
+
 namespace ZGUI
 {
-    Style::Style(const ZFontParams& _fp, const ZTextLook& _look, ePosition _pos, int32_t _padding, uint32_t _bgCol, bool _wrap)
+    void ComputeSizes()
+    {
+        gDefaultSpacer = (uint32_t)(grFullArea.Height() / 125);
+        gnDefaultGroupInlaySize = gDefaultSpacer * 4 / 5;
+
+        gStyleButton.fp.nHeight = grFullArea.Height() / 72;
+        gStyleToggleChecked.fp.nHeight = grFullArea.Height() / 72;
+        gStyleToggleUnchecked.fp.nHeight = grFullArea.Height() / 72;
+        gStyleTooltip.fp.nHeight = grFullArea.Height() / 72;
+        gStyleCaption.fp.nHeight = grFullArea.Height() / 60;
+
+
+        gDefaultTitleFont.nHeight = grFullArea.Height() / 54;
+        //    gDefaultCaptionFont.nHeight = grFullArea.Height() / 60;
+        gDefaultTextFont.nHeight = grFullArea.Height() / 108;
+
+    }
+
+
+    ZTextLook::ZTextLook(eDeco _decoration, uint32_t _colTop, uint32_t _colBottom)
+    {
+        decoration = _decoration;
+        colTop = _colTop;
+        colBottom = _colBottom;
+    }
+
+    ZTextLook::ZTextLook(const std::string& s)
+    {
+        nlohmann::json j = nlohmann::json::parse(s);
+
+        if (j.contains("deco"))
+            decoration = j["deco"];
+
+        if (j.contains("colT"))
+            colTop = j["colT"];
+
+        if (j.contains("colB"))
+            colBottom = j["colB"];
+    }
+
+    ZTextLook::operator string() const
+    {
+        nlohmann::json j;
+        j["deco"] = decoration;
+        j["colT"] = colTop;
+        j["colB"] = colBottom;
+
+        return j.dump();
+    }
+
+
+    Style::Style(const ZFontParams& _fp, const ZTextLook& _look, ePosition _pos, int32_t _paddingH, int32_t _paddingV, uint32_t _bgCol, bool _wrap)
     {
         fp = _fp;
         look = _look;
         pos = _pos;
-        padding = _padding;
+        paddingH = _paddingH;
+        paddingV = _paddingV;
         bgCol = _bgCol;
         wrap = _wrap;
     }
@@ -28,8 +109,11 @@ namespace ZGUI
         if (j.contains("pos"))
             pos = j["pos"];
 
-        if (j.contains("pad"))
-            padding = j["pad"];
+        if (j.contains("padH"))
+            paddingH = j["padH"];
+
+        if (j.contains("padV"))
+            paddingH = j["padV"];
 
         if (j.contains("bg"))
             bgCol = j["bg"];
@@ -44,7 +128,8 @@ namespace ZGUI
         j["fp"] = (string)fp;
         j["look"] = (string)look;
         j["pos"] = pos;
-        j["pad"] = padding;
+        j["padH"] = paddingH;
+        j["padV"] = paddingV;
         j["bg"] = bgCol;
 
         return j.dump();
@@ -140,7 +225,7 @@ namespace ZGUI
         if (rDraw.Width() == 0 || rDraw.Height() == 0)
             rDraw = pDst->GetArea();
 
-        style.Font()->DrawTextParagraph(pDst, sText, rDraw, style.look, style.pos);
+        style.Font()->DrawTextParagraph(pDst, sText, rDraw, &style);
     }
 
     void TextBox::Paint(ZBuffer* pDst, tTextboxMap& textBoxMap)

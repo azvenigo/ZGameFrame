@@ -146,10 +146,10 @@ bool ZWinControlPanel::Paint()
         mpTransformTexture->DrawRectAlpha(r, 0x88ffffff);
 
         ZRect rCaption = group.mArea;
-        rCaption.InflateRect(-group.mStyle.padding, group.mStyle.padding);
+        rCaption.InflateRect(-group.mStyle.paddingH, group.mStyle.paddingV);
         
 
-        group.mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), group.msCaption, rCaption, group.mStyle.look, group.mStyle.pos);
+        group.mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), group.msCaption, rCaption, &group.mStyle);
 
 
 

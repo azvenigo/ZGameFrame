@@ -1050,7 +1050,7 @@ bool Z3DTestWin::Init()
         pCP->AddCaption("Render Size");
         pCP->AddSlider(&mnRenderSize, 1, 128, 16, 0.25, ZMessage("updaterendersize", this), true);
 
-        ZTextLook toggleLook(ZTextLook::kEmbossed, 0xff737373, 0xff737373);
+        ZGUI::ZTextLook toggleLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
         pCP->AddSpace(16);
         pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", "rendermode");

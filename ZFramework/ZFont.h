@@ -133,23 +133,10 @@ public:
 
 typedef std::shared_ptr<ZFontParams> tZFontParamsPtr;
 
-class ZTextLook
+namespace ZGUI
 {
-public:
-    enum eDeco : uint8_t
-    {
-        kNormal = 0,
-        kShadowed = 1,
-        kEmbossed = 2
-    };
-
-    ZTextLook(eDeco _decoration = kNormal, uint32_t _colTop = 0xffffffff, uint32_t _colBottom = 0xffffffff);
-    ZTextLook(const std::string& s);
-    operator std::string() const;
-
-    uint32_t    colTop;
-    uint32_t    colBottom;
-    eDeco       decoration;
+    class ZTextLook;
+    class Style;
 };
 
 class ZFont
@@ -170,8 +157,8 @@ public:
     void            SetEnableKerning(bool bEnable) { mbEnableKerning = bEnable; }
     void            SetTracking(int64_t nTracking) { mFontParams.nTracking = nTracking; }
 
-    bool            DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, const ZTextLook& look = {}, ZRect* pClip = NULL);
-    bool            DrawTextParagraph(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, const ZTextLook& look = {}, ZGUI::ePosition pos = ZGUI::LT, ZRect* pClip = NULL);
+    bool            DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, ZGUI::ZTextLook* pLook = nullptr, ZRect* pClip = nullptr);
+    bool            DrawTextParagraph(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, ZGUI::Style* pStyle = nullptr, ZRect* pClip = NULL);
 
 
     int64_t         CharWidth(uint8_t c);

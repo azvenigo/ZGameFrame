@@ -162,7 +162,7 @@ namespace ZGUI
     }
 
 
-    ZRect Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t padding)
+    ZRect Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t paddingH, int64_t paddingV)
     {
         int64_t w = r.Width();
         int64_t h = r.Height();
@@ -192,9 +192,9 @@ namespace ZGUI
         if (pos&HOutside)
         {
             if (pos&Left)
-                newX = ref.left - w - padding;            // outside left
+                newX = ref.left - w - paddingH;            // outside left
             else if (pos&Right)
-                newX = ref.right + padding;
+                newX = ref.right + paddingH;
             else
                 ZASSERT(false); // if outside it has to be either left or right... outside center isn't a thing....is it?
         }
@@ -202,11 +202,11 @@ namespace ZGUI
         {
 //            ZASSERT(pos&HInside);
             if (pos&Left)
-                newX = ref.left + padding;
+                newX = ref.left + paddingH;
             else if (pos&HCenter)
                 newX = (ref.left + ref.right - w) / 2;  // center horizontally within ref
             else if (pos&Right)
-                newX = ref.right - w - padding;   // inside right
+                newX = ref.right - w - paddingH;   // inside right
             else
                 ZASSERT(false);
 
@@ -217,20 +217,20 @@ namespace ZGUI
         if (pos&VOutside)
         {
             if (pos&Top)
-                newY = ref.top - h - padding;
+                newY = ref.top - h - paddingV;
             else if (pos&Bottom)
-                newY = ref.bottom + padding;
+                newY = ref.bottom + paddingV;
             else
                 ZASSERT(false); // outside center, again?
         }
         else if (pos&VInside)
         {
             if (pos&Top)            // inside top
-                newY = ref.top + padding;
+                newY = ref.top + paddingV;
             else if (pos&VCenter)
                 newY = (ref.top + ref.bottom - h) / 2;        // center vertically within ref
             else if (pos&Bottom)    // inside bottom
-                newY = ref.bottom - h - padding;
+                newY = ref.bottom - h - paddingV;
             else
                 ZASSERT(false);
         }

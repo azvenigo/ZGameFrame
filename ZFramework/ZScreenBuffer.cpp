@@ -4,6 +4,7 @@
 #include "ZRasterizer.h"
 #include "ZTimer.h"
 #include "ZStringHelpers.h"
+#include "ZGUIStyle.h"
 #include <iostream>
 
 #ifdef _WIN64
@@ -113,7 +114,7 @@ void ZScreenBuffer::Render(tZBufferPtr pTexture, ZRect& rAreaToDrawTo)
 	ZRect rArea(2,2,66,32);
 	Sprintf(sTemp, "FPS:%d\ntime:%d", gnFramesPerSecond, gTimer.GetElapsedTime());
 	FillAlpha(rArea, 0x66000000);
-    gpFontSystem->GetDefaultFont()->DrawTextParagraph(this, sTemp, ZRect(4,4,320,120), ZTextLook(ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::LT);
+    gpFontSystem->GetDefaultFont()->DrawTextParagraph(this, sTemp, ZRect(4,4,320,120), &gStyleGeneralText);
 #endif
 
 #ifdef USE_D3D 

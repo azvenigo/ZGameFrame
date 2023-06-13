@@ -102,7 +102,7 @@ namespace ZGUI
          OLOB = HOutside|Left|VOutside|Bottom,  ILOB = HInside|Left|VOutside|Bottom, ICOB = HInside|HCenter|VOutside|Bottom, IROB = HInside|Right|VOutside|Bottom,  OROB = HOutside|Right|VOutside|Bottom,
     };
 
-    ZRect       Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t padding = 0);  // moves r relative to ref based on position flags
+    ZRect       Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t paddingH = 0, int64_t paddingV = 0);  // moves r relative to ref based on position flags
     std::string ToString(ePosition pos);
     ePosition   FromString(std::string s);
 };
