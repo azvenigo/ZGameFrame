@@ -26,7 +26,7 @@ ZWinImage::ZWinImage()
     mfMaxZoom = 100.0;
     mToggleUIHotkey = 0;
     mZoomHotkey = 0;
-    mbShowUI = true;
+    mbShowUI = false;
     mZoomStyle = gStyleCaption;
 
     mpPanel = nullptr;
@@ -128,7 +128,7 @@ void ZWinImage::ResetControlPanel()
 
         // Management
         rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
-        rButton.right = rButton.left + rButton.Width() * 3 / 2;     // wider buttons for management
+        rButton.right = rButton.left + rButton.Width() * 2;     // wider buttons for management
 
         rGroup.left = rButton.left - gnDefaultGroupInlaySize;
 
@@ -136,7 +136,7 @@ void ZWinImage::ResetControlPanel()
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption("Move");
-        pBtn->mStyle = gStyleButton;
+        pBtn->mStyle = gDefaultGroupingStyle;
         //        pBtn->mStyle.look.colTop = 0xffff0000;
         //        pBtn->mStyle.look.colBottom = 0xffff0000;
         pBtn->mStyle.fp.nHeight = nGroupSide / 2;
@@ -151,7 +151,7 @@ void ZWinImage::ResetControlPanel()
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption("Del");
-        pBtn->mStyle = gStyleButton;
+        pBtn->mStyle = gDefaultGroupingStyle;
         pBtn->mStyle.look.colTop = 0xffff0000;
         pBtn->mStyle.look.colBottom = 0xffff0000;
         pBtn->mStyle.fp.nHeight = nGroupSide / 2;
@@ -225,7 +225,8 @@ void ZWinImage::ResetControlPanel()
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption("F"); 
-        pBtn->mStyle = gStyleButton;
+        pBtn->mStyle = gDefaultGroupingStyle;
+        pBtn->mStyle.fp.nHeight = nGroupSide / 2;
         pBtn->SetArea(rButton);
         Sprintf(sMessage, "toggle_fullscreen");
         pBtn->SetMessage(sMessage);

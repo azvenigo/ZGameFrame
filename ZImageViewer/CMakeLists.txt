@@ -29,7 +29,7 @@ ImageViewer.h ImageViewer.cpp
 ConfirmDeleteDialog.h ConfirmDeleteDialog.cpp
 ZImageViewer.rc 
 resource_win64.h
-res/ZImageViewer.ico
+raw_resources/ZImageViewer.ico
 )
 
 set (GUI_FILES

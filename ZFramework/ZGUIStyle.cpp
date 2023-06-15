@@ -21,7 +21,7 @@ ZGUI::Style gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLo
 ZGUI::Style gStyleGeneralText(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, 0, 0, 0, true);
 ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultSpacer, gDefaultDialogFill, true);
 ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultSpacer, gDefaultTextAreaFill);
-ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 8, 8);
+ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 16, 2);
 
 ZGUI::Palette gAppPalette{
 {
@@ -37,13 +37,14 @@ namespace ZGUI
     void ComputeSizes()
     {
         gDefaultSpacer = (uint32_t)(grFullArea.Height() / 125);
-        gnDefaultGroupInlaySize = gDefaultSpacer * 4 / 5;
+        gnDefaultGroupInlaySize = 10;
 
         gStyleButton.fp.nHeight = grFullArea.Height() / 72;
         gStyleToggleChecked.fp.nHeight = grFullArea.Height() / 72;
         gStyleToggleUnchecked.fp.nHeight = grFullArea.Height() / 72;
         gStyleTooltip.fp.nHeight = grFullArea.Height() / 72;
         gStyleCaption.fp.nHeight = grFullArea.Height() / 60;
+//        gDefaultGroupingStyle.fp.nHeight = grFullArea.Height()/135;
 
 
         gDefaultTitleFont.nHeight = grFullArea.Height() / 54;

@@ -37,7 +37,8 @@ ZRect                   grFullArea;
 //ZPoint                  gInitWindowSize;
 //ZPoint                  gWindowedModeOffset;    // for switching between full/windowed
 
-ZRect                   grWindowArea;
+ZRect                   grWindowedArea;
+ZRect                   grFullScreenArea;
 
 
 extern bool             gbPaused = false;
@@ -56,7 +57,9 @@ float                   gfMouseMultY = 1.0f;
 ZDebug                  gDebug;
 
 
-void HandleWindowSizeChanged(bool bSwitchingFullScreen);
+void HandleWindowSizeChanged();
+void SwitchFullscreen(bool bFullscreen);
+
 
 class Win64AppMessageHandler : public IMessageTarget
 {
@@ -66,8 +69,7 @@ public:
     {
         if (message.GetType() == "toggle_fullscreen")
         {
-            gbFullScreen = !gbFullScreen;
-            HandleWindowSizeChanged(true);
+            SwitchFullscreen(!gbFullScreen);
         }
         return true;
     }
@@ -314,20 +316,30 @@ BOOL WinInitInstance(int argc, char* argv[])
     // Default width/height
 //    gInitWindowSize.x = GetSystemMetrics(SM_CXSCREEN) * 3 / 4;
 //    gInitWindowSize.y = GetSystemMetrics(SM_CYSCREEN) * 3 / 4;
-    grWindowArea.SetRect(0, 0, GetSystemMetrics(SM_CXSCREEN) * 3 / 4, GetSystemMetrics(SM_CYSCREEN) * 3 / 4);
-    grWindowArea.MoveRect((GetSystemMetrics(SM_CXSCREEN) - grWindowArea.Width()) / 2, (GetSystemMetrics(SM_CYSCREEN) - grWindowArea.Height()) / 2);
+    grFullScreenArea.SetRect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    grWindowedArea.SetRect(0, 0, GetSystemMetrics(SM_CXSCREEN) * 3 / 4, GetSystemMetrics(SM_CYSCREEN) * 3 / 4);
+    grWindowedArea.MoveRect((GetSystemMetrics(SM_CXSCREEN) - grWindowedArea.Width()) / 2, (GetSystemMetrics(SM_CYSCREEN) - grWindowedArea.Height()) / 2);
 
 
 
     // if registry settings persisted
-    if (!gRegistry.Get("appwin", "window_l", grWindowArea.left))
-        gRegistry.SetDefault("appwin", "window_l", grWindowArea.left);
-    if (!gRegistry.Get("appwin", "window_t", grWindowArea.top))
-        gRegistry.SetDefault("appwin", "window_t", grWindowArea.top);
-    if (!gRegistry.Get("appwin", "window_r", grWindowArea.right))
-        gRegistry.SetDefault("appwin", "window_r", grWindowArea.right);
-    if (!gRegistry.Get("appwin", "window_b", grWindowArea.bottom))
-        gRegistry.SetDefault("appwin", "window_b", grWindowArea.bottom);
+    if (!gRegistry.Get("appwin", "window_l", grWindowedArea.left))
+        gRegistry.SetDefault("appwin", "window_l", grWindowedArea.left);
+    if (!gRegistry.Get("appwin", "window_t", grWindowedArea.top))
+        gRegistry.SetDefault("appwin", "window_t", grWindowedArea.top);
+    if (!gRegistry.Get("appwin", "window_r", grWindowedArea.right))
+        gRegistry.SetDefault("appwin", "window_r", grWindowedArea.right);
+    if (!gRegistry.Get("appwin", "window_b", grWindowedArea.bottom))
+        gRegistry.SetDefault("appwin", "window_b", grWindowedArea.bottom);
+
+    if (!gRegistry.Get("appwin", "full_l", grFullScreenArea.left))
+        gRegistry.SetDefault("appwin", "full_l", grFullScreenArea.left);
+    if (!gRegistry.Get("appwin", "full_t", grFullScreenArea.top))
+        gRegistry.SetDefault("appwin", "full_t", grFullScreenArea.top);
+    if (!gRegistry.Get("appwin", "full_r", grFullScreenArea.right))
+        gRegistry.SetDefault("appwin", "full_r", grFullScreenArea.right);
+    if (!gRegistry.Get("appwin", "full_b", grFullScreenArea.bottom))
+        gRegistry.SetDefault("appwin", "full_b", grFullScreenArea.bottom);
 
     if (!gRegistry.Get("appwin", "fullscreen", gbFullScreen))
         gRegistry.SetDefault("appwin", "fullscreen", gbFullScreen);
@@ -342,9 +354,9 @@ BOOL WinInitInstance(int argc, char* argv[])
     parser.RegisterParam(CLP::ParamDesc("fullscreen", &gbFullScreen, CLP::kNamed));
     parser.Parse(argc, argv);
     if (parser.GetParamWasFound("width"))
-        grWindowArea.right = grWindowArea.left + width;
+        grWindowedArea.right = grWindowedArea.left + width;
     if (parser.GetParamWasFound("height"))
-        grWindowArea.bottom = grWindowArea.top + height;
+        grWindowedArea.bottom = grWindowedArea.top + height;
 
 
 
@@ -353,14 +365,14 @@ BOOL WinInitInstance(int argc, char* argv[])
     if (gbFullScreen)
     {
         ghWnd = CreateWindow(szAppClass, szAppClass, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
-        grFullArea.SetRect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-        SizeWindowToClientArea(ghWnd, 0, 0, grFullArea.Width(), grFullArea.Height());
+        grFullArea.SetRect(0, 0, grFullScreenArea.Width(), grFullScreenArea.Height());
+        SizeWindowToClientArea(ghWnd, grFullScreenArea.left, grFullScreenArea.top, grFullArea.Width(), grFullArea.Height());
     }
     else
     {
         ghWnd = CreateWindow(szAppClass, szAppClass, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
-        grFullArea.SetRect(0, 0, grWindowArea.Width(), grWindowArea.Height());
-        SizeWindowToClientArea(ghWnd, grWindowArea.left, grWindowArea.top, grWindowArea.Width(), grWindowArea.Height());
+        grFullArea.SetRect(0, 0, grWindowedArea.Width(), grWindowedArea.Height());
+        SizeWindowToClientArea(ghWnd, grWindowedArea.left, grWindowedArea.top, grWindowedArea.Width(), grWindowedArea.Height());
     }
 
     if (!ghWnd)
@@ -382,14 +394,12 @@ BOOL WinInitInstance(int argc, char* argv[])
 	return TRUE;
 }
 
-void HandleWindowSizeChanged(bool bSwitchingFullScreen = false)
+void SwitchFullscreen(bool bFullscreen)
 {
-    if (!gpGraphicSystem || !gpMainWin)
+    if (gbFullScreen == bFullscreen)
         return;
 
-    ZGUI::ComputeSizes();
-
-    gbPaused = true;
+    gbFullScreen = bFullscreen;
 
     if (gbFullScreen)
     {
@@ -398,48 +408,76 @@ void HandleWindowSizeChanged(bool bSwitchingFullScreen = false)
 
         HMONITOR h = MonitorFromWindow(ghWnd, MONITOR_DEFAULTTONEAREST);
         GetMonitorInfo(h, &mi);
+        grFullScreenArea.SetRect(mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right, mi.rcMonitor.bottom);
 
-        grFullArea.SetRect(0, 0, mi.rcMonitor.right- mi.rcMonitor.left, mi.rcMonitor.bottom- mi.rcMonitor.top);
         DWORD nStyle = GetWindowLong(ghWnd, GWL_STYLE);
         DWORD dwRemove = WS_OVERLAPPEDWINDOW;
         nStyle &= ~dwRemove;
         SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
-        MoveWindow(ghWnd, mi.rcMonitor.left, mi.rcMonitor.top, grFullArea.Width(), grFullArea.Height(), TRUE);
+//        MoveWindow(ghWnd, grFullScreenArea.left, grFullScreenArea.top, grFullScreenArea.Width(), grFullScreenArea.Height(), TRUE);
+        MoveWindow(ghWnd, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right- mi.rcMonitor.left, mi.rcMonitor.bottom- mi.rcMonitor.top, TRUE);
     }
     else
     {
         RECT rW;
-        rW.left = grWindowArea.left;
-        rW.top = grWindowArea.top;
-        rW.right = grWindowArea.right;
-        rW.bottom = grWindowArea.bottom;
+        rW.left = grWindowedArea.left;
+        rW.top = grWindowedArea.top;
+        rW.right = grWindowedArea.right;
+        rW.bottom = grWindowedArea.bottom;
 
         DWORD nStyle = GetWindowLong(ghWnd, GWL_STYLE);
         DWORD dwAdd = WS_OVERLAPPEDWINDOW;
         nStyle |= dwAdd;
         SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
 
-//        SetWindowLongPtr(ghWnd, GWL_STYLE, WS_SYSMENU);
-//        if (bSwitchingFullScreen)
-//            AdjustWindowRect(&rW, dwAdd, FALSE);
-        MoveWindow(ghWnd, rW.left, rW.top, rW.right - rW.left, rW.bottom - rW.top, TRUE);
-
-
-//        gRegistry.Set("appwin", "width", gInitWindowSize.x);
-//        gRegistry.Set("appwin", "height", gInitWindowSize.y);
-        gRegistry.Set("appwin", "window_l", grWindowArea.left);
-        gRegistry.Set("appwin", "window_t", grWindowArea.top);
-        gRegistry.Set("appwin", "window_r", grWindowArea.right);
-        gRegistry.Set("appwin", "window_b", grWindowArea.bottom);
-
-        RECT rClient;
-        GetClientRect(ghWnd, &rClient);
-        grFullArea.SetRect(0, 0, rClient.right, rClient.bottom);
+        MoveWindow(ghWnd, grWindowedArea.left, grWindowedArea.top, grWindowedArea.Width(), grWindowedArea.Height(), TRUE);
     }
+
+
+    HandleWindowSizeChanged();
+}
+
+void HandleWindowSizeChanged()
+{
+    if (!gpGraphicSystem || !gpMainWin)
+        return;
+
+    RECT rW;
+    GetWindowRect(ghWnd, &rW);
+    if (gbFullScreen)
+    {
+        grFullScreenArea.left = rW.left;
+        grFullScreenArea.top = rW.top;
+        grFullScreenArea.right = rW.right;
+        grFullScreenArea.bottom = rW.bottom;
+
+        gRegistry.Set("appwin", "full_l", grFullScreenArea.left);
+        gRegistry.Set("appwin", "full_t", grFullScreenArea.top);
+        gRegistry.Set("appwin", "full_r", grFullScreenArea.right);
+        gRegistry.Set("appwin", "full_b", grFullScreenArea.bottom);
+    }
+    else
+    {
+        grWindowedArea.left = rW.left;
+        grWindowedArea.top = rW.top;
+        grWindowedArea.right = rW.right;
+        grWindowedArea.bottom = rW.bottom;
+
+        gRegistry.Set("appwin", "window_l", grWindowedArea.left);
+        gRegistry.Set("appwin", "window_t", grWindowedArea.top);
+        gRegistry.Set("appwin", "window_r", grWindowedArea.right);
+        gRegistry.Set("appwin", "window_b", grWindowedArea.bottom);
+    }
+
+    RECT rC;
+    GetClientRect(ghWnd, &rC);
+    grFullArea.SetRect(0, 0, rC.right, rC.bottom);
+    ZGUI::ComputeSizes();
 
     gRegistry.Set("appwin", "fullscreen", gbFullScreen);
 
 
+    gbPaused = true;
     gpGraphicSystem->HandleModeChanges();
     gpMainWin->SetArea(grFullArea);
     gpMainWin->InvalidateChildren();
@@ -462,11 +500,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
     case WM_WINDOWPOSCHANGED:
     {
-        if (!gbFullScreen)
+        if (!bSizing)
+            HandleWindowSizeChanged();
+/*        if (!gbFullScreen)
         {
 
             WINDOWPOS* pWP = (WINDOWPOS*)lParam;
-            grWindowArea.MoveRect(pWP->x, pWP->y);
+            ZDEBUG_OUT("WM_WINDOWPOSCHANGED - x:", pWP->x, " y:", pWP->y, " cx:", pWP->cx, " cy:", pWP->cy);
+                grWindowArea.MoveRect(pWP->x, pWP->y);
             if (pWP->cx != grWindowArea.Width() || pWP->cy != grWindowArea.Height())
             {
                 grWindowArea.right = grWindowArea.left + pWP->cx;
@@ -476,7 +517,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         if (gpMainWin)
-            gpMainWin->InvalidateChildren();
+            gpMainWin->InvalidateChildren();*/
     }
         break;
     case WM_SYSCOMMAND:
@@ -488,13 +529,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_ERASEBKGND:
         return 1;
+    case WM_ENTERSIZEMOVE:
+        bSizing = true;
+        break;
     case WM_EXITSIZEMOVE:
+        DefWindowProc(hWnd, message, wParam, lParam);
         if (bSizing)
         {
             bSizing = false;
             HandleWindowSizeChanged();
         }
-        DefWindowProc(hWnd, message, wParam, lParam);
         break;
 	case WM_COMMAND:
 		wmId    = LOWORD(wParam); 
@@ -524,8 +568,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             else if (wParam == 'f' || wParam == 'F')
             {
-                gbFullScreen = !gbFullScreen;
-                HandleWindowSizeChanged(true);
+                SwitchFullscreen(!gbFullScreen);
             }
         }
         break;
