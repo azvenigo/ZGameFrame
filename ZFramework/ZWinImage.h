@@ -94,9 +94,6 @@ public:
 
     ZGUI::tTextboxMap   mCaptionMap;
 
-    ZGUI::Style         mZoomStyle;
-
-
     uint32_t            mFillColor;
 
 

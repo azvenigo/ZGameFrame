@@ -1128,7 +1128,6 @@ void cProcessImageWin::ResetResultsBuffer()
 
 
         //        mpResultWin->SetShowZoom(gpFontSystem->GetFont(gDefaultTitleFont),ZTextLook(ZTextLook::kNormal, 0x44ffffff, 0x44ffffff), ZGUI::RB, true);
-        mpResultWin->mZoomStyle = gStyleCaption;
         mpResultWin->mfMinZoom = 0.05;
         mpResultWin->mfMaxZoom = 100.0;
 

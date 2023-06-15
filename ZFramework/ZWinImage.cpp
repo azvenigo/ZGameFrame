@@ -26,8 +26,8 @@ ZWinImage::ZWinImage()
     mfMaxZoom = 100.0;
     mToggleUIHotkey = 0;
     mZoomHotkey = 0;
-    mbShowUI = false;
-    mZoomStyle = gStyleCaption;
+    mbShowUI = true;
+    mCaptionMap["zoom"].style = gStyleCaption;
 
     mpPanel = nullptr;
 
@@ -68,11 +68,10 @@ void ZWinImage::ResetControlPanel()
 
 
         ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
-        mpPanel->mbHideOnMouseExit = true;
         mpPanel->mbHideOnMouseExit = !mbShowUI; // if UI is toggled on, then don't hide panel on mouse out
         mpPanel->SetArea(rPanelArea);
         mpPanel->mrTrigger = rPanelArea;
-        ChildAdd(mpPanel);
+        ChildAdd(mpPanel, mbShowUI);
 
         ZWinSizablePushBtn* pBtn;
 
@@ -624,21 +623,16 @@ bool ZWinImage::Paint()
                 gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
             }
         }
-
-        // Show Zoom?
-        if (mBehavior & kShowCaption || (mBehavior & kUIToggleOnHotkey && mbShowUI))
-        {
-            string sZoom;
-            Sprintf(sZoom, "%d%%", (int32_t)(mfZoom * 100.0));
-            ZRect rZoomCaption(mZoomStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sZoom.data(), sZoom.length(), mZoomStyle.pos));
-            mZoomStyle.Font()->DrawText(mpTransformTexture.get(), sZoom, rZoomCaption, &mZoomStyle.look);
-        }
-
     }
 
     if (mBehavior & kShowCaption || (mBehavior & kUIToggleOnHotkey && mbShowUI))
     {
+        Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
         ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);
+    }
+    else
+    {
+        mCaptionMap["zoom"].sText = "";
     }
 
 

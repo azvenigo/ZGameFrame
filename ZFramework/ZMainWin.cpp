@@ -57,6 +57,9 @@ bool ZMainWin::Paint()
 
 void ZMainWin::SetArea(const ZRect& newArea)
 {
+    if (mArea == newArea)
+        return;
+
     ZWin::SetArea(newArea);
     OnParentAreaChange();   // update all children
 }

@@ -417,10 +417,10 @@ bool ImageViewer::Init()
         Sprintf(mpWinImage->msLoadButtonMessage, "loadimg;target=%s", msWinName.c_str());
 
 
-        ZGUI::Style zoomStyle(gDefaultWinTextEditStyle);
-        zoomStyle.pos = ZGUI::CB;
-        zoomStyle.look = ZGUI::ZTextLook::kShadowed;
-        mpWinImage->mZoomStyle = zoomStyle;
+        mpWinImage->mCaptionMap["zoom"].sText = gStyleCaption;
+        mpWinImage->mCaptionMap["zoom"].style.pos = ZGUI::CB;
+        mpWinImage->mCaptionMap["zoom"].style.look = ZGUI::ZTextLook::kShadowed;
+//        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
 
         ChildAdd(mpWinImage);
         mpWinImage->SetFocus();
@@ -442,6 +442,9 @@ bool ImageViewer::OnParentAreaChange()
     SetArea(mpParentWin->GetArea());
     ZWin::OnParentAreaChange();
     UpdateCaptions();
+
+//    static int count = 0;
+//    ZOUT("ImageViewer::OnParentAreaChange\n", count++);
 
     return true;
 }
@@ -738,18 +741,22 @@ void ImageViewer::UpdateCaptions()
     {
         ZGUI::Style folderStyle(gStyleButton);
         folderStyle.pos = ZGUI::LT;
-        folderStyle.paddingV = mAreaToDrawTo.Height() / 24;
         folderStyle.look = ZGUI::ZTextLook::kShadowed;
         mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
         mpWinImage->mCaptionMap["folder"].style = folderStyle;
+        mpWinImage->mCaptionMap["folder"].style.paddingV = mAreaToDrawTo.Height() / 24;
+
+        string sImageCount = "[" + SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size()) + "]";
+        mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
+        mpWinImage->mCaptionMap["image_count"].style = folderStyle;
+        mpWinImage->mCaptionMap["image_count"].style.paddingV = gStyleButton.fp.nHeight;
+        mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::LB;
 
 
-
-        string sFilename = SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size()) + " " + mSelectedFilename.filename().string();
-        ZGUI::Style filenameStyle(gDefaultWinTextEditStyle);
+        string sFilename =  mSelectedFilename.filename().string();
+        ZGUI::Style filenameStyle(gStyleButton);
         filenameStyle.pos = ZGUI::LB;
         filenameStyle.look = ZGUI::ZTextLook::kShadowed;
-        filenameStyle.paddingH = folderStyle.Font()->StringWidth(mpWinImage->mCaptionMap["folder"].sText) + gDefaultSpacer*4;
         mpWinImage->mCaptionMap["filename"].sText = sFilename;
         mpWinImage->mCaptionMap["filename"].style = filenameStyle;
 

@@ -42,6 +42,7 @@ ZRect                   grFullScreenArea;
 
 
 extern bool             gbPaused = false;
+bool                    gbSizing = false;
 HINSTANCE               g_hInst;				// The current instance
 HWND                    ghWnd;
 
@@ -400,7 +401,10 @@ void SwitchFullscreen(bool bFullscreen)
         return;
 
     gbFullScreen = bFullscreen;
+    gbSizing = true;
 
+//    PAINTSTRUCT ps;
+//    HDC hdc = BeginPaint(ghWnd, &ps);
     if (gbFullScreen)
     {
         MONITORINFO mi;
@@ -413,9 +417,10 @@ void SwitchFullscreen(bool bFullscreen)
         DWORD nStyle = GetWindowLong(ghWnd, GWL_STYLE);
         DWORD dwRemove = WS_OVERLAPPEDWINDOW;
         nStyle &= ~dwRemove;
+
         SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
-//        MoveWindow(ghWnd, grFullScreenArea.left, grFullScreenArea.top, grFullScreenArea.Width(), grFullScreenArea.Height(), TRUE);
-        MoveWindow(ghWnd, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right- mi.rcMonitor.left, mi.rcMonitor.bottom- mi.rcMonitor.top, TRUE);
+        MoveWindow(ghWnd, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top, TRUE);
+
     }
     else
     {
@@ -428,13 +433,15 @@ void SwitchFullscreen(bool bFullscreen)
         DWORD nStyle = GetWindowLong(ghWnd, GWL_STYLE);
         DWORD dwAdd = WS_OVERLAPPEDWINDOW;
         nStyle |= dwAdd;
-        SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
 
+        SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
         MoveWindow(ghWnd, grWindowedArea.left, grWindowedArea.top, grWindowedArea.Width(), grWindowedArea.Height(), TRUE);
     }
 
 
     HandleWindowSizeChanged();
+    gbSizing = false;
+//    EndPaint(ghWnd, &ps);
 }
 
 void HandleWindowSizeChanged()
@@ -477,12 +484,13 @@ void HandleWindowSizeChanged()
     gRegistry.Set("appwin", "fullscreen", gbFullScreen);
 
 
-    gbPaused = true;
     gpGraphicSystem->HandleModeChanges();
     gpMainWin->SetArea(grFullArea);
     gpMainWin->InvalidateChildren();
     gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
-    gbPaused = false;
+
+    static int count = 0;
+    ZOUT("done handlesizechanged:", count++, "\n");
 }
 
 
@@ -493,33 +501,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	int wmId, wmEvent;
 
-    static bool bSizing = false;
-
     static int count = 0;
 	switch (message) 
 	{
-    case WM_WINDOWPOSCHANGED:
+/*    case WM_WINDOWPOSCHANGED:
     {
-        if (!bSizing)
-            HandleWindowSizeChanged();
-/*        if (!gbFullScreen)
+        WINDOWPOS* pPos = (WINDOWPOS*)lParam;
+
+        if (gbFullScreen && (pPos->cx != grFullArea.Width() || pPos->cy != grFullArea.Height()) || (!gbFullScreen && (pPos->cx != grWindowedArea.Width() || pPos->cy != grWindowedArea.Height())))
         {
-
-            WINDOWPOS* pWP = (WINDOWPOS*)lParam;
-            ZDEBUG_OUT("WM_WINDOWPOSCHANGED - x:", pWP->x, " y:", pWP->y, " cx:", pWP->cx, " cy:", pWP->cy);
-                grWindowArea.MoveRect(pWP->x, pWP->y);
-            if (pWP->cx != grWindowArea.Width() || pWP->cy != grWindowArea.Height())
-            {
-                grWindowArea.right = grWindowArea.left + pWP->cx;
-                grWindowArea.bottom = grWindowArea.top + pWP->cy;
-                bSizing = true;
-            }
+            HandleWindowSizeChanged();
         }
-
-        if (gpMainWin)
-            gpMainWin->InvalidateChildren();*/
     }
-        break;
+        break;*/
     case WM_SYSCOMMAND:
         DefWindowProc(hWnd, message, wParam, lParam);
         if (wParam == SC_MAXIMIZE || wParam == SC_RESTORE)
@@ -530,13 +524,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_ERASEBKGND:
         return 1;
     case WM_ENTERSIZEMOVE:
-        bSizing = true;
+        gbSizing = true;
         break;
     case WM_EXITSIZEMOVE:
         DefWindowProc(hWnd, message, wParam, lParam);
-        if (bSizing)
+//        if (gbSizing)
         {
-            bSizing = false;
+            gbSizing = false;
             HandleWindowSizeChanged();
         }
         break;
