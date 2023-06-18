@@ -42,7 +42,8 @@ ZRect                   grFullScreenArea;
 
 
 extern bool             gbPaused = false;
-bool                    gbSizing = false;
+bool                    gbWindowSizeChanged = false;
+bool                    gbRenderingEnabled = true;
 HINSTANCE               g_hInst;				// The current instance
 HWND                    ghWnd;
 
@@ -134,6 +135,8 @@ int main(int argc, char* argv[])
 
         if (!gbPaused && !gbApplicationExiting)
         {
+            if (gbWindowSizeChanged)
+                HandleWindowSizeChanged();
 
             gMessageSystem.Process();
             gTickManager.Tick();
@@ -143,7 +146,7 @@ int main(int argc, char* argv[])
                 gInput.Process();
 
                 ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
-                if (pScreenBuffer)
+                if (pScreenBuffer && gbRenderingEnabled)
                 {
                     // Copy to our window surface
                     pScreenBuffer->BeginRender();
@@ -184,7 +187,7 @@ int main(int argc, char* argv[])
 
                 }
 
-                if (gbGraphicSystemResetNeeded && !gbPaused)
+                if (gbGraphicSystemResetNeeded && !gbPaused && gbRenderingEnabled)
                 {
                     ZDEBUG_OUT("calling HandleModeChanges\n");
 
@@ -401,7 +404,6 @@ void SwitchFullscreen(bool bFullscreen)
         return;
 
     gbFullScreen = bFullscreen;
-    gbSizing = true;
 
 //    PAINTSTRUCT ps;
 //    HDC hdc = BeginPaint(ghWnd, &ps);
@@ -438,9 +440,8 @@ void SwitchFullscreen(bool bFullscreen)
         MoveWindow(ghWnd, grWindowedArea.left, grWindowedArea.top, grWindowedArea.Width(), grWindowedArea.Height(), TRUE);
     }
 
-
-    HandleWindowSizeChanged();
-    gbSizing = false;
+    gbWindowSizeChanged = true;
+//    HandleWindowSizeChanged();
 //    EndPaint(ghWnd, &ps);
 }
 
@@ -448,6 +449,8 @@ void HandleWindowSizeChanged()
 {
     if (!gpGraphicSystem || !gpMainWin)
         return;
+
+    gbWindowSizeChanged = false;
 
     RECT rW;
     GetWindowRect(ghWnd, &rW);
@@ -478,16 +481,26 @@ void HandleWindowSizeChanged()
 
     RECT rC;
     GetClientRect(ghWnd, &rC);
-    grFullArea.SetRect(0, 0, rC.right, rC.bottom);
-    ZGUI::ComputeSizes();
 
-    gRegistry.Set("appwin", "fullscreen", gbFullScreen);
+    // if minimized, stop rendering
+    if (rC.right - rC.left == 0 || rC.bottom - rC.top == 0)
+        gbRenderingEnabled = false;
+    else
+        gbRenderingEnabled = true;
+
+    if (gbRenderingEnabled)
+    {
+        grFullArea.SetRect(0, 0, rC.right, rC.bottom);
+        ZGUI::ComputeSizes();
+
+        gRegistry.Set("appwin", "fullscreen", gbFullScreen);
 
 
-    gpGraphicSystem->HandleModeChanges();
-    gpMainWin->SetArea(grFullArea);
-    gpMainWin->InvalidateChildren();
-    gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
+        gpGraphicSystem->HandleModeChanges();
+        gpMainWin->SetArea(grFullArea);
+        gpMainWin->InvalidateChildren();
+        gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
+    }
 
     static int count = 0;
     ZOUT("done handlesizechanged:", count++, "\n");
@@ -495,7 +508,7 @@ void HandleWindowSizeChanged()
 
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+{   
 	if (gbApplicationExiting)
 		return 0;
 
@@ -504,35 +517,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     static int count = 0;
 	switch (message) 
 	{
-/*    case WM_WINDOWPOSCHANGED:
+    case WM_WINDOWPOSCHANGED:
     {
         WINDOWPOS* pPos = (WINDOWPOS*)lParam;
+        string s;
+        Sprintf(s, "snap flags:%x\n", pPos->flags);
+        OutputDebugString(s.c_str());
 
-        if (gbFullScreen && (pPos->cx != grFullArea.Width() || pPos->cy != grFullArea.Height()) || (!gbFullScreen && (pPos->cx != grWindowedArea.Width() || pPos->cy != grWindowedArea.Height())))
+/*        if (pPos->flags & SWP_SNAP != 0)
         {
+
             HandleWindowSizeChanged();
-        }
+        }*/
+        gbWindowSizeChanged = true;
     }
-        break;*/
+        break;
     case WM_SYSCOMMAND:
         DefWindowProc(hWnd, message, wParam, lParam);
         if (wParam == SC_MAXIMIZE || wParam == SC_RESTORE)
         {
-            HandleWindowSizeChanged();
+            gbWindowSizeChanged = true;
+//            HandleWindowSizeChanged();
         }
         break;
     case WM_ERASEBKGND:
         return 1;
     case WM_ENTERSIZEMOVE:
-        gbSizing = true;
+//        gbSizing = true;
         break;
     case WM_EXITSIZEMOVE:
         DefWindowProc(hWnd, message, wParam, lParam);
-//        if (gbSizing)
-        {
-            gbSizing = false;
-            HandleWindowSizeChanged();
-        }
+        gbWindowSizeChanged = true;
         break;
 	case WM_COMMAND:
 		wmId    = LOWORD(wParam); 

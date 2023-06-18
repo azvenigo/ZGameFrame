@@ -27,7 +27,6 @@ ZWinImage::ZWinImage()
     mToggleUIHotkey = 0;
     mZoomHotkey = 0;
     mbShowUI = true;
-    mCaptionMap["zoom"].style = gStyleCaption;
 
     mpPanel = nullptr;
 
@@ -41,6 +40,7 @@ ZWinImage::~ZWinImage()
 bool ZWinImage::Init()
 {
     mIdleSleepMS = 10000;
+    Clear();
     ResetControlPanel();
     return ZWin::Init();
 }
@@ -237,9 +237,14 @@ void ZWinImage::ResetControlPanel()
 
 bool ZWinImage::OnParentAreaChange()
 {
+   
     SetArea(mpParentWin->GetArea());
     ResetControlPanel();
-    FitImageToWindow();
+
+    // if previously sized to window, keep sizing to window
+    if (mViewState == kFitToWindow)
+        FitImageToWindow();
+
     return ZWin::OnParentAreaChange();
 }
 
@@ -248,6 +253,8 @@ void ZWinImage::Clear()
 {
     mpImage.reset();
     mCaptionMap.clear();
+    mCaptionMap["zoom"].style = gStyleCaption;
+    mCaptionMap["zoom"].style.pos = ZGUI::CB;
     Invalidate();
 }
 
@@ -323,10 +330,16 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
         double fNewZoom = mfZoom;
         if (nDelta < 0)
         {
+            if (mfZoom >= mfMaxZoom)
+                return true;
+
             fNewZoom *= 1.2f;
         }
         else
         {
+            if (mfZoom <= mfMinZoom)
+                return true;
+
             fNewZoom *= 0.8f;
         }
 
@@ -476,7 +489,8 @@ void ZWinImage::SetArea(const ZRect& newArea)
         mpPanel->SetArea(rPanelArea);
     }
 
-    FitImageToWindow();
+    if (mViewState == kFitToWindow)
+        FitImageToWindow();
     mbVisible = true;
 }
 
@@ -561,18 +575,16 @@ double ZWinImage::GetZoom()
 
 void ZWinImage::SetImage(tZBufferPtr pImage)
 {
-    if (pImage->GetArea().Height() < mAreaToDrawTo.Height())    // if setting an image smaller than the screen, set new one unzoomed
+    mpImage = pImage;
+    if (mViewState == kFitToWindow)
+        FitImageToWindow();
+    else
     {
         SetZoom(1.0);
         mImageArea = pImage->GetArea();
         mImageArea = mImageArea.CenterInRect(mAreaToDrawTo);
-        mpImage = pImage;
         Invalidate();
-        return;
     }
-
-    mpImage = pImage;
-    FitImageToWindow();
 }
 
 bool ZWinImage::Paint()
@@ -625,7 +637,7 @@ bool ZWinImage::Paint()
         }
     }
 
-    if (mBehavior & kShowCaption || (mBehavior & kUIToggleOnHotkey && mbShowUI))
+    if ((mBehavior & kShowCaption || (mBehavior & kUIToggleOnHotkey && mbShowUI)))
     {
         Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
         ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);
@@ -648,7 +660,11 @@ bool ZWinImage::HandleMessage(const ZMessage& message)
         if (mpImage)
         {
             mpImage->Rotate(ZBuffer::kLeft);
-            FitImageToWindow();
+
+            if (mViewState == kFitToWindow)
+                FitImageToWindow();
+
+            Invalidate();
         }
         return true;
     }
@@ -657,7 +673,10 @@ bool ZWinImage::HandleMessage(const ZMessage& message)
         if (mpImage)
         {
             mpImage->Rotate(ZBuffer::kRight);
-            FitImageToWindow();
+            if (mViewState == kFitToWindow)
+                FitImageToWindow();
+
+            Invalidate();
         }
         return true;
     }
@@ -666,7 +685,10 @@ bool ZWinImage::HandleMessage(const ZMessage& message)
         if (mpImage)
         {
             mpImage->Rotate(ZBuffer::kHFlip);
-            FitImageToWindow();
+            if (mViewState == kFitToWindow)
+                FitImageToWindow();
+
+            Invalidate();
         }
         return true;
     }
@@ -675,7 +697,10 @@ bool ZWinImage::HandleMessage(const ZMessage& message)
         if (mpImage)
         {
             mpImage->Rotate(ZBuffer::kVFlip);
-            FitImageToWindow();
+            if (mViewState == kFitToWindow)
+                FitImageToWindow();
+
+            Invalidate();
         }
         return true;
     }

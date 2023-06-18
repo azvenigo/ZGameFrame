@@ -695,6 +695,9 @@ void ImageViewer::Clear()
 
 bool ImageViewer::ScanForImagesInFolder(const std::filesystem::path& folder)
 {
+    if (!std::filesystem::exists(folder))
+        return false;
+
     bool bFolderScan = std::filesystem::is_directory(folder);
 
     mImagesInFolder.clear();
