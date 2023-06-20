@@ -251,10 +251,14 @@ bool ZWinImage::OnParentAreaChange()
 
 void ZWinImage::Clear()
 {
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+
+
     mpImage.reset();
     mCaptionMap.clear();
     mCaptionMap["zoom"].style = gStyleCaption;
     mCaptionMap["zoom"].style.pos = ZGUI::CB;
+    
     Invalidate();
 }
 
@@ -290,11 +294,27 @@ bool ZWinImage::OnMouseDownR(int64_t x, int64_t y)
     }
     else
     {
-        //mfZoom = 1.0;
-        SetZoom(1.0);
+        double fZoomPointX = (double)(x - mImageArea.left);
+        double fZoomPointY = (double)(y - mImageArea.top);
 
-//        mImageArea = mpImage->GetArea();
-//        mImageArea = mImageArea.CenterInRect(mAreaToDrawTo);
+        double fZoomPointU = fZoomPointX / (double)mImageArea.Width();
+        double fZoomPointV = fZoomPointY / (double)mImageArea.Height();
+
+        ZRect rImage(mpImage.get()->GetArea());
+
+
+
+        int64_t nNewLeft = (int64_t)(x - (rImage.Width() * fZoomPointU));
+        int64_t nNewRight = nNewLeft + (int64_t)rImage.Width();
+
+        int64_t nNewTop = (int64_t)(y - (rImage.Height() * fZoomPointV));
+        int64_t nNewBottom = nNewTop + (int64_t)rImage.Height();
+
+        ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
+
+        mImageArea.SetRect(rNewArea);
+        SetZoom(1.0);
+        Invalidate();
     }
 
     return ZWin::OnMouseDownR(x, y);
