@@ -8,7 +8,9 @@
 #include "helpers/ThreadPool.h"
 #include "ZWinFileDialog.h"
 #include "ConfirmDeleteDialog.h"
+#include "ZWinControlPanel.h"
 #include <algorithm>
+#include "ZWinBtn.H"
 #include "helpers/Registry.h"
 
 
@@ -33,6 +35,9 @@ ImageViewer::ImageViewer()
     mAtomicIndex = 0;
     mLastAction = kNone;
     msWinName = "ZWinImageViewer";
+    mpPanel = nullptr;
+    mToggleUIHotkey = 0;
+
 }
  
 ImageViewer::~ImageViewer()
@@ -55,26 +60,56 @@ bool ImageViewer::ShowOpenImageDialog()
     return true;
 
 }
+void ImageViewer::HandleQuitCommand()
+{
+    if (mDeletionList.empty())
+    {
+        gMessageSystem.Post("quit_app_confirmed");
+    }
+    else
+    {
+        mFilenameToLoad = *mDeletionList.begin();
+        ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", mDeletionList);
+        pDialog->msOnConfirmDelete = ZMessage("delete_confirm", this);
+        pDialog->msOnCancel = ZMessage("delete_cancel_and_quit", this);
+        pDialog->msOnGoBack = ZMessage("delete_goback", this);
+    }
+}
 
 bool ImageViewer::OnKeyDown(uint32_t key)
 {
 #ifdef _WIN64
     if (key == VK_ESCAPE)
     {
-        if (mDeletionList.empty())
-        {
-            gMessageSystem.Post("quit_app_confirmed");
-        }
-        else
-        {
-            mFilenameToLoad = *mDeletionList.begin();
-            ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", mDeletionList);
-            pDialog->msOnConfirmDelete = ZMessage("delete_confirm", this);
-            pDialog->msOnCancel = ZMessage("delete_cancel_and_quit", this);
-            pDialog->msOnGoBack = ZMessage("delete_goback", this);
-        }
+        HandleQuitCommand();
+        return true;
     }
 #endif
+
+    if (key == mToggleUIHotkey)
+    {
+        if (mpPanel)
+        {
+            if (!mpPanel->IsVisible())
+            {
+                mpPanel->SetVisible();
+                mpPanel->mbHideOnMouseExit = false;
+            }
+            else
+            {
+                mpPanel->SetVisible(false);
+                mpPanel->mbHideOnMouseExit = true;
+            }
+
+            bool bShowUI = mpPanel->IsVisible() || mImagesInFolder.empty();
+
+            if (mpWinImage)
+                mpWinImage->mbShowUI = bShowUI;
+
+        }
+        InvalidateChildren();
+    }
+
 
     switch (key)
     {
@@ -135,7 +170,11 @@ bool ImageViewer::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 bool ImageViewer::HandleMessage(const ZMessage& message)
 {
     string sType = message.GetType();
-
+    if (sType == "quit")
+    {
+        HandleQuitCommand();
+        return true;
+    }
     if (sType == "loadimg")
     {
         ShowOpenImageDialog();
@@ -204,6 +243,23 @@ void ImageViewer::HandleDeleteCommand()
     ScanForImagesInFolder(current.parent_path());
 }
 
+void ImageViewer::SetArea(const ZRect& newArea)
+{
+    mbVisible = false;
+    ZWin::SetArea(newArea);
+
+    if (mpPanel)
+    {
+        int64_t nControlPanelSide = mAreaToDrawTo.Height() / 16;
+        limit<int64_t>(nControlPanelSide, 20, 64);
+
+        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
+        mpPanel->mrTrigger = rPanelArea;
+        mpPanel->SetArea(rPanelArea);
+    }
+
+    mbVisible = true;
+}
 void ImageViewer::HandleNavigateToParentFolder()
 {
     if (mSelectedFilename.empty())
@@ -410,11 +466,9 @@ bool ImageViewer::Init()
 //        rImageArea.left += 64;  // thumbs
         mpWinImage->SetArea(rImageArea);
         mpWinImage->mFillColor = 0xff000000;
-        mpWinImage->mToggleUIHotkey = VK_TAB;
         mpWinImage->mZoomHotkey = VK_MENU;
-        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kUIToggleOnHotkey|ZWinImage::kScrollable|ZWinImage::kShowControlPanel|ZWinImage::kShowLoadButton|ZWinImage::kShowSaveButton;
-        Sprintf(mpWinImage->msSaveButtonMessage, "saveimg;target=%s", msWinName.c_str());
-        Sprintf(mpWinImage->msLoadButtonMessage, "loadimg;target=%s", msWinName.c_str());
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable;
+
 
 
         mpWinImage->mCaptionMap["zoom"].sText = gStyleCaption;
@@ -424,6 +478,10 @@ bool ImageViewer::Init()
 
         ChildAdd(mpWinImage);
         mpWinImage->SetFocus();
+
+        ResetControlPanel();
+
+        mToggleUIHotkey = VK_TAB;
     }
 
     Preload();
@@ -433,6 +491,182 @@ bool ImageViewer::Init()
     return ZWin::Init();
 }
 
+
+void ImageViewer::ResetControlPanel()
+{
+    bool bShow = false;
+    if (mpPanel)
+    {
+        bShow = mpPanel->IsVisible();
+        ChildDelete(mpPanel);
+        mpPanel = nullptr;
+    }
+
+    mpPanel = new ZWinControlPanel();
+    int64_t nControlPanelSide = mAreaToDrawTo.Height() / 24;
+    limit<int64_t>(nControlPanelSide, 64, 128);
+        
+    int64_t nGroupSide = nControlPanelSide - gnDefaultGroupInlaySize * 2;
+
+
+
+    ZGUI::Style wd1Style = ZGUI::Style(ZFontParams("Wingdings", nGroupSide * 2 / 4));
+    ZGUI::Style wd3Style = ZGUI::Style(ZFontParams("Wingdings 3", nGroupSide * 2 / 3));
+
+
+    ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
+    mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
+    mpPanel->SetArea(rPanelArea);
+    mpPanel->mrTrigger = rPanelArea;
+    ChildAdd(mpPanel, bShow);
+    mpPanel->mbHideOnMouseExit = !bShow; 
+
+    ZWinSizablePushBtn* pBtn;
+
+    ZRect rGroup(gnDefaultGroupInlaySize, gnDefaultGroupInlaySize, -1, nControlPanelSide - gnDefaultGroupInlaySize);  // start the first grouping
+
+    ZRect rButton(rGroup.left + gnDefaultGroupInlaySize, rGroup.top + gnDefaultGroupInlaySize, rGroup.left + nGroupSide, rGroup.bottom - gnDefaultGroupInlaySize / 2);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("X");
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage(ZMessage("quit", this));
+    mpPanel->ChildAdd(pBtn);
+
+    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize, 0);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("1");  // wingdings 1 open folder
+    pBtn->SetArea(rButton);
+    pBtn->mStyle = wd1Style;
+    pBtn->SetMessage(ZMessage("loadimg", this));
+    mpPanel->ChildAdd(pBtn);
+
+    rButton.OffsetRect(rButton.Width(), 0);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("<"); // wingdings 1 save
+    pBtn->mStyle = wd1Style;
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage(ZMessage("saveimg", this));
+    mpPanel->ChildAdd(pBtn);
+
+    rGroup.right = rButton.right + gnDefaultGroupInlaySize;
+    mpPanel->AddGrouping("File", rGroup);
+
+    string sMessage;
+
+
+    // Management
+    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
+    rButton.right = rButton.left + rButton.Width() * 2;     // wider buttons for management
+
+    rGroup.left = rButton.left - gnDefaultGroupInlaySize;
+
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("Move");
+    pBtn->mStyle = gDefaultGroupingStyle;
+    //        pBtn->mStyle.look.colTop = 0xffff0000;
+    //        pBtn->mStyle.look.colBottom = 0xffff0000;
+    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "set_move_folder;target=%s", mpParentWin->GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+
+
+
+    rButton.OffsetRect(rButton.Width(), 0);
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("Del");
+    pBtn->mStyle = gDefaultGroupingStyle;
+    pBtn->mStyle.look.colTop = 0xffff0000;
+    pBtn->mStyle.look.colBottom = 0xffff0000;
+    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "delete_single;target=%s", mpParentWin->GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+
+
+
+
+    rGroup.right = rButton.right + gnDefaultGroupInlaySize;
+    mpPanel->AddGrouping("Manage", rGroup);
+
+
+
+
+
+    // Rotation Group
+    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 8, 0);
+    rGroup.left = rButton.left - gnDefaultGroupInlaySize;   // start new grouping
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption(":"); // wingdings rotate left
+    pBtn->mStyle = wd3Style;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+
+    rButton.OffsetRect(rButton.Width(), 0);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption(";"); // wingdings rotate right
+    pBtn->mStyle = wd3Style;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+
+    rButton.OffsetRect(rButton.Width(), 0);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("1"); // wingdings flip H
+    pBtn->mStyle = wd3Style;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+
+    rButton.OffsetRect(rButton.Width(), 0);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("2"); // wingdings flip V
+    pBtn->mStyle = wd3Style;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+
+
+
+    rGroup.right = rButton.right + gnDefaultGroupInlaySize;
+    mpPanel->AddGrouping("Rotate", rGroup);
+
+    rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gnDefaultGroupInlaySize);
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("F");
+    pBtn->mStyle = gDefaultGroupingStyle;
+    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "toggle_fullscreen");
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+}
+
 bool ImageViewer::OnParentAreaChange()
 {
     if (!mpTransformTexture)
@@ -440,6 +674,7 @@ bool ImageViewer::OnParentAreaChange()
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
     SetArea(mpParentWin->GetArea());
+    ResetControlPanel();
     ZWin::OnParentAreaChange();
     UpdateCaptions();
 

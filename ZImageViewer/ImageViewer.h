@@ -8,6 +8,7 @@
 
 
 class ZWinImage;
+class ZWinControlPanel;
 
 
 typedef std::list<std::filesystem::path>        tImageFilenames;
@@ -47,7 +48,7 @@ public:
    bool     AcceptedExtension(std::string sExt);
    bool     ShowOpenImageDialog();
    bool     OnParentAreaChange();
-
+   void     SetArea(const ZRect& newArea);
 
    std::atomic<int64_t>     mMaxMemoryUsage;
    std::atomic<int64_t>     mMaxCacheReadAhead;
@@ -55,6 +56,8 @@ public:
 protected:
 
     void                    Clear();
+    void                    ResetControlPanel();
+
     bool                    ScanForImagesInFolder(const std::filesystem::path& folder);
     bool                    InCache(const std::filesystem::path& imagePath);
     bool                    ImagePreloading();
@@ -72,6 +75,7 @@ protected:
 
     void                    DeleteConfimed();
     void                    DeleteFile(std::filesystem::path& f);
+    void                    HandleQuitCommand();
     void                    HandleMoveCommand();
     void                    HandleDeleteCommand();
     void                    HandleNavigateToParentFolder();
@@ -84,8 +88,9 @@ protected:
     void                    SetNextImage();
     void                    SetPrevImage();
 
+    ZWinControlPanel*       mpPanel;
 
-    ZWinImage* mpWinImage;  
+    ZWinImage*              mpWinImage;  
     std::filesystem::path   mSelectedFilename;
     std::filesystem::path   mFilenameToLoad;
 
@@ -103,6 +108,7 @@ protected:
     std::list<std::string>  mAcceptedExtensions = { "jpg", "jpeg", "png", "gif", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" };
     std::atomic<uint32_t>   mAtomicIndex;   // incrementing index for unloading oldest
 
+    uint32_t    mToggleUIHotkey;
 
     // image manipulation
     tImageFilenames         mDeletionList;

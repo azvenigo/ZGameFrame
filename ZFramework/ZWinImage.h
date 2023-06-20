@@ -4,7 +4,6 @@
 #include "ZBuffer.h"
 #include "ZTypes.h"
 #include "ZAnimObjects.h"
-#include "ZWinControlPanel.h"
 
 
 
@@ -22,11 +21,6 @@ public:
         kHotkeyZoom             = 1 << 2,   // 4
         kShowZoomCaption        = 1 << 3,   // 8
         kShowCaption            = 1 << 4,   // 16
-        kShowControlPanel       = 1 << 5,   // 32
-        kUIToggleOnHotkey       = 1 << 6,   // 64
-        kShowLoadButton         = 1 << 7,   // 128
-        kShowSaveButton         = 1 << 8,   // 256
-        kShowCloseButton        = 1 << 9,   // 512
     };
 
     enum eViewState : uint32_t
@@ -36,10 +30,6 @@ public:
         kZoomedInToSmallImage   = 3,
         kZoomedOutOfLargeImage  = 4,
     };
-
-
-
-
 
     ZWinImage();
     ~ZWinImage();
@@ -71,10 +61,8 @@ public:
 
     void        SetArea(const ZRect& newArea);
     bool        OnParentAreaChange();
-    void        ResetControlPanel();
 
     uint32_t    mBehavior;
-    uint32_t    mToggleUIHotkey;
     uint32_t    mZoomHotkey;
     double      mfMinZoom;
     double      mfMaxZoom;
@@ -86,15 +74,10 @@ public:
     tZBufferPtr mpImage;
 
 
-/*    std::string         msCaption;
-    ZGUI::Style         mCaptionStyle;
-
-    std::string         msOverlayCaption;
-    ZGUI::Style         mOverlayCaptionStyle;*/
-
     ZGUI::tTextboxMap   mCaptionMap;
 
     uint32_t            mFillColor;
+    bool                mbShowUI;
 
 
 protected:
@@ -106,7 +89,4 @@ private:
     ZRect               mImageArea;
     eViewState          mViewState;
 
-    bool                mbShowUI;
-
-    ZWinControlPanel*   mpPanel;
 };
