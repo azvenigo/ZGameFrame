@@ -20,7 +20,7 @@ ZWinImage::ZWinImage()
     mpImage.reset();
 	mfZoom = 1.0;
     mfPerfectFitZoom = 1.0;
-    mViewState = kFitToWindow;
+    mViewState = kNoState;
     mfMinZoom = 0.01;
     mfMaxZoom = 100.0;
     mZoomHotkey = 0;
@@ -383,10 +383,21 @@ double ZWinImage::GetZoom()
 
 void ZWinImage::SetImage(tZBufferPtr pImage)
 {
+    ZRect rOldImage;
+    if (mpImage)
+        rOldImage = mpImage->GetArea();
+
     mpImage = pImage;
-    if (mViewState == kFitToWindow)
+    if (mViewState == kFitToWindow || mViewState == kNoState)
+    {
         FitImageToWindow();
-    else
+    }
+    else if (mpImage->GetArea() == rOldImage)
+    {
+        // if image dimensions haven't changed and we have user set pan/zoom, leave it
+        Invalidate();
+    }
+    else 
     {
         SetZoom(1.0);
         mImageArea = pImage->GetArea();

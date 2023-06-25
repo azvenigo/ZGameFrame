@@ -25,6 +25,7 @@ public:
 
     enum eViewState : uint32_t
     {
+        kNoState                = 0,
         kFitToWindow            = 1,
         kZoom100                = 2,
         kZoomedInToSmallImage   = 3,

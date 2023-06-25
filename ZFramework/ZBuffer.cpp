@@ -94,8 +94,6 @@ bool ZBuffer::Shutdown()
 
 bool ZBuffer::LoadBuffer(const string& sFilename)
 {
-    mBufferProps.clear();
-
 #ifdef STB_IMAGE_IMPLEMENTATION
     int width;
     int height;
@@ -113,9 +111,12 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
     imageFile.read((char*)imageBuf->data(), nFileSize);
     imageBuf->seekp(nFileSize);
 
-    easyexif::EXIFInfo exifInfo;
-    exifInfo.parseFrom(imageBuf->data(), nFileSize);
+    mEXIF.clear();
+    mEXIF.parseFrom(imageBuf->data(), nFileSize);
     
+
+
+
 
 
 //    uint8_t* pImage = stbi_load(sFilename.c_str(), &width, &height, &channels, 4);
@@ -154,17 +155,17 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 
     stbi_image_free(pImage);
 
-    if (exifInfo.Orientation != 0)
+    if (mEXIF.Orientation != 0)
     {
         eOrientation reverse;
         
         // for left and right, the reverse is the opposite rotation. For all others, it's the same operation to reverse
-        if ((eOrientation)exifInfo.Orientation == kLeft)
+        if ((eOrientation)mEXIF.Orientation == kLeft)
             reverse = kRight;
-        else if ((eOrientation)exifInfo.Orientation == kRight)
+        else if ((eOrientation)mEXIF.Orientation == kRight)
             reverse = kLeft;
         else
-            reverse = (eOrientation)exifInfo.Orientation;
+            reverse = (eOrientation)mEXIF.Orientation;
 
 
         Rotate(reverse);

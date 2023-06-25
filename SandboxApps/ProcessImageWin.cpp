@@ -202,7 +202,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
     if (!pBuf)
         return;
 
-    tBufferProps& props = pBuf->GetProps();
+/*    tBufferProps& props = pBuf->GetProps();
 
     tZFontPtr pSmallFont = gpFontSystem->GetFont(ZFontParams("System", 20, 200, 0, true));
     ZFontParams fp(pSmallFont->GetFontParams());
@@ -224,7 +224,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
         sPropLineXMLNode += "</text></line>";
 
         mpImageProps->AddLineNode(sPropLineXMLNode);
-    }
+    }*/
     mpImageProps->SetScrollable();
 }
 

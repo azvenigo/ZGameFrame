@@ -5,18 +5,9 @@
 #include "ZColor.h"
 #include <string>
 #include <mutex>
+#include "easyexif/exif.h"
 
 typedef std::shared_ptr<class ZBuffer> tZBufferPtr;
-
-struct BufferProp
-{
-    std::string sName;
-    std::string sType;
-    std::string sValue;
-};
-
-typedef std::list<BufferProp> tBufferProps;
-
 
 class ZBuffer
 {
@@ -73,7 +64,7 @@ public:
 
     virtual uint32_t*       GetPixels() { return mpPixels; }
 
-    virtual tBufferProps&   GetProps() { return mBufferProps; }
+    virtual easyexif::EXIFInfo& GetEXIF() { return mEXIF; }
 
     // Flags
     virtual bool            GetRenderFlag(eRenderFlags flag) { return mRenderFlags & flag; }
@@ -119,7 +110,7 @@ protected:
 
 	uint32_t*               mpPixels;        // The color data
 	ZRect                   mSurfaceArea;
-    tBufferProps            mBufferProps;       
+    easyexif::EXIFInfo      mEXIF;
     std::recursive_mutex    mMutex;
     uint32_t                mRenderFlags;
 };

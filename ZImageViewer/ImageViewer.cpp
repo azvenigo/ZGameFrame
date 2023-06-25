@@ -115,12 +115,14 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     {
     case VK_UP:
         if (gInput.IsKeyDown(VK_MENU))
-        {
             HandleNavigateToParentFolder();
-        }
+        else
+            SetPrevImage();
+        break;
     case VK_LEFT:
         SetPrevImage();
         break;
+    case VK_DOWN:   // fallthrough to next image
     case VK_RIGHT:
         SetNextImage();
         break;
@@ -130,6 +132,21 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     case VK_END:
         SetLastImage();
         break;
+    case '1':
+    {
+        filesystem::path favs(mCurrentFolder);
+        favs.append("favs");
+        MoveSelectedFile(favs);
+    }
+        break;
+    case 'D':
+    {
+        filesystem::path dels(mCurrentFolder);
+        dels.append("to_be_deleted");
+        MoveSelectedFile(dels);
+    }
+        break;
+
     case 'm':
     case 'M':
         if (mMoveToFolder.empty())
@@ -315,6 +332,8 @@ void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
         if (current != mImagesInFolder.end())
             nextImageFilename = *current;
     }
+
+    filesystem::create_directories(newPath);
 
     filesystem::path newName(newPath);
     newName.append(mSelectedFilename.filename().string());
@@ -977,23 +996,28 @@ void ImageViewer::UpdateCaptions()
 {
     if (mpWinImage)
     {
+        int64_t topPadding = 0; // in case panel is visible
+        if (mpPanel)
+            topPadding = mpPanel->GetArea().Height();
+
         ZGUI::Style folderStyle(gStyleButton);
         folderStyle.pos = ZGUI::LT;
         folderStyle.look = ZGUI::ZTextLook::kShadowed;
         mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
         mpWinImage->mCaptionMap["folder"].style = folderStyle;
-        mpWinImage->mCaptionMap["folder"].style.paddingV = mAreaToDrawTo.Height() / 24;
+        mpWinImage->mCaptionMap["folder"].style.paddingV = topPadding;
 
-        string sImageCount = "[" + SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size()) + "]";
+        string sImageCount = "# " + SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size());
         mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
         mpWinImage->mCaptionMap["image_count"].style = folderStyle;
-        mpWinImage->mCaptionMap["image_count"].style.paddingV = gStyleButton.fp.nHeight;
-        mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::LB;
+        mpWinImage->mCaptionMap["image_count"].style.paddingV = topPadding;
+        mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::RT;
 
 
         string sFilename =  mSelectedFilename.filename().string();
         ZGUI::Style filenameStyle(gStyleButton);
-        filenameStyle.pos = ZGUI::LB;
+        filenameStyle.pos = ZGUI::LT;
+        filenameStyle.paddingV = topPadding + folderStyle.fp.nHeight;
         filenameStyle.look = ZGUI::ZTextLook::kShadowed;
         mpWinImage->mCaptionMap["filename"].sText = sFilename;
         mpWinImage->mCaptionMap["filename"].style = filenameStyle;
@@ -1032,6 +1056,26 @@ void ImageViewer::UpdateCaptions()
         {
             mpWinImage->mCaptionMap["move_to_folder"].Clear();
         }
+
+        if (mpWinImage->mpImage)
+        {
+            easyexif::EXIFInfo& exif = mpWinImage->mpImage->GetEXIF();
+            string sF;
+            if (std::fmod(exif.FNumber, 1.0) == 0)
+                Sprintf(sF, "%d", (int)exif.FNumber);
+            else
+                Sprintf(sF, "%.1f", exif.FNumber);
+
+            ZRect rArea(mpWinImage->mpImage->GetArea());
+            Sprintf(mpWinImage->mCaptionMap["exif"].sText, "Lens:%s\n%dmm  1/%ds  f%s  ISO:%d\nSize:%dx%d", exif.LensInfo.Model.c_str(), (int)exif.FocalLength, (int)(1.0 / exif.ExposureTime), sF.c_str(), exif.ISOSpeedRatings, rArea.Width(), rArea.Height())  ;
+            mpWinImage->mCaptionMap["exif"].style = folderStyle;
+            mpWinImage->mCaptionMap["exif"].style.pos = ZGUI::RB;
+        }
+        else
+        {
+            mpWinImage->mCaptionMap["exif"].Clear();
+        }
+
 
         if (mImagesInFolder.empty())
         {
