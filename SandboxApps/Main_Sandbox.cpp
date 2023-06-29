@@ -283,7 +283,8 @@ bool ZFrameworkApp::InitRegistry(std::filesystem::path userDataPath)
     appDataPath += "/ZSandbox/";
 
     filesystem::path prefsPath = appDataPath.make_preferred().string() + "prefs.json";
-    if (!gRegistry.Load(prefsPath.string()))
+    gRegistry.SetFilename(prefsPath.string());
+    if (!gRegistry.Load())
     {
         ZDEBUG_OUT("No registry file at:%s creating path for one.");
         std::filesystem::create_directories(prefsPath.parent_path());

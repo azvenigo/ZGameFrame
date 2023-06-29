@@ -36,6 +36,7 @@ ImageViewer::ImageViewer()
     mLastAction = kNone;
     msWinName = "ZWinImageViewer";
     mpPanel = nullptr;
+    mpSymbolicFont = nullptr;
     mToggleUIHotkey = 0;
 
 }
@@ -102,6 +103,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
             }
 
             bool bShowUI = mpPanel->IsVisible() || mImagesInFolder.empty();
+            gRegistry["ZImageViewer"]["showui"] = bShowUI;
 
             if (mpWinImage)
                 mpWinImage->mbShowUI = bShowUI;
@@ -513,13 +515,15 @@ bool ImageViewer::Init()
 
 void ImageViewer::ResetControlPanel()
 {
-    bool bShow = false;
+    bool bShow = gRegistry["ZImageViewer"]["showui"];
     if (mpPanel)
     {
         bShow = mpPanel->IsVisible();
         ChildDelete(mpPanel);
         mpPanel = nullptr;
     }
+
+
 
     mpPanel = new ZWinControlPanel();
     int64_t nControlPanelSide = mAreaToDrawTo.Height() / 24;
@@ -529,8 +533,12 @@ void ImageViewer::ResetControlPanel()
 
 
 
-    ZGUI::Style wd1Style = ZGUI::Style(ZFontParams("Wingdings", nGroupSide * 2 / 4));
-    ZGUI::Style wd3Style = ZGUI::Style(ZFontParams("Wingdings 3", nGroupSide * 2 / 3));
+    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("MS Gothic", nGroupSide * 2 / 4, 200, 0, 0, false, true));
+
+    mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
+    ((ZDynamicFont*) mpSymbolicFont.get())->GenerateSymbolicGlyph('<', 8634);
+    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('Q', 9813);
+
 
 
     ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
@@ -557,9 +565,9 @@ void ImageViewer::ResetControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("1");  // wingdings 1 open folder
+    pBtn->SetCaption("Q");  // wingdings 1 open folder
     pBtn->SetArea(rButton);
-    pBtn->mStyle = wd1Style;
+    pBtn->mStyle = unicodeStyle;
     pBtn->SetMessage(ZMessage("loadimg", this));
     mpPanel->ChildAdd(pBtn);
 
@@ -567,8 +575,8 @@ void ImageViewer::ResetControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("<"); // wingdings 1 save
-    pBtn->mStyle = wd1Style;
+    pBtn->SetCaption("Q"); // wingdings 1 save
+    pBtn->mStyle = unicodeStyle;
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("saveimg", this));
     mpPanel->ChildAdd(pBtn);
@@ -630,7 +638,7 @@ void ImageViewer::ResetControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption(":"); // wingdings rotate left
-    pBtn->mStyle = wd3Style;
+    pBtn->mStyle = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -641,7 +649,7 @@ void ImageViewer::ResetControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption(";"); // wingdings rotate right
-    pBtn->mStyle = wd3Style;
+    pBtn->mStyle = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -652,7 +660,7 @@ void ImageViewer::ResetControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("1"); // wingdings flip H
-    pBtn->mStyle = wd3Style;
+    pBtn->mStyle = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -663,7 +671,7 @@ void ImageViewer::ResetControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("2"); // wingdings flip V
-    pBtn->mStyle = wd3Style;
+    pBtn->mStyle = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -979,7 +987,7 @@ bool ImageViewer::Process()
             mSelectedFilename = mFilenameToLoad;
             mpWinImage->SetImage(pFuture->get());
             mpWinImage->mCaptionMap["no_image"].Clear();
-
+            mpWinImage->mbShowUI = gRegistry["ZImageViewer"]["showui"];
             gRegistry["ZImageViewer"]["image"] = mSelectedFilename.string();
 
             UpdateCaptions();

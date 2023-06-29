@@ -200,9 +200,7 @@ bool TextTestWin::Init()
 
     pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
 
-    pCP->AddToggle(&mCustomFontParams.bUnderline, "Underline", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
-
-    pCP->AddToggle(&mCustomFontParams.bStrikeOut, "StrikeOut", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
+    pCP->AddToggle(&mCustomFontParams.bSymbolic, "Symbolic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
 
 
 

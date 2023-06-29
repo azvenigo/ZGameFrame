@@ -16,8 +16,7 @@ ZFontParams::ZFontParams()
     nTracking = 1;
     nFixedWidth = 0;
     bItalic = false;
-    bUnderline = false;
-    bStrikeOut = false;
+    bSymbolic = false;
 }
 
 ZFontParams::ZFontParams(const ZFontParams& rhs)
@@ -27,8 +26,7 @@ ZFontParams::ZFontParams(const ZFontParams& rhs)
     nTracking = rhs.nTracking;
     nFixedWidth = rhs.nFixedWidth;
     bItalic = rhs.bItalic;
-    bUnderline = rhs.bUnderline;
-    bStrikeOut = rhs.bStrikeOut;
+    bSymbolic = rhs.bSymbolic;
     sFacename = rhs.sFacename;
 }
 
@@ -129,8 +127,8 @@ bool ZFont::LoadFont(const string& sFilename)
     memcpy(&mFontParams.bItalic, pData, sizeof(mFontParams.bItalic));
     pData += sizeof(mFontParams.bItalic);
 
-    memcpy(&mFontParams.bStrikeOut, pData, sizeof(mFontParams.bStrikeOut));
-    pData += sizeof(mFontParams.bStrikeOut);
+    memcpy(&mFontParams.bSymbolic, pData, sizeof(mFontParams.bSymbolic));
+    pData += sizeof(mFontParams.bSymbolic);
 
 //	mColorGradient.resize(mFontParams.nHeight);
 
@@ -184,7 +182,7 @@ bool ZFont::SaveFont(const string& sFilename)
     uncompBuffer->write((uint8_t*)&mFontParams.nTracking, sizeof(mFontParams.nTracking));
     uncompBuffer->write((uint8_t*)&mFontParams.nFixedWidth, sizeof(mFontParams.nFixedWidth));
     uncompBuffer->write((uint8_t*)&mFontParams.bItalic, sizeof(mFontParams.bItalic));
-    uncompBuffer->write((uint8_t*)&mFontParams.bStrikeOut, sizeof(mFontParams.bStrikeOut));
+    uncompBuffer->write((uint8_t*)&mFontParams.bSymbolic, sizeof(mFontParams.bSymbolic));
 
     // sFacename length
     int16_t nFacenameLength = (int16_t) mFontParams.sFacename.length();
@@ -1107,8 +1105,8 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
         0,                      /*nOrientation*/
         (int) mFontParams.nWeight, 
         mFontParams.bItalic, 
-        mFontParams.bUnderline, 
-        mFontParams.bStrikeOut, 
+        0, 
+        0, 
         nCharSet,           /*nCharSet*/
         OUT_DEVICE_PRECIS,     /*nOutPrecision*/
         OUT_DEFAULT_PRECIS,     /*nClipPrecision*/
@@ -1620,8 +1618,11 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
 
     if (!msCacheFolder.empty())
     {
-        ZDEBUG_OUT("Saving font:%s to cache", fp.sFacename.c_str());
-        pNewFont->SaveFont(FontCacheFilename(params));
+        if (!params.bSymbolic) // no caching symbolic fonts
+        {
+            ZDEBUG_OUT("Saving font:%s to cache", fp.sFacename.c_str());
+            pNewFont->SaveFont(FontCacheFilename(params));
+        }
     }
 
     return mFontMap[pNewFont->GetFontParams()];

@@ -39,11 +39,11 @@ namespace ZGUI
         gDefaultSpacer = (uint32_t)(grFullArea.Height() / 125);
         gnDefaultGroupInlaySize = 10;
 
-        gStyleButton.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 72, 10);
-        gStyleToggleChecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 72, 10);
-        gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 72, 10);
-        gStyleTooltip.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 72, 10);
-        gStyleCaption.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 60, 10);
+        gStyleButton.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
+        gStyleToggleChecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
+        gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
+        gStyleTooltip.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
+        gStyleCaption.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 55, 10);
 //        gDefaultGroupingStyle.fp.nHeight = grFullArea.Height()/135;
 
 

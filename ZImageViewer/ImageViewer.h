@@ -108,8 +108,9 @@ protected:
     std::list<std::string>  mAcceptedExtensions = { "jpg", "jpeg", "png", "gif", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" };
     std::atomic<uint32_t>   mAtomicIndex;   // incrementing index for unloading oldest
 
-    uint32_t    mToggleUIHotkey;
+    uint32_t                mToggleUIHotkey;
 
     // image manipulation
     tImageFilenames         mDeletionList;
+    tZFontPtr               mpSymbolicFont;
 };

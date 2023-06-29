@@ -41,7 +41,7 @@ public:
     ZFontParams();
     ZFontParams(const ZFontParams& rhs);
 
-    ZFontParams(const std::string name, int64_t height, int64_t weight = 200, int64_t tracking = 0, int64_t fixed = 0, bool italic = false, bool underline = false, bool strikeout = false)
+    ZFontParams(const std::string name, int64_t height, int64_t weight = 200, int64_t tracking = 0, int64_t fixed = 0, bool italic = false, bool symbolic = false)
     {
         sFacename = name;
         nHeight = height;
@@ -49,8 +49,7 @@ public:
         nTracking = tracking;
         nFixedWidth = fixed;
         bItalic = italic;
-        bUnderline = underline;
-        bStrikeOut = strikeout;
+        bSymbolic = symbolic;
     }
 
     ZFontParams(const std::string& sJSON)
@@ -67,15 +66,10 @@ public:
         else
             bItalic = false;
 
-        if (j.contains("u"))
-            bUnderline = j["u"];
-        else
-            bUnderline = false;
-
         if (j.contains("s"))
-            bStrikeOut = j["s"];
+            bSymbolic = j["s"];
         else
-            bStrikeOut = false;
+            bSymbolic = false;
     }
 
     // overloaded cast
@@ -91,11 +85,8 @@ public:
         if (bItalic)
             j["i"] = bItalic;
 
-        if (bUnderline)
-            j["u"] = bUnderline;
-
-        if (bStrikeOut)
-            j["s"] = bStrikeOut;
+        if (bSymbolic)
+            j["s"] = bSymbolic;
 
         return j.dump();
     }
@@ -126,8 +117,7 @@ public:
     int64_t nTracking;
     int64_t nFixedWidth;
     bool bItalic;
-    bool bUnderline;
-    bool bStrikeOut;
+    bool bSymbolic;
     std::string sFacename;
 };
 
@@ -206,8 +196,7 @@ inline bool operator==(const ZFontParams& lhs, const ZFontParams& rhs)
         lhs.nWeight             == rhs.nWeight &&
         lhs.nTracking           == rhs.nTracking &&
         lhs.bItalic             == rhs.bItalic &&
-        lhs.bUnderline          == rhs.bUnderline &&
-        lhs.bStrikeOut          == rhs.bStrikeOut &&
+        lhs.bSymbolic           == rhs.bSymbolic &&
         lhs.sFacename.compare(rhs.sFacename) == 0;
 
     return bEqual;

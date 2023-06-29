@@ -456,7 +456,7 @@ bool ZWinImage::Paint()
         }
     }
 
-    if (mBehavior & kShowCaption && mbShowUI)
+    if (mBehavior & kShowCaption || mbShowUI)
     {
         Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
         ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);
