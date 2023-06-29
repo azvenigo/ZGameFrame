@@ -1082,7 +1082,7 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
     mDIBInfo.bmiColors[0].rgbReserved = 0;
 
     DWORD pitch = DEFAULT_PITCH;
-    if (mFontParams.nFixedWidth > 0)
+    if (mFontParams.nFixedWidth > 0 || mFontParams.bSymbolic)
     {
         pitch = FIXED_PITCH;
         mbEnableKerning = false;
@@ -1608,7 +1608,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
     }
 
     ZDynamicFont* pNewFont = new ZDynamicFont();
-    pNewFont->Init(params);
+    pNewFont->Init(params, !params.bSymbolic);
 
     ZFontParams fp(pNewFont->GetFontParams());
     ZDEBUG_OUT("Created font:%s size:%d\n", fp.sFacename, fp.nHeight);

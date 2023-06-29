@@ -474,55 +474,6 @@ bool ZWinImage::HandleMessage(const ZMessage& message)
 {
     string sType = message.GetType();
 
-    if (sType == "rotate_left")
-    {
-        if (mpImage)
-        {
-            mpImage->Rotate(ZBuffer::kLeft);
-
-            if (mViewState == kFitToWindow)
-                FitImageToWindow();
-
-            Invalidate();
-        }
-        return true;
-    }
-    else if (sType == "rotate_right")
-    {
-        if (mpImage)
-        {
-            mpImage->Rotate(ZBuffer::kRight);
-            if (mViewState == kFitToWindow)
-                FitImageToWindow();
-
-            Invalidate();
-        }
-        return true;
-    }
-    else if (sType == "flipH")
-    {
-        if (mpImage)
-        {
-            mpImage->Rotate(ZBuffer::kHFlip);
-            if (mViewState == kFitToWindow)
-                FitImageToWindow();
-
-            Invalidate();
-        }
-        return true;
-    }
-    else if (sType == "flipV")
-    {
-        if (mpImage)
-        {
-            mpImage->Rotate(ZBuffer::kVFlip);
-            if (mViewState == kFitToWindow)
-                FitImageToWindow();
-
-            Invalidate();
-        }
-        return true;
-    }
 
     return ZWin::HandleMessage(message);
 }

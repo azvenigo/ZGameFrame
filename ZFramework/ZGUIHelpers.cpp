@@ -204,7 +204,7 @@ namespace ZGUI
             if (pos&Left)
                 newX = ref.left + paddingH;
             else if (pos&HCenter)
-                newX = (ref.left + ref.right - w) / 2;  // center horizontally within ref
+                newX = (ref.left + ref.right)/2 - w/2;  // center horizontally within ref
             else if (pos&Right)
                 newX = ref.right - w - paddingH;   // inside right
             else
@@ -228,7 +228,7 @@ namespace ZGUI
             if (pos&Top)            // inside top
                 newY = ref.top + paddingV;
             else if (pos&VCenter)
-                newY = (ref.top + ref.bottom - h) / 2;        // center vertically within ref
+                newY = (ref.top + ref.bottom)/2 - h/2;        // center vertically within ref
             else if (pos&Bottom)    // inside bottom
                 newY = ref.bottom - h - paddingV;
             else

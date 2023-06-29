@@ -240,6 +240,47 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         return true;
     }
 
+    if (mpWinImage && mpWinImage->mpImage)
+    {
+        if (sType == "rotate_left")
+        {
+            mpWinImage->mpImage->Rotate(ZBuffer::kLeft);
+
+            if (mpWinImage->IsSizedToWindow())
+                mpWinImage->FitImageToWindow();
+
+            Invalidate();
+            return true;
+        }
+        else if (sType == "rotate_right")
+        {
+            mpWinImage->mpImage->Rotate(ZBuffer::kRight);
+            if (mpWinImage->IsSizedToWindow())
+                mpWinImage->FitImageToWindow();
+
+            Invalidate();
+            return true;
+        }
+        else if (sType == "flipH")
+        {
+            mpWinImage->mpImage->Rotate(ZBuffer::kHFlip);
+            if (mpWinImage->IsSizedToWindow())
+                mpWinImage->FitImageToWindow();
+
+            Invalidate();
+            return true;
+        }
+        else if (sType == "flipV")
+        {
+            mpWinImage->mpImage->Rotate(ZBuffer::kVFlip);
+            if (mpWinImage->IsSizedToWindow())
+                mpWinImage->FitImageToWindow();
+
+            Invalidate();
+            return true;
+        }
+    }
+
     return ZWin::HandleMessage(message);
 }
 
@@ -515,7 +556,8 @@ bool ImageViewer::Init()
 
 void ImageViewer::ResetControlPanel()
 {
-    bool bShow = gRegistry["ZImageViewer"]["showui"];
+    bool bShow = false;
+    gRegistry.Get("ZImageViewer","showui", bShow);
     if (mpPanel)
     {
         bShow = mpPanel->IsVisible();
@@ -533,11 +575,20 @@ void ImageViewer::ResetControlPanel()
 
 
 
-    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("MS Gothic", nGroupSide * 2 / 4, 200, 0, 0, false, true));
+    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("MS Gothic", nGroupSide * 3 /4, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
+    ZGUI::Style wingdingsStyle = ZGUI::Style(ZFontParams("Wingdings", nGroupSide /2, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
 
     mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
-    ((ZDynamicFont*) mpSymbolicFont.get())->GenerateSymbolicGlyph('<', 8634);
-    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('Q', 9813);
+    ((ZDynamicFont*) mpSymbolicFont.get())->GenerateSymbolicGlyph('<', 11119); // rotate left
+    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('>', 11118); // rotate right
+
+    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('-', 11108); // flip H
+    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('|', 11109); // flip V
+
+    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x26F6);
+
+
+//    ((ZDynamicFont*)wingdingsStyle.Font().get())->GenerateSymbolicGlyph('F', 0x2922);
 
 
 
@@ -565,9 +616,9 @@ void ImageViewer::ResetControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("Q");  // wingdings 1 open folder
+    pBtn->SetCaption("1");  // wingdings open folder
     pBtn->SetArea(rButton);
-    pBtn->mStyle = unicodeStyle;
+    pBtn->mStyle = wingdingsStyle;
     pBtn->SetMessage(ZMessage("loadimg", this));
     mpPanel->ChildAdd(pBtn);
 
@@ -575,8 +626,8 @@ void ImageViewer::ResetControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("Q"); // wingdings 1 save
-    pBtn->mStyle = unicodeStyle;
+    pBtn->SetCaption("<"); // wingdings save
+    pBtn->mStyle = wingdingsStyle;
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("saveimg", this));
     mpPanel->ChildAdd(pBtn);
@@ -601,6 +652,7 @@ void ImageViewer::ResetControlPanel()
     //        pBtn->mStyle.look.colTop = 0xffff0000;
     //        pBtn->mStyle.look.colBottom = 0xffff0000;
     pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->mStyle.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "set_move_folder;target=%s", mpParentWin->GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -616,6 +668,7 @@ void ImageViewer::ResetControlPanel()
     pBtn->mStyle.look.colTop = 0xffff0000;
     pBtn->mStyle.look.colBottom = 0xffff0000;
     pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->mStyle.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "delete_single;target=%s", mpParentWin->GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -637,7 +690,7 @@ void ImageViewer::ResetControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption(":"); // wingdings rotate left
+    pBtn->SetCaption("<"); // unicode rotate left
     pBtn->mStyle = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
@@ -648,7 +701,7 @@ void ImageViewer::ResetControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption(";"); // wingdings rotate right
+    pBtn->SetCaption(">"); // unicode rotate right
     pBtn->mStyle = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
@@ -659,7 +712,7 @@ void ImageViewer::ResetControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("1"); // wingdings flip H
+    pBtn->SetCaption("-"); // unicode flip H
     pBtn->mStyle = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
@@ -670,7 +723,7 @@ void ImageViewer::ResetControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("2"); // wingdings flip V
+    pBtn->SetCaption("|"); // unicode flip V
     pBtn->mStyle = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
@@ -686,8 +739,9 @@ void ImageViewer::ResetControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("F");
-    pBtn->mStyle = gDefaultGroupingStyle;
-    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->mStyle = unicodeStyle;
+    pBtn->mStyle.pos = ZGUI::C;
+    pBtn->mStyle.paddingV = -pBtn->mStyle.fp.nHeight/10;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "toggle_fullscreen");
     pBtn->SetMessage(sMessage);
@@ -987,7 +1041,8 @@ bool ImageViewer::Process()
             mSelectedFilename = mFilenameToLoad;
             mpWinImage->SetImage(pFuture->get());
             mpWinImage->mCaptionMap["no_image"].Clear();
-            mpWinImage->mbShowUI = gRegistry["ZImageViewer"]["showui"];
+            gRegistry.Get("ZImageViewer", "showui", mpWinImage->mbShowUI);
+
             gRegistry["ZImageViewer"]["image"] = mSelectedFilename.string();
 
             UpdateCaptions();
