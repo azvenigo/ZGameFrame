@@ -31,6 +31,7 @@ ImageViewer::ImageViewer()
     mbAcceptsFocus = true;
     mIdleSleepMS = 13;
     mMaxMemoryUsage = 2 * 1024 * 1024 * 1024LL;   // 2GiB
+    //mMaxMemoryUsage = 675 * 1024 * 1024LL;
     mMaxCacheReadAhead = 10;
     mAtomicIndex = 0;
     mLastAction = kNone;
@@ -780,8 +781,18 @@ tZBufferPtr ImageViewer::LoadImageProc(std::filesystem::path& imagePath, ImageVi
     tZBufferPtr pNewImage(new ZBuffer);
     if (!pNewImage->LoadBuffer(imagePath.string()))
     {
+        pNewImage->Init(1920, 1080);
+        string sError;
+        Sprintf(sError, "Error loading image:\n%s", imagePath.string().c_str());
+
+        ZGUI::Style errorStyle(gStyleCaption);
+        errorStyle.look.colTop = 0xffff0000;
+        errorStyle.look.colBottom = 0xffff0000;
+        errorStyle.pos = ZGUI::C;
+        errorStyle.Font()->DrawTextParagraph(pNewImage.get(), sError, pNewImage->GetArea(), &errorStyle);
+
         cerr << "Error loading\n";
-        return nullptr;
+//        return nullptr;
     }
 
     return pNewImage;
@@ -864,7 +875,7 @@ bool ImageViewer::AddToCache(std::filesystem::path imagePath)
         return true;
 
     mImageCache.emplace_front( tNamedImagePair(imagePath, gPool.enqueue(&ImageViewer::LoadImageProc, imagePath, this)));
-    //ZOUT("Adding to cache: ", imagePath, " total in cache:", mImageCache.size(), "\n");
+//    ZOUT("Adding to cache: ", imagePath, " total in cache:", mImageCache.size(), "\n");
     return true;
 }
 
@@ -890,8 +901,12 @@ int64_t ImageViewer::CurMemoryUsage()
     {
         if (is_ready(p.second))
         {
-            ZRect rArea = p.second.get().get()->GetArea();
-            nLoaded += rArea.Width() * rArea.Height() * 4;
+            ZBuffer* pImage = p.second.get().get();
+            if (pImage)
+            {
+                ZRect rArea = pImage->GetArea();
+                nLoaded += rArea.Width() * rArea.Height() * 4;
+            }
         }
     }
 
@@ -968,10 +983,13 @@ bool ImageViewer::Preload()
 
     const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
 
-    while (CurMemoryUsage() > mMaxMemoryUsage && mImagesInFolder.size() > 1)
+    int64_t nCurMemUsage = CurMemoryUsage();
+    while (nCurMemUsage > mMaxMemoryUsage && mImagesInFolder.size() > 1)
     {
+//        ZOUT("Remove from cache:", (*mImageCache.rbegin()).first, " with memory usage:", nCurMemUsage, "\n");
         mImageCache.pop_back();
-        //ZDEBUG_OUT("Images:", mImageCache.size(), " memory:", CurMemoryUsage(), "\n");
+        nCurMemUsage = CurMemoryUsage();
+//        ZDEBUG_OUT("Images:", mImageCache.size(), " new memory:", nCurMemUsage, "\n");
     }
 
     return true;
