@@ -350,7 +350,7 @@ void ImageViewer::HandleMoveCommand()
     }
 
     string sFolder;
-    if (ZWinFileDialog::ShowSelectFolderDialog(sFolder))
+    if (ZWinFileDialog::ShowSelectFolderDialog(sFolder, mCurrentFolder.string()))
     {
         if (filesystem::path(sFolder) == mCurrentFolder)
         {
@@ -378,6 +378,7 @@ void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
     }
 
     filesystem::path oldName = PathFromIndex(mnViewingIndex);
+    int64_t oldIndex = mnViewingIndex;
 
     if (!std::filesystem::exists(oldName))
     {
@@ -392,9 +393,9 @@ void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
     filesystem::path newName(newPath);
     newName.append(oldName.filename().string());
     filesystem::rename(oldName, newName);
-
     ScanForImagesInFolder(mCurrentFolder);
 
+    mnViewingIndex = oldIndex;
     limit<int64_t>(mnViewingIndex, 0, mImageArray.size() - 1);
 
     Invalidate();
@@ -488,6 +489,24 @@ bool ImageViewer::Init()
 {
     if (!mbInitted)
     {
+        SetFocus();
+        mpWinImage = new ZWinImage();
+        ZRect rImageArea(mAreaToDrawTo);
+//        rImageArea.left += 64;  // thumbs
+        mpWinImage->SetArea(rImageArea);
+        mpWinImage->mFillColor = 0xff000000;
+        mpWinImage->mZoomHotkey = VK_MENU;
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable;
+
+        mpWinImage->mCaptionMap["zoom"].sText = gStyleCaption;
+        mpWinImage->mCaptionMap["zoom"].style.pos = ZGUI::CB;
+        mpWinImage->mCaptionMap["zoom"].style.look = ZGUI::ZTextLook::kShadowed;
+//        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
+
+        ChildAdd(mpWinImage);
+        mpWinImage->SetFocus();
+
+
         string sPersistedViewPath;
         if (gRegistry.Get("ZImageViewer", "image", sPersistedViewPath))
         {
@@ -498,24 +517,6 @@ bool ImageViewer::Init()
             KickCaching();
         }
 
-        SetFocus();
-        mpWinImage = new ZWinImage();
-        ZRect rImageArea(mAreaToDrawTo);
-//        rImageArea.left += 64;  // thumbs
-        mpWinImage->SetArea(rImageArea);
-        mpWinImage->mFillColor = 0xff000000;
-        mpWinImage->mZoomHotkey = VK_MENU;
-        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable;
-
-
-
-        mpWinImage->mCaptionMap["zoom"].sText = gStyleCaption;
-        mpWinImage->mCaptionMap["zoom"].style.pos = ZGUI::CB;
-        mpWinImage->mCaptionMap["zoom"].style.look = ZGUI::ZTextLook::kShadowed;
-//        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
-
-        ChildAdd(mpWinImage);
-        mpWinImage->SetFocus();
 
         ResetControlPanel();
 
@@ -629,7 +630,7 @@ void ImageViewer::ResetControlPanel()
     pBtn->mStyle.fp.nHeight = nGroupSide / 2;
     pBtn->mStyle.pos = ZGUI::C;
     pBtn->SetArea(rButton);
-    Sprintf(sMessage, "set_move_folder;target=%s", mpParentWin->GetTargetName().c_str());
+    Sprintf(sMessage, "set_move_folder;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
 
@@ -645,7 +646,7 @@ void ImageViewer::ResetControlPanel()
     pBtn->mStyle.fp.nHeight = nGroupSide / 2;
     pBtn->mStyle.pos = ZGUI::C;
     pBtn->SetArea(rButton);
-    Sprintf(sMessage, "delete_single;target=%s", mpParentWin->GetTargetName().c_str());
+    Sprintf(sMessage, "delete_single;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
 
@@ -743,6 +744,9 @@ bool ImageViewer::OnParentAreaChange()
 
 bool ImageViewer::ViewImage(const std::filesystem::path& filename)
 {
+    if (mCurrentFolder != filename.parent_path())
+        ScanForImagesInFolder(filename.parent_path());
+
     mnViewingIndex = IndexFromPath(filename);
     limit<int64_t>(mnViewingIndex, 0, mImageArray.size());
     return true;
@@ -760,6 +764,13 @@ void ImageViewer::LoadExifProc(std::filesystem::path& imagePath, ImageEntry* pEn
     else
         pEntry->mState = ImageEntry::kNoExifAvailable;
 }
+
+void ImageViewer::FlushLoads()
+{
+    delete mpPool;  // will join
+    mpPool = new ThreadPool(kPoolSize);
+}
+
 
 
 void ImageViewer::LoadImageProc(std::filesystem::path& imagePath, ImageEntry* pEntry)
@@ -975,7 +986,9 @@ void ImageViewer::Clear()
 {
     const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
 
+    FlushLoads();
     mImageArray.clear();
+    mCurrentFolder.clear();
     mnViewingIndex = 0;
     mLastAction = kNone;
     if (mpWinImage)
@@ -986,17 +999,17 @@ void ImageViewer::Clear()
 }
 
 
-bool ImageViewer::ScanForImagesInFolder(const std::filesystem::path& folder)
+bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
 {
     if (!std::filesystem::exists(folder))
         return false;
 
-    if (folder == mCurrentFolder)
-        return true;
-
-    mCurrentFolder = folder;
+//    if (folder == mCurrentFolder)
+//        return true;
 
     Clear();
+
+    mCurrentFolder = folder;
 
     for (auto filePath : std::filesystem::directory_iterator(mCurrentFolder))
     {
@@ -1120,14 +1133,21 @@ void ImageViewer::UpdateCaptions()
         mpWinImage->mCaptionMap["folder"].style = folderStyle;
         mpWinImage->mCaptionMap["folder"].style.paddingV = topPadding;
 
-        string sImageCount = "# " + SH::FromInt(mnViewingIndex+1) + "/" + SH::FromInt(mImageArray.size());
-        mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
-        mpWinImage->mCaptionMap["image_count"].style = folderStyle;
-        mpWinImage->mCaptionMap["image_count"].style.paddingV = topPadding;
-        mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::RT;
+        if (!mImageArray.empty())
+        {
+            string sImageCount = "# " + SH::FromInt(mnViewingIndex + 1) + "/" + SH::FromInt(mImageArray.size());
+            mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
+            mpWinImage->mCaptionMap["image_count"].style = folderStyle;
+            mpWinImage->mCaptionMap["image_count"].style.paddingV = topPadding;
+            mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::RT;
+        }
+        else
+        {
+            mpWinImage->mCaptionMap["image_count"].Clear();
+        }
 
 
-        string sFilename =  PathFromIndex(mnViewingIndex).string();
+        string sFilename =  PathFromIndex(mnViewingIndex).filename().string();
         ZGUI::Style filenameStyle(gStyleButton);
         filenameStyle.pos = ZGUI::LT;
         filenameStyle.paddingV = topPadding + folderStyle.fp.nHeight;
@@ -1154,7 +1174,7 @@ void ImageViewer::UpdateCaptions()
         {
             bShowCapitons = true;
             Sprintf(mpWinImage->mCaptionMap["deletion_summary"].sText, "%d Files marked for deletion", deletionList.size());
-            mpWinImage->mCaptionMap["deletion_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::RB, 0, 0, 0x88000000, true);
+            mpWinImage->mCaptionMap["deletion_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, 0, 28, 0x88000000, true);
         }
         else
         {

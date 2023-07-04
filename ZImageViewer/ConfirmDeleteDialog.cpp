@@ -63,7 +63,7 @@ bool ConfirmDeleteDialog::Init()
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption("Quit");
         pBtn->SetMessage(ZMessage("cancel", this));
-        pBtn->mStyle = gStyleGeneralText;
+        pBtn->mStyle = gStyleButton;
         pBtn->SetArea(rButton);
         ChildAdd(pBtn);
 

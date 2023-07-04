@@ -98,7 +98,7 @@ protected:
     void                    Clear();
     void                    ResetControlPanel();
 
-    bool                    ScanForImagesInFolder(const std::filesystem::path& folder);
+    bool                    ScanForImagesInFolder(std::filesystem::path folder);
 
     tZBufferPtr             GetCurImage(); // null if no image or not loaded
 
@@ -119,6 +119,8 @@ protected:
 
     static void             LoadImageProc(std::filesystem::path& imagePath, ImageEntry* pEntry);
     static void             LoadExifProc(std::filesystem::path& imagePath, ImageEntry* pEntry);
+
+    void                    FlushLoads();
 
     void                    UpdateCaptions();
 
