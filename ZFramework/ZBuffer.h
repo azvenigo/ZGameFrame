@@ -65,6 +65,7 @@ public:
     virtual uint32_t*       GetPixels() { return mpPixels; }
 
     virtual easyexif::EXIFInfo& GetEXIF() { return mEXIF; }
+    static bool             ReadEXIFFromFile(const std::string& sName, easyexif::EXIFInfo& info);
 
     // Flags
     virtual bool            GetRenderFlag(eRenderFlags flag) { return mRenderFlags & flag; }

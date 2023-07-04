@@ -146,7 +146,7 @@ void ZInput::CheckForMouseOverNewWindow()
     // Check whether a "cursor out" message needs to be sent.  (i.e. a previous window had the cursor over it but no longer)
     if (mouseOverWin != pMouseOverWin)
     {
-        ZOUT("bMouseHoverPosted = false\n");
+        //ZOUT("bMouseHoverPosted = false\n");
 
         bMouseHoverPosted = false;	// Only post a mouse hover message if the cursor has moved into a new window
 

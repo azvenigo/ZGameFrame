@@ -5,13 +5,13 @@
 #include "Resources.h"
 #include "helpers/StringHelpers.h"
 #include "ZStringHelpers.h"
-#include "helpers/ThreadPool.h"
 #include "ZWinFileDialog.h"
 #include "ConfirmDeleteDialog.h"
 #include "ZWinControlPanel.h"
 #include <algorithm>
 #include "ZWinBtn.H"
 #include "helpers/Registry.h"
+#include "ZTimer.h"
 
 
 using namespace std;
@@ -22,8 +22,7 @@ bool is_ready(std::shared_future<R> const& f)
 {
     return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
-
-ThreadPool gPool(16);
+const int kPoolSize = 8;
 
 ImageViewer::ImageViewer()
 {
@@ -31,19 +30,24 @@ ImageViewer::ImageViewer()
     mbAcceptsFocus = true;
     mIdleSleepMS = 13;
     mMaxMemoryUsage = 2 * 1024 * 1024 * 1024LL;   // 2GiB
-    //mMaxMemoryUsage = 675 * 1024 * 1024LL;
-    mMaxCacheReadAhead = 10;
-    mAtomicIndex = 0;
+//    mMaxMemoryUsage = 675 * 1024 * 1024LL;
+    mMaxCacheReadAhead = 5;
+    mnViewingIndex = 0;
     mLastAction = kNone;
     msWinName = "ZWinImageViewer";
     mpPanel = nullptr;
     mpSymbolicFont = nullptr;
+    mpWinImage = nullptr;
+    mpPool = new ThreadPool(kPoolSize);
     mToggleUIHotkey = 0;
+    mCachingState = kWaiting;
 
 }
  
 ImageViewer::~ImageViewer()
 {
+    if (mpPool)
+        delete mpPool;
 }
 
 
@@ -51,27 +55,39 @@ bool ImageViewer::ShowOpenImageDialog()
 {
     string sFilename;
     string sDefaultFolder;
-    if (!mSelectedFilename.empty())
-        sDefaultFolder = mSelectedFilename.parent_path().string();
+    if (!mCurrentFolder.empty())
+        sDefaultFolder = mCurrentFolder.string();
     if (ZWinFileDialog::ShowLoadDialog("Images", "*.jpg;*.jpeg;*.png;*.gif;*.tga;*.bmp;*.psd;*.hdr;*.pic;*.pnm", sFilename, sDefaultFolder))
     {
-        mFilenameToLoad = sFilename;
         mMoveToFolder.clear();
-        Preload();
+
+        filesystem::path imagePath(sFilename);
+        ScanForImagesInFolder(imagePath.parent_path());
+        mnViewingIndex = IndexFromPath(imagePath);
+        KickCaching();
     }
     return true;
 
 }
 void ImageViewer::HandleQuitCommand()
 {
-    if (mDeletionList.empty())
+    mCachingState = kWaiting;
+
+    tImageFilenames deletionList = GetImagesFlaggedToBeDeleted();
+
+    if (deletionList.empty())
     {
+        if (mpPool)
+        {
+            delete mpPool;
+            mpPool = nullptr;
+        }
         gMessageSystem.Post("quit_app_confirmed");
     }
     else
     {
-        mFilenameToLoad = *mDeletionList.begin();
-        ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", mDeletionList);
+        mnViewingIndex = IndexFromPath(*deletionList.begin());
+        ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", deletionList);
         pDialog->msOnConfirmDelete = ZMessage("delete_confirm", this);
         pDialog->msOnCancel = ZMessage("delete_cancel_and_quit", this);
         pDialog->msOnGoBack = ZMessage("delete_goback", this);
@@ -103,7 +119,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
                 mpPanel->mbHideOnMouseExit = true;
             }
 
-            bool bShowUI = mpPanel->IsVisible() || mImagesInFolder.empty();
+            bool bShowUI = mpPanel->IsVisible() || mImageArray.empty();
             gRegistry["ZImageViewer"]["showui"] = bShowUI;
 
             if (mpWinImage)
@@ -167,10 +183,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
         break;
     case VK_DELETE:
         {
-        if (!mSelectedFilename.empty())
-        {
-            ToggleDeletionList(mSelectedFilename);
-        }
+            ToggleDeleteFlag();
         }
     }
 
@@ -232,7 +245,8 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     }
     else if (sType == "select")
     {
-        mFilenameToLoad = message.GetParam("filename");
+        mnViewingIndex = IndexFromPath(message.GetParam("filename"));
+        KickCaching();
         return true;
     }
     else if (sType == "set_move_folder")
@@ -287,21 +301,21 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
 
 void ImageViewer::HandleDeleteCommand()
 {
-    if (mSelectedFilename.empty())
+    if (!ValidIndex(mnViewingIndex))
     {
         ZERROR("No image selected for delete");
         return;
     }
 
-    filesystem::path current = mSelectedFilename;
-    SetNextImage();
-    DeleteFile(current);
+    int64_t nPrevViewingIndex = mnViewingIndex;
 
-    tImageFilenames::iterator it = find(mDeletionList.begin(), mDeletionList.end(), current);
-    if (it != mDeletionList.end())
-        it = mDeletionList.erase(it);
+    DeleteFile(mImageArray[mnViewingIndex].filename);
 
-    ScanForImagesInFolder(current.parent_path());
+    ScanForImagesInFolder(mCurrentFolder);
+
+    mnViewingIndex = nPrevViewingIndex; // restore
+    KickCaching();
+    limit<int64_t>(mnViewingIndex, 0, mImageArray.size()-1);
 }
 
 void ImageViewer::SetArea(const ZRect& newArea)
@@ -323,16 +337,13 @@ void ImageViewer::SetArea(const ZRect& newArea)
 }
 void ImageViewer::HandleNavigateToParentFolder()
 {
-    if (mSelectedFilename.empty())
-        return;
-
     ScanForImagesInFolder(mCurrentFolder.parent_path());
     SetFirstImage();
 }
 
 void ImageViewer::HandleMoveCommand()
 {
-    if (mSelectedFilename.empty())
+    if (!ValidIndex(mnViewingIndex))
     {
         ZERROR("No image selected to move");
         return;
@@ -341,7 +352,7 @@ void ImageViewer::HandleMoveCommand()
     string sFolder;
     if (ZWinFileDialog::ShowSelectFolderDialog(sFolder))
     {
-        if (filesystem::path(sFolder) == mSelectedFilename.parent_path())
+        if (filesystem::path(sFolder) == mCurrentFolder)
         {
             // do not set move to folder to the same as current
             mMoveToFolder.clear();
@@ -360,7 +371,15 @@ void ImageViewer::HandleMoveCommand()
 
 void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
 {
-    if (mSelectedFilename.empty() || !std::filesystem::exists(mSelectedFilename))
+    if (!ValidIndex(mnViewingIndex))
+    {
+        ZERROR("No image selected to move");
+        return;
+    }
+
+    filesystem::path oldName = PathFromIndex(mnViewingIndex);
+
+    if (!std::filesystem::exists(oldName))
     {
         ZERROR("No image selected to move");
         return;
@@ -368,36 +387,15 @@ void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
 
     mMoveToFolder = newPath;
 
-    filesystem::path nextImageFilename;
-    tImageFilenames::iterator current = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mSelectedFilename);
-    if (current != mImagesInFolder.end())
-    {
-        current++;
-        if (current != mImagesInFolder.end())
-            nextImageFilename = *current;
-    }
-
     filesystem::create_directories(newPath);
 
     filesystem::path newName(newPath);
-    newName.append(mSelectedFilename.filename().string());
-    filesystem::rename(mSelectedFilename, newName);
+    newName.append(oldName.filename().string());
+    filesystem::rename(oldName, newName);
 
-    RemoveFromCache(mSelectedFilename);
+    ScanForImagesInFolder(mCurrentFolder);
 
-    ScanForImagesInFolder(mFilenameToLoad.parent_path());
-
-    // if we just moved the last image in the folder, need to select the new last one
-    if (nextImageFilename.empty())
-    {
-        SetLastImage();
-    }
-    else
-    {
-        mFilenameToLoad = nextImageFilename;
-        mSelectedFilename.clear();
-    }
-
+    limit<int64_t>(mnViewingIndex, 0, mImageArray.size() - 1);
 
     Invalidate();
 }
@@ -405,14 +403,13 @@ void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
 
 void ImageViewer::DeleteConfimed()
 {
-    for (auto f : mDeletionList)
+    tImageFilenames deletionList = GetImagesFlaggedToBeDeleted();
+    for (auto f : deletionList)
     {
         DeleteFile(f);
     }
 
-    mDeletionList.clear();
-
-    ScanForImagesInFolder(mSelectedFilename.parent_path());
+    ScanForImagesInFolder(mCurrentFolder);
 }
 
 void ImageViewer::DeleteFile(std::filesystem::path& f)
@@ -448,79 +445,57 @@ bool ImageViewer::SaveImage(const std::filesystem::path& filename)
 
 void ImageViewer::SetFirstImage()
 {
-    if (mImagesInFolder.empty())
-    {
-        Clear();
-        return;
-    }
-
-    mFilenameToLoad = *mImagesInFolder.begin();
+    mnViewingIndex = 0;
     mLastAction = kBeginning;
-    Preload();
+    limit<int64_t>(mnViewingIndex, 0, mImageArray.size() - 1);
+    mCachingState = kReadingAhead;
+    FreeCacheMemory();
+    KickCaching();
 }
+ 
 
 void ImageViewer::SetLastImage()
 {
-    if (mImagesInFolder.empty())
-    {
-        Clear();
-        return;
-    }
-
-    mFilenameToLoad = *mImagesInFolder.rbegin();
+    mnViewingIndex = mImageArray.size() - 1;
     mLastAction = kEnd;
-    Preload();
+    limit<int64_t>(mnViewingIndex, 0, mImageArray.size() - 1);
+    mCachingState = kReadingAhead;
+    FreeCacheMemory();
+    KickCaching();
 }
 
 void ImageViewer::SetPrevImage()
 {
-    if (mImagesInFolder.empty())
-    {
-        Clear();
-        return;
-    }
-
-    tImageFilenames::iterator selectedImage = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mSelectedFilename);
-
-    if (selectedImage != mImagesInFolder.end() && selectedImage != mImagesInFolder.begin())
-    {
-        selectedImage--;
-        mFilenameToLoad = *selectedImage;
-    }
-
+    mnViewingIndex--;
     mLastAction = kPrevImage;
-    Preload();
+    limit<int64_t>(mnViewingIndex, 0, mImageArray.size() - 1);
+    mCachingState = kReadingAhead;
+    FreeCacheMemory();
+    KickCaching();
 }
 
 void ImageViewer::SetNextImage()
 {
-    if (mImagesInFolder.empty())
-    {
-        Clear();
-        return;
-    }
-
-    tImageFilenames::iterator selectedImage = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mSelectedFilename);
-
-    if (selectedImage != mImagesInFolder.end())
-    {
-        selectedImage++;
-        if (selectedImage != mImagesInFolder.end())
-            mFilenameToLoad = *selectedImage;
-    }
-
+    mnViewingIndex++;
     mLastAction = kNextImage;
-    Preload();
+    limit<int64_t>(mnViewingIndex, 0, mImageArray.size() - 1);
+    mCachingState = kReadingAhead;
+    FreeCacheMemory();
+    KickCaching();
 }
 
 bool ImageViewer::Init()
 {
     if (!mbInitted)
     {
-        string sLoaded;
-        if (gRegistry.Get("ZImageViewer", "image", sLoaded))
+        string sPersistedViewPath;
+        if (gRegistry.Get("ZImageViewer", "image", sPersistedViewPath))
         {
-            mFilenameToLoad = sLoaded;
+            ScanForImagesInFolder(filesystem::path(sPersistedViewPath).parent_path());
+            mnViewingIndex = IndexFromPath(sPersistedViewPath);
+            limit<int64_t>(mnViewingIndex, 0, mImageArray.size() - 1);
+            mCachingState = kReadingAhead;
+            KickCaching();
         }
 
         SetFocus();
@@ -547,8 +522,7 @@ bool ImageViewer::Init()
         mToggleUIHotkey = VK_TAB;
     }
 
-    Preload();
-    if (mFilenameToLoad.empty())
+    if (!ValidIndex(mnViewingIndex))
         SetFirstImage();
 
     return ZWin::Init();
@@ -769,15 +743,32 @@ bool ImageViewer::OnParentAreaChange()
 
 bool ImageViewer::ViewImage(const std::filesystem::path& filename)
 {
-    mFilenameToLoad = filename;
-
-    Preload();
+    mnViewingIndex = IndexFromPath(filename);
+    limit<int64_t>(mnViewingIndex, 0, mImageArray.size());
     return true;
 }
 
-
-tZBufferPtr ImageViewer::LoadImageProc(std::filesystem::path& imagePath, ImageViewer* pThis)
+void ImageViewer::LoadExifProc(std::filesystem::path& imagePath, ImageEntry* pEntry)
 {
+    if (!pEntry)
+        return;
+
+    ZOUT("Loading EXIF:", imagePath, "\n");
+
+    if (ZBuffer::ReadEXIFFromFile(imagePath.string(), pEntry->mEXIF))
+        pEntry->mState = ImageEntry::kExifReady;
+    else
+        pEntry->mState = ImageEntry::kNoExifAvailable;
+}
+
+
+void ImageViewer::LoadImageProc(std::filesystem::path& imagePath, ImageEntry* pEntry)
+{
+    if (!pEntry)
+        return;
+
+    ZOUT("Loading:", imagePath, "\n");
+
     tZBufferPtr pNewImage(new ZBuffer);
     if (!pNewImage->LoadBuffer(imagePath.string()))
     {
@@ -795,202 +786,169 @@ tZBufferPtr ImageViewer::LoadImageProc(std::filesystem::path& imagePath, ImageVi
 //        return nullptr;
     }
 
-    return pNewImage;
+    pEntry->pImage = pNewImage;
+    pEntry->mState = ImageEntry::kLoaded;
 }
 
-
-bool ImageViewer::InCache(const std::filesystem::path& imagePath)
+tZBufferPtr ImageViewer::GetCurImage()
 {
-    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+    if (!ValidIndex(mnViewingIndex))    // also handles empty array case
+        return nullptr;
 
-    for (auto& p : mImageCache)
-    {
-        if (p.first == imagePath)
-            return true;
-    }
-
-    return false;
+    return mImageArray[mnViewingIndex].pImage;
 }
-
-bool ImageViewer::ImagePreloading()
-{
-    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
-
-    for (auto& p : mImageCache)
-    {
-        if (p.second.valid() && !is_ready(p.second))
-        {
-            return true;
-        }
-    }
-
-//    ZDEBUG_OUT_LOCKLESS("not preloading...\n");
-
-    return false;
-}
-
-
-int64_t ImageViewer::ImageIndexInFolder(std::filesystem::path imagePath)
-{
-    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
-
-    int64_t i = 1;
-    for (auto& image : mImagesInFolder)
-    {
-        if (image == imagePath)
-            return i;
-        i++;
-    }
-
-    return 0;
-}
-
-
-tImageFuture* ImageViewer::GetCached(const std::filesystem::path& imagePath)
-{
-    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
-
-    for (auto& p : mImageCache)
-    {
-        if (p.first == imagePath)
-        {
-            if (is_ready(p.second))
-                return &p.second;
-            return nullptr;
-        }
-    }
-
-    return nullptr;
-}
-
-
-bool ImageViewer::AddToCache(std::filesystem::path imagePath)
-{
-    if (imagePath.empty())
-        return false;
-
-    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
-
-    if (InCache(imagePath))
-        return true;
-
-    mImageCache.emplace_front( tNamedImagePair(imagePath, gPool.enqueue(&ImageViewer::LoadImageProc, imagePath, this)));
-//    ZOUT("Adding to cache: ", imagePath, " total in cache:", mImageCache.size(), "\n");
-    return true;
-}
-
-bool ImageViewer::RemoveFromCache(std::filesystem::path imagePath)
-{
-    if (imagePath.empty())
-        return false;
-
-    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
-
-    mImageCache.remove_if([&](auto& p) {return p.first == imagePath; });
-
-    return false;
-}
-
 
 int64_t ImageViewer::CurMemoryUsage()
 {
-    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
 
-    int64_t nLoaded = 0;
-    for (auto& p : mImageCache)
+    int64_t nUsage = 0;
+    for (auto& i : mImageArray)
     {
-        if (is_ready(p.second))
+        if (i.pImage)
         {
-            ZBuffer* pImage = p.second.get().get();
-            if (pImage)
-            {
-                ZRect rArea = pImage->GetArea();
-                nLoaded += rArea.Width() * rArea.Height() * 4;
-            }
+            ZRect rArea = i.pImage->GetArea();
+            nUsage += rArea.Width() * rArea.Height() * 4;
+        }
+        else if (i.mState == ImageEntry::kLoadInProgress)
+        {
+            int64_t nBytesPending = (i.mEXIF.ImageWidth * i.mEXIF.ImageHeight) * 4;
+            nUsage += nBytesPending;
         }
     }
 
-    return nLoaded;
+    return nUsage;
+}
+
+int64_t ImageViewer::GetLoadsInProgress()
+{
+    int64_t nCount = 0;
+    for (auto& i : mImageArray)
+    {
+        if (i.mState == ImageEntry::kLoadInProgress)
+            nCount++;
+    }
+
+    return nCount;
 }
 
 
-bool ImageViewer::Preload()
+// check ahead in the direction of last action....two forward, one back
+int64_t ImageViewer::NextImageToCache()
 {
-    if (mCurrentFolder != mFilenameToLoad.parent_path())
+    int64_t dir = 1;
+    if (mLastAction == kPrevImage || mnViewingIndex == mImageArray.size()-1)
+        dir = -1;
+    
+
+    for (int64_t distance = 0; distance < mMaxCacheReadAhead; distance++)
     {
-        mCurrentFolder = mFilenameToLoad.parent_path();
-        ScanForImagesInFolder(mCurrentFolder);
-    }
-
-    if (mImagesInFolder.empty())
-    {
-        Clear();
-        return true;
-    }
-
-
-    tImageFilenames::iterator selectedImage = std::find(mImagesInFolder.begin(), mImagesInFolder.end(), mFilenameToLoad);
-
-    if (mFilenameToLoad != mSelectedFilename)
-    {
-        if (selectedImage != mImagesInFolder.end())
+        int64_t index = (int64_t)mnViewingIndex + distance * dir;
+        if (ValidIndex(index))
         {
-            if (AddToCache(*selectedImage))
+            ImageEntry& entry = mImageArray[index];
+            if (entry.mState < ImageEntry::kLoadInProgress)
+                return index;
+        }
+
+        index = (int64_t)mnViewingIndex + distance * -dir;
+        if (ValidIndex(index))
+        {
+            ImageEntry& entry = mImageArray[index];
+            if (entry.mState < ImageEntry::kLoadInProgress)
+                return index;
+        }
+    }
+
+    return -1;
+}
+
+bool ImageViewer::FreeCacheMemory()
+{
+
+    const int64_t kUnloadViewDistance = mMaxCacheReadAhead;
+    // unload everything over mMaxCacheReadAhead
+    for (int64_t i = 0; i < mImageArray.size(); i++)
+    {
+        if (std::abs(i - mnViewingIndex) > kUnloadViewDistance && mImageArray[i].mState == ImageEntry::kLoaded)
+        {
+            ZOUT("Unloading viewed:", i, "\n");
+            mImageArray[i].pImage = nullptr;
+            if (mImageArray[i].mEXIF.ImageWidth > 0 && mImageArray[i].mEXIF.ImageHeight > 0)
+                mImageArray[i].mState = ImageEntry::kExifReady;
+            else
+                mImageArray[i].mState = ImageEntry::kInit;
+        }
+    }
+
+    // progressively look for closer images to unload until under budget
+    for (int64_t nDistance = kUnloadViewDistance-1; nDistance > 1 && CurMemoryUsage() > mMaxMemoryUsage; nDistance--)
+    {
+        // make memory available if over budget
+        for (int64_t i = 0; i < mImageArray.size() && CurMemoryUsage() > mMaxMemoryUsage; i++)
+        {
+            if (std::abs(i - mnViewingIndex) > nDistance && mImageArray[i].mState == ImageEntry::kLoaded)
             {
-                /*            // now preload the next image
-                            selectedImage++;
-                            if (selectedImage != mImagesInFolder.end())
-                            {
-                                AddToCache(*selectedImage);
-                            }*/
+                ZOUT("Unloading viewed:", i, "\n");
+                mImageArray[i].pImage = nullptr;
+                if (mImageArray[i].mEXIF.ImageWidth > 0 && mImageArray[i].mEXIF.ImageHeight > 0)
+                    mImageArray[i].mState = ImageEntry::kExifReady;
+                else
+                    mImageArray[i].mState = ImageEntry::kInit;
             }
+        }
+    }
+
+    return true;
+}
+
+
+
+bool ImageViewer::KickCaching()
+{
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
+
+    // loading current image is top priority
+    if (ValidIndex(mnViewingIndex))
+    {
+        ImageEntry& entry = mImageArray[mnViewingIndex];
+        if (entry.mState < ImageEntry::kLoadInProgress)
+        {
+            entry.mState = ImageEntry::kLoadInProgress;
+            mpPool->enqueue(&ImageViewer::LoadImageProc, entry.filename, &entry);
+        }
+    }
+
+    if (GetLoadsInProgress() > kPoolSize/2)
+        return false;
+
+    // kick off exif reading if necessary
+    for (auto& entry : mImageArray)
+    {
+        if (entry.mState == ImageEntry::kInit)
+        {
+            entry.mState = ImageEntry::kLoadingExif;
+            mpPool->enqueue(&ImageViewer::LoadExifProc, entry.filename, &entry);
+            break;
+        }
+    }
+
+    if (CurMemoryUsage() < mMaxMemoryUsage)
+    {
+        int64_t nextToCache = NextImageToCache();
+
+        if (nextToCache < 0)
+            return false;
+
+        ImageEntry& entry = mImageArray[nextToCache];
+        if (entry.mState < ImageEntry::kLoadInProgress)
+        {
+            entry.mState = ImageEntry::kLoadInProgress;
+            mpPool->enqueue(&ImageViewer::LoadImageProc, entry.filename, &entry);
         }
     }
     else
-    {
-        // if there's room in the cache and no images are loading, preload another
-        if (!ImagePreloading() && CurMemoryUsage() < mMaxMemoryUsage)
-        {
-            if (mLastAction == kNone || mLastAction == kNextImage)
-            {
-                for (int readAhead = 0; readAhead < mMaxCacheReadAhead && selectedImage != mImagesInFolder.end(); readAhead++)
-                {
-                    selectedImage++;
-                    if (selectedImage != mImagesInFolder.end() && !InCache(*selectedImage))
-                    {
-                        AddToCache(*selectedImage);
-                        break;
-                    }
-                }
-            }
-            else if (mLastAction == kPrevImage)
-            {
-                for (int readAhead = 0; readAhead < mMaxCacheReadAhead; readAhead++)
-                {
-                    if (selectedImage != mImagesInFolder.end() && selectedImage != mImagesInFolder.begin())
-                    {
-                        selectedImage--;
-                        if (!InCache(*selectedImage))
-                        {
-                            AddToCache(*selectedImage);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
-
-    int64_t nCurMemUsage = CurMemoryUsage();
-    while (nCurMemUsage > mMaxMemoryUsage && mImagesInFolder.size() > 1)
-    {
-//        ZOUT("Remove from cache:", (*mImageCache.rbegin()).first, " with memory usage:", nCurMemUsage, "\n");
-        mImageCache.pop_back();
-        nCurMemUsage = CurMemoryUsage();
-//        ZDEBUG_OUT("Images:", mImageCache.size(), " new memory:", nCurMemUsage, "\n");
-    }
+        mCachingState = kWaiting;   // wait for any additional actions before resuming caching
 
     return true;
 }
@@ -1015,10 +973,11 @@ bool ImageViewer::AcceptedExtension(std::string sExt)
 
 void ImageViewer::Clear()
 {
-    const std::lock_guard<std::recursive_mutex> lock(mImageCacheMutex);
-    mImageCache.clear();
-    mImagesInFolder.clear();
-    mSelectedFilename.clear();
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
+
+    mImageArray.clear();
+    mnViewingIndex = 0;
+    mLastAction = kNone;
     if (mpWinImage)
         mpWinImage->Clear();
 
@@ -1032,44 +991,117 @@ bool ImageViewer::ScanForImagesInFolder(const std::filesystem::path& folder)
     if (!std::filesystem::exists(folder))
         return false;
 
-    bool bFolderScan = std::filesystem::is_directory(folder);
+    if (folder == mCurrentFolder)
+        return true;
 
-    mImagesInFolder.clear();
-    mDeletionList.clear();
+    mCurrentFolder = folder;
 
-    for (auto filePath : std::filesystem::directory_iterator(folder))
+    Clear();
+
+    for (auto filePath : std::filesystem::directory_iterator(mCurrentFolder))
     {
         if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
         {
-            mImagesInFolder.push_back(filePath);
+            mImageArray.emplace_back(ImageEntry(filePath));
             //ZDEBUG_OUT("Found image:", filePath, "\n");
         }
     }
 
+    UpdateCaptions();
+
     return true;
 }
 
+int64_t ImageViewer::IndexFromPath(std::filesystem::path imagePath)
+{
+    for (int i = 0; i < mImageArray.size(); i++)
+    {
+        if (mImageArray[i].filename == imagePath)
+            return i;
+    }
+
+    return -1;
+}
+
+std::filesystem::path ImageViewer::PathFromIndex(int64_t index)
+{
+    if (!ValidIndex(index))
+        return {};
+
+    return mImageArray[index].filename;
+}
+
+
+bool ImageViewer::ValidIndex(int64_t index)
+{
+    return index >= 0 && index < mImageArray.size();
+}
+
+tImageFilenames ImageViewer::GetImagesFlaggedToBeDeleted()
+{
+    tImageFilenames filenames;
+
+    for (auto& i : mImageArray)
+    {
+        if (i.bToBeDeleted)
+            filenames.push_back(i.filename);
+    }
+
+    return filenames;
+}
+
+#ifdef _DEBUG
+string ImageViewer::LoadStateString()
+{
+    string state;
+    for (int i = 0; i < mImageArray.size(); i++)
+    {
+        if (mImageArray[i].pImage)
+            state = state + " [" + SH::FromInt(i) + "]";
+        else
+            state = state + " " + SH::FromInt(i);
+    }
+
+    return state;
+}
+
+#endif
+
 bool ImageViewer::Process()
 {
-    if (mpWinImage && mFilenameToLoad != mSelectedFilename)
+    if (mpWinImage && !mImageArray.empty())
     {
-        tImageFuture* pFuture = GetCached(mFilenameToLoad);
-        if (pFuture)
+        tZBufferPtr curImage = GetCurImage();
+
+        if (curImage && mpWinImage->mpImage != curImage)
         {
-            mSelectedFilename = mFilenameToLoad;
-            mpWinImage->SetImage(pFuture->get());
+            mpWinImage->SetImage(curImage);
+
             mpWinImage->mCaptionMap["no_image"].Clear();
             gRegistry.Get("ZImageViewer", "showui", mpWinImage->mbShowUI);
 
-            gRegistry["ZImageViewer"]["image"] = mSelectedFilename.string();
+            gRegistry["ZImageViewer"]["image"] = mImageArray[mnViewingIndex].filename.string();
 
             UpdateCaptions();
+            Invalidate();
         }
+
+        if (mCachingState == kReadingAhead)
+            KickCaching();
     }
-    else
+
+#ifdef _DEBUG
+    static int64_t nLastReport = 0;
+
+    int64_t nTime = gTimer.GetElapsedTime();
+    if (nTime - nLastReport > 1000)
     {
-        Preload();
+        ZOUT("state:   ", LoadStateString(), "\n\n");
+        nLastReport = nTime;
     }
+#endif
+
+
     return ZWin::Process();
 }
 
@@ -1088,14 +1120,14 @@ void ImageViewer::UpdateCaptions()
         mpWinImage->mCaptionMap["folder"].style = folderStyle;
         mpWinImage->mCaptionMap["folder"].style.paddingV = topPadding;
 
-        string sImageCount = "# " + SH::FromInt(ImageIndexInFolder(mSelectedFilename)) + "/" + SH::FromInt(mImagesInFolder.size());
+        string sImageCount = "# " + SH::FromInt(mnViewingIndex+1) + "/" + SH::FromInt(mImageArray.size());
         mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
         mpWinImage->mCaptionMap["image_count"].style = folderStyle;
         mpWinImage->mCaptionMap["image_count"].style.paddingV = topPadding;
         mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::RT;
 
 
-        string sFilename =  mSelectedFilename.filename().string();
+        string sFilename =  PathFromIndex(mnViewingIndex).string();
         ZGUI::Style filenameStyle(gStyleButton);
         filenameStyle.pos = ZGUI::LT;
         filenameStyle.paddingV = topPadding + folderStyle.fp.nHeight;
@@ -1105,10 +1137,10 @@ void ImageViewer::UpdateCaptions()
 
 
         bool bShowCapitons = (mpWinImage->mBehavior & ZWinImage::kShowCaption)!=0;
-        if (InDeletionList(mSelectedFilename))
+        if (ValidIndex(mnViewingIndex) && mImageArray[mnViewingIndex].bToBeDeleted)
         {
             bShowCapitons = true;
-            mpWinImage->mCaptionMap["for_delete"].sText = mSelectedFilename.filename().string() + "\nMARKED FOR DELETE";
+            mpWinImage->mCaptionMap["for_delete"].sText = mImageArray[mnViewingIndex].filename.filename().string() + "\nMARKED FOR DELETE";
             mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0, 0x88000000, true);
         }
         else
@@ -1116,10 +1148,12 @@ void ImageViewer::UpdateCaptions()
             mpWinImage->mCaptionMap["for_delete"].Clear();
         }
 
-        if (!mDeletionList.empty())
+        tImageFilenames deletionList = GetImagesFlaggedToBeDeleted();
+
+        if (!deletionList.empty())
         {
             bShowCapitons = true;
-            Sprintf(mpWinImage->mCaptionMap["deletion_summary"].sText, "%d Files marked for deletion", mDeletionList.size());
+            Sprintf(mpWinImage->mCaptionMap["deletion_summary"].sText, "%d Files marked for deletion", deletionList.size());
             mpWinImage->mCaptionMap["deletion_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::RB, 0, 0, 0x88000000, true);
         }
         else
@@ -1158,7 +1192,7 @@ void ImageViewer::UpdateCaptions()
         }
 
 
-        if (mImagesInFolder.empty())
+        if (mImageArray.empty())
         {
             bShowCapitons = true;
             mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
@@ -1179,19 +1213,10 @@ void ImageViewer::UpdateCaptions()
     }
 }
 
-bool ImageViewer::InDeletionList(std::filesystem::path& imagePath)
+void ImageViewer::ToggleDeleteFlag()
 {
-    tImageFilenames::iterator findit = std::find(mDeletionList.begin(), mDeletionList.end(), imagePath);
-    return findit != mDeletionList.end();
-}
-
-void ImageViewer::ToggleDeletionList(std::filesystem::path& imagePath)
-{
-    tImageFilenames::iterator findit = std::find(mDeletionList.begin(), mDeletionList.end(), imagePath);
-    if (findit == mDeletionList.end())
-        mDeletionList.push_back(imagePath);
-    else
-        mDeletionList.erase(findit);
+    if (ValidIndex(mnViewingIndex))
+        mImageArray[mnViewingIndex].bToBeDeleted = !mImageArray[mnViewingIndex].bToBeDeleted;
 
     UpdateCaptions();
     Invalidate();
@@ -1212,7 +1237,7 @@ bool ImageViewer::Paint()
         return false;
 
 
-    if (mImagesInFolder.empty())
+    if (mImageArray.empty())
     {
         gStyleCaption.Font()->DrawTextParagraph(mpTransformTexture.get(), "No images", mAreaToDrawTo, &gStyleCaption);
     }

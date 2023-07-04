@@ -5,16 +5,51 @@
 #include "ZWin.h"
 #include <future>
 #include <limits>
+#include "helpers/ThreadPool.h"
 
 
 class ZWinImage;
 class ZWinControlPanel;
 
 
+//typedef std::shared_future< tZBufferPtr >       tImageFuture;
+
+class ImageEntry
+{
+public:
+    enum eImageEntryState : uint32_t
+    {
+        kInit = 0,
+        kLoadingExif = 1,
+        kExifReady = 2,
+        kNoExifAvailable = 3,
+        kLoadInProgress = 4,
+        kLoaded = 5
+    };
+
+    ImageEntry(std::filesystem::path _filename) 
+    { 
+        filename = _filename; 
+
+        mEXIF.clear();
+
+        mState = kInit;
+        bToBeDeleted = false;
+    }
+
+    bool ReadyToLoad() { return mState == kExifReady || mState == kNoExifAvailable; }
+
+    std::filesystem::path   filename;
+    tZBufferPtr             pImage;
+    easyexif::EXIFInfo      mEXIF;
+
+    eImageEntryState        mState;
+
+    bool                    bToBeDeleted;
+};
+
 typedef std::list<std::filesystem::path>        tImageFilenames;
-typedef std::shared_future< tZBufferPtr >       tImageFuture;
-typedef std::pair< std::filesystem::path, tImageFuture>   tNamedImagePair;
-typedef std::list< tNamedImagePair >            tImageCache;
+typedef std::vector< ImageEntry > tImageEntryArray;
 
 class ImageViewer : public ZWin
 {
@@ -29,6 +64,11 @@ class ImageViewer : public ZWin
         kEnd            = 6
     };
 
+    enum eCachingState : uint32_t
+    {
+        kReadingAhead = 1,
+        kWaiting      = 2
+    };
 
 public:
     ImageViewer();
@@ -59,19 +99,30 @@ protected:
     void                    ResetControlPanel();
 
     bool                    ScanForImagesInFolder(const std::filesystem::path& folder);
-    bool                    InCache(const std::filesystem::path& imagePath);
-    bool                    ImagePreloading();
-    tImageFuture*           GetCached(const std::filesystem::path& imagePath);
-    bool                    AddToCache(std::filesystem::path imagePath);
-    bool                    RemoveFromCache(std::filesystem::path imagePath);
-    int64_t                 CurMemoryUsage();       // only returns the in-memory bytes of buffers that have finished loading
-    int64_t                 ImageIndexInFolder(std::filesystem::path imagePath);
 
-    static tZBufferPtr      LoadImageProc(std::filesystem::path& imagePath, ImageViewer* pThis);
+    tZBufferPtr             GetCurImage(); // null if no image or not loaded
+
+    int64_t                 CurMemoryUsage();       // only returns the in-memory bytes of buffers that have finished loading
+    int64_t                 GetLoadsInProgress();
+
+    int64_t                 IndexFromPath(std::filesystem::path imagePath);
+    bool                    ValidIndex(int64_t index);
+    std::filesystem::path   PathFromIndex(int64_t index);
+
+    tImageFilenames         GetImagesFlaggedToBeDeleted();
+
+    bool                    KickCaching();
+    bool                    FreeCacheMemory();
+    int64_t                 NextImageToCache();
+
+
+
+    static void             LoadImageProc(std::filesystem::path& imagePath, ImageEntry* pEntry);
+    static void             LoadExifProc(std::filesystem::path& imagePath, ImageEntry* pEntry);
+
     void                    UpdateCaptions();
 
-    bool                    InDeletionList(std::filesystem::path& imagePath);
-    void                    ToggleDeletionList(std::filesystem::path& imagePath);
+    void                    ToggleDeleteFlag();
 
     void                    DeleteConfimed();
     void                    DeleteFile(std::filesystem::path& f);
@@ -82,7 +133,8 @@ protected:
 
     void                    MoveSelectedFile(std::filesystem::path& newPath);
 
-    bool                    Preload();
+
+
     void                    SetFirstImage();
     void                    SetLastImage();
     void                    SetNextImage();
@@ -91,26 +143,27 @@ protected:
     ZWinControlPanel*       mpPanel;
 
     ZWinImage*              mpWinImage;  
-    std::filesystem::path   mSelectedFilename;
-    std::filesystem::path   mFilenameToLoad;
 
-    tImageFilenames         mImagesInFolder;
+
+#ifdef _DEBUG
+    std::string             LoadStateString();
+#endif
+
     std::filesystem::path   mCurrentFolder;
-
     std::filesystem::path   mMoveToFolder;
 
-    tImageCache             mImageCache;
-    std::recursive_mutex    mImageCacheMutex;
+    ThreadPool*             mpPool;              
+    tImageEntryArray        mImageArray;
+    std::recursive_mutex    mImageArrayMutex;
 
+    int64_t                 mnViewingIndex;
     eLastAction             mLastAction;
-    //std::filesystem::path   mLastPreload;
+    eCachingState           mCachingState;
 
     std::list<std::string>  mAcceptedExtensions = { "jpg", "jpeg", "png", "gif", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" };
-    std::atomic<uint32_t>   mAtomicIndex;   // incrementing index for unloading oldest
 
     uint32_t                mToggleUIHotkey;
-
-    // image manipulation
-    tImageFilenames         mDeletionList;
     tZFontPtr               mpSymbolicFont;
 };
+
+

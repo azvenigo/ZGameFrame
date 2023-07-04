@@ -328,6 +328,78 @@ bool ZBuffer::SaveBuffer(const std::string& sName)
 
 
 
+bool ZBuffer::ReadEXIFFromFile(const std::string& sName, easyexif::EXIFInfo& info)
+{
+    std::filesystem::path filename(sName);
+    if (!std::filesystem::exists(filename))
+        return false;
+
+    std::ifstream file(filename, std::ios::binary);
+    if (!file)
+    {
+        ZERROR("ERROR: Failed to open file:", sName);
+        return false;
+    }
+
+    uint8_t marker[2];
+    if (!file.read((char*)marker, 2))
+    {
+        ZERROR("ERROR: Failed to read initial 2 byte header from file:", sName);
+        return false;
+    }
+
+    if (marker[0] != 0xff || marker[1] != 0xd8)
+    {
+        ZERROR("ERROR: Not a jpeg. Image header does not start with 0xffd8:", sName);
+        return false;
+    }  
+
+
+
+
+    char segmentSize[2];
+    uint16_t nSegBytes = 0;
+    while (file.read((char*)marker, 2))
+    {
+        if (!file.read(segmentSize, 2))
+        {
+            ZERROR("ERROR: Failed to read segment size");
+            return false;
+        }
+
+        nSegBytes = segmentSize[0] << 8 | segmentSize[1];
+//        segmentSize = (segmentSize << 8) | (segmentSize >> 8);
+
+        if (marker[0] == 0xff && marker[1] == 0xe1)
+        {
+            break;
+        }
+
+        file.seekg(nSegBytes - 2, std::ios::cur);
+    }
+
+    ZOUT("Found exif segment at offset:", file.tellg());
+    uint8_t* pBuf = new uint8_t[nSegBytes];
+
+    file.read((char*)pBuf, nSegBytes);
+
+
+    info.clear();
+    int result = info.parseFromEXIFSegment(pBuf, nSegBytes);
+
+    delete[] pBuf;
+    if (result != 0)
+    {
+        ZERROR("Error reading exif. Code:", result);
+        return false;
+    }
+
+
+
+    return true;
+}
+
+
 
 
 
