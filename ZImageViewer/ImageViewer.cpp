@@ -122,6 +122,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
             bool bShowUI = mpPanel->IsVisible() || mImageArray.empty();
             gRegistry["ZImageViewer"]["showui"] = bShowUI;
 
+            UpdateCaptions();
             if (mpWinImage)
                 mpWinImage->mbShowUI = bShowUI;
 
@@ -551,7 +552,7 @@ void ImageViewer::ResetControlPanel()
 
 
 
-    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("MS Gothic", nGroupSide * 3 /4, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
+    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide * 3 /4, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
     ZGUI::Style wingdingsStyle = ZGUI::Style(ZFontParams("Wingdings", nGroupSide /2, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
 
     mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
@@ -561,7 +562,7 @@ void ImageViewer::ResetControlPanel()
     ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('-', 11108); // flip H
     ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('|', 11109); // flip V
 
-    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x26F6);
+    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x2750);
 
 
 //    ((ZDynamicFont*)wingdingsStyle.Font().get())->GenerateSymbolicGlyph('F', 0x2922);
