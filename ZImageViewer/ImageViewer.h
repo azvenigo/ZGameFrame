@@ -158,6 +158,7 @@ protected:
     tImageEntryArray        mImageArray;
     std::recursive_mutex    mImageArrayMutex;
 
+
     int64_t                 mnViewingIndex;
     eLastAction             mLastAction;
     eCachingState           mCachingState;

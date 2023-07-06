@@ -44,6 +44,7 @@ set (GUI_FILES
 ../ZFramework/ZWinControlPanel.h    ../ZFramework/ZWinControlPanel.cpp
 ../ZFramework/ZWinWatchPanel.h      ../ZFramework/ZWinWatchPanel.cpp
 ../ZFramework/ZWinText.h            ../ZFramework/ZWinText.cpp
+../ZFramework/ZWinTable.h           ../ZFramework/ZWinTable.cpp
 ../ZFramework/ZWinFileDialog.h      ../ZFramework/platforms/windows/ZWinFileDialog_Windows.cpp
 ../ZFramework/ZWinPaletteDialog.h   ../ZFramework/ZWinPaletteDialog.cpp
 

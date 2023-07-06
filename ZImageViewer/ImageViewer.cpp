@@ -8,6 +8,7 @@
 #include "ZWinFileDialog.h"
 #include "ConfirmDeleteDialog.h"
 #include "ZWinControlPanel.h"
+#include "ZWinTable.h"
 #include <algorithm>
 #include "ZWinBtn.H"
 #include "helpers/Registry.h"
@@ -123,8 +124,6 @@ bool ImageViewer::OnKeyDown(uint32_t key)
             gRegistry["ZImageViewer"]["showui"] = bShowUI;
 
             UpdateCaptions();
-            if (mpWinImage)
-                mpWinImage->mbShowUI = bShowUI;
 
         }
         InvalidateChildren();
@@ -504,6 +503,17 @@ bool ImageViewer::Init()
         mpWinImage->mCaptionMap["zoom"].style.look = ZGUI::ZTextLook::kShadowed;
 //        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
 
+       mpWinImage->mpTable = new ZWinTable();
+       mpWinImage->mpTable->rArea.SetRect(0, 0, mAreaToDrawTo.Width()/5, mAreaToDrawTo.Height()/4);
+       mpWinImage->mpTable->mCellStyle.fp.nHeight = 40;
+       mpWinImage->mpTable->mCellStyle.paddingH = 8;
+       mpWinImage->mpTable->mCellStyle.paddingV = 8;
+
+       mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
+       mpWinImage->mpTable->mTableStyle.paddingH = 16;
+       mpWinImage->mpTable->mTableStyle.paddingV = 16;
+
+
         ChildAdd(mpWinImage);
         mpWinImage->SetFocus();
 
@@ -518,8 +528,8 @@ bool ImageViewer::Init()
             KickCaching();
         }
 
-
         ResetControlPanel();
+
 
         mToggleUIHotkey = VK_TAB;
     }
@@ -732,6 +742,11 @@ bool ImageViewer::OnParentAreaChange()
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
     SetArea(mpParentWin->GetArea());
+    if (mpWinImage && mpWinImage->mpTable)
+    {
+        mpWinImage->mpTable->rArea.SetRect(0, 0, mAreaToDrawTo.Width() / 5, mAreaToDrawTo.Height() / 4);
+    }
+
     ResetControlPanel();
     ZWin::OnParentAreaChange();
     UpdateCaptions();
@@ -1092,7 +1107,6 @@ bool ImageViewer::Process()
             mpWinImage->SetImage(curImage);
 
             mpWinImage->mCaptionMap["no_image"].Clear();
-            gRegistry.Get("ZImageViewer", "showui", mpWinImage->mbShowUI);
 
             gRegistry["ZImageViewer"]["image"] = mImageArray[mnViewingIndex].filename.string();
 
@@ -1157,10 +1171,12 @@ void ImageViewer::UpdateCaptions()
         mpWinImage->mCaptionMap["filename"].style = filenameStyle;
 
 
-        bool bShowCapitons = (mpWinImage->mBehavior & ZWinImage::kShowCaption)!=0;
+        bool bShowCaptions = false;
+        if (mpPanel)
+            bShowCaptions = mpPanel->IsVisible();
         if (ValidIndex(mnViewingIndex) && mImageArray[mnViewingIndex].bToBeDeleted)
         {
-            bShowCapitons = true;
+            bShowCaptions = true;
             mpWinImage->mCaptionMap["for_delete"].sText = mImageArray[mnViewingIndex].filename.filename().string() + "\nMARKED FOR DELETE";
             mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::C, 0, 0, 0x88000000, true);
         }
@@ -1173,7 +1189,7 @@ void ImageViewer::UpdateCaptions()
 
         if (!deletionList.empty())
         {
-            bShowCapitons = true;
+            bShowCaptions = true;
             Sprintf(mpWinImage->mCaptionMap["deletion_summary"].sText, "%d Files marked for deletion", deletionList.size());
             mpWinImage->mCaptionMap["deletion_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, 0, 28, 0x88000000, true);
         }
@@ -1184,7 +1200,7 @@ void ImageViewer::UpdateCaptions()
 
         if (!mMoveToFolder.empty())
         {
-            bShowCapitons = true;
+            bShowCaptions = true;
             Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> Move to: %s", mMoveToFolder.string().c_str());
             mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff88ff, 0xffff88ff), ZGUI::RT, 32, 32, 0x88000000, true);
         }
@@ -1203,19 +1219,30 @@ void ImageViewer::UpdateCaptions()
                 Sprintf(sF, "%.1f", exif.FNumber);
 
             ZRect rArea(mpWinImage->mpImage->GetArea());
-            Sprintf(mpWinImage->mCaptionMap["exif"].sText, "Lens:%s\n%dmm  1/%ds  f%s  ISO:%d\nSize:%dx%d", exif.LensInfo.Model.c_str(), (int)exif.FocalLength, (int)(1.0 / exif.ExposureTime), sF.c_str(), exif.ISOSpeedRatings, rArea.Width(), rArea.Height())  ;
-            mpWinImage->mCaptionMap["exif"].style = folderStyle;
-            mpWinImage->mCaptionMap["exif"].style.pos = ZGUI::RB;
+            string sExposure;
+            Sprintf(sExposure, "%dmm  1/%ds  f%s  ISO:%d", (int)exif.FocalLength, (int)(1.0 / exif.ExposureTime), sF.c_str(), exif.ISOSpeedRatings);
+
+
+            string sSize;
+            Sprintf(sSize, "%dx%d", exif.ImageWidth, exif.ImageHeight);
+
+            mpWinImage->mpTable->Clear();
+
+            if (!exif.LensInfo.Model.empty())
+                mpWinImage->mpTable->AddRow("Lens", exif.LensInfo.Model);
+
+            mpWinImage->mpTable->AddRow("Exposure", sExposure);
+            mpWinImage->mpTable->AddRow("Size", sSize);
         }
         else
         {
-            mpWinImage->mCaptionMap["exif"].Clear();
+            mpWinImage->mpTable->Clear();
         }
 
 
         if (mImageArray.empty())
         {
-            bShowCapitons = true;
+            bShowCaptions = true;
             mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
             mpWinImage->mCaptionMap["no_image"].style = gStyleCaption;
         }
@@ -1223,7 +1250,7 @@ void ImageViewer::UpdateCaptions()
 
 
 
-        if (bShowCapitons)
+        if (bShowCaptions)
             mpWinImage->mBehavior |= ZWinImage::kShowCaption;
         else
             mpWinImage->mBehavior &= ~ZWinImage::kShowCaption;

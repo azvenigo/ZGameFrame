@@ -9,6 +9,7 @@
 #include "ZGUIStyle.h"
 #include "ZDebug.h"
 #include "ZInput.h"
+#include "ZWinTable.h"
 
 extern ZAnimator gAnimator;
 using namespace std;
@@ -24,7 +25,7 @@ ZWinImage::ZWinImage()
     mfMinZoom = 0.01;
     mfMaxZoom = 100.0;
     mZoomHotkey = 0;
-    mbShowUI = true;
+    mpTable = nullptr;
 
     mBehavior = eBehavior::kNone;
 }
@@ -456,10 +457,13 @@ bool ZWinImage::Paint()
         }
     }
 
-    if (mBehavior & kShowCaption || mbShowUI)
+    if ((mBehavior & kShowCaption) != 0)
     {
         Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
         ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);
+
+        if (mpTable)
+            mpTable->Paint(mpTransformTexture.get());
     }
     else
     {

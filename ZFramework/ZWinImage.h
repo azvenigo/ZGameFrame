@@ -5,8 +5,7 @@
 #include "ZTypes.h"
 #include "ZAnimObjects.h"
 
-
-
+class ZWinTable;
 
 class ZWinImage : public ZWin
 {
@@ -76,9 +75,9 @@ public:
 
 
     ZGUI::tTextboxMap   mCaptionMap;
+    ZWinTable*          mpTable;
 
     uint32_t            mFillColor;
-    bool                mbShowUI;
 
 
 protected:
