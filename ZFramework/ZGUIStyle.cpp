@@ -214,24 +214,4 @@ namespace ZGUI
             mColorMap[i] = EditableColor(j[SH::FromInt(i)]);
         }
     }
-
-    void TextBox::Paint(ZBuffer* pDst)
-    {
-        if (sText.empty())
-            return;
-
-        assert(pDst);
-        // assuming pDst is locked
-        ZRect rDraw(area);
-        if (rDraw.Width() == 0 || rDraw.Height() == 0)
-            rDraw = pDst->GetArea();
-
-        style.Font()->DrawTextParagraph(pDst, sText, rDraw, &style);
-    }
-
-    void TextBox::Paint(ZBuffer* pDst, tTextboxMap& textBoxMap)
-    {
-        for (auto& t : textBoxMap)
-            t.second.Paint(pDst);
-    }
 };

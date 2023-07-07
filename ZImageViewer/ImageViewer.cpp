@@ -8,7 +8,6 @@
 #include "ZWinFileDialog.h"
 #include "ConfirmDeleteDialog.h"
 #include "ZWinControlPanel.h"
-#include "ZWinTable.h"
 #include <algorithm>
 #include "ZWinBtn.H"
 #include "helpers/Registry.h"
@@ -503,8 +502,7 @@ bool ImageViewer::Init()
         mpWinImage->mCaptionMap["zoom"].style.look = ZGUI::ZTextLook::kShadowed;
 //        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
 
-       mpWinImage->mpTable = new ZWinTable();
-       mpWinImage->mpTable->rArea.SetRect(0, 0, mAreaToDrawTo.Width()/5, mAreaToDrawTo.Height()/4);
+       mpWinImage->mpTable = new ZGUI::ZTable();
        mpWinImage->mpTable->mCellStyle.fp.nHeight = 40;
        mpWinImage->mpTable->mCellStyle.paddingH = 8;
        mpWinImage->mpTable->mCellStyle.paddingV = 8;
@@ -742,10 +740,6 @@ bool ImageViewer::OnParentAreaChange()
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
     SetArea(mpParentWin->GetArea());
-    if (mpWinImage && mpWinImage->mpTable)
-    {
-        mpWinImage->mpTable->rArea.SetRect(0, 0, mAreaToDrawTo.Width() / 5, mAreaToDrawTo.Height() / 4);
-    }
 
     ResetControlPanel();
     ZWin::OnParentAreaChange();
@@ -1233,6 +1227,11 @@ void ImageViewer::UpdateCaptions()
 
             mpWinImage->mpTable->AddRow("Exposure", sExposure);
             mpWinImage->mpTable->AddRow("Size", sSize);
+
+            ZGUI::Style style(mpWinImage->mpTable->mCellStyle);
+            style.fp.nWeight = 800;
+
+            mpWinImage->mpTable->SetColStyle(0, style);
         }
         else
         {

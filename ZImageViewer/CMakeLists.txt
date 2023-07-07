@@ -44,7 +44,6 @@ set (GUI_FILES
 ../ZFramework/ZWinControlPanel.h    ../ZFramework/ZWinControlPanel.cpp
 ../ZFramework/ZWinWatchPanel.h      ../ZFramework/ZWinWatchPanel.cpp
 ../ZFramework/ZWinText.h            ../ZFramework/ZWinText.cpp
-../ZFramework/ZWinTable.h           ../ZFramework/ZWinTable.cpp
 ../ZFramework/ZWinFileDialog.h      ../ZFramework/platforms/windows/ZWinFileDialog_Windows.cpp
 ../ZFramework/ZWinPaletteDialog.h   ../ZFramework/ZWinPaletteDialog.cpp
 
@@ -54,6 +53,7 @@ set (GUI_FILES
 ../ZFramework/ZGraphicSystem.h      ../ZFramework/ZGraphicSystem.cpp
 ../ZFramework/ZGUIHelpers.h         ../ZFramework/ZGUIHelpers.cpp
 ../ZFramework/ZGUIStyle.h           ../ZFramework/ZGUIStyle.cpp
+../ZFramework/ZGUIElements.h        ../ZFramework/ZGUIElements.cpp
 
 ../ZFramework/ZRasterizer.h         ../ZFramework/ZRasterizer.cpp
 ../ZFramework/ZScreenBuffer.h       ../ZFramework/ZScreenBuffer.cpp

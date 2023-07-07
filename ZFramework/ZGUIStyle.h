@@ -7,6 +7,38 @@
 #include <map>
 
 
+
+//////////////////////////////////////////////////////////////////
+// Default styles to be instantiated by app
+
+extern ZRect		grFullArea;
+extern uint32_t     gDefaultSpacer;
+
+
+extern uint32_t     gDefaultDialogFill;
+extern uint32_t     gDefaultTextAreaFill;
+extern uint32_t     gnDefaultGroupInlaySize;
+
+
+
+extern ZFontParams  gDefaultButtonFont;
+extern ZFontParams  gDefaultTitleFont;
+extern ZFontParams  gDefaultTextFont;
+
+extern ZFontParams  gDefaultTooltipFont;
+extern ZTextLook    gDefaultToolitipLook;
+
+extern ZGUI::Style  gStyleTooltip;
+extern ZGUI::Style  gStyleCaption;
+extern ZGUI::Style  gStyleButton;
+extern ZGUI::Style  gStyleToggleChecked;
+extern ZGUI::Style  gStyleToggleUnchecked;
+extern ZGUI::Style  gStyleGeneralText;
+extern ZGUI::Style  gDefaultDialogStyle;
+extern ZGUI::Style  gDefaultWinTextEditStyle;
+extern ZGUI::Style  gDefaultGroupingStyle;
+
+
 namespace ZGUI
 {
     void ComputeSizes();    // To be called by application whenever creating or changing screen size to calculate proper sizing
@@ -117,60 +149,4 @@ namespace ZGUI
 
         tColorMap mColorMap;
     };
-
-
-    typedef std::map<std::string, class TextBox> tTextboxMap; // named textbox to descriptor
-
-    class TextBox
-    {
-    public:
-        void        Paint(ZBuffer* pDst);
-        static void Paint(ZBuffer* pDst, tTextboxMap& textBoxMap);
-        void        Clear()
-        {
-            sText.clear();
-            style = {};
-            area = {};
-        }
-
-        std::string sText;
-        Style       style;
-        ZRect       area;
-    };
-
-
-
 };
-
-
-//////////////////////////////////////////////////////////////////
-// Default styles to be instantiated by app
-
-extern ZRect		grFullArea;
-extern uint32_t     gDefaultSpacer;
-
-
-extern uint32_t     gDefaultDialogFill;
-extern uint32_t     gDefaultTextAreaFill;
-extern uint32_t     gnDefaultGroupInlaySize;
-
-
-
-extern ZFontParams  gDefaultButtonFont;
-extern ZFontParams  gDefaultTitleFont;
-extern ZFontParams  gDefaultTextFont;
-
-extern ZFontParams  gDefaultTooltipFont;
-extern ZTextLook    gDefaultToolitipLook;
-
-extern ZGUI::Style  gStyleTooltip;
-extern ZGUI::Style  gStyleCaption;
-extern ZGUI::Style  gStyleButton;
-extern ZGUI::Style  gStyleToggleChecked;
-extern ZGUI::Style  gStyleToggleUnchecked;
-extern ZGUI::Style  gStyleGeneralText;
-extern ZGUI::Style  gDefaultDialogStyle;
-extern ZGUI::Style  gDefaultWinTextEditStyle;
-extern ZGUI::Style  gDefaultGroupingStyle;
-
-

@@ -4,8 +4,7 @@
 #include "ZBuffer.h"
 #include "ZTypes.h"
 #include "ZAnimObjects.h"
-
-class ZWinTable;
+#include "ZGUIElements.h"
 
 class ZWinImage : public ZWin
 {
@@ -75,7 +74,7 @@ public:
 
 
     ZGUI::tTextboxMap   mCaptionMap;
-    ZWinTable*          mpTable;
+    ZGUI::ZTable*       mpTable;
 
     uint32_t            mFillColor;
 

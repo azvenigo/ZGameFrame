@@ -41,7 +41,6 @@ set (GUI_FILES
 ../ZFramework/ZWinDebugConsole.h    ../ZFramework/ZWinDebugConsole.cpp
 ../ZFramework/ZWinFormattedText.h   ../ZFramework/ZWinFormattedText.cpp
 ../ZFramework/ZWinImage.h           ../ZFramework/ZWinImage.cpp
-../ZFramework/ZWinTable.h           ../ZFramework/ZWinTable.cpp
 ../ZFramework/ZMainWin.h            ../ZFramework/ZMainWin.cpp
 ../ZFramework/ZWinScriptedDialog.h  ../ZFramework/ZWinScriptedDialog.cpp
 ../ZFramework/ZWinSlider.h          ../ZFramework/ZWinSlider.cpp
@@ -57,6 +56,7 @@ set (GUI_FILES
 ../ZFramework/ZGraphicSystem.h      ../ZFramework/ZGraphicSystem.cpp
 ../ZFramework/ZGUIHelpers.h         ../ZFramework/ZGUIHelpers.cpp
 ../ZFramework/ZGUIStyle.h           ../ZFramework/ZGUIStyle.cpp
+../ZFramework/ZGUIElements.h        ../ZFramework/ZGUIElements.cpp
 
 ../ZFramework/ZRasterizer.h         ../ZFramework/ZRasterizer.cpp
 ../ZFramework/ZScreenBuffer.h       ../ZFramework/ZScreenBuffer.cpp
