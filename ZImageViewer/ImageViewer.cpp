@@ -1223,14 +1223,17 @@ void ImageViewer::UpdateCaptions()
             string sSize;
             Sprintf(sSize, "%dx%d", exif.ImageWidth, exif.ImageHeight);
 
+            const std::lock_guard<std::recursive_mutex> lock(mpWinImage->mpTable->mTableMutex);
+
             mpWinImage->mpTable->Clear();
 
             if (!exif.LensInfo.Model.empty())
                 mpWinImage->mpTable->AddRow("Lens", exif.LensInfo.Model);
 
+            mpWinImage->mpTable->AddRow("Date", exif.DateTime);
+
             mpWinImage->mpTable->AddRow("Exposure", sExposure);
             mpWinImage->mpTable->AddRow("Size", sSize);
-            mpWinImage->mpTable->AddRow("Test", "sSize", "more stuff", 1.234);
 
             ZGUI::Style style(mpWinImage->mpTable->mCellStyle);
             style.fp.nWeight = 800;
@@ -1240,6 +1243,7 @@ void ImageViewer::UpdateCaptions()
         }
         else
         {
+            const std::lock_guard<std::recursive_mutex> lock(mpWinImage->mpTable->mTableMutex);
             mpWinImage->mpTable->Clear();
         }
 

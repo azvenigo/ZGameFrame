@@ -58,6 +58,8 @@ namespace ZGUI
 
     bool ZTable::Paint(ZBuffer* pDest)
     {
+        const std::lock_guard<std::recursive_mutex> lock(mTableMutex);
+
         // Compute max width of each column
         std::vector<size_t> columnWidths;
         columnWidths.resize(mColumns);

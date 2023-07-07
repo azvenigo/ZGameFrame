@@ -98,11 +98,11 @@ namespace ZGUI
 
         inline void ToCellList(tCellArray&) {}   // needed for the variadic with no args
 
-
         bool Paint(ZBuffer* pDest);
 
-        ZGUI::Style mTableStyle;
+        std::recursive_mutex mTableMutex;
 
+        ZGUI::Style mTableStyle;
         ZGUI::Style mCellStyle;
     private:
         std::list<tCellArray> mRows;
