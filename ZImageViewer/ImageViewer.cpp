@@ -1217,11 +1217,12 @@ void ImageViewer::UpdateCaptions()
 
             ZRect rArea(mpWinImage->mpImage->GetArea());
             string sExposure;
-            Sprintf(sExposure, "%dmm  1/%ds  f%s  ISO:%d", (int)exif.FocalLength, (int)(1.0 / exif.ExposureTime), sF.c_str(), exif.ISOSpeedRatings);
+            if (exif.FocalLength > 0)
+                Sprintf(sExposure, "%dmm  1/%ds  f%s  ISO:%d", (int)exif.FocalLength, (int)(1.0 / exif.ExposureTime), sF.c_str(), exif.ISOSpeedRatings);
 
 
             string sSize;
-            Sprintf(sSize, "%dx%d", exif.ImageWidth, exif.ImageHeight);
+            Sprintf(sSize, "%dx%d", mpWinImage->mpImage.get()->GetArea().Width(), mpWinImage->mpImage.get()->GetArea().Height());
 
             const std::lock_guard<std::recursive_mutex> lock(mpWinImage->mpTable->mTableMutex);
 
@@ -1230,9 +1231,12 @@ void ImageViewer::UpdateCaptions()
             if (!exif.LensInfo.Model.empty())
                 mpWinImage->mpTable->AddRow("Lens", exif.LensInfo.Model);
 
-            mpWinImage->mpTable->AddRow("Date", exif.DateTime);
+            if (!exif.DateTime.empty())
+                mpWinImage->mpTable->AddRow("Date", exif.DateTime);
 
-            mpWinImage->mpTable->AddRow("Exposure", sExposure);
+            if (!sExposure.empty())
+                mpWinImage->mpTable->AddRow("Exposure", sExposure);
+
             mpWinImage->mpTable->AddRow("Size", sSize);
 
             ZGUI::Style style(mpWinImage->mpTable->mCellStyle);
