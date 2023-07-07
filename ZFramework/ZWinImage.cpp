@@ -9,7 +9,6 @@
 #include "ZGUIStyle.h"
 #include "ZDebug.h"
 #include "ZInput.h"
-#include "ZWinTable.h"
 
 extern ZAnimator gAnimator;
 using namespace std;

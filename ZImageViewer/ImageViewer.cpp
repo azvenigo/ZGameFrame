@@ -497,21 +497,9 @@ bool ImageViewer::Init()
         mpWinImage->mZoomHotkey = VK_MENU;
         mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable;
 
-        mpWinImage->mCaptionMap["zoom"].sText = gStyleCaption;
-        mpWinImage->mCaptionMap["zoom"].style.pos = ZGUI::CB;
-        mpWinImage->mCaptionMap["zoom"].style.look = ZGUI::ZTextLook::kShadowed;
 //        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
 
-       mpWinImage->mpTable = new ZGUI::ZTable();
-       mpWinImage->mpTable->mCellStyle.fp.nHeight = 40;
-       mpWinImage->mpTable->mCellStyle.paddingH = 8;
-       mpWinImage->mpTable->mCellStyle.paddingV = 8;
-
-       mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
-       mpWinImage->mpTable->mTableStyle.paddingH = 16;
-       mpWinImage->mpTable->mTableStyle.paddingV = 16;
-
-
+        mpWinImage->mpTable = new ZGUI::ZTable();
         ChildAdd(mpWinImage);
         mpWinImage->SetFocus();
 
@@ -1135,6 +1123,21 @@ void ImageViewer::UpdateCaptions()
         if (mpPanel)
             topPadding = mpPanel->GetArea().Height();
 
+        mpWinImage->mCaptionMap["zoom"].style = gStyleCaption;
+        mpWinImage->mCaptionMap["zoom"].style.pos = ZGUI::CB;
+        mpWinImage->mCaptionMap["zoom"].style.look = ZGUI::ZTextLook::kShadowed;
+
+        mpWinImage->mpTable->mCellStyle = gStyleCaption;
+        mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
+        mpWinImage->mpTable->mCellStyle.paddingH = gDefaultSpacer/2;
+        mpWinImage->mpTable->mCellStyle.paddingV = gDefaultSpacer/2;
+
+        mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
+        mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
+        mpWinImage->mpTable->mTableStyle.paddingH = gDefaultSpacer;
+        mpWinImage->mpTable->mTableStyle.paddingV = gDefaultSpacer;
+
+
         ZGUI::Style folderStyle(gStyleButton);
         folderStyle.pos = ZGUI::LT;
         folderStyle.look = ZGUI::ZTextLook::kShadowed;
@@ -1227,9 +1230,11 @@ void ImageViewer::UpdateCaptions()
 
             mpWinImage->mpTable->AddRow("Exposure", sExposure);
             mpWinImage->mpTable->AddRow("Size", sSize);
+            mpWinImage->mpTable->AddRow("Test", "sSize", "more stuff", 1.234);
 
             ZGUI::Style style(mpWinImage->mpTable->mCellStyle);
             style.fp.nWeight = 800;
+            style.fp.nHeight *= 1.2;
 
             mpWinImage->mpTable->SetColStyle(0, style);
         }

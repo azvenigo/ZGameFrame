@@ -86,11 +86,11 @@ namespace ZGUI
             nRow++;
         }
 
-        size_t nTotalColumnWidths = 0;
+        size_t nTotalColumnWidths = mCellStyle.paddingH*4;  // left and right margins
         for (auto& c : columnWidths)
             nTotalColumnWidths += (c + mCellStyle.paddingH);
 
-        size_t nTotalRowHeights = 0;
+        size_t nTotalRowHeights = mCellStyle.paddingV;    // top and bottom margins
         for (auto& r : rowHeights)
             nTotalRowHeights += (r + mCellStyle.paddingV);
 
@@ -98,22 +98,35 @@ namespace ZGUI
 
         rAreaToDrawTo = ZGUI::Arrange(rAreaToDrawTo, pDest->GetArea(), mTableStyle.pos, mTableStyle.paddingH, mTableStyle.paddingV);
 
-        int64_t nY = 0;
+        if (mTableStyle.bgCol != 0)
+        {
+            pDest->FillAlpha(rAreaToDrawTo, mTableStyle.bgCol);
+        }
+
+
+
+        int64_t nY = mCellStyle.paddingV;
 
         // Draw top border
 
         // Now print each row based on column widths
+        nRow = 0;
         for (auto& row : mRows)
         {
             // Draw left border
 
-            int64_t nX = 0;
+            size_t nRowHeight = rowHeights[nRow];
+
+            int64_t nX = mCellStyle.paddingH;
             for (size_t nCol = 0; nCol < mColumns; nCol++)
             {
                 size_t nColWidth = columnWidths[nCol];
                 ZCell& cell = row[nCol];
-                ZRect rString = cell.style.Font()->GetOutputRect(rAreaToDrawTo, (uint8_t*)cell.val.data(), cell.val.length(), mCellStyle.pos, mCellStyle.paddingH);
-                rString.OffsetRect(nX, nY);
+                ZRect rCellArea(0, 0, nColWidth, nRowHeight);
+                rCellArea.OffsetRect(nX + rAreaToDrawTo.left, nY + rAreaToDrawTo.top);
+
+                ZRect rString = cell.style.Font()->GetOutputRect(rCellArea, (uint8_t*)cell.val.data(), cell.val.length(), mCellStyle.pos, mCellStyle.paddingH);
+                //ZRect rString = ZGUI::Arrange(rString, rAreaToDrawTo, cell.style.pos, cell.style.paddingH, cell.style.paddingV);
 
                 cell.style.Font()->DrawText(pDest, cell.val, rString, &mCellStyle.look);
 
@@ -121,7 +134,8 @@ namespace ZGUI
             }
 
             // Draw right border
-            nY += mCellStyle.fp.nHeight + mCellStyle.paddingV;
+            nY += nRowHeight + mCellStyle.paddingV;
+            nRow++;
         }
 
         // bottom border
