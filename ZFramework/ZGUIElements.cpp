@@ -45,6 +45,7 @@ namespace ZGUI
         {
             cell.style = style;
         }
+        mbAreaNeedsComputing = true;
     }
 
     void ZTable::SetColStyle(size_t col, const ZGUI::Style& style)
@@ -54,19 +55,17 @@ namespace ZGUI
             if (col < row.size())
                 row[col].style = style;
         }
+        mbAreaNeedsComputing = true;
     }
 
-    bool ZTable::Paint(ZBuffer* pDest)
+    void ZTable::ComputeAreas(const ZRect& rTarget)
     {
-        const std::lock_guard<std::recursive_mutex> lock(mTableMutex);
-
         // Compute max width of each column
-        std::vector<size_t> columnWidths;
-        columnWidths.resize(mColumns);
+        mColumnWidths.clear();
+        mColumnWidths.resize(mColumns);
 
-
-        std::vector<size_t> rowHeights;
-        rowHeights.resize(mRows.size());
+        mRowHeights.clear();
+        mRowHeights.resize(mRows.size());
 
         size_t nRow = 0;
         for (auto& row : mRows)
@@ -79,32 +78,39 @@ namespace ZGUI
                 if (s.style.fp.nHeight > nTallestCell)
                     nTallestCell = s.style.fp.nHeight;
 
-                if (columnWidths[nCol] < nWidth)
-                    columnWidths[nCol] = nWidth;
+                if (mColumnWidths[nCol] < nWidth)
+                    mColumnWidths[nCol] = nWidth;
                 nCol++;
             }
 
-            rowHeights[nRow] = nTallestCell;
+            mRowHeights[nRow] = nTallestCell;
             nRow++;
         }
 
-        size_t nTotalColumnWidths = mCellStyle.paddingH*4;  // left and right margins
-        for (auto& c : columnWidths)
-            nTotalColumnWidths += (c + mCellStyle.paddingH);
+        mrAreaToDrawTo.SetRect(0, 0, 0, 0);
+
+        size_t nTotalColumnWidths = mCellStyle.paddingH * 4;  // left and right margins
+        for (auto& c : mColumnWidths)
+            mrAreaToDrawTo.right += (c + mCellStyle.paddingH);
 
         size_t nTotalRowHeights = mCellStyle.paddingV;    // top and bottom margins
-        for (auto& r : rowHeights)
-            nTotalRowHeights += (r + mCellStyle.paddingV);
+        for (auto& r : mRowHeights)
+            mrAreaToDrawTo.bottom += (r + mCellStyle.paddingV);
 
-        ZRect rAreaToDrawTo(0, 0, nTotalColumnWidths, nTotalRowHeights);
+        mrAreaToDrawTo = ZGUI::Arrange(mrAreaToDrawTo, rTarget, mTableStyle.pos, mTableStyle.paddingH, mTableStyle.paddingV);
 
-        rAreaToDrawTo = ZGUI::Arrange(rAreaToDrawTo, pDest->GetArea(), mTableStyle.pos, mTableStyle.paddingH, mTableStyle.paddingV);
+        mbAreaNeedsComputing = false;
+    }
+
+    bool ZTable::Paint(ZBuffer* pDest)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(mTableMutex);
+
+        if (mbAreaNeedsComputing)
+            ComputeAreas(pDest->GetArea());
 
         if (mTableStyle.bgCol != 0)
-        {
-            pDest->FillAlpha(rAreaToDrawTo, mTableStyle.bgCol);
-        }
-
+            pDest->FillAlpha(mrAreaToDrawTo, mTableStyle.bgCol);
 
 
         int64_t nY = mCellStyle.paddingV;
@@ -112,20 +118,20 @@ namespace ZGUI
         // Draw top border
 
         // Now print each row based on column widths
-        nRow = 0;
+        int64_t nRow = 0;
         for (auto& row : mRows)
         {
             // Draw left border
 
-            size_t nRowHeight = rowHeights[nRow];
+            size_t nRowHeight = mRowHeights[nRow];
 
             int64_t nX = mCellStyle.paddingH;
             for (size_t nCol = 0; nCol < mColumns; nCol++)
             {
-                size_t nColWidth = columnWidths[nCol];
+                size_t nColWidth = mColumnWidths[nCol];
                 ZCell& cell = row[nCol];
                 ZRect rCellArea(0, 0, nColWidth, nRowHeight);
-                rCellArea.OffsetRect(nX + rAreaToDrawTo.left, nY + rAreaToDrawTo.top);
+                rCellArea.OffsetRect(nX + mrAreaToDrawTo.left, nY + mrAreaToDrawTo.top);
 
                 ZRect rString = cell.style.Font()->GetOutputRect(rCellArea, (uint8_t*)cell.val.data(), cell.val.length(), mCellStyle.pos, mCellStyle.paddingH);
                 //ZRect rString = ZGUI::Arrange(rString, rAreaToDrawTo, cell.style.pos, cell.style.paddingH, cell.style.paddingV);

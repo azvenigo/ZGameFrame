@@ -1237,6 +1237,13 @@ void ImageViewer::UpdateCaptions()
             if (!sExposure.empty())
                 mpWinImage->mpTable->AddRow("Exposure", sExposure);
 
+            if (exif.GeoLocation.Latitude != 0.0)
+            {
+                string sGeo;
+                Sprintf(sGeo, "lat:%0.3f lng:%0.3f", exif.GeoLocation.Latitude, exif.GeoLocation.Longitude);
+                mpWinImage->mpTable->AddRow("Location", sGeo);
+            }
+
             mpWinImage->mpTable->AddRow("Size", sSize);
 
             ZGUI::Style style(mpWinImage->mpTable->mCellStyle);

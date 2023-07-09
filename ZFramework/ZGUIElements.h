@@ -49,10 +49,14 @@ namespace ZGUI
     class ZTable
     {
     public:
-        ZTable() : mTableStyle(gDefaultDialogStyle), mCellStyle(gDefaultDialogStyle), mColumns(0) {}
+        ZTable() : mTableStyle(gDefaultDialogStyle), mCellStyle(gDefaultDialogStyle), mColumns(0), mbAreaNeedsComputing(true) {}
 
         // Table manimpulation
-        void Clear() { mRows.clear(); }
+        void Clear() 
+        { 
+            mRows.clear();
+            mbAreaNeedsComputing = true;
+        }
 
         template <typename T, typename...Types>
         inline void AddRow(T arg, Types...more)
@@ -72,6 +76,7 @@ namespace ZGUI
                 columns.resize(mColumns);
 
             mRows.push_back(columns);
+            mbAreaNeedsComputing = true;
         }
 
         void AddMultilineRow(std::string& sMultiLine);
@@ -98,15 +103,23 @@ namespace ZGUI
 
         inline void ToCellList(tCellArray&) {}   // needed for the variadic with no args
 
-        bool Paint(ZBuffer* pDest);
-
         std::recursive_mutex mTableMutex;
 
+        // Rendering
+        bool Paint(ZBuffer* pDest);
         ZGUI::Style mTableStyle;
         ZGUI::Style mCellStyle;
+        ZRect       mrAreaToDrawTo;
+
     private:
         std::list<tCellArray> mRows;
         size_t mColumns;
+
+        bool mbAreaNeedsComputing;      // if true, table has changed and area needs to be recomputed
+        void ComputeAreas(const ZRect& rTarget);
+
+        std::vector<size_t> mColumnWidths;
+        std::vector<size_t> mRowHeights;
     };
 
 };

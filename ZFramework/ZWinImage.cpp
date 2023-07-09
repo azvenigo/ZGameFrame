@@ -78,6 +78,20 @@ bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 
 bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 {
+    easyexif::EXIFInfo& exif = mpImage->GetEXIF();
+    bool bHasGeoLocation = exif.GeoLocation.Latitude != 0.0 || exif.GeoLocation.Longitude != 0.0;
+
+#ifdef _WIN32
+    if (((mBehavior & kShowCaption) != 0) && bHasGeoLocation && mpTable && mpTable->mrAreaToDrawTo.PtInRect(x,y))
+    {
+        // open geolocation https://maps.google.com/?q=<lat>,<lng>
+        string sURL;
+        Sprintf(sURL, "https://maps.google.com/?t=k&q=%f,%f", exif.GeoLocation.Latitude, exif.GeoLocation.Longitude);
+        ShellExecute(0, "open", sURL.c_str(), 0, 0, SW_SHOWNORMAL);
+
+        return true;
+    }
+#endif
     if ((mBehavior & kScrollable) && mImageArea.PtInRect(x,y))
     {
         if (SetCapture())
