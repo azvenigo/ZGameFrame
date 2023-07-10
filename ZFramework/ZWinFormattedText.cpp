@@ -158,7 +158,7 @@ bool ZWinFormattedText::OnMouseDownL(int64_t x, int64_t y)
 				sTextEntry& entry = *lineIt;
 
                 tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
-				ZRect rText = pFont->GetOutputRect(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.pos);
+				ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.pos);
 				if (rText.PtInRect(nMouseX, nMouseY))
 				{
 					if (!entry.sLink.empty())
@@ -339,7 +339,7 @@ bool ZWinFormattedText::Paint()
 				sTextEntry& entry = *lineIt;
 
                 tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
-				ZRect rText = pFont->GetOutputRect(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.pos);
+				ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.pos);
 
 				int64_t nShadowOffset = max((int) pFont->Height()/16, (int) 1);
 

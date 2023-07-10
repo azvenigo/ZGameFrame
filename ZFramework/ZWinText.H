@@ -29,6 +29,8 @@ public:
 
     virtual void        SetBehavior(uint8_t b) { mBehavior = (eBehavior)b; }
 
+    static  ZWinLabel* ShowTooltip(ZWin* pMainWin, const std::string& sTooltip, const ZGUI::Style& style = {});
+
     std::string		    msText;
     ZGUI::Style         mStyle;
 

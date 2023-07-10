@@ -24,6 +24,7 @@ ZWinImage::ZWinImage()
     mfMinZoom = 0.01;
     mfMaxZoom = 100.0;
     mZoomHotkey = 0;
+    nSubsampling = 2;
     mpTable = nullptr;
 
     mBehavior = eBehavior::kNone;
@@ -70,7 +71,11 @@ void ZWinImage::Clear()
 
 bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 {
-    ReleaseCapture();
+    if (AmCapturing())
+    {
+        Invalidate();
+        ReleaseCapture();
+    }
     if (!msMouseUpLMessage.empty() && mImageArea.PtInRect(x, y))
         gMessageSystem.Post(msMouseUpLMessage);
     return ZWin::OnMouseUpL(x, y);
@@ -465,12 +470,17 @@ bool ZWinImage::Paint()
                 tUVVertexArray verts;
                 gRasterizer.RectToVerts(mImageArea, verts);
                 ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
-                gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
+
+                if (nSubsampling == 0 || AmCapturing() || gInput.IsKeyDown(mZoomHotkey))
+                    gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
+                else
+                    gRasterizer.MultiSampleRasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo, nSubsampling);
+                ZOUT("Rendering with subdivisions:", nSubsampling, "\n");
             }
         }
     }
 
-    if ((mBehavior & kShowCaption) != 0)
+    if ((mBehavior & kShowCaption) != 0 || gInput.IsKeyDown(mZoomHotkey))
     {
         Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
         ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);

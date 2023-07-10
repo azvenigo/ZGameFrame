@@ -167,6 +167,8 @@ protected:
 
     uint32_t                mToggleUIHotkey;
     tZFontPtr               mpSymbolicFont;
+
+    bool                    mbSubsample;
 };
 
 

@@ -133,7 +133,7 @@ namespace ZGUI
                 ZRect rCellArea(0, 0, nColWidth, nRowHeight);
                 rCellArea.OffsetRect(nX + mrAreaToDrawTo.left, nY + mrAreaToDrawTo.top);
 
-                ZRect rString = cell.style.Font()->GetOutputRect(rCellArea, (uint8_t*)cell.val.data(), cell.val.length(), mCellStyle.pos, mCellStyle.paddingH);
+                ZRect rString = cell.style.Font()->Arrange(rCellArea, (uint8_t*)cell.val.data(), cell.val.length(), mCellStyle.pos, mCellStyle.paddingH);
                 //ZRect rString = ZGUI::Arrange(rString, rAreaToDrawTo, cell.style.pos, cell.style.paddingH, cell.style.paddingV);
 
                 cell.style.Font()->DrawText(pDest, cell.val, rString, &mCellStyle.look);

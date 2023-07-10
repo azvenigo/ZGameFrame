@@ -420,6 +420,108 @@ bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, t
 }
 
 
+uint32_t SampleTexture(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, uint32_t nSampleSubdivisions)
+{
+    uint32_t* pSourcePixels = pTexture->GetPixels();
+    int64_t nTextureStride = pTexture->GetArea().Width();
+    double fTextureW = (double)pTexture->GetArea().Width() - 0.5;
+    double fTextureH = (double)pTexture->GetArea().Height() - 0.5;
+
+    double fSubPixelDU = (1.0/fTextureW) / (double)nSampleSubdivisions;
+    double fSubPixelDV = (1.0/fTextureH) / (double)nSampleSubdivisions;
+
+    uint64_t nFinalA = 0;
+    uint64_t nFinalR = 0;
+    uint64_t nFinalG = 0;
+    uint64_t nFinalB = 0;
+
+    double fSampleV = fTexturePixelV;
+    for (uint32_t y = 0; y < nSampleSubdivisions; y++)
+    {
+        double fSampleU = fTexturePixelU;
+        for (uint32_t x = 0; x < nSampleSubdivisions; x++)
+        {
+            int64_t nTextureX = (int64_t)(fSampleU * fTextureW);
+            int64_t nTextureY = (int64_t)(fSampleV * fTextureH);
+            uint32_t nSourceCol = *(pSourcePixels + nTextureY * nTextureStride + nTextureX);
+            nFinalA += ARGB_A(nSourceCol);
+            nFinalR += ARGB_R(nSourceCol);
+            nFinalG += ARGB_G(nSourceCol);
+            nFinalB += ARGB_B(nSourceCol);
+
+            fSampleU += fSubPixelDV;
+        }
+        fSampleV += fSubPixelDV;
+    }
+
+    uint32_t nSamples = nSampleSubdivisions * nSampleSubdivisions;
+    uint32_t nFinalCol = ARGB(nFinalA / nSamples, nFinalR / nSamples, nFinalG / nSamples, nFinalB / nSamples);
+
+    return nFinalCol;
+}
+
+bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip, uint32_t nSubsamples, uint8_t nAlpha)
+{
+    ZRect rDest = pDestination->GetArea();
+    int64_t nDestStride = pDestination->GetArea().Width();
+    double fTextureW = (double)pTexture->GetArea().Width() - 0.5;
+    double fTextureH = (double)pTexture->GetArea().Height() - 0.5;
+    uint32_t* pSourcePixels = pTexture->GetPixels();
+    int64_t nTextureStride = pTexture->GetArea().Width();
+    double fClipLeft;
+    double fClipRight;
+    int64_t nTopScanLine;
+    int64_t nBottomScanLine;
+
+    ZASSERT(pDestination->GetPixels() != nullptr);
+    SetupRasterization(pDestination, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
+
+    // For each scanline
+    for (int64_t nScanLine = nTopScanLine; nScanLine < nBottomScanLine; nScanLine++)
+    {
+        ZUVVertex scanLineMin;
+        ZUVVertex scanLineMax;
+
+        double fScanLineLength;
+
+        double fTextureU;
+        double fTextureV;
+        double fTextureDU;
+        double fTextureDV;
+
+        SetupScanline((double)nScanLine, fClipLeft, fClipRight, scanLineMin, scanLineMax, vertexArray, fScanLineLength, fTextureU, fTextureV, fTextureDU, fTextureDV);
+
+        // Rasterize the scanline using textureWalker as the source color
+        int64_t nStartX = (int64_t)scanLineMin.x;
+        int64_t nScanLinePixels = (int64_t)scanLineMax.x - (int64_t)scanLineMin.x;
+        uint32_t* pDestPixels = pDestination->GetPixels() + nScanLine * nDestStride + nStartX;
+
+
+        //		int64_t nRand = pDestination->GetArea().Width() * pDestination->GetArea().Height();
+
+        ZASSERT(nStartX + nScanLinePixels <= rDest.right);
+
+        ZASSERT(pDestination->GetPixels() != nullptr);
+
+        for (int64_t nCount = 0; nCount < nScanLinePixels; nCount++)
+        {
+            uint32_t nSampled = SampleTexture(pTexture, fTextureU, fTextureV, fTextureDU, fTextureDV, nSubsamples);
+            if (ARGB_A(nSampled) > 0)
+                *pDestPixels = COL::AlphaBlend_Col2Alpha(nSampled, *pDestPixels, nAlpha);
+            pDestPixels++;
+            fTextureU += fTextureDU;
+            fTextureV += fTextureDV;
+        }
+
+        mnDrawnPixels += nScanLinePixels;
+    }
+
+    mnProcessedVertices += vertexArray.size();
+    return true;
+}
+
+
+
 bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip)
 {
 	ZRect rDest = pDestination->GetArea();
@@ -445,10 +547,10 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexA
 
 		double fTextureU;
 		double fTextureV;
-		double fTextureDX;
+		double fTextureDU;
 		double fTextureDV;
 
-		SetupScanline((double) nScanLine, fClipLeft, fClipRight, scanLineMin, scanLineMax, vertexArray, fScanLineLength, fTextureU, fTextureV, fTextureDX, fTextureDV);
+		SetupScanline((double) nScanLine, fClipLeft, fClipRight, scanLineMin, scanLineMax, vertexArray, fScanLineLength, fTextureU, fTextureV, fTextureDU, fTextureDV);
 
 		// Rasterize the scanline using textureWalker as the source color
 		int64_t nStartX = (int64_t) scanLineMin.x;
@@ -465,7 +567,7 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexA
 			*pDestPixels = nSourceCol;
 			pDestPixels++;
 
-			fTextureU += fTextureDX;
+			fTextureU += fTextureDU;
 			fTextureV += fTextureDV;
 		}
 

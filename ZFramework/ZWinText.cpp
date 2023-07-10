@@ -11,7 +11,7 @@ using namespace std;
 ZWinLabel::ZWinLabel(uint8_t _behavior)
 {
     mBehavior = (eBehavior)_behavior;
-    mbAcceptsCursorMessages = true;
+    mbAcceptsCursorMessages = (mBehavior&CloseOnClick)!=0;  
     mStyle = gStyleCaption;
 }
 
@@ -37,7 +37,7 @@ bool ZWinLabel::OnMouseHover(int64_t x, int64_t y)
         ZRect rTextArea;
         
         tZFontPtr pTooltipFont = gpFontSystem->GetFont(mStyleTooltip.fp);
-        rTextArea = pTooltipFont->GetOutputRect(mAreaToDrawTo, (uint8_t*)msTooltipText.c_str(), msTooltipText.length(), mStyleTooltip.pos);
+        rTextArea = pTooltipFont->Arrange(mAreaToDrawTo, (uint8_t*)msTooltipText.c_str(), msTooltipText.length(), mStyleTooltip.pos);
         rTextArea.InflateRect(pTooltipFont->Height()/4, pTooltipFont->Height()/4);
 
 
@@ -91,13 +91,35 @@ bool ZWinLabel::Paint()
     }
     else
     {
-        ZRect rOut = mStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)msText.c_str(), msText.length(), mStyle.pos);
+        ZRect rOut = mStyle.Font()->Arrange(mAreaToDrawTo, (uint8_t*)msText.c_str(), msText.length(), mStyle.pos);
         mStyle.Font()->DrawText(mpTransformTexture.get(), msText, rOut, &mStyle.look);
     }
 
     return ZWin::Paint();
 }
 
+
+ZWinLabel* ZWinLabel::ShowTooltip(ZWin* pMainWin, const std::string& sTooltip, const ZGUI::Style& style)
+{
+    ZWinLabel* pWin = new ZWinLabel(ZWinLabel::CloseOnMouseOut);
+    pWin->msText = sTooltip;
+    pWin->mStyle = style;
+
+    ZRect rTextArea;
+    tZFontPtr pTooltipFont = gpFontSystem->GetFont(pWin->mStyle.fp);
+    rTextArea = pTooltipFont->StringRect(sTooltip);
+    rTextArea.InflateRect(pTooltipFont->Height() / 4, pTooltipFont->Height() / 4);
+
+
+    rTextArea.MoveRect(ZPoint(gInput.lastMouseMove.x - rTextArea.Width() + pTooltipFont->Height() / 4, gInput.lastMouseMove.y - rTextArea.Height() + pTooltipFont->Height() / 4));
+    pWin->SetArea(rTextArea);
+
+    if (pMainWin->ChildAdd(pWin))
+        return pWin;
+
+    delete pWin;
+    return nullptr;
+}
 
 
 
@@ -219,7 +241,7 @@ bool ZWinTextEdit::Paint()
     }
 
 
-    ZRect rString(mStyle.Font()->GetOutputRect(rOut, (uint8_t*)mpText->c_str(), mpText->length(), posToUse, 0));
+    ZRect rString(mStyle.Font()->Arrange(rOut, (uint8_t*)mpText->c_str(), mpText->length(), posToUse, 0));
 
     mpTransformTexture.get()->Fill(mAreaToDrawTo, mStyle.bgCol);
 

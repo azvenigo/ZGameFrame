@@ -6,7 +6,7 @@
 #include "ZXMLNode.h"
 #include "helpers/StringHelpers.h"
 #include "ZStringHelpers.h"
-
+#include "ZWinText.H"
 
 #ifdef _DEBUG
 #define new new(_NORMAL_BLOCK, THIS_FILE, __LINE__)
@@ -85,12 +85,14 @@ bool ZWinBtn::SetBaseRect( ZRect rRect )
 	return true;
 }
 
-bool ZWinBtn::OnMouseHover(int64_t /*x*/, int64_t /*y*/)
+bool ZWinBtn::OnMouseHover(int64_t x, int64_t y)
 {
-	if (!msHoverMessage.empty())
-		gMessageSystem.Post(msHoverMessage);
+    if (msTooltip.empty())
+        return true;
 
-	return true;
+    ZWinLabel::ShowTooltip(GetTopWindow(), msTooltip, gStyleTooltip);
+
+    return true;
 }
 
 bool ZWinBtn::OnMouseIn()
@@ -464,7 +466,7 @@ bool ZWinSizablePushBtn::Paint()
 	int64_t nStrlen = msCaption.length();
 	if (nStrlen > 0)
 	{
-		ZRect rText(mStyle.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)msCaption.data(), nStrlen, mStyle.pos, mStyle.paddingV));
+		ZRect rText(mStyle.Font()->Arrange(mAreaToDrawTo, (uint8_t*)msCaption.data(), nStrlen, mStyle.pos, mStyle.paddingV));
 
 		string sCaptionToDraw(msCaption);
 
@@ -538,6 +540,17 @@ bool ZWinSizablePushBtn::OnMouseMove(int64_t x, int64_t y)
 
 	return ZWin::OnMouseMove(x, y);
 }
+
+bool ZWinSizablePushBtn::OnMouseHover(int64_t x, int64_t y)
+{
+    if (msTooltip.empty())
+        return true;
+
+    ZWinLabel::ShowTooltip(GetTopWindow(), msTooltip, gStyleTooltip);
+
+    return true;
+}
+
 
 void ZWinSizablePushBtn::SetCaption(const string& sCaption) 
 { 

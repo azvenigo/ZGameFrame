@@ -644,7 +644,7 @@ ZRect ZFont::StringRect(const std::string& sText)
 
 // This function helps format text by returning a rectangle where the text should be output
 // It will not clip, however... That should be done by the caller if necessary
-ZRect ZFont::GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding)
+ZRect ZFont::Arrange(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding)
 {
 	ZRect rText(0,0, StringWidth(string((char*)pChars,nNumChars)), mFontParams.nHeight);
 	rArea.DeflateRect(nPadding, nPadding);
@@ -746,7 +746,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 	{
         int64_t nLettersToDraw = CalculateWordsThatFitOnLine(rTextLine.Width(), (uint8_t*) pChars, pEnd-pChars);
        
-        ZRect rAdjustedLine(GetOutputRect(rTextLine, (uint8_t*)pChars, nLettersToDraw, lineStyle));
+        ZRect rAdjustedLine(Arrange(rTextLine, (uint8_t*)pChars, nLettersToDraw, lineStyle));
         if (rAdjustedLine.bottom > rAreaToDrawTo.top && rAdjustedLine.top < rAreaToDrawTo.bottom)       // only draw if line is within rAreaToDrawTo
 		    DrawText(pBuffer, string(pChars, nLettersToDraw), rAdjustedLine, &pStyle->look, pClip);
 
@@ -1647,6 +1647,9 @@ tZFontPtr ZFontSystem::GetFont(const std::string& sFontName, int32_t nFontSize)
 
 tZFontPtr ZFontSystem::GetFont(const ZFontParams& params)
 {
+    if (params.sFacename.empty() || params.nHeight == 0)
+        return nullptr;
+
     const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
     auto findIt = mFontMap.find(params);
 

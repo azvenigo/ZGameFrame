@@ -153,11 +153,10 @@ public:
 
     int64_t         CharWidth(uint8_t c);
     int32_t         GetSpaceBetweenChars(uint8_t c1, uint8_t c2);
-    ZRect           GetOutputRect(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding = 0);
-
-
+    ZRect           Arrange(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding = 0);
 	int64_t         StringWidth(const std::string& sText);
     ZRect           StringRect(const std::string& sText);
+
 	int64_t         CalculateWordsThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);  // returns the number of characters that should be drawn on this line, breaking at words
 	int64_t         CalculateLettersThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);	// returns the number of characters that fit on that line
 	int64_t         CalculateNumberOfLines(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);	// returns the number of lines required to draw text

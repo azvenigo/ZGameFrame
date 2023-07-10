@@ -6,7 +6,7 @@ using namespace std;
 uint32_t        gDefaultDialogFill(0xff575757);
 uint32_t        gDefaultTextAreaFill(0xff888888);
 uint32_t        gDefaultSpacer(16);
-uint32_t        gnDefaultGroupInlaySize(8);
+int64_t         gnDefaultGroupInlaySize(8);
 ZRect           grDefaultDialogBackgroundEdgeRect(3, 3, 53, 52);
 
 //Fonts
@@ -42,7 +42,7 @@ namespace ZGUI
         gStyleButton.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
         gStyleToggleChecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
         gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
-        gStyleTooltip.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
+        gStyleTooltip.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 70, 10);
         gStyleCaption.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 55, 10);
 //        gDefaultGroupingStyle.fp.nHeight = grFullArea.Height()/135;
 

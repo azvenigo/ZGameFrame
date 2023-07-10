@@ -958,7 +958,7 @@ bool ZChessWin::Paint()
                     sLabel = "White is in Check";
             }
 
-            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
+            rMoveLabel = pLabelFont->Arrange(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gDefaultSpacer, gDefaultSpacer);
 
@@ -975,7 +975,7 @@ bool ZChessWin::Paint()
                 else
                     sLabel = "Black is in Check";
             }
-            rMoveLabel = pLabelFont->GetOutputRect(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
+            rMoveLabel = pLabelFont->Arrange(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gDefaultSpacer, gDefaultSpacer);
             mpTransformTexture->Fill(rMoveLabel, 0xff000000);

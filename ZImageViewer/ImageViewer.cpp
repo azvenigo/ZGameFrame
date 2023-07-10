@@ -8,6 +8,7 @@
 #include "ZWinFileDialog.h"
 #include "ConfirmDeleteDialog.h"
 #include "ZWinControlPanel.h"
+#include "ZGUIStyle.h"
 #include <algorithm>
 #include "ZWinBtn.H"
 #include "helpers/Registry.h"
@@ -23,6 +24,8 @@ bool is_ready(std::shared_future<R> const& f)
     return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
 const int kPoolSize = 8;
+
+//#define DEBUG_CACHE
 
 ImageViewer::ImageViewer()
 {
@@ -293,6 +296,15 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             Invalidate();
             return true;
         }
+        else if (sType == "invalidate")
+        {
+            if (mbSubsample && mpWinImage)
+                mpWinImage->nSubsampling = 2;
+            else
+                mpWinImage->nSubsampling = 0;
+            InvalidateChildren();
+            return true;
+        }
     }
 
     return ZWin::HandleMessage(message);
@@ -548,7 +560,7 @@ void ImageViewer::ResetControlPanel()
 
 
 
-    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide * 3 /4, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
+    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide * 3 /4, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     ZGUI::Style wingdingsStyle = ZGUI::Style(ZFontParams("Wingdings", nGroupSide /2, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
 
     mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
@@ -559,6 +571,7 @@ void ImageViewer::ResetControlPanel()
     ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('|', 11109); // flip V
 
     ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x2750);
+    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
 
 
 //    ((ZDynamicFont*)wingdingsStyle.Font().get())->GenerateSymbolicGlyph('F', 0x2922);
@@ -708,7 +721,13 @@ void ImageViewer::ResetControlPanel()
     rGroup.right = rButton.right + gnDefaultGroupInlaySize;
     mpPanel->AddGrouping("Rotate", rGroup);
 
+
+
     rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gnDefaultGroupInlaySize);
+
+    rGroup.right = rButton.right;
+    rButton.OffsetRect(-gnDefaultGroupInlaySize, 0);
+
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->SetCaption("F");
@@ -719,6 +738,31 @@ void ImageViewer::ResetControlPanel()
     Sprintf(sMessage, "toggle_fullscreen");
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
+
+    rButton.OffsetRect(-rButton.Width(), 0);
+    ZWinCheck* pCheck = new ZWinCheck(&mbSubsample);
+    pCheck->SetMessages(ZMessage("invalidate", this), ZMessage("invalidate", this));
+    pCheck->SetCaption("Q");
+    pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+
+    pCheck->mCheckedStyle = unicodeStyle;
+    pCheck->mCheckedStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
+    pCheck->mCheckedStyle.look.colTop = 0xff88ff88;
+    pCheck->mCheckedStyle.look.colBottom = 0xff88ff88;
+    pCheck->mCheckedStyle.pos = ZGUI::CB;
+    pCheck->mCheckedStyle.paddingV = unicodeStyle.fp.nHeight / 10;
+
+    pCheck->mUncheckedStyle = unicodeStyle;
+    pCheck->mUncheckedStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
+    pCheck->mUncheckedStyle.pos = ZGUI::CB;
+    pCheck->mUncheckedStyle.paddingV = unicodeStyle.fp.nHeight / 10;
+
+    pCheck->SetArea(rButton);
+    pCheck->SetTooltip("Sub-pixel sampling");
+    mpPanel->ChildAdd(pCheck);
+
+    rGroup.left = rButton.left- gnDefaultGroupInlaySize;
+    mpPanel->AddGrouping("view", rGroup);
 }
 
 bool ImageViewer::OnParentAreaChange()
@@ -1062,6 +1106,9 @@ tImageFilenames ImageViewer::GetImagesFlaggedToBeDeleted()
 }
 
 #ifdef _DEBUG
+
+#ifdef DEBUG_CACHE
+
 string ImageViewer::LoadStateString()
 {
     string state;
@@ -1075,6 +1122,7 @@ string ImageViewer::LoadStateString()
 
     return state;
 }
+#endif
 
 #endif
 
@@ -1100,6 +1148,8 @@ bool ImageViewer::Process()
             KickCaching();
     }
 
+#ifdef DEBUG_CACHE
+
 #ifdef _DEBUG
     static int64_t nLastReport = 0;
 
@@ -1111,6 +1161,7 @@ bool ImageViewer::Process()
     }
 #endif
 
+#endif
 
     return ZWin::Process();
 }

@@ -71,6 +71,7 @@ public:
     std::string msSaveButtonMessage;
 
     tZBufferPtr mpImage;
+    uint32_t    nSubsampling;
 
 
     ZGUI::tTextboxMap   mCaptionMap;

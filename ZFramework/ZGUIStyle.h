@@ -17,7 +17,7 @@ extern uint32_t     gDefaultSpacer;
 
 extern uint32_t     gDefaultDialogFill;
 extern uint32_t     gDefaultTextAreaFill;
-extern uint32_t     gnDefaultGroupInlaySize;
+extern int64_t      gnDefaultGroupInlaySize;
 
 
 
