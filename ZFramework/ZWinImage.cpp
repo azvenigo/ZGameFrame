@@ -471,7 +471,7 @@ bool ZWinImage::Paint()
                 gRasterizer.RectToVerts(mImageArea, verts);
                 ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
-                if (nSubsampling == 0 || AmCapturing() || gInput.IsKeyDown(mZoomHotkey))
+                if (nSubsampling == 0 || AmCapturing() || gInput.IsKeyDown(mZoomHotkey) || mfZoom == 1.00)
                     gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
                 else
                     gRasterizer.MultiSampleRasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo, nSubsampling);
