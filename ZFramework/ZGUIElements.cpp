@@ -7,7 +7,7 @@ namespace ZGUI
 {
     void TextBox::Paint(ZBuffer* pDst)
     {
-        if (sText.empty())
+        if (sText.empty() || !visible)
             return;
 
         assert(pDst);

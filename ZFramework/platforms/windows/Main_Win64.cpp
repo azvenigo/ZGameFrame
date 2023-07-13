@@ -80,11 +80,11 @@ public:
 
 int main(int argc, char* argv[])
 {
-
+     
     // Enable exception handling
     SetUnhandledExceptionFilter([](PEXCEPTION_POINTERS exceptionInfo) -> LONG {
         std::cerr << "Unhandled exception: " << std::hex << exceptionInfo->ExceptionRecord->ExceptionCode << std::endl;
-//        while (1);
+        //while (1);
         return EXCEPTION_EXECUTE_HANDLER;
         });
 

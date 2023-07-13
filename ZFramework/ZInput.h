@@ -9,7 +9,7 @@ class ZWin;
 class ZInput
 {
 public:
-    ZInput() : captureWin(nullptr), keyboardFocusWin(nullptr), lastMouseMoveTime(0)
+    ZInput() : captureWin(nullptr), keyboardFocusWin(nullptr), lastMouseMove(-1,-1), lastMouseMoveTime(0)
     {
     }
 

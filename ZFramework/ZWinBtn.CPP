@@ -257,8 +257,12 @@ bool ZWinPushBtn::OnMouseMove(int64_t x, int64_t y)
 ///////////////////////////////////////////////////////////////////////////////
 ZWinCheck::ZWinCheck(bool* pbChecked)
 {
-    ZASSERT(pbChecked);
-	mpbChecked = pbChecked;
+    mbInternal = false;
+
+    if (!pbChecked)
+        mpbChecked = &mbInternal;
+    else
+	    mpbChecked = pbChecked;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -375,7 +379,11 @@ bool ZWinCheck::OnMouseUpL(int64_t, int64_t)
 
 bool ZWinCheck::OnMouseDownL(int64_t, int64_t)
 {
-	SetState(!*mpbChecked);
+    // if we're part of a radio group and area already checked, do nothing
+    if (!msRadioGroupName.empty() && *mpbChecked)
+        return true;
+
+    SetState(!*mpbChecked);
 	return true;
 }
 

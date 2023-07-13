@@ -155,7 +155,7 @@ protected:
 class ZWinCheck : public ZWinSizablePushBtn
 {
 public:
-	ZWinCheck(bool* pbChecked);
+	ZWinCheck(bool* pbChecked = nullptr);
 	~ZWinCheck();
 
 public:
@@ -181,6 +181,7 @@ protected:
     virtual bool  			Paint();
    
     bool*					mpbChecked;
+    bool                    mbInternal;     // if control has no external bool, keep it internal
 	std::string				msUncheckMessage;
     std::string             msRadioGroupName;
 };

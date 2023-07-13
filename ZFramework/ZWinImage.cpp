@@ -111,34 +111,37 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 
 bool ZWinImage::OnMouseDownR(int64_t x, int64_t y)
 {
-    // toggle between 100% and fullscreen
-    if (mViewState != kFitToWindow)
+    if (mpImage)
     {
-        FitImageToWindow();
-    }
-    else
-    {
-        double fZoomPointX = (double)(x - mImageArea.left);
-        double fZoomPointY = (double)(y - mImageArea.top);
+        // toggle between 100% and fullscreen
+        if (mViewState != kFitToWindow)
+        {
+            FitImageToWindow();
+        }
+        else
+        {
+            double fZoomPointX = (double)(x - mImageArea.left);
+            double fZoomPointY = (double)(y - mImageArea.top);
 
-        double fZoomPointU = fZoomPointX / (double)mImageArea.Width();
-        double fZoomPointV = fZoomPointY / (double)mImageArea.Height();
+            double fZoomPointU = fZoomPointX / (double)mImageArea.Width();
+            double fZoomPointV = fZoomPointY / (double)mImageArea.Height();
 
-        ZRect rImage(mpImage.get()->GetArea());
+            ZRect rImage(mpImage.get()->GetArea());
 
 
 
-        int64_t nNewLeft = (int64_t)(x - (rImage.Width() * fZoomPointU));
-        int64_t nNewRight = nNewLeft + (int64_t)rImage.Width();
+            int64_t nNewLeft = (int64_t)(x - (rImage.Width() * fZoomPointU));
+            int64_t nNewRight = nNewLeft + (int64_t)rImage.Width();
 
-        int64_t nNewTop = (int64_t)(y - (rImage.Height() * fZoomPointV));
-        int64_t nNewBottom = nNewTop + (int64_t)rImage.Height();
+            int64_t nNewTop = (int64_t)(y - (rImage.Height() * fZoomPointV));
+            int64_t nNewBottom = nNewTop + (int64_t)rImage.Height();
 
-        ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
+            ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
 
-        mImageArea.SetRect(rNewArea);
-        SetZoom(1.0);
-        Invalidate();
+            mImageArea.SetRect(rNewArea);
+            SetZoom(1.0);
+            Invalidate();
+        }
     }
 
     return ZWin::OnMouseDownR(x, y);
@@ -232,28 +235,16 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 bool ZWinImage::OnKeyDown(uint32_t c)
 {
     if (c == mZoomHotkey)
-    {
         mpParentWin->InvalidateChildren();
-    }
-
-    if (mpParentWin)
-        return mpParentWin->OnKeyDown(c);
-
-
-    return ZWin::OnKeyDown(c);
+    return mpParentWin->OnKeyDown(c);
 }
 
 bool ZWinImage::OnKeyUp(uint32_t c)
 {
     if (c == mZoomHotkey)
-    {
         mpParentWin->InvalidateChildren();
-    }
 
-    if (mpParentWin)
-        return mpParentWin->OnKeyUp(c);
-
-    return ZWin::OnKeyUp(c);
+    return mpParentWin->OnKeyUp(c);
 }
 
 
@@ -480,18 +471,17 @@ bool ZWinImage::Paint()
         }
     }
 
-    if ((mBehavior & kShowCaption) != 0 || gInput.IsKeyDown(mZoomHotkey))
+    if ((mBehavior & kShowCaption) != 0)
     {
-        Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
         ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);
 
-        if (mpTable)
+        if (mpImage && mpTable)
             mpTable->Paint(mpTransformTexture.get());
     }
-    else
-    {
-        mCaptionMap["zoom"].sText = "";
-    }
+
+    Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
+    mCaptionMap["zoom"].visible = gInput.IsKeyDown(mZoomHotkey);
+    mCaptionMap["filename"].visible = !mCaptionMap["zoom"].visible; // either zoom or filename should be visible
 
 
 	return ZWin::Paint();

@@ -12,7 +12,8 @@ class ZWinImage;
 class ZWinControlPanel;
 
 
-//typedef std::shared_future< tZBufferPtr >       tImageFuture;
+const std::string ksToBeDeleted("ZZ_to_be_deleted");
+const std::string ksFavorites("favorites");
 
 class ImageEntry
 {
@@ -34,18 +35,18 @@ public:
         mEXIF.clear();
 
         mState = kInit;
-        bToBeDeleted = false;
     }
 
     bool ReadyToLoad() { return mState == kExifReady || mState == kNoExifAvailable; }
+    bool ToBeDeleted(); // true if image is in the ZZ_to_be_deleted subfolder
+    bool IsFavorite();  // true if image is in the "favorites" subfolder
+
 
     std::filesystem::path   filename;
     tZBufferPtr             pImage;
     easyexif::EXIFInfo      mEXIF;
 
     eImageEntryState        mState;
-
-    bool                    bToBeDeleted;
 };
 
 typedef std::list<std::filesystem::path>        tImageFilenames;
@@ -68,6 +69,13 @@ class ImageViewer : public ZWin
     {
         kReadingAhead = 1,
         kWaiting      = 2
+    };
+
+    enum eFilterState : uint32_t
+    {
+        kAll = 0,
+        kFavs = 1,
+        kToBeDeleted = 2
     };
 
 public:
@@ -123,8 +131,11 @@ protected:
     void                    FlushLoads();
 
     void                    UpdateCaptions();
+    void                    UpdateFilteredView(eFilterState state);
 
-    void                    ToggleDeleteFlag();
+    void                    ToggleUI();
+    void                    ToggleToBeDeleted();
+    void                    ToggleFavorite();
 
     void                    DeleteConfimed();
     void                    DeleteFile(std::filesystem::path& f);
@@ -141,6 +152,12 @@ protected:
     void                    SetLastImage();
     void                    SetNextImage();
     void                    SetPrevImage();
+
+    bool                    FindNextImageMatchingFilter(int64_t &nIndex);
+    bool                    FindPrevImageMatchingFilter(int64_t &nIndex);
+    int64_t                 CountImagesMatchingFilter();
+
+    bool                    ImageMatchesCurFilter(int64_t nIndex);
 
     ZWinControlPanel*       mpPanel;
 
@@ -167,8 +184,10 @@ protected:
 
     uint32_t                mToggleUIHotkey;
     tZFontPtr               mpSymbolicFont;
+    tZFontPtr               mpFavoritesFont;
 
     bool                    mbSubsample;
+    eFilterState            mFilterState;
 };
 
 

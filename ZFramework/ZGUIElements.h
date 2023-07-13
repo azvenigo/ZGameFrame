@@ -20,11 +20,13 @@ namespace ZGUI
             sText.clear();
             style = {};
             area = {};
+            visible = true;
         }
 
         std::string sText;
         Style       style;
         ZRect       area;
+        bool        visible;
     };
 
 

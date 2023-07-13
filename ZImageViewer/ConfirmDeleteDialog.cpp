@@ -59,7 +59,7 @@ bool ConfirmDeleteDialog::Init()
 
         ZWinSizablePushBtn* pBtn;
 
-        pBtn = new ZWinSizablePushBtn();
+/*        pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetCaption("Quit");
         pBtn->SetMessage(ZMessage("cancel", this));
@@ -67,12 +67,12 @@ bool ConfirmDeleteDialog::Init()
         pBtn->SetArea(rButton);
         ChildAdd(pBtn);
 
-        rButton.OffsetRect(-rButton.Width() - gDefaultSpacer, 0);
+        rButton.OffsetRect(-rButton.Width() - gDefaultSpacer, 0);*/
 
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-        pBtn->SetCaption("Delete");
+        pBtn->SetCaption("Confirm Delete");
         pBtn->SetMessage(ZMessage("deleteconfirm", this));
         pBtn->mStyle = gStyleButton;
         pBtn->mStyle.look.colTop = 0xffff0000;
@@ -82,7 +82,9 @@ bool ConfirmDeleteDialog::Init()
         pBtn->SetArea(rButton);
         ChildAdd(pBtn);
 
-        rButton.OffsetRect(-rButton.Width() - gDefaultSpacer, 0);
+        rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::LB, gDefaultSpacer, gDefaultSpacer);
+
+//        rButton.MoveRect(-rButton.Width()*2 - gDefaultSpacer, 0);
 
 
         pBtn = new ZWinSizablePushBtn();
