@@ -9,6 +9,7 @@
 
 
 class ZWinImage;
+class ZWinCheck;
 class ZWinControlPanel;
 
 
@@ -146,6 +147,8 @@ protected:
 
     void                    MoveSelectedFile(std::filesystem::path& newPath);
 
+    bool                    RemoveImageArrayEntry(int64_t nIndex);
+
 
 
     void                    SetFirstImage();
@@ -155,7 +158,7 @@ protected:
 
     bool                    FindNextImageMatchingFilter(int64_t &nIndex);
     bool                    FindPrevImageMatchingFilter(int64_t &nIndex);
-    int64_t                 CountImagesMatchingFilter();
+    int64_t                 CountImagesMatchingFilter(eFilterState state);
 
     bool                    ImageMatchesCurFilter(int64_t nIndex);
 
@@ -185,6 +188,10 @@ protected:
     uint32_t                mToggleUIHotkey;
     tZFontPtr               mpSymbolicFont;
     tZFontPtr               mpFavoritesFont;
+
+    ZWinCheck*              mpAllFilterButton;
+    ZWinCheck*              mpFavsFilterButton;
+    ZWinCheck*              mpDelFilterButton;
 
     bool                    mbSubsample;
     eFilterState            mFilterState;

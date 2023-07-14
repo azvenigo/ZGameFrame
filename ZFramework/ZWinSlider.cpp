@@ -137,7 +137,7 @@ int64_t ZWinSlider::WindowToScaledValue(int64_t x, int64_t y)
 
     int64_t nUnscaledValRange = mnSliderUnscaledValMax - mnSliderUnscaledValMin;
     int64_t nScaledValue = mnSliderValScalar * (mnSliderUnscaledValMin + (int64_t)((double)(nUnscaledValRange) * fNormalizedValue));
-    ZDEBUG_OUT("normalized:", fNormalizedValue, " scaled:", nScaledValue, "\n");
+    //ZDEBUG_OUT("normalized:", fNormalizedValue, " scaled:", nScaledValue, "\n");
 
     return nScaledValue;
 }

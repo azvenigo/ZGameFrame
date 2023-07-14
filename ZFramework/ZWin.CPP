@@ -246,6 +246,8 @@ ZWin* ZWin::GetTopWindow()
 
 bool ZWin::SetParentWin(ZWin* pNewParent) 
 {
+    ZASSERT(pNewParent != this);
+
 	mpParentWin = pNewParent;
 	return true;
 }

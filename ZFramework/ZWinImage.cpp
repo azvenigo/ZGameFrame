@@ -24,7 +24,7 @@ ZWinImage::ZWinImage()
     mfMinZoom = 0.01;
     mfMaxZoom = 100.0;
     mZoomHotkey = 0;
-    nSubsampling = 2;
+    nSubsampling = 0;
     mpTable = nullptr;
 
     mBehavior = eBehavior::kNone;
@@ -58,7 +58,7 @@ bool ZWinImage::OnParentAreaChange()
 void ZWinImage::Clear()
 {
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
-
+    ZOUT("ZWinImage::Clear()\n");
 
     mpImage.reset();
     mCaptionMap.clear();
@@ -83,26 +83,30 @@ bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 
 bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 {
-    easyexif::EXIFInfo& exif = mpImage->GetEXIF();
-    bool bHasGeoLocation = exif.GeoLocation.Latitude != 0.0 || exif.GeoLocation.Longitude != 0.0;
+    if (mpImage)
+    {
+
+        easyexif::EXIFInfo& exif = mpImage->GetEXIF();
+        bool bHasGeoLocation = exif.GeoLocation.Latitude != 0.0 || exif.GeoLocation.Longitude != 0.0;
 
 #ifdef _WIN32
-    if (((mBehavior & kShowCaption) != 0) && bHasGeoLocation && mpTable && mpTable->mrAreaToDrawTo.PtInRect(x,y))
-    {
-        // open geolocation https://maps.google.com/?q=<lat>,<lng>
-        string sURL;
-        Sprintf(sURL, "https://maps.google.com/?t=k&q=%f,%f", exif.GeoLocation.Latitude, exif.GeoLocation.Longitude);
-        ShellExecute(0, "open", sURL.c_str(), 0, 0, SW_SHOWNORMAL);
-
-        return true;
-    }
-#endif
-    if ((mBehavior & kScrollable) && mImageArea.PtInRect(x,y))
-    {
-        if (SetCapture())
+        if (((mBehavior & kShowCaption) != 0) && bHasGeoLocation && mpTable && mpTable->mrAreaToDrawTo.PtInRect(x, y))
         {
-            SetMouseDownPos(mImageArea.left-x, mImageArea.top-y);
+            // open geolocation https://maps.google.com/?q=<lat>,<lng>
+            string sURL;
+            Sprintf(sURL, "https://maps.google.com/?t=k&q=%f,%f", exif.GeoLocation.Latitude, exif.GeoLocation.Longitude);
+            ShellExecute(0, "open", sURL.c_str(), 0, 0, SW_SHOWNORMAL);
+
             return true;
+        }
+#endif
+        if ((mBehavior & kScrollable) && mImageArea.PtInRect(x, y))
+        {
+            if (SetCapture())
+            {
+                SetMouseDownPos(mImageArea.left - x, mImageArea.top - y);
+                return true;
+            }
         }
     }
 
@@ -398,6 +402,9 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
         rOldImage = mpImage->GetArea();
 
     mpImage = pImage;
+    const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+
     if (mViewState == kFitToWindow || mViewState == kNoState)
     {
         FitImageToWindow();
@@ -405,15 +412,15 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
     else if (mpImage->GetArea() == rOldImage)
     {
         // if image dimensions haven't changed and we have user set pan/zoom, leave it
-        Invalidate();
     }
     else 
     {
         SetZoom(1.0);
         mImageArea = pImage->GetArea();
         mImageArea = mImageArea.CenterInRect(mAreaToDrawTo);
-        Invalidate();
     }
+
+    Invalidate();
 }
 
 bool ZWinImage::Paint()
@@ -441,32 +448,34 @@ bool ZWinImage::Paint()
 
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
+    tZBufferPtr pRenderImage = mpImage;
+    ZRect rRenderArea = mImageArea;
 
 //    ZOUT_LOCKLESS("mpimage");
-    if (mpImage)
+    if (pRenderImage)
     {
 //        ZOUT_LOCKLESS("imageSurfaceLock get");
-        const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
-        if (mpImage->GetPixels())
+        if (pRenderImage->GetPixels())
         {
 //            ZOUT_LOCKLESS("getpixels");
-            ZRect rSource(mpImage->GetArea());
+            ZRect rSource(pRenderImage->GetArea());
+
+            ZOUT("Rendering image:", pRenderImage->GetEXIF().DateTime, "\n");
 
             if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
             {
-                mpTransformTexture.get()->Blt(mpImage.get(), rSource, rDest);
+                mpTransformTexture.get()->Blt(pRenderImage.get(), rSource, rDest);
             }
             else
             {
                 tUVVertexArray verts;
-                gRasterizer.RectToVerts(mImageArea, verts);
+                gRasterizer.RectToVerts(rRenderArea, verts);
                 ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
                 if (nSubsampling == 0 || AmCapturing() || gInput.IsKeyDown(mZoomHotkey) || mfZoom == 1.00)
-                    gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo);
+                    gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), pRenderImage.get(), verts, &mAreaToDrawTo);
                 else
-                    gRasterizer.MultiSampleRasterizeWithAlpha(mpTransformTexture.get(), mpImage.get(), verts, &mAreaToDrawTo, nSubsampling);
-                ZOUT("Rendering with subdivisions:", nSubsampling, "\n");
+                    gRasterizer.MultiSampleRasterizeWithAlpha(mpTransformTexture.get(), pRenderImage.get(), verts, &mAreaToDrawTo, nSubsampling);
             }
         }
     }
@@ -475,7 +484,7 @@ bool ZWinImage::Paint()
     {
         ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);
 
-        if (mpImage && mpTable)
+        if (pRenderImage && mpTable)
             mpTable->Paint(mpTransformTexture.get());
     }
 

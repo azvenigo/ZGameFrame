@@ -563,6 +563,7 @@ bool ZWinSizablePushBtn::OnMouseHover(int64_t x, int64_t y)
 void ZWinSizablePushBtn::SetCaption(const string& sCaption) 
 { 
 	msCaption = sCaption; 
+    Invalidate();
 }
 
 

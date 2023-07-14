@@ -43,9 +43,9 @@ ImageViewer::ImageViewer()
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
     mIdleSleepMS = 13;
-    mMaxMemoryUsage = 2 * 1024 * 1024 * 1024LL;   // 2GiB
-//    mMaxMemoryUsage = 675 * 1024 * 1024LL;
-    mMaxCacheReadAhead = 5;
+    mMaxMemoryUsage = 4 * 1024 * 1024 * 1024LL;   // 2GiB
+//    mMaxMemoryUsage = 400 * 1024 * 1024LL;
+    mMaxCacheReadAhead = 8;
     mnViewingIndex = 0;
     mLastAction = kNone;
     msWinName = "ZWinImageViewer";
@@ -58,6 +58,9 @@ ImageViewer::ImageViewer()
     mCachingState = kWaiting;
     mbSubsample = false;
     mFilterState = kAll;
+    mpAllFilterButton = nullptr;
+    mpFavsFilterButton = nullptr;
+    mpDelFilterButton = nullptr;
 
 }
  
@@ -194,6 +197,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
         else
         {
             MoveSelectedFile(mMoveToFolder);
+            RemoveImageArrayEntry(mnViewingIndex);
         }
         break;
     case 'o':
@@ -204,6 +208,20 @@ bool ImageViewer::OnKeyDown(uint32_t key)
 
     return true;
 }
+
+bool ImageViewer::RemoveImageArrayEntry(int64_t nIndex)
+{
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+
+    if (!ValidIndex(nIndex))
+        return false;
+
+    mImageArray.erase(mImageArray.begin() + nIndex);
+    limit<int64_t>(mnViewingIndex, 0, mImageArray.size() - 1);
+    UpdateFilteredView(mFilterState);
+    return true;
+}
+
 
 bool ImageViewer::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 {
@@ -222,19 +240,19 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         HandleQuitCommand();
         return true;
     }
-    if (sType == "loadimg")
+    else if (sType == "loadimg")
     {
         ShowOpenImageDialog();
         return true;
     }
-    if (sType == "saveimg")
+    else if (sType == "saveimg")
     {
         string sFilename;
         if (ZWinFileDialog::ShowSaveDialog("Images", "*.jpg;*.jpeg;*.png;*.tga;*.bmp;*.hdr", sFilename))
             SaveImage(sFilename);
         return true;
     }
-    if (sType == "delete_single")
+    else if (sType == "show_confirm")
     {
         tImageFilenames deletionList = GetImagesFlaggedToBeDeleted();
         ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", deletionList);
@@ -243,10 +261,9 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         pDialog->msOnGoBack = ZMessage("delete_goback", this);
         return true;
     }
-    if (sType == "delete_confirm")
+    else if (sType == "delete_confirm")
     {
         DeleteConfimed();
-        gMessageSystem.Post("quit_app_confirmed");
         return true;
     }
     else if (sType == "delete_goback")
@@ -254,11 +271,6 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         // Anything to do or just close the confirm dialog?
         if (mpWinImage)
             mpWinImage->SetFocus();
-        return true;
-    }
-    else if (sType == "delete_cancel_and_quit")
-    {
-        gMessageSystem.Post("quit_app_confirmed");
         return true;
     }
     else if (sType == "select")
@@ -385,7 +397,7 @@ void ImageViewer::HandleNavigateToParentFolder()
 
 void ImageViewer::HandleMoveCommand()
 {
-    if (!ValidIndex(mnViewingIndex))
+    if (!ValidIndex(mnViewingIndex) || CountImagesMatchingFilter(mFilterState) == 0)
     {
         ZERROR("No image selected to move");
         return;
@@ -402,6 +414,7 @@ void ImageViewer::HandleMoveCommand()
         }
         MoveSelectedFile(filesystem::path(sFolder));
         mMoveToFolder = sFolder;
+        RemoveImageArrayEntry(mnViewingIndex);
     }
     else
     {
@@ -414,7 +427,7 @@ void ImageViewer::HandleMoveCommand()
 
 void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
 {
-    if (!ValidIndex(mnViewingIndex))
+    if (!ValidIndex(mnViewingIndex) || CountImagesMatchingFilter(mFilterState) == 0)
     {
         ZERROR("No image selected to move");
         return;
@@ -433,9 +446,17 @@ void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
 
     filesystem::path newName(newPath);
     newName.append(oldName.filename().string());
-    filesystem::rename(oldName, newName);
 
-    mImageArray[mnViewingIndex].filename = newName;
+    try
+    {
+        filesystem::rename(oldName, newName);
+        mImageArray[mnViewingIndex].filename = newName;
+    }
+    catch (std::filesystem::filesystem_error err)
+    {
+        ZERROR("Error renaming from \"", oldName, "\" to \"", newName, "\"\ncode:", err.code(), " error:", err.what(), "\n");
+    };
+
 
 //    ScanForImagesInFolder(mCurrentFolder);
 
@@ -453,6 +474,11 @@ void ImageViewer::DeleteConfimed()
     {
         DeleteFile(f);
     }
+
+    filesystem::path toBeDeleted = mCurrentFolder;
+    toBeDeleted.append(ksToBeDeleted);
+    if (std::filesystem::is_empty(toBeDeleted))
+        std::filesystem::remove(toBeDeleted);
 
     ScanForImagesInFolder(mCurrentFolder);
 }
@@ -491,11 +517,11 @@ bool ImageViewer::SaveImage(const std::filesystem::path& filename)
 void ImageViewer::SetFirstImage()
 {
     mnViewingIndex = 0;
-    if (ValidIndex(mnViewingIndex) && !ImageMatchesCurFilter(mnViewingIndex))
+    if (!ImageMatchesCurFilter(mnViewingIndex))
     {
         if (!FindNextImageMatchingFilter(mnViewingIndex))
         {
-            return UpdateFilteredView(mFilterState);
+            UpdateFilteredView(mFilterState);
         }
     };
 
@@ -505,6 +531,7 @@ void ImageViewer::SetFirstImage()
     mCachingState = kReadingAhead;
     FreeCacheMemory();
     KickCaching();
+    InvalidateChildren();
 }
  
 
@@ -515,7 +542,7 @@ void ImageViewer::SetLastImage()
     {
         if (!FindPrevImageMatchingFilter(mnViewingIndex))
         {
-            return UpdateFilteredView(mFilterState);
+            UpdateFilteredView(mFilterState);
         }
     };
 
@@ -524,13 +551,14 @@ void ImageViewer::SetLastImage()
     mCachingState = kReadingAhead;
     FreeCacheMemory();
     KickCaching();
+    InvalidateChildren();
 }
 
 void ImageViewer::SetPrevImage()
 {
     if (!FindPrevImageMatchingFilter(mnViewingIndex))
     {
-        return UpdateFilteredView(mFilterState);
+        UpdateFilteredView(mFilterState);
     }
 
     mLastAction = kPrevImage;
@@ -538,13 +566,14 @@ void ImageViewer::SetPrevImage()
     mCachingState = kReadingAhead;
     FreeCacheMemory();
     KickCaching();
+    InvalidateChildren();
 }
 
 void ImageViewer::SetNextImage()
 {
     if (!FindNextImageMatchingFilter(mnViewingIndex))
     {
-        return UpdateFilteredView(mFilterState);
+        UpdateFilteredView(mFilterState);
     }
 
     mLastAction = kNextImage;
@@ -552,6 +581,7 @@ void ImageViewer::SetNextImage()
     mCachingState = kReadingAhead;
     FreeCacheMemory();
     KickCaching();
+    InvalidateChildren();
 }
 bool ImageViewer::FindNextImageMatchingFilter(int64_t& nIndex)
 {
@@ -564,6 +594,7 @@ bool ImageViewer::FindNextImageMatchingFilter(int64_t& nIndex)
     if (ValidIndex(nSearch))
     {
         nIndex = nSearch;
+        return true;
     }
 
     return false;
@@ -580,6 +611,7 @@ bool ImageViewer::FindPrevImageMatchingFilter(int64_t& nIndex)
     if (ValidIndex(nSearch))
     {
         nIndex = nSearch;
+        return true;
     }
 
     return false;
@@ -601,9 +633,9 @@ bool ImageViewer::ImageMatchesCurFilter(int64_t nIndex)
     return mImageArray[nIndex].IsFavorite();
 }
 
-int64_t ImageViewer::CountImagesMatchingFilter()
+int64_t ImageViewer::CountImagesMatchingFilter(eFilterState state)
 {
-    if (mFilterState == kAll)
+    if (state == kAll)
         return mImageArray.size();
        
     int64_t nToBeDeleted = 0;
@@ -616,7 +648,7 @@ int64_t ImageViewer::CountImagesMatchingFilter()
             nFavorites++;
     }
 
-    if (mFilterState == kToBeDeleted)
+    if (state == kToBeDeleted)
         return nToBeDeleted;
 
     // else viewing favorites
@@ -657,8 +689,8 @@ bool ImageViewer::Init()
 
         ResetControlPanel();
 
-
         mToggleUIHotkey = VK_TAB;
+        UpdateFilteredView(kAll);
     }
 
     if (!ValidIndex(mnViewingIndex))
@@ -796,7 +828,7 @@ void ImageViewer::ResetControlPanel()
     pBtn->mStyle.fp.nHeight = nGroupSide / 2;
     pBtn->mStyle.pos = ZGUI::C;
     pBtn->SetArea(rButton);
-    Sprintf(sMessage, "delete_single;target=%s", GetTargetName().c_str());
+    Sprintf(sMessage, "show_confirm;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
 
@@ -875,7 +907,7 @@ void ImageViewer::ResetControlPanel()
 
     ZGUI::Style filterButtonStyle = gDefaultGroupingStyle;
     filterButtonStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
-    filterButtonStyle.fp.nHeight = nGroupSide / 2;
+    filterButtonStyle.fp.nHeight = nGroupSide / 3;
     filterButtonStyle.pos = ZGUI::C;
     filterButtonStyle.look.colTop = 0xff888888;
     filterButtonStyle.look.colBottom = 0xff888888;
@@ -896,9 +928,9 @@ void ImageViewer::ResetControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->SetTooltip("Images flagged for deletion");
+    pCheck->SetTooltip("All images");
     mpPanel->ChildAdd(pCheck);
-
+    mpAllFilterButton = pCheck;
 
     // ToBeDeleted
     rButton.OffsetRect(rButton.Width(), 0);
@@ -917,7 +949,7 @@ void ImageViewer::ResetControlPanel()
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Images flagged for deletion");
     mpPanel->ChildAdd(pCheck);
-
+    mpDelFilterButton = pCheck;
 
     // Favorites
     rButton.OffsetRect(rButton.Width(), 0);
@@ -925,7 +957,7 @@ void ImageViewer::ResetControlPanel()
     pCheck = new ZWinCheck();
     pCheck->SetMessages(ZMessage("filter_favs", this), "");
     pCheck->SetRadioGroup("filter_group");
-    pCheck->SetCaption("fav");
+    pCheck->SetCaption("favs");
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 
     pCheck->mCheckedStyle = filterButtonStyle;
@@ -937,7 +969,7 @@ void ImageViewer::ResetControlPanel()
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Favorites");
     mpPanel->ChildAdd(pCheck);
-
+    mpFavsFilterButton = pCheck;
   
 
 
@@ -1434,21 +1466,23 @@ bool ImageViewer::Process()
         if (curImage && mpWinImage->mpImage != curImage)
         {
             mpWinImage->SetImage(curImage);
+            ZOUT("Setting image:", curImage->GetEXIF().DateTime, "\n");
 
             mpWinImage->mCaptionMap["no_image"].Clear();
 
             gRegistry["ZImageViewer"]["image"] = mImageArray[mnViewingIndex].filename.string();
 
             UpdateCaptions();
-            Invalidate();
+            InvalidateChildren();
         }
 
-        if (!curImage)
+/*        if (!curImage)
         {
             mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
             mpWinImage->mCaptionMap["no_image"].style = gStyleCaption;
             mpWinImage->mCaptionMap["no_image"].visible = true;
-        }
+            InvalidateChildren();
+        }*/
 
         if (mCachingState == kReadingAhead)
             KickCaching();
@@ -1476,13 +1510,9 @@ bool ImageViewer::Process()
 void ImageViewer::UpdateFilteredView(eFilterState state)
 {
     mFilterState = state;
-    if (CountImagesMatchingFilter() == 0)
+    if (CountImagesMatchingFilter(mFilterState) == 0)
     {
         mpWinImage->Clear();
-        mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
-        mpWinImage->mCaptionMap["no_image"].style = gStyleCaption;
-        mpWinImage->mCaptionMap["no_image"].visible = true;
-
         if (mpPanel && !mpPanel->IsVisible())   // if no images and the UI is hidden, bring it up
             ToggleUI();
     }
@@ -1502,6 +1532,36 @@ void ImageViewer::UpdateCaptions()
     bool bShow = false;
     gRegistry.Get("ZImageViewer", "showui", bShow);
 
+    mpWinImage->mCaptionMap["favorite"].visible = false;
+    mpWinImage->mCaptionMap["for_delete"].visible = false;
+    mpWinImage->mCaptionMap["no_image"].visible = false;
+    mpWinImage->mCaptionMap["image_count"].visible = false;
+
+
+    // count up favorites and to be deleted
+    int64_t nToBeDeleted = 0;
+    int64_t nFavorites = 0;
+    for (auto& i : mImageArray)
+    {
+        if (i.ToBeDeleted())
+            nToBeDeleted++;
+        else if (i.IsFavorite())
+            nFavorites++;
+    }
+
+    string sCaption;
+    Sprintf(sCaption, "%d favs", nFavorites);
+    if (mpFavsFilterButton)
+        mpFavsFilterButton->SetCaption(sCaption);
+
+    Sprintf(sCaption, "%d del", nToBeDeleted);
+    if (mpDelFilterButton)
+        mpDelFilterButton->SetCaption(sCaption);
+
+    Sprintf(sCaption, "%d images", mImageArray.size());
+    if (mpAllFilterButton)
+        mpAllFilterButton->SetCaption(sCaption);
+
 
     if (mpWinImage)
     {
@@ -1510,124 +1570,81 @@ void ImageViewer::UpdateCaptions()
             topPadding = mpPanel->GetArea().Height();
 
 
-        // count up favorites and to be deleted
-        int64_t nToBeDeleted = 0;
-        int64_t nFavorites = 0;
-        for (auto& i : mImageArray)
-        {
-            if (i.ToBeDeleted())
-                nToBeDeleted++;
-            else if (i.IsFavorite())
-                nFavorites++;
-        }
-
-
-
-
-/*        mpWinImage->mCaptionMap["zoom"].style = gStyleCaption;
-        mpWinImage->mCaptionMap["zoom"].style.pos = ZGUI::CB;
-        mpWinImage->mCaptionMap["zoom"].style.look = ZGUI::ZTextLook::kShadowed;*/
-
-        mpWinImage->mpTable->mCellStyle = gStyleCaption;
-        mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
-        mpWinImage->mpTable->mCellStyle.paddingH = gDefaultSpacer/2;
-        mpWinImage->mpTable->mCellStyle.paddingV = gDefaultSpacer/2;
-
-        mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
-        mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
-        mpWinImage->mpTable->mTableStyle.paddingH = gDefaultSpacer;
-        mpWinImage->mpTable->mTableStyle.paddingV = gDefaultSpacer;
-
-
         ZGUI::Style folderStyle(gStyleButton);
         folderStyle.pos = ZGUI::LT;
         folderStyle.look = ZGUI::ZTextLook::kShadowed;
+
+
+        if (CountImagesMatchingFilter(mFilterState) == 0)
+        {
+            mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
+            mpWinImage->mCaptionMap["no_image"].style = gStyleCaption;
+            mpWinImage->mCaptionMap["no_image"].visible = true;
+        }
+        else
+        {
+            if (bShow)
+            {
+                mpWinImage->mpTable->mCellStyle = gStyleCaption;
+                mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
+                mpWinImage->mpTable->mCellStyle.paddingH = gDefaultSpacer / 2;
+                mpWinImage->mpTable->mCellStyle.paddingV = gDefaultSpacer / 2;
+
+                mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
+                mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
+                mpWinImage->mpTable->mTableStyle.paddingH = gDefaultSpacer;
+                mpWinImage->mpTable->mTableStyle.paddingV = gDefaultSpacer;
+
+                string sImageCount = "Viewing: [" + SH::FromInt(mnViewingIndex + 1) + "/" + SH::FromInt(mImageArray.size()) + "]";
+                mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
+                mpWinImage->mCaptionMap["image_count"].style = folderStyle;
+                mpWinImage->mCaptionMap["image_count"].style.paddingV = topPadding + folderStyle.fp.nHeight;
+                mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::LT;
+                mpWinImage->mCaptionMap["image_count"].visible = true;
+
+                string sFilename = PathFromIndex(mnViewingIndex).filename().string();
+                ZGUI::Style filenameStyle(gStyleButton);
+                filenameStyle.pos = ZGUI::CB;
+                filenameStyle.paddingV = folderStyle.fp.nHeight;
+                filenameStyle.look = ZGUI::ZTextLook::kShadowed;
+                mpWinImage->mCaptionMap["filename"].sText = sFilename;
+                mpWinImage->mCaptionMap["filename"].style = filenameStyle;
+                mpWinImage->mCaptionMap["filename"].visible = true;
+
+                if (mFilterState == kAll)
+                {
+                    if (ValidIndex(mnViewingIndex) && mImageArray[mnViewingIndex].IsFavorite() && mpFavoritesFont)
+                    {
+                        mpWinImage->mCaptionMap["favorite"].sText = "C";
+                        mpWinImage->mCaptionMap["favorite"].style = ZGUI::Style(mpFavoritesFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffe1b131, 0xffe1b131), ZGUI::RT, filenameStyle.fp.nHeight * 2, filenameStyle.fp.nHeight * 2, 0x88000000, true);
+                        mpWinImage->mCaptionMap["favorite"].visible = true;
+                    }
+                }
+
+                if (ValidIndex(mnViewingIndex) && mImageArray[mnViewingIndex].ToBeDeleted())
+                {
+                    mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
+                    mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, 0, 100, 0x88000000, true);
+                    mpWinImage->mCaptionMap["for_delete"].visible = true;
+                    bShow = true;
+                }
+            }
+
+
+        }
+
+
         mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
         mpWinImage->mCaptionMap["folder"].style = folderStyle;
         mpWinImage->mCaptionMap["folder"].style.paddingV = topPadding;
         mpWinImage->mCaptionMap["folder"].visible = bShow;
 
-        if (!mImageArray.empty())
-        {
-            string sImageCount = "Viewing: [" + SH::FromInt(mnViewingIndex + 1) + "/" + SH::FromInt(mImageArray.size()) + "]";
-            mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
-            mpWinImage->mCaptionMap["image_count"].style = folderStyle;
-            mpWinImage->mCaptionMap["image_count"].style.paddingV = topPadding + folderStyle.fp.nHeight;
-            mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::LT;
-            mpWinImage->mCaptionMap["image_count"].visible = bShow;
-        }
-        else
-        {
-            mpWinImage->mCaptionMap["image_count"].Clear();
-        }
 
-
-        string sFilename =  PathFromIndex(mnViewingIndex).filename().string();
-        ZGUI::Style filenameStyle(gStyleButton);
-        filenameStyle.pos = ZGUI::CB;
-        filenameStyle.paddingV = folderStyle.fp.nHeight;
-        filenameStyle.look = ZGUI::ZTextLook::kShadowed;
-        mpWinImage->mCaptionMap["filename"].sText = sFilename;
-        mpWinImage->mCaptionMap["filename"].style = filenameStyle;
-        mpWinImage->mCaptionMap["filename"].visible = bShow;
-
-        if (mFilterState == kAll)
-        {
-            if (ValidIndex(mnViewingIndex) && mImageArray[mnViewingIndex].IsFavorite() && mpFavoritesFont)
-            {
-                mpWinImage->mCaptionMap["favorite"].sText = "C";
-                mpWinImage->mCaptionMap["favorite"].style = ZGUI::Style(mpFavoritesFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffe1b131, 0xffe1b131), ZGUI::RT, filenameStyle.fp.nHeight * 2, filenameStyle.fp.nHeight*2, 0x88000000, true);
-                mpWinImage->mCaptionMap["favorite"].visible = bShow;
-            }
-            else
-            {
-                mpWinImage->mCaptionMap["favorite"].Clear();
-            }
-        }
-        else
-        {
-            mpWinImage->mCaptionMap["favorite"].Clear();
-            mpWinImage->mCaptionMap["for_delete"].Clear();
-        }
-
-        if (nToBeDeleted > 0 && mFilterState != kFavs)
-        {
-            Sprintf(mpWinImage->mCaptionMap["deletion_summary"].sText, "To be deleted: %d", nToBeDeleted);
-            mpWinImage->mCaptionMap["deletion_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::LT, 0, topPadding+ folderStyle.fp.nHeight*3, 0x88000000, true);
-        }
-        else
-        {
-            mpWinImage->mCaptionMap["deletion_summary"].Clear();
-        }
-
-        if (ValidIndex(mnViewingIndex) && mImageArray[mnViewingIndex].ToBeDeleted())
-        {
-            mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-            mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, 0, 100, 0x88000000, true);
-            mpWinImage->mCaptionMap["for_delete"].visible = true;
-            bShow = true;
-        }
-        else
-        {
-            mpWinImage->mCaptionMap["for_delete"].Clear();
-        }
-
-
-        if (nFavorites > 0 && mFilterState != kToBeDeleted)
-        {
-            Sprintf(mpWinImage->mCaptionMap["favorites_summary"].sText, "Favorites: %d", nFavorites);
-            mpWinImage->mCaptionMap["favorites_summary"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffe1b131, 0xffe1b131), ZGUI::LT, 0, topPadding+ folderStyle.fp.nHeight*4, 0x88000000, true);
-        }
-        else
-        {
-            mpWinImage->mCaptionMap["favorites_summary"].Clear();
-        }
-        
 
         if (!mMoveToFolder.empty())
         {
-            Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> Move to: %s", mMoveToFolder.string().c_str());
-            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff88ff, 0xffff88ff), ZGUI::RT, 32, 32, 0x88000000, true);
+            Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M'ove destination: %s", mMoveToFolder.string().c_str());
+            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::RT, 32, topPadding+32, 0x88000000, true);
             mpWinImage->mCaptionMap["move_to_folder"].visible = bShow;
         }
         else
@@ -1687,16 +1704,6 @@ void ImageViewer::UpdateCaptions()
             mpWinImage->mpTable->Clear();
         }
 
-
-        if (mImageArray.empty())
-        {
-            mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
-            mpWinImage->mCaptionMap["no_image"].style = gStyleCaption;
-        }
-        
-
-
-
         if (bShow)
             mpWinImage->mBehavior |= ZWinImage::kShowCaption;
         else
@@ -1713,16 +1720,20 @@ void ImageViewer::ToggleToBeDeleted()
     if (!ValidIndex(mnViewingIndex))
         return;
 
+    filesystem::path toBeDeleted = mCurrentFolder;
+    toBeDeleted.append(ksToBeDeleted);
+
     if (mImageArray[mnViewingIndex].ToBeDeleted())
     {
         // move from subfolder up
         MoveSelectedFile(mCurrentFolder);
+
+        if (std::filesystem::is_empty(toBeDeleted))
+            std::filesystem::remove(toBeDeleted);
     }
     else
     {
         // move into to be deleted subfolder
-        filesystem::path toBeDeleted = mCurrentFolder;
-        toBeDeleted.append(ksToBeDeleted);
         MoveSelectedFile(toBeDeleted);
     }
 
@@ -1735,16 +1746,20 @@ void ImageViewer::ToggleFavorite()
     if (!ValidIndex(mnViewingIndex))
         return;
 
+    filesystem::path favorites = mCurrentFolder;
+    favorites.append(ksFavorites);
+
     if (mImageArray[mnViewingIndex].IsFavorite())
     {
         // move from subfolder up
         MoveSelectedFile(mCurrentFolder);
+
+        if (std::filesystem::is_empty(favorites))
+            std::filesystem::remove(favorites);
     }
     else
     {
         // move into favorites subfolder
-        filesystem::path favorites = mCurrentFolder;
-        favorites.append(ksFavorites);
         MoveSelectedFile(favorites);
     }
 
