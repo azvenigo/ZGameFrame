@@ -16,6 +16,22 @@ class ZWinControlPanel;
 const std::string ksToBeDeleted("ZZ_to_be_deleted");
 const std::string ksFavorites("favorites");
 
+class ViewingIndex
+{
+public:
+    ViewingIndex(int64_t _abs = -1, int64_t _del = -1, int64_t _fav = -1)
+    {
+        absoluteIndex = _abs;
+        delIndex = _del;
+        favIndex = _fav;
+    };
+
+    int64_t absoluteIndex;
+    int64_t delIndex;
+    int64_t favIndex;
+};
+
+
 class ImageEntry
 {
 public:
@@ -38,6 +54,15 @@ public:
         mState = kInit;
     }
 
+    void Unload()
+    {
+        pImage = nullptr;
+        if (mEXIF.ImageWidth > 0 && mEXIF.ImageHeight > 0)
+            mState = ImageEntry::kExifReady;
+        else
+            mState = ImageEntry::kInit;
+    }
+
     bool ReadyToLoad() { return mState == kExifReady || mState == kNoExifAvailable; }
     bool ToBeDeleted(); // true if image is in the ZZ_to_be_deleted subfolder
     bool IsFavorite();  // true if image is in the "favorites" subfolder
@@ -50,8 +75,9 @@ public:
     eImageEntryState        mState;
 };
 
-typedef std::list<std::filesystem::path>        tImageFilenames;
-typedef std::vector< ImageEntry > tImageEntryArray;
+typedef std::list<std::filesystem::path>    tImageFilenames;
+typedef std::shared_ptr<ImageEntry>         tImageEntryPtr;
+typedef std::vector< tImageEntryPtr >       tImageEntryArray;
 
 class ImageViewer : public ZWin
 {
@@ -114,20 +140,25 @@ protected:
     int64_t                 CurMemoryUsage();       // only returns the in-memory bytes of buffers that have finished loading
     int64_t                 GetLoadsInProgress();
 
-    int64_t                 IndexFromPath(std::filesystem::path imagePath);
-    bool                    ValidIndex(int64_t index);
-    std::filesystem::path   PathFromIndex(int64_t index);
+    int64_t                 IndexInCurMode();
+    int64_t                 CountInCurMode();
 
-    tImageFilenames         GetImagesFlaggedToBeDeleted();
+    ViewingIndex            IndexFromPath(const std::filesystem::path& imagePath);
+
+    void                    LimitIndex();
+    bool                    ValidIndex(const ViewingIndex& vi);
+    tImageEntryPtr          EntryFromIndex(const ViewingIndex& vi);
+
+//    tImageFilenames         GetImagesFlaggedToBeDeleted();
 
     bool                    KickCaching();
     bool                    FreeCacheMemory();
-    int64_t                 NextImageToCache();
+    tImageEntryPtr          NextImageToCache();
 
 
 
-    static void             LoadImageProc(std::filesystem::path& imagePath, ImageEntry* pEntry);
-    static void             LoadExifProc(std::filesystem::path& imagePath, ImageEntry* pEntry);
+    static void             LoadImageProc(std::filesystem::path& imagePath, std::shared_ptr<ImageEntry> pEntry);
+    static void             LoadExifProc(std::filesystem::path& imagePath, std::shared_ptr<ImageEntry> pEntry);
 
     void                    FlushLoads();
 
@@ -142,12 +173,11 @@ protected:
     void                    DeleteFile(std::filesystem::path& f);
     void                    HandleQuitCommand();
     void                    HandleMoveCommand();
-    void                    HandleDeleteCommand();
     void                    HandleNavigateToParentFolder();
 
     void                    MoveSelectedFile(std::filesystem::path& newPath);
 
-    bool                    RemoveImageArrayEntry(int64_t nIndex);
+    bool                    RemoveImageArrayEntry(const ViewingIndex& vi);
 
 
 
@@ -156,11 +186,14 @@ protected:
     void                    SetNextImage();
     void                    SetPrevImage();
 
-    bool                    FindNextImageMatchingFilter(int64_t &nIndex);
-    bool                    FindPrevImageMatchingFilter(int64_t &nIndex);
+    //bool                    FindNextImageMatchingFilter(ViewingIndex& vi);
+    //bool                    FindPrevImageMatchingFilter(ViewingIndex& vi);
+    bool                    FindImageMatchingCurFilter(ViewingIndex& vi, int64_t offset);
+
+
     int64_t                 CountImagesMatchingFilter(eFilterState state);
 
-    bool                    ImageMatchesCurFilter(int64_t nIndex);
+    bool                    ImageMatchesCurFilter(const ViewingIndex& vi);
 
     ZWinControlPanel*       mpPanel;
 
@@ -176,10 +209,14 @@ protected:
 
     ThreadPool*             mpPool;              
     tImageEntryArray        mImageArray;
+    tImageEntryArray        mFavImageArray;
+    tImageEntryArray        mToBeDeletedImageArray;
     std::recursive_mutex    mImageArrayMutex;
 
 
-    int64_t                 mnViewingIndex;
+
+//    int64_t                 mnViewingIndex;
+    ViewingIndex            mViewingIndex;
     eLastAction             mLastAction;
     eCachingState           mCachingState;
 
