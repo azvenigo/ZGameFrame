@@ -13,7 +13,7 @@ class ZWinCheck;
 class ZWinControlPanel;
 
 
-const std::string ksToBeDeleted("ZZ_to_be_deleted");
+const std::string ksToBeDeleted("ZZ_TO_BE_DELETED_ZZ");
 const std::string ksFavorites("favorites");
 
 class ViewingIndex
@@ -175,7 +175,7 @@ protected:
     void                    HandleMoveCommand();
     void                    HandleNavigateToParentFolder();
 
-    void                    MoveSelectedFile(std::filesystem::path& newPath);
+    bool                    MoveImage(std::filesystem::path oldPath, std::filesystem::path newPath);
 
     bool                    RemoveImageArrayEntry(const ViewingIndex& vi);
 
@@ -196,6 +196,7 @@ protected:
     bool                    ImageMatchesCurFilter(const ViewingIndex& vi);
 
     ZWinControlPanel*       mpPanel;
+    std::recursive_mutex    mPanelMutex;
 
     ZWinImage*              mpWinImage;  
 
@@ -206,6 +207,10 @@ protected:
 
     std::filesystem::path   mCurrentFolder;
     std::filesystem::path   mMoveToFolder;
+
+    std::filesystem::path   mUndoFrom;  // previous move source
+    std::filesystem::path   mUndoTo;    // previous move dest
+
 
     ThreadPool*             mpPool;              
     tImageEntryArray        mImageArray;
@@ -232,6 +237,8 @@ protected:
 
     bool                    mbSubsample;
     eFilterState            mFilterState;
+
+   
 };
 
 

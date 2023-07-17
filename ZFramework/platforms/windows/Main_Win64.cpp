@@ -520,8 +520,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_GETMINMAXINFO:
     {
         LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-        lpMMI->ptMinTrackSize.x = 800;
-        lpMMI->ptMinTrackSize.y = 480;
+        lpMMI->ptMinTrackSize.x = 1080;
+        lpMMI->ptMinTrackSize.y = 512;
     }
     break;
     case WM_WINDOWPOSCHANGED:

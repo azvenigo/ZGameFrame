@@ -43,7 +43,7 @@ ImageViewer::ImageViewer()
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
     mIdleSleepMS = 13;
-    mMaxMemoryUsage = 4 * 1024 * 1024 * 1024LL;   // 2GiB
+    mMaxMemoryUsage = 4 * 1024 * 1024 * 1024LL;   // 4 GiB
 //    mMaxMemoryUsage = 400 * 1024 * 1024LL;
     mMaxCacheReadAhead = 8;
     mLastAction = kNone;
@@ -79,7 +79,9 @@ bool ImageViewer::ShowOpenImageDialog()
     if (ZWinFileDialog::ShowLoadDialog("Images", "*.jpg;*.jpeg;*.png;*.gif;*.tga;*.bmp;*.psd;*.hdr;*.pic;*.pnm", sFilename, sDefaultFolder))
     {
         mMoveToFolder.clear();
-        
+        mUndoFrom.clear();
+        mUndoTo.clear();
+
         mFilterState = kAll;
         filesystem::path imagePath(sFilename);
         ScanForImagesInFolder(imagePath.parent_path());
@@ -195,8 +197,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
         }
         else
         {
-            MoveSelectedFile(mMoveToFolder);
-            RemoveImageArrayEntry(mViewingIndex);
+            MoveImage(EntryFromIndex(mViewingIndex)->filename, mMoveToFolder);
         }
         break;
     case 'o':
@@ -326,7 +327,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             if (mpWinImage->IsSizedToWindow())
                 mpWinImage->FitImageToWindow();
 
-            Invalidate();
+            InvalidateChildren();
             return true;
         }
         else if (sType == "rotate_right")
@@ -335,7 +336,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             if (mpWinImage->IsSizedToWindow())
                 mpWinImage->FitImageToWindow();
 
-            Invalidate();
+            InvalidateChildren();
             return true;
         }
         else if (sType == "flipH")
@@ -344,7 +345,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             if (mpWinImage->IsSizedToWindow())
                 mpWinImage->FitImageToWindow();
 
-            Invalidate();
+            InvalidateChildren();
             return true;
         }
         else if (sType == "flipV")
@@ -353,7 +354,19 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             if (mpWinImage->IsSizedToWindow())
                 mpWinImage->FitImageToWindow();
 
-            Invalidate();
+            InvalidateChildren();
+            return true;
+        }
+        else if (sType == "undo")
+        {
+            if (!mUndoFrom.empty() && !mUndoTo.empty())
+            {
+                MoveImage(mUndoTo, mUndoFrom);   // move it back
+                ViewingIndex vi = IndexFromPath(mUndoTo);  // if moving an image into our tree
+                if (ValidIndex(vi))
+                    mViewingIndex = vi;
+                UpdateFilteredView(mFilterState);
+            }
             return true;
         }
    }
@@ -401,57 +414,72 @@ void ImageViewer::HandleMoveCommand()
             mMoveToFolder.clear();
             return;
         }
-        MoveSelectedFile(filesystem::path(sFolder));
-        mMoveToFolder = sFolder;
-        RemoveImageArrayEntry(mViewingIndex);
+        if (MoveImage(EntryFromIndex(mViewingIndex)->filename, filesystem::path(sFolder)))
+            mMoveToFolder = sFolder;
+        else
+            mMoveToFolder.clear();
     }
     else
     {
         mMoveToFolder.clear();
+
     }
 
     if (mpWinImage)
         mpWinImage->SetFocus();
 }
 
-void ImageViewer::MoveSelectedFile(std::filesystem::path& newPath)
+bool ImageViewer::MoveImage(std::filesystem::path oldPath, std::filesystem::path newPath)
 {
-    if (!ValidIndex(mViewingIndex) || CountImagesMatchingFilter(mFilterState) == 0)
+    if (oldPath.empty() || newPath.empty())
+        return false;
+
+    if (!std::filesystem::exists(oldPath))
     {
         ZERROR("No image selected to move");
-        return;
+        return false;
     }
 
-    filesystem::path oldName = EntryFromIndex(mViewingIndex)->filename;
+    // if we were passed a folder name only, use the filename of the source
+    if (!newPath.has_extension())
+        newPath.append(oldPath.filename().string());
 
-    if (!std::filesystem::exists(oldName))
-    {
-        ZERROR("No image selected to move");
-        return;
-    }
+    // if the file is moving in/out of current tree, rescan
+    bool bRequireRescan = false;
 
-    filesystem::create_directories(newPath);
+    bool bOldPathInTree = oldPath.parent_path() == mCurrentFolder || oldPath.parent_path().filename() == ksToBeDeleted || oldPath.parent_path().filename() == ksFavorites;
+    bool bNewPathInTree = newPath.parent_path() == mCurrentFolder || newPath.parent_path().filename() == ksToBeDeleted || newPath.parent_path().filename() == ksFavorites;
 
-    filesystem::path newName(newPath);
-    newName.append(oldName.filename().string());
+    bRequireRescan = bOldPathInTree^bNewPathInTree;     // xor
+
+    ZOUT("Moving ", oldPath, " -> ", newPath, "\n");
+
+    filesystem::create_directories(newPath.parent_path());
 
     try
     {
-        filesystem::rename(oldName, newName);
-        mImageArray[mViewingIndex.absoluteIndex]->filename = newName;
+        filesystem::rename(oldPath, newPath);
+        mImageArray[mViewingIndex.absoluteIndex]->filename = newPath;
+
+        mUndoFrom = oldPath;
+        mUndoTo = newPath;
     }
     catch (std::filesystem::filesystem_error err)
     {
-        ZERROR("Error renaming from \"", oldName, "\" to \"", newName, "\"\ncode:", err.code(), " error:", err.what(), "\n");
+        ZERROR("Error renaming from \"", oldPath, "\" to \"", newPath, "\"\ncode:", err.code(), " error:", err.what(), "\n");
+        return false;
     };
 
 
-//    ScanForImagesInFolder(mCurrentFolder);
+    if (bRequireRescan)
+        ScanForImagesInFolder(mCurrentFolder);
 
 //    mnViewingIndex = oldIndex;
 //    limit<int64_t>(mnViewingIndex, 0, mImageArray.size() - 1);
 
     Invalidate();
+
+    return true;
 }
 
 
@@ -749,6 +777,9 @@ void ImageViewer::ResetControlPanel()
 
     bool bShow = false;
     gRegistry.Get("ZImageViewer","showui", bShow);
+
+    const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
+    
     if (mpPanel)
     {
         // if the panel is already the correct size, don't recreate it
@@ -777,6 +808,9 @@ void ImageViewer::ResetControlPanel()
 
     ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('-', 11108); // flip H
     ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('|', 11109); // flip V
+
+    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('u', 0x238c); // undo
+
 
     ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x2750);
     ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
@@ -846,7 +880,21 @@ void ImageViewer::ResetControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("Move");
+    pBtn->SetCaption("undo");  // undo glyph
+    pBtn->mStyle = gDefaultGroupingStyle;
+    //        pBtn->mStyle.look.colTop = 0xffff0000;
+    //        pBtn->mStyle.look.colBottom = 0xffff0000;
+    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->mStyle.pos = ZGUI::C;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "undo;target=%s", GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+
+    rButton.OffsetRect(rButton.Width(), 0);
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("move");
     pBtn->mStyle = gDefaultGroupingStyle;
     //        pBtn->mStyle.look.colTop = 0xffff0000;
     //        pBtn->mStyle.look.colBottom = 0xffff0000;
@@ -885,6 +933,8 @@ void ImageViewer::ResetControlPanel()
 
     // Rotation Group
     rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 8, 0);
+    rButton.right = rButton.left + rButton.Height();    // square button
+
     rGroup.left = rButton.left - gnDefaultGroupInlaySize;   // start new grouping
 
     pBtn = new ZWinSizablePushBtn();
@@ -942,6 +992,8 @@ void ImageViewer::ResetControlPanel()
 
     // Filter group
     rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
+    rButton.right = rButton.left + (int64_t)(rButton.Width() * 2.5);     // wider buttons for management
+
     rButton.right = rButton.left + rButton.Width();     // wider buttons for management
 
     rGroup.left = rButton.left - gnDefaultGroupInlaySize;
@@ -1692,6 +1744,9 @@ void ImageViewer::UpdateCaptions()
 
     string sCaption;
     Sprintf(sCaption, "%d favs", nFavorites);
+
+    // need to make sure panel isn't being reset while updating these
+    mPanelMutex.lock();
     if (mpFavsFilterButton)
         mpFavsFilterButton->SetCaption(sCaption);
 
@@ -1702,6 +1757,7 @@ void ImageViewer::UpdateCaptions()
     Sprintf(sCaption, "%d images", mImageArray.size());
     if (mpAllFilterButton)
         mpAllFilterButton->SetCaption(sCaption);
+    mPanelMutex.unlock();
 
 
     if (mpWinImage)
@@ -1714,6 +1770,8 @@ void ImageViewer::UpdateCaptions()
         ZGUI::Style folderStyle(gStyleButton);
         folderStyle.pos = ZGUI::LT;
         folderStyle.look = ZGUI::ZTextLook::kShadowed;
+        folderStyle.paddingH = gDefaultSpacer / 2;
+        folderStyle.paddingV = gDefaultSpacer / 2;
 
 
         if (CountImagesMatchingFilter(mFilterState) == 0)
@@ -1739,7 +1797,7 @@ void ImageViewer::UpdateCaptions()
                 string sImageCount = "Viewing: [" + SH::FromInt(IndexInCurMode() + 1) + "/" + SH::FromInt(CountInCurMode()) + "]";
                 mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
                 mpWinImage->mCaptionMap["image_count"].style = folderStyle;
-                mpWinImage->mCaptionMap["image_count"].style.paddingV = (int32_t)(topPadding + folderStyle.fp.nHeight);
+                mpWinImage->mCaptionMap["image_count"].style.paddingV += (int32_t)(topPadding + folderStyle.fp.nHeight);
                 mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::LT;
                 mpWinImage->mCaptionMap["image_count"].visible = true;
 
@@ -1748,7 +1806,7 @@ void ImageViewer::UpdateCaptions()
                     string sFilename = EntryFromIndex(mViewingIndex)->filename.filename().string();
                     ZGUI::Style filenameStyle(gStyleButton);
                     filenameStyle.pos = ZGUI::CB;
-                    filenameStyle.paddingV = (int32_t)folderStyle.fp.nHeight;
+                    filenameStyle.paddingV += (int32_t)folderStyle.fp.nHeight;
                     filenameStyle.look = ZGUI::ZTextLook::kShadowed;
                     mpWinImage->mCaptionMap["filename"].sText = sFilename;
                     mpWinImage->mCaptionMap["filename"].style = filenameStyle;
@@ -1764,7 +1822,7 @@ void ImageViewer::UpdateCaptions()
                     if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
                     {
                         mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, 0, 100, 0x88000000, true);
+                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, gDefaultSpacer / 2, 100, 0x88000000, true);
                         mpWinImage->mCaptionMap["for_delete"].visible = true;
                         bShow = true;
                     }
@@ -1777,15 +1835,15 @@ void ImageViewer::UpdateCaptions()
 
         mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
         mpWinImage->mCaptionMap["folder"].style = folderStyle;
-        mpWinImage->mCaptionMap["folder"].style.paddingV = (int32_t)topPadding;
+        mpWinImage->mCaptionMap["folder"].style.paddingV += (int32_t)topPadding;
         mpWinImage->mCaptionMap["folder"].visible = bShow;
 
 
 
         if (!mMoveToFolder.empty())
         {
-            Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M'ove destination: %s", mMoveToFolder.string().c_str());
-            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", 28, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::RT, 32, (int32_t)topPadding+32, 0x88000000, true);
+            Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "Hit 'M' for quick move to:\n%s", mMoveToFolder.string().c_str());
+            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, gDefaultSpacer / 2, (int32_t)gDefaultSpacer / 2 + folderStyle.fp.nHeight*8, 0x88000000, true);
             mpWinImage->mCaptionMap["move_to_folder"].visible = bShow;
         }
         else
@@ -1867,7 +1925,7 @@ void ImageViewer::ToggleToBeDeleted()
     if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
     {
         // move from subfolder up
-        MoveSelectedFile(mCurrentFolder);
+        MoveImage(EntryFromIndex(mViewingIndex)->filename, mCurrentFolder);
 
         if (std::filesystem::is_empty(toBeDeleted))
             std::filesystem::remove(toBeDeleted);
@@ -1875,7 +1933,7 @@ void ImageViewer::ToggleToBeDeleted()
     else
     {
         // move into to be deleted subfolder
-        MoveSelectedFile(toBeDeleted);
+        MoveImage(EntryFromIndex(mViewingIndex)->filename, toBeDeleted);
     }
 
     UpdateFilteredView(mFilterState);
@@ -1892,7 +1950,7 @@ void ImageViewer::ToggleFavorite()
     if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite())
     {
         // move from subfolder up
-        MoveSelectedFile(mCurrentFolder);
+        MoveImage(EntryFromIndex(mViewingIndex)->filename, mCurrentFolder);
 
         if (std::filesystem::is_empty(favorites))
             std::filesystem::remove(favorites);
@@ -1900,7 +1958,7 @@ void ImageViewer::ToggleFavorite()
     else
     {
         // move into favorites subfolder
-        MoveSelectedFile(favorites);
+        MoveImage(EntryFromIndex(mViewingIndex)->filename, favorites);
     }
 
     UpdateFilteredView(mFilterState);
