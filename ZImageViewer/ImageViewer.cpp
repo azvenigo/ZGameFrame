@@ -743,16 +743,8 @@ bool ImageViewer::Init()
         string sPersistedViewPath;
         if (gRegistry.Get("ZImageViewer", "image", sPersistedViewPath))
         {
-            ScanForImagesInFolder(filesystem::path(sPersistedViewPath).parent_path());
-            mViewingIndex = IndexFromPath(sPersistedViewPath);
-            mCachingState = kReadingAhead;
-            KickCaching();
+            ViewImage(sPersistedViewPath);
         }
-
-        ResetControlPanel();
-
-        mToggleUIHotkey = VK_TAB;
-        UpdateFilteredView(kAll);
     }
 
     if (!ValidIndex(mViewingIndex))
@@ -1064,7 +1056,9 @@ void ImageViewer::ResetControlPanel()
     mpPanel->ChildAdd(pCheck);
     mpFavsFilterButton = pCheck;
   
-
+    mpFavsFilterButton->SetState(mFilterState == kFavs, false);
+    mpDelFilterButton->SetState(mFilterState == kToBeDeleted, false);
+    mpAllFilterButton->SetState(mFilterState == kAll, false);
 
 
 
@@ -1163,7 +1157,20 @@ bool ImageViewer::ViewImage(const std::filesystem::path& filename)
     if (mCurrentFolder != filename.parent_path())
         ScanForImagesInFolder(filename.parent_path());
 
+    mToggleUIHotkey = VK_TAB;
+    UpdateFilteredView(kAll);   // set filter to all and fill out del and fav arrays
+
     mViewingIndex = IndexFromPath(filename);
+
+    if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite()) // if current image is fav, set that as the filter
+        UpdateFilteredView(kFavs);
+    else if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())   // same with del
+        UpdateFilteredView(kToBeDeleted);
+
+    ResetControlPanel();
+    mCachingState = kReadingAhead;
+    KickCaching();
+
     return true;
 }
 
@@ -1730,31 +1737,19 @@ void ImageViewer::UpdateCaptions()
     mpWinImage->mCaptionMap["no_image"].visible = false;
     mpWinImage->mCaptionMap["image_count"].visible = false;
 
-
-    // count up favorites and to be deleted
-    int64_t nToBeDeleted = 0;
-    int64_t nFavorites = 0;
-    for (auto& i : mImageArray)
-    {
-        if (i->ToBeDeleted())
-            nToBeDeleted++;
-        else if (i->IsFavorite())
-            nFavorites++;
-    }
-
     string sCaption;
-    Sprintf(sCaption, "%d favs", nFavorites);
+    Sprintf(sCaption, "%d favs", mFavImageArray.size());
 
     // need to make sure panel isn't being reset while updating these
     mPanelMutex.lock();
     if (mpFavsFilterButton)
         mpFavsFilterButton->SetCaption(sCaption);
 
-    Sprintf(sCaption, "%d del", nToBeDeleted);
+    Sprintf(sCaption, "%d del", mToBeDeletedImageArray.size());
     if (mpDelFilterButton)
         mpDelFilterButton->SetCaption(sCaption);
-
-    Sprintf(sCaption, "%d images", mImageArray.size());
+ 
+    Sprintf(sCaption, "%d all", mImageArray.size());
     if (mpAllFilterButton)
         mpAllFilterButton->SetCaption(sCaption);
     mPanelMutex.unlock();

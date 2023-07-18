@@ -67,8 +67,8 @@ void ZImageViewer::InitChildWindows()
     ImageViewer* pWin = new ImageViewer();
     pWin->SetArea(grFullArea);
     gpMainWin->ChildAdd(pWin);
-    if (!sImageFilename.empty())
-        pWin->ViewImage(sImageFilename);
+//    if (!sImageFilename.empty())
+//        pWin->ViewImage(sImageFilename);
 
     gpMainWin->ChildAdd(gpDebugConsole, false);
 }
@@ -149,7 +149,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
         return false;
     }
 
-    gRegistry["zimageviewer"]["imageviewer_filename"] = sImageFilename;
+    gRegistry["ZImageViewer"]["image"] = sImageFilename;
 
 
     filesystem::path resourcesPath(appPath.parent_path());

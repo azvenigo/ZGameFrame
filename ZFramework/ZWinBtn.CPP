@@ -347,17 +347,16 @@ void ZWinCheck::SetState(bool bChecked, bool bPostNotifications)
         {
             gMessageSystem.Post(msUncheckMessage);
         }
-    }
 
-    if (bChecked && !msRadioGroupName.empty())
-    {
-        // If we're part of a radio group and we're being checked, send out a message to uncheck all others in the group
-//        string sUncheckMessage;
-//        Sprintf(sUncheckMessage, "radio_check;group=%s;checked=%s", msRadioGroupName.c_str(), msWinName.c_str());
-//        gMessageSystem.Post(sUncheckMessage);
-        gMessageSystem.Post("radio_check", "group", msRadioGroupName, "checked", msWinName);
+        if (bChecked && !msRadioGroupName.empty())
+        {
+            // If we're part of a radio group and we're being checked, send out a message to uncheck all others in the group
+    //        string sUncheckMessage;
+    //        Sprintf(sUncheckMessage, "radio_check;group=%s;checked=%s", msRadioGroupName.c_str(), msWinName.c_str());
+    //        gMessageSystem.Post(sUncheckMessage);
+            gMessageSystem.Post("radio_check", "group", msRadioGroupName, "checked", msWinName);
+        }
     }
-
 
     Invalidate();
 }
