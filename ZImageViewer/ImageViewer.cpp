@@ -320,12 +320,15 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
 
     if (mpWinImage && mpWinImage->mpImage)
     {
+        double fOldZoom = mpWinImage->GetZoom();
         if (sType == "rotate_left")
         {
             mpWinImage->mpImage->Rotate(ZBuffer::kLeft);
 
             if (mpWinImage->IsSizedToWindow())
                 mpWinImage->FitImageToWindow();
+            else
+                mpWinImage->SetZoom(fOldZoom);
 
             InvalidateChildren();
             return true;
@@ -335,6 +338,8 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             mpWinImage->mpImage->Rotate(ZBuffer::kRight);
             if (mpWinImage->IsSizedToWindow())
                 mpWinImage->FitImageToWindow();
+            else
+                mpWinImage->SetZoom(fOldZoom);
 
             InvalidateChildren();
             return true;
@@ -344,6 +349,8 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             mpWinImage->mpImage->Rotate(ZBuffer::kHFlip);
             if (mpWinImage->IsSizedToWindow())
                 mpWinImage->FitImageToWindow();
+            else
+                mpWinImage->SetZoom(fOldZoom);
 
             InvalidateChildren();
             return true;
@@ -353,6 +360,8 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             mpWinImage->mpImage->Rotate(ZBuffer::kVFlip);
             if (mpWinImage->IsSizedToWindow())
                 mpWinImage->FitImageToWindow();
+            else
+                mpWinImage->SetZoom(fOldZoom);
 
             InvalidateChildren();
             return true;
@@ -739,6 +748,7 @@ bool ImageViewer::Init()
         ChildAdd(mpWinImage);
         mpWinImage->SetFocus();
 
+        mToggleUIHotkey = VK_TAB;
 
         string sPersistedViewPath;
         if (gRegistry.Get("ZImageViewer", "image", sPersistedViewPath))
@@ -748,7 +758,12 @@ bool ImageViewer::Init()
     }
 
     if (!ValidIndex(mViewingIndex))
+    {
         SetFirstImage();
+        ResetControlPanel();
+        UpdateCaptions();
+        mpPanel->SetVisible();
+    }
 
     return ZWin::Init();
 }
@@ -1154,17 +1169,20 @@ bool ImageViewer::OnParentAreaChange()
 
 bool ImageViewer::ViewImage(const std::filesystem::path& filename)
 {
-    if (mCurrentFolder != filename.parent_path())
-        ScanForImagesInFolder(filename.parent_path());
+    if (!filename.empty() && filesystem::exists(filename))
+    {
+        if (mCurrentFolder != filename.parent_path())
+            ScanForImagesInFolder(filename.parent_path());
+    }
 
     mToggleUIHotkey = VK_TAB;
     UpdateFilteredView(kAll);   // set filter to all and fill out del and fav arrays
 
     mViewingIndex = IndexFromPath(filename);
 
-    if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite()) // if current image is fav, set that as the filter
+    if (mViewingIndex.favIndex >= 0) // if current image is fav, set that as the filter
         UpdateFilteredView(kFavs);
-    else if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())   // same with del
+    else if (mViewingIndex.delIndex >= 0)   // same with del
         UpdateFilteredView(kToBeDeleted);
 
     ResetControlPanel();
@@ -1774,6 +1792,7 @@ void ImageViewer::UpdateCaptions()
             mpWinImage->mCaptionMap["no_image"].sText = "No images\nPress 'O' or TAB";
             mpWinImage->mCaptionMap["no_image"].style = gStyleCaption;
             mpWinImage->mCaptionMap["no_image"].visible = true;
+            bShow = true;
         }
         else
         {

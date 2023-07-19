@@ -255,25 +255,6 @@ void TrimWhitespace(string& sVal)
 	sVal = sVal.substr(nFirstNonWhiteSpace, nLastNonWhiteSpace-nFirstNonWhiteSpace);
 }
 
-string GetHoursMinutesSecondsString(int64_t nSeconds)
-{
-	int64_t nHours = 0;
-	int64_t nMinutes = 0;
-
-	nHours = nSeconds/3600;
-
-	nSeconds -= nHours*3600;
-
-	nMinutes = nSeconds/60;
-
-	nSeconds -= nMinutes*60;
-
-	char buf[32];
-	sprintf_s(buf, "%02d:%02d:%02d", (uint32_t) nHours, (uint32_t) nMinutes, (uint32_t) nSeconds);
-
-	return string(buf);
-}
-
 void Sprintf(string& sOut, const char* lpszFormat, ...)
 {
 	va_list args;

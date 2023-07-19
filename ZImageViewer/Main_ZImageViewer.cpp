@@ -149,7 +149,8 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
         return false;
     }
 
-    gRegistry["ZImageViewer"]["image"] = sImageFilename;
+    if (!sImageFilename.empty())
+        gRegistry["ZImageViewer"]["image"] = sImageFilename;
 
 
     filesystem::path resourcesPath(appPath.parent_path());

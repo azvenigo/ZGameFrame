@@ -18,9 +18,6 @@ std::string Int64ArrayToString(std::vector<int64_t>& intArray);
 std::string StringMapToString(tKeyValueMap& stringMap);
 void        StringToStringMap(std::string sVal, tKeyValueMap& stringMap);
 
-uint64_t    StringToUint64(const std::string& sVal);
-std::string UInt64ToString(uint64_t nVal);
-
 bool        StringToBinary(const std::string& sString, void* pDest);		// std::string must be in ascii 2 hex values per byte of destination..... so pDest must point to a buffer of sVal.length()/2
 bool        BinaryToString(void* pSource, int64_t nLength, std::string& sString);
 
@@ -34,17 +31,12 @@ bool        IsAlpha(char c);
 bool        IsWhiteSpace(char c);
 bool        ContainsWhitespace(const std::string& sVal);
 
-void        MakeLower(std::string& sVal);        // modifies the std::string in place
-void        MakeUpper(std::string& sVal);        // modifies the std::string in place
-
 void        Sprintf(std::string& sOut, const char* format, ...);
 void        Sprintf(std::string& sOut, const char* format, va_list args);
 
 bool		StartsWith(const std::string& sConsider, const std::string& starts);
 bool		EndsWith(const std::string& sConsider, const std::string& ends);
 
-
-std::string GetHoursMinutesSecondsString(int64_t nSeconds);		
 
 // Parsers
 
