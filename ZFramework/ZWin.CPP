@@ -231,7 +231,7 @@ void  ZWin::CalcAbsoluteArea()
 
 void ZWin::Arrange(ZGUI::ePosition pos, const ZRect& outerRect, int64_t padding)
 {
-    SetArea(ZGUI::Arrange(mArea, outerRect, pos, padding));
+    SetArea(ZGUI::Arrange(mArea, outerRect, pos, padding, padding));
 }
 
 
@@ -261,6 +261,9 @@ bool ZWin::ChildAdd(ZWin* child, bool bAutoShow)
 
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     ZASSERT_MESSAGE(find(mChildList.begin(), mChildList.end(), child) == mChildList.end(), "Child already added!");
+    if (mChildList.empty())
+        gMessageSystem.AddNotification("kill_child", this);
+
     mChildList.push_front(child);
 
 	child->CalcAbsoluteArea();
@@ -292,6 +295,11 @@ bool ZWin::ChildRemove(ZWin* child)
 
             const std::lock_guard<std::recursive_mutex> surfaceLock(child->mpTransformTexture.get()->GetMutex());
 			child->SetParentWin(NULL);
+
+            if (mChildList.empty())
+                gMessageSystem.RemoveNotification("kill_child", this);
+
+
 			return true;
 		}
 	}   
@@ -754,7 +762,7 @@ bool ZWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "kill_child")
 	{
-        ZWin* pChild = GetChildWindowByWinName(message.GetParam("child"));
+        ZWin* pChild = GetChildWindowByWinName(message.GetParam("name"));
         if (pChild)
 		{
 			ChildDelete(pChild);
@@ -910,7 +918,7 @@ ZWinDialog::ZWinDialog() : mStyle(gDefaultDialogStyle), mBehavior(eBehavior::Non
 bool ZWinDialog::Init()
 {
     ZRect rButton(0, 0, gDefaultSpacer * 8, gDefaultSpacer * 3);
-    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gDefaultSpacer);
+    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gDefaultSpacer, gDefaultSpacer);
 
 
     if (mBehavior & eBehavior::CancelButton)
@@ -942,8 +950,16 @@ bool ZWinDialog::Init()
         ChildAdd(pBtn);
     }
 
-    return ZWin::Init();
+    ZWin::Init();
+    SetFocus();
+    return true;
 }
+
+bool ZWinDialog::Shutdown()
+{
+    return ZWin::Shutdown();
+}
+
 
 bool ZWinDialog::Paint()
 {
@@ -1014,16 +1030,19 @@ bool ZWinDialog::OnKeyDown(uint32_t key)
 void ZWinDialog::OnOK()
 {
     // TODO, post whatever needed on ok
-
+    if (mpParentWin)
+        mpParentWin->SetFocus();
     // post close
 
-    gMessageSystem.Post("kill_window", "name", msWinName);
+    gMessageSystem.Post("kill_child", "name", msWinName);
 
 }
 
 void ZWinDialog::OnCancel()
 {
-    gMessageSystem.Post("kill_window", "name", msWinName);
+    if (mpParentWin)
+        mpParentWin->SetFocus();
+    gMessageSystem.Post("kill_child", "name", msWinName);
 }
 
 

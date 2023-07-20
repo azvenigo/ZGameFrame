@@ -20,7 +20,7 @@ bool ZWinLabel::OnMouseDownL(int64_t x, int64_t y)
 {
     if (mBehavior & CloseOnClick)
     {
-        gMessageSystem.Post("kill_child", GetTopWindow(), "child", GetTargetName());
+        gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
     }
 
     return ZWin::OnMouseDownL(x, y);
@@ -58,7 +58,7 @@ bool ZWinLabel::Process()
         {
             SetVisible(false);
             mBehavior = None;   // no further actions
-            gMessageSystem.Post("kill_child", GetTopWindow(), "child", GetTargetName());
+            gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
         }
     }
 

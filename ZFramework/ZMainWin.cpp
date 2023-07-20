@@ -33,7 +33,6 @@ ZMainWin::ZMainWin()
 bool ZMainWin::Init()
 {
 	gMessageSystem.AddNotification("quit_app_confirmed", this);
-	gMessageSystem.AddNotification("kill_window", this);
 	gMessageSystem.AddNotification("chardown", this);
 	gMessageSystem.AddNotification("keydown", this);
 	gMessageSystem.AddNotification("keyup", this);
@@ -108,16 +107,6 @@ bool ZMainWin::HandleMessage(const ZMessage& message)
         InvalidateChildren();       // wakes all children that may be waiting on CVs
 		return true;
 	}
-    else if (sType == "kill_window")
-    {
-        ZWin* pWin = GetChildWindowByWinName(message.GetParam("name"));
-        if (pWin)
-        {
-            ZDEBUG_OUT("Deleting child:", pWin->GetWinName());
-            ChildDelete(pWin);
-        }
-        return true;
-    }
 
 	return ZWin::HandleMessage(message);
 }

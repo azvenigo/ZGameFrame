@@ -8,6 +8,7 @@
 #include "ZWinFileDialog.h"
 #include "ConfirmDeleteDialog.h"
 #include "ZWinControlPanel.h"
+#include "ZWinText.H"
 #include "ZGUIStyle.h"
 #include <algorithm>
 #include "ZWinBtn.H"
@@ -378,10 +379,103 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             }
             return true;
         }
+        else if (sType == "show_help")
+        {
+            ShowHelpDialog();
+            return true;
+        }
    }
 
     return ZWin::HandleMessage(message);
 }
+
+void ImageViewer::ShowHelpDialog()
+{
+    ZWinDialog* pHelp = new ZWinDialog();
+    pHelp->SetWinName("ImageViewerHelp");
+    pHelp->mbAcceptsCursorMessages = true;
+    pHelp->mbAcceptsFocus = true;
+
+    ZRect r(1600, 1200);
+    pHelp->SetArea(r);
+    pHelp->mBehavior = ZWinDialog::Draggable | ZWinDialog::OKButton;
+    pHelp->mStyle = gDefaultDialogStyle;
+
+
+    ZRect rCaption(r);
+    ZWinLabel* pLabel = new ZWinLabel();
+    pLabel->msText = "ZView Help";
+    pLabel->SetArea(rCaption);
+    pLabel->mStyle = gStyleCaption;
+    pLabel->mStyle.pos = ZGUI::CT;
+    pLabel->mStyle.fp.nHeight = 72;
+    pLabel->mStyle.fp.nWeight = 500;
+    pLabel->mStyle.look = ZGUI::ZTextLook::kEmbossed;
+    pLabel->mStyle.look.colTop = 0xff999999;
+    pLabel->mStyle.look.colBottom = 0xff777777;
+    pHelp->ChildAdd(pLabel);
+
+
+
+    ZWinFormattedText* pForm = new ZWinFormattedText();
+
+    ZGUI::Style text(gStyleGeneralText);
+    ZGUI::Style sectionText(gStyleGeneralText);
+    sectionText.fp.nWeight = 800;
+    sectionText.look.colTop = 0xffaaaaaa;
+    sectionText.look.colBottom = 0xffaaaaaa;
+
+    ZRect rForm(1400, 1000);
+    rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
+    pForm->SetArea(rForm);
+    pForm->SetScrollable();
+    pForm->SetFill(gDefaultDialogFill);
+    pForm->mbAcceptsCursorMessages = false;
+    pHelp->ChildAdd(pForm);
+    ChildAdd(pHelp);
+    pHelp->Arrange(ZGUI::C, mAreaToDrawTo);
+
+    pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Loading, quickly zooming and exiting are prioritized.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("\nAnother key feature is to sort through which images are favorites, and which should be deleted.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("So that you have time to change your mind, images are moved into subfolders.", text.fp, text.look, ZGUI::LT);
+
+
+    pForm->AddMultiLine("\nViewing", sectionText.fp, sectionText.look, ZGUI::LT);
+    pForm->AddMultiLine("Associate image types with ZView or open an image from the toolbar or press 'O' to open a new image.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Once an image is loaded, all images in the same folder are scanned and available to sort through.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use Left/Right or Mouse wheel to flip through images.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use Home/End to go to the beginning/end of the list.", text.fp, text.look, ZGUI::LT);
+
+    pForm->AddMultiLine("Use toolbar rotation buttons to rotate/flip", text.fp, text.look, ZGUI::LT);
+
+    pForm->AddMultiLine("\nZoom/Scroll", sectionText.fp, sectionText.look, ZGUI::LT);
+    pForm->AddMultiLine("Right-click on a portion of the image to quickly switch between 100% zoom and fit to window..", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Hold ALT and use Mouse wheel zoom in and out.", text.fp, text.look, ZGUI::LT);
+
+    pForm->AddMultiLine("\nUI", sectionText.fp, sectionText.look, ZGUI::LT);
+    pForm->AddMultiLine("Use TAB to show/hide UI", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use 'F' to switch windowed/fullscreen", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Move mouse to the top of the screen to show toolbar even with UI hidden.", text.fp, text.look, ZGUI::LT);
+    
+    pForm->AddMultiLine("\nManaging Images", sectionText.fp, sectionText.look, ZGUI::LT);
+    pForm->AddMultiLine("Use '1' to toggle an image as favorite. (It will be moved into a 'favorites' subfolder.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use 'DEL' to toggle an image as to-be-deleted. (It will be moved into a 'ZZ_TO_BE_DELETED_ZZ' subfolder.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use the DELETE button in the toolbar to bring up a confirmation dialog with the list of photos flagged for deletion.", text.fp, text.look, ZGUI::LT);
+
+    pForm->AddMultiLine("Use the filter buttons in the toolbar to view either all images, just favorites, or just images flagged for deletion.", text.fp, text.look, ZGUI::LT);
+
+
+    pForm->AddMultiLine("Use 'UNDO' to undo the previous toggle or move.", text.fp, text.look, ZGUI::LT);
+
+    pForm->AddMultiLine("\nYou can also use 'M' to quickly set a destination folder. Afterward 'M' will instantly move the image to that destination. (UNDO is available for this as well.)", text.fp, text.look, ZGUI::LT);
+
+
+    pForm->Invalidate();
+
+
+}
+
 
 void ImageViewer::SetArea(const ZRect& newArea)
 {
@@ -1141,6 +1235,17 @@ void ImageViewer::ResetControlPanel()
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Sub-pixel sampling");
     mpPanel->ChildAdd(pCheck);
+
+
+    rButton.OffsetRect(-rButton.Width(), 0);
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("?"); // unicode flip H
+    pBtn->mStyle = filterButtonStyle;
+    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage(ZMessage("show_help", this));
+    mpPanel->ChildAdd(pBtn);
 
 
 

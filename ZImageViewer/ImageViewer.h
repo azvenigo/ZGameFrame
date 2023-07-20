@@ -195,6 +195,8 @@ protected:
 
     bool                    ImageMatchesCurFilter(const ViewingIndex& vi);
 
+    void                    ShowHelpDialog();
+
     ZWinControlPanel*       mpPanel;
     std::recursive_mutex    mPanelMutex;
 
