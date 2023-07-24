@@ -67,6 +67,9 @@ bool ZWinLabel::Process()
 
 bool ZWinLabel::Paint()
 {
+    if (!mpTransformTexture)
+        return false;
+
     const lock_guard<recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
         return false;

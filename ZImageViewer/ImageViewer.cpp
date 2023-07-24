@@ -1302,7 +1302,7 @@ void ImageViewer::LoadExifProc(std::filesystem::path& imagePath, shared_ptr<Imag
     if (!pEntry)
         return;
 
-    ZOUT("Loading EXIF:", imagePath, "\n");
+//    ZOUT("Loading EXIF:", imagePath, "\n");
 
     if (ZBuffer::ReadEXIFFromFile(imagePath.string(), pEntry->mEXIF))
         pEntry->mState = ImageEntry::kExifReady;
@@ -1323,7 +1323,7 @@ void ImageViewer::LoadImageProc(std::filesystem::path& imagePath, shared_ptr<Ima
     if (!pEntry)
         return;
 
-    ZOUT("Loading:", imagePath, "\n");
+//    ZOUT("Loading:", imagePath, "\n");
 
     tZBufferPtr pNewImage(new ZBuffer);
     if (!pNewImage->LoadBuffer(imagePath.string()))
@@ -1534,7 +1534,7 @@ bool ImageViewer::KickCaching()
 
         if (entry->mState < ImageEntry::kLoadInProgress)
         {
-            ZOUT("caching image ", entry->filename, "\n");
+//            ZOUT("caching image ", entry->filename, "\n");
             entry->mState = ImageEntry::kLoadInProgress;
             mpPool->enqueue(&ImageViewer::LoadImageProc, entry->filename, entry);
         }
@@ -1607,6 +1607,8 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
 
     mCurrentFolder = folder;
 
+    bool bErrors = false;
+
     for (auto filePath : std::filesystem::directory_iterator(mCurrentFolder))
     {
         if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
@@ -1624,7 +1626,14 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
         {
             if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
             {
-                mImageArray.emplace_back(new ImageEntry(filePath));
+                if (ValidIndex(IndexFromPath(filePath)))
+                {
+                    // Duplicate image in both favorites and non-favorites folder
+                    ZERROR("Duplicate image in both favorites and regular folder! Please ensure it's in one or the other:", filePath.path().string().c_str());
+                    bErrors = true;
+                }
+                else
+                    mImageArray.emplace_back(new ImageEntry(filePath));
                 //ZDEBUG_OUT("Found image:", filePath, "\n");
             }
         }
@@ -1638,11 +1647,25 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
         {
             if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
             {
-                mImageArray.emplace_back(new ImageEntry(filePath));
+                if (ValidIndex(IndexFromPath(filePath)))
+                {
+                    // Duplicate image in both to be deleted and non-favorites folder
+                    ZERROR("Duplicate image in both to_be_deleted and regular folder! Please ensure it's in one or the other:", filePath.path().string().c_str());
+                    bErrors = true;
+                }
+                else
+                    mImageArray.emplace_back(new ImageEntry(filePath));
                 //ZDEBUG_OUT("Found image:", filePath, "\n");
             }
         }
     }
+
+    if (bErrors)
+    {
+        gMessageSystem.Post("toggleconsole");
+        return false;
+    }
+
 
     std::sort(mImageArray.begin(), mImageArray.end(), [](const shared_ptr<ImageEntry>& a, const shared_ptr<ImageEntry>& b) -> bool { return a->filename.filename().string() < b->filename.filename().string(); });
 

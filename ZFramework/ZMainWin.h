@@ -19,9 +19,10 @@ public:
     bool    ComputeVisibility();
     void    SetArea(const ZRect& newArea);
 
+    void    ShowMessageBox(std::string title, std::string message, std::string onOKMessage);
 
 protected:
-	bool    HandleMessage(const ZMessage& message);
+    bool    HandleMessage(const ZMessage& message);
 	void    ShowMainMenu();
 };
 

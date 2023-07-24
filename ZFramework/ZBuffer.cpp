@@ -378,7 +378,7 @@ bool ZBuffer::ReadEXIFFromFile(const std::string& sName, easyexif::EXIFInfo& inf
         file.seekg(nSegBytes - 2, std::ios::cur);
     }
 
-    ZOUT("Found exif segment at offset:", file.tellg());
+//    ZOUT("Found exif segment at offset:", file.tellg());
     uint8_t* pBuf = new uint8_t[nSegBytes];
 
     file.read((char*)pBuf, nSegBytes);

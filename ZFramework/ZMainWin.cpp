@@ -5,6 +5,7 @@
 #include "ZWinFormattedText.h"
 #include "ZWinScriptedDialog.h"
 #include "helpers/StringHelpers.h"
+#include "ZWinText.H"
 #include <iostream>
 
 #include "ZGraphicSystem.h"
@@ -36,6 +37,7 @@ bool ZMainWin::Init()
 	gMessageSystem.AddNotification("chardown", this);
 	gMessageSystem.AddNotification("keydown", this);
 	gMessageSystem.AddNotification("keyup", this);
+    gMessageSystem.AddNotification("message_box", this);
 
 	mbAcceptsCursorMessages = true;
 
@@ -107,7 +109,67 @@ bool ZMainWin::HandleMessage(const ZMessage& message)
         InvalidateChildren();       // wakes all children that may be waiting on CVs
 		return true;
 	}
+    else if (sType == "message_box")
+    {
+        ShowMessageBox(message.GetParam("caption"), message.GetParam("text"), message.GetParam("on_ok"));
+    }
 
 	return ZWin::HandleMessage(message);
+}
+
+
+void ZMainWin::ShowMessageBox(std::string caption, std::string text, std::string onOKMessage)
+{
+    ZWinDialog* pMsgBox = new ZWinDialog();
+    pMsgBox->SetWinName("MessageBox");
+    pMsgBox->mbAcceptsCursorMessages = true;
+    pMsgBox->mbAcceptsFocus = true;
+
+    ZRect r(800, 300);
+    pMsgBox->SetArea(r);
+    pMsgBox->mBehavior = ZWinDialog::Draggable | ZWinDialog::OKButton;
+    pMsgBox->mStyle = gDefaultDialogStyle;
+
+    pMsgBox->msOnOKMessage = onOKMessage;
+
+    ZRect rCaption(r);
+    ZWinLabel* pLabel = new ZWinLabel();
+    pLabel->msText = caption;
+    pMsgBox->SetArea(rCaption);
+    pMsgBox->mStyle = gStyleCaption;
+    pMsgBox->mStyle.pos = ZGUI::CT;
+    pMsgBox->mStyle.fp.nHeight = 32;
+    pMsgBox->mStyle.fp.nWeight = 500;
+    pMsgBox->mStyle.look = ZGUI::ZTextLook::kEmbossed;
+    pMsgBox->mStyle.look.colTop = 0xff999999;
+    pMsgBox->mStyle.look.colBottom = 0xff777777;
+    pMsgBox->ChildAdd(pLabel);
+
+
+
+    ZWinFormattedText* pForm = new ZWinFormattedText();
+
+    ZGUI::Style textStyle(gStyleGeneralText);
+    ZGUI::Style sectionText(gStyleGeneralText);
+    sectionText.fp.nWeight = 800;
+    sectionText.look.colTop = 0xffaaaaaa;
+    sectionText.look.colBottom = 0xffaaaaaa;
+
+    ZRect rForm(1400, 1000);
+    rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
+    pForm->SetArea(rForm);
+    pForm->SetScrollable();
+    pForm->SetFill(gDefaultDialogFill);
+    pForm->mbAcceptsCursorMessages = false;
+    pMsgBox->ChildAdd(pForm);
+    ChildAdd(pMsgBox);
+    pMsgBox->Arrange(ZGUI::C, mAreaToDrawTo);
+
+    pForm->AddMultiLine(text, textStyle.fp, textStyle.look, ZGUI::LT);
+
+
+    pForm->Invalidate();
+
+
 }
 
