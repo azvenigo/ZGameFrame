@@ -12,6 +12,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdarg.h>
+#include "helpers/Logger.h"
 
 struct sDbgMsg
 {
@@ -48,6 +49,8 @@ public:
     {
         std::string sLine;
         ToString(sLine, arg, more...);
+
+        gLogger.Log(sLine);
 
         mHistoryMutex.lock();
         mHistory.push_back(sDbgMsg(sLine, level));

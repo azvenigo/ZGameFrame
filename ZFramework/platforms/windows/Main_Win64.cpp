@@ -7,6 +7,7 @@
 #include "helpers/CommandLineParser.h"
 #include "helpers/Registry.h"
 #include "ZDebug.h"
+#include "helpers/Logger.h"
 #include "ZInput.h"
 #include "ZTickManager.h"
 #include "ZGraphicSystem.h"
@@ -14,6 +15,8 @@
 #include "ZTimer.h"
 #include "ZMainWin.h"
 #include "ZAnimator.h"
+
+const char* szAppClass = "ZImageViewer";
 
 namespace ZFrameworkApp
 {
@@ -91,6 +94,7 @@ int main(int argc, char* argv[])
     string sUserPath(getenv("APPDATA"));
     std::filesystem::path userDataPath(sUserPath);
 
+    gLogger.msLogFilename = sUserPath + "/ZImageViewer/" + szAppClass + ".log";
 
     ZFrameworkApp::InitRegistry(userDataPath);
 
@@ -173,7 +177,6 @@ int main(int argc, char* argv[])
                     int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
                     int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
                     int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
-                    static char  buf[512];
 
                     int64_t nDelta = nEndRenderVisible - nStartRenderVisible;
                     nTotalRenderTime += nDelta;
@@ -297,7 +300,6 @@ int WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdline, int cmdshow)
 }
 
 
-const char* szAppClass = "ZImageViewer";
 BOOL WinInitInstance(int argc, char* argv[])
 {
     g_hInst = GetModuleHandle(nullptr);
@@ -591,7 +593,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
         gInput.OnKeyDown((uint32_t)wParam);
-		break;
+        if (wParam == VK_RETURN && gInput.IsKeyDown(VK_MENU))  // alt-enter
+        {
+            SwitchFullscreen(!gbFullScreen);
+        }
+        break;
     case WM_SYSKEYUP:
     case WM_KEYUP:
         gInput.OnKeyUp((uint32_t)wParam);

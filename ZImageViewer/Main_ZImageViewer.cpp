@@ -2,6 +2,8 @@
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
 #include "helpers/CommandLineParser.h"
+#include "helpers/Logger.h"
+
 
 #include "ZWinDebugConsole.h"
 #include "Resources.h"
@@ -36,6 +38,7 @@ ZWin*                   gpCaptureWin = nullptr;
 ZWin*                   gpMouseOverWin = nullptr;
 ZPoint                  gLastMouseMove;
 REG::Registry           gRegistry;
+LOG::Logger             gLogger;
 
 
 void ZImageViewer::InitControlPanel()

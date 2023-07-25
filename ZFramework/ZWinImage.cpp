@@ -460,7 +460,7 @@ bool ZWinImage::Paint()
 //            ZOUT_LOCKLESS("getpixels");
             ZRect rSource(pRenderImage->GetArea());
 
-            ZOUT("Rendering image:", pRenderImage->GetEXIF().DateTime, "\n");
+//            ZOUT("Rendering image:", pRenderImage->GetEXIF().DateTime, "\n");
 
             if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
             {

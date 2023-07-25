@@ -1472,7 +1472,7 @@ bool ImageViewer::FreeCacheMemory()
     {
         if (std::abs(i - nCurIndex) > kUnloadViewDistance && (*pArrayToScan)[i]->mState == ImageEntry::kLoaded)
         {
-            ZOUT("Unloading viewed:", i, "\n");
+//            ZOUT("Unloading viewed:", i, "\n");
             (*pArrayToScan)[i]->Unload();
         }
     }
@@ -1485,7 +1485,7 @@ bool ImageViewer::FreeCacheMemory()
         {
             if (std::abs(i - nCurIndex) > nDistance && (*pArrayToScan)[i]->mState == ImageEntry::kLoaded)
             {
-                ZOUT("Unloading viewed:", i, "\n");
+//                ZOUT("Unloading viewed:", i, "\n");
                 (*pArrayToScan)[i]->Unload();
             }
         }
@@ -1626,13 +1626,13 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
         {
             if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
             {
-                if (ValidIndex(IndexFromPath(filePath)))
+/*                if (ValidIndex(IndexFromPath(filePath)))
                 {
                     // Duplicate image in both favorites and non-favorites folder
                     ZERROR("Duplicate image in both favorites and regular folder! Please ensure it's in one or the other:", filePath.path().string().c_str());
                     bErrors = true;
                 }
-                else
+                else*/
                     mImageArray.emplace_back(new ImageEntry(filePath));
                 //ZDEBUG_OUT("Found image:", filePath, "\n");
             }
@@ -1647,13 +1647,13 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
         {
             if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
             {
-                if (ValidIndex(IndexFromPath(filePath)))
+/*                if (ValidIndex(IndexFromPath(filePath)))
                 {
                     // Duplicate image in both to be deleted and non-favorites folder
                     ZERROR("Duplicate image in both to_be_deleted and regular folder! Please ensure it's in one or the other:", filePath.path().string().c_str());
                     bErrors = true;
                 }
-                else
+                else*/
                     mImageArray.emplace_back(new ImageEntry(filePath));
                 //ZDEBUG_OUT("Found image:", filePath, "\n");
             }
