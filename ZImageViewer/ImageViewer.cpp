@@ -57,6 +57,7 @@ ImageViewer::ImageViewer()
     mToggleUIHotkey = 0;
     mCachingState = kWaiting;
     mbSubsample = false;
+    mbShowUI = true;
     mFilterState = kAll;
     mpAllFilterButton = nullptr;
     mpFavsFilterButton = nullptr;
@@ -117,30 +118,27 @@ void ImageViewer::HandleQuitCommand()
     }*/
 }
 
-void ImageViewer::ToggleUI()
+void ImageViewer::UpdateUI()
 {
-    if (mpPanel)
-    {
-        if (!mpPanel->IsVisible())
-        {
-            mpPanel->SetVisible();
-            mpPanel->mbHideOnMouseExit = false;
-        }
-        else
-        {
-            mpPanel->SetVisible(false);
-            mpPanel->mbHideOnMouseExit = true;
-        }
 
-        bool bShowUI = mpPanel->IsVisible() || mImageArray.empty();
-        gRegistry["ZImageViewer"]["showui"] = bShowUI;
+    ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
 
-        UpdateCaptions();
-
-    }
+    UpdateControlPanel();
+    UpdateCaptions();
     InvalidateChildren();
 }
 
+bool ImageViewer::OnKeyUp(uint32_t key)
+{
+    if (key == VK_MENU && !mbShowUI)
+    {
+        UpdateUI();
+        return true;
+    }
+
+
+    return ZWin::OnKeyUp(key);
+}
 
 bool ImageViewer::OnKeyDown(uint32_t key)
 {
@@ -152,14 +150,26 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     }
 #endif
 
+    bool bShow = true;
+    gRegistry.Get("ZImageViewer", "showui", bShow);
     if (key == mToggleUIHotkey)
     {
-        ToggleUI();
+        mbShowUI = !mbShowUI;
+        UpdateUI();
+        gRegistry["ZImageViewer"]["showui"] = mbShowUI;
+        return true;
+    }
+    else if (key == VK_MENU && !mbShowUI)
+    {
+        UpdateUI();
+        return true;
     }
 
 
     switch (key)
     {
+    case VK_MENU:
+        break;
     case VK_UP:
         if (gInput.IsKeyDown(VK_MENU))
             HandleNavigateToParentFolder();
@@ -476,24 +486,6 @@ void ImageViewer::ShowHelpDialog()
 
 }
 
-
-void ImageViewer::SetArea(const ZRect& newArea)
-{
-    mbVisible = false;
-    ZWin::SetArea(newArea);
-
-    if (mpPanel)
-    {
-        int64_t nControlPanelSide = mAreaToDrawTo.Height() / 16;
-        limit<int64_t>(nControlPanelSide, 20, 64);
-
-        ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
-        mpPanel->mrTrigger = rPanelArea;
-        mpPanel->SetArea(rPanelArea);
-    }
-
-    mbVisible = true;
-}
 void ImageViewer::HandleNavigateToParentFolder()
 {
     ScanForImagesInFolder(mCurrentFolder.parent_path());
@@ -827,6 +819,8 @@ bool ImageViewer::Init()
 {
     if (!mbInitted)
     {
+        gRegistry.Get("ZImageViewer", "showui", mbShowUI);
+
         SetFocus();
         mpWinImage = new ZWinImage();
         ZRect rImageArea(mAreaToDrawTo);
@@ -854,7 +848,7 @@ bool ImageViewer::Init()
     if (!ValidIndex(mViewingIndex))
     {
         SetFirstImage();
-        ResetControlPanel();
+        UpdateControlPanel();
         UpdateCaptions();
         mpPanel->SetVisible();
     }
@@ -870,28 +864,32 @@ void ImageViewer::LimitIndex()
     limit<int64_t>(mViewingIndex.favIndex,      0, mFavImageArray.size());
 }
 
-void ImageViewer::ResetControlPanel()
+void ImageViewer::UpdateControlPanel()
 {
     int64_t nControlPanelSide = mAreaToDrawTo.Height() / 24;
     limit<int64_t>(nControlPanelSide, 64, 128);
 
 
-    bool bShow = false;
-    gRegistry.Get("ZImageViewer","showui", bShow);
-
     const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
     
+    if (mpPanel && mpPanel->GetArea().Width() == mAreaToDrawTo.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
+    {
+        bool bShow = mbShowUI;
+        if (gInput.IsKeyDown(VK_MENU))
+            bShow = true;
+
+        mpPanel->SetVisible(bShow);
+        mpPanel->mbHideOnMouseExit = !bShow;
+        return;
+    }
+
+    // panel needs to be created or is wrong dimensions
     if (mpPanel)
     {
-        // if the panel is already the correct size, don't recreate it
-//        if (mpPanel->GetArea().Width() == mAreaToDrawTo.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
-//            return;
-
-        bShow = mpPanel->IsVisible();
+        ZDEBUG_OUT("Deleting Control Panel\n");
         ChildDelete(mpPanel);
         mpPanel = nullptr;
     }
-
 
 
     mpPanel = new ZWinControlPanel();
@@ -930,8 +928,8 @@ void ImageViewer::ResetControlPanel()
     mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
     mpPanel->SetArea(rPanelArea);
     mpPanel->mrTrigger = rPanelArea;
-    ChildAdd(mpPanel, bShow);
-    mpPanel->mbHideOnMouseExit = !bShow; 
+    ChildAdd(mpPanel, mbShowUI);
+    mpPanel->mbHideOnMouseExit = !mbShowUI;
 
     ZWinSizablePushBtn* pBtn;
 
@@ -1261,7 +1259,7 @@ bool ImageViewer::OnParentAreaChange()
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
     SetArea(mpParentWin->GetArea());
 
-    ResetControlPanel();
+    UpdateControlPanel();
     ZWin::OnParentAreaChange();
     UpdateCaptions();
 
@@ -1290,7 +1288,7 @@ bool ImageViewer::ViewImage(const std::filesystem::path& filename)
     else if (mViewingIndex.delIndex >= 0)   // same with del
         UpdateFilteredView(kToBeDeleted);
 
-    ResetControlPanel();
+    UpdateControlPanel();
     mCachingState = kReadingAhead;
     KickCaching();
 
@@ -1778,7 +1776,7 @@ bool ImageViewer::Process()
         if (curImage && mpWinImage->mpImage.get() != curImage.get())
         {
             mpWinImage->SetImage(curImage);
-            ZOUT("Setting image:", curImage->GetEXIF().DateTime, "\n");
+            ZDEBUG_OUT("Setting image:", curImage->GetEXIF().DateTime, "\n");
 
             mpWinImage->mCaptionMap["no_image"].Clear();
 
@@ -1845,8 +1843,7 @@ void ImageViewer::UpdateFilteredView(eFilterState state)
     {
         mViewingIndex = {};
         mpWinImage->Clear();
-        if (mpPanel && !mpPanel->IsVisible())   // if no images and the UI is hidden, bring it up
-            ToggleUI();
+        UpdateUI();
     }
     else
     {
@@ -1875,8 +1872,9 @@ void ImageViewer::UpdateFilteredView(eFilterState state)
 
 void ImageViewer::UpdateCaptions()
 {
-    bool bShow = false;
-    gRegistry.Get("ZImageViewer", "showui", bShow);
+    bool bShow = mbShowUI;
+    if (gInput.IsKeyDown(VK_MENU))
+        bShow = true;
 
     mpWinImage->mCaptionMap["favorite"].visible = false;
     mpWinImage->mCaptionMap["for_delete"].visible = false;

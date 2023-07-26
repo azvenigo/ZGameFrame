@@ -5,6 +5,13 @@
 
 void ZInput::OnKeyDown(uint32_t key)
 {
+    // for certain keys, don't send repeat events
+    if (key == VK_MENU || key == VK_CONTROL || key == VK_SHIFT)
+    {
+        if ((keyState[(uint8_t)key] & 0x80) != 0)
+            return;
+    }
+
     keyState[(uint8_t)key] |= 0x80;
 
     IMessageTarget* pTarget = keyboardFocusWin;

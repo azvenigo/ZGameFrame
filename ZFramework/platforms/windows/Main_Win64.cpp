@@ -87,6 +87,8 @@ int main(int argc, char* argv[])
     // Enable exception handling
     SetUnhandledExceptionFilter([](PEXCEPTION_POINTERS exceptionInfo) -> LONG {
         std::cerr << "Unhandled exception: " << std::hex << exceptionInfo->ExceptionRecord->ExceptionCode << std::endl;
+        ZERROR("Unhandled exception: ", exceptionInfo->ExceptionRecord->ExceptionCode, "\n");
+        gLogger.Flush();
         //while (1);
         return EXCEPTION_EXECUTE_HANDLER;
         });
@@ -111,6 +113,7 @@ int main(int argc, char* argv[])
 
 
     uint64_t nTimeStamp = 0;
+    uint64_t nLogFlushTimeStamp = gTimer.GetUSSinceEpoch();
 
     Win64AppMessageHandler appMessageHandler;
     gMessageSystem.AddNotification("toggle_fullscreen", &appMessageHandler);
@@ -216,6 +219,14 @@ int main(int argc, char* argv[])
                 std::this_thread::sleep_for(std::chrono::microseconds(nUSToSleep));
                 //                nTimeStamp = gTimer.GetUSSinceEpoch();
             }
+
+            uint64_t nTimeSinceLastLogFlush = nLogFlushTimeStamp - nNewTime;
+            if (nTimeSinceLastLogFlush > 1000000)
+            {
+                nTimeSinceLastLogFlush = nNewTime;
+                gLogger.Flush();
+            }
+
         }
     }
 
@@ -522,8 +533,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_GETMINMAXINFO:
     {
         LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-        lpMMI->ptMinTrackSize.x = 1080;
-        lpMMI->ptMinTrackSize.y = 512;
+        lpMMI->ptMinTrackSize.x = 1200;
+        lpMMI->ptMinTrackSize.y = 768;
     }
     break;
     case WM_WINDOWPOSCHANGED:
@@ -597,6 +608,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             SwitchFullscreen(!gbFullScreen);
         }
+#ifdef _WIN32
+        else if (wParam == 'L' && gInput.IsKeyDown(VK_CONTROL))
+        {
+            string sURL;
+            ShellExecute(0, "open", gLogger.msLogFilename.c_str(), 0, 0, SW_SHOWNORMAL);
+
+            return true;
+        }
+#endif
         break;
     case WM_SYSKEYUP:
     case WM_KEYUP:

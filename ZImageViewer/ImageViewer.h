@@ -116,6 +116,7 @@ public:
    bool     ViewImage(const std::filesystem::path& filename);
    bool     SaveImage(const std::filesystem::path& filename);
 
+   bool	    OnKeyUp(uint32_t key);
    bool	    OnKeyDown(uint32_t key);
    bool     OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
    bool	    HandleMessage(const ZMessage& message);
@@ -123,7 +124,6 @@ public:
    bool     AcceptedExtension(std::string sExt);
    bool     ShowOpenImageDialog();
    bool     OnParentAreaChange();
-   void     SetArea(const ZRect& newArea);
 
    std::atomic<int64_t>     mMaxMemoryUsage;
    std::atomic<int64_t>     mMaxCacheReadAhead;
@@ -131,7 +131,7 @@ public:
 protected:
 
     void                    Clear();
-    void                    ResetControlPanel();
+    void                    UpdateControlPanel();
 
     bool                    ScanForImagesInFolder(std::filesystem::path folder);
 
@@ -165,7 +165,7 @@ protected:
     void                    UpdateCaptions();
     void                    UpdateFilteredView(eFilterState state);
 
-    void                    ToggleUI();
+    void                    UpdateUI();
     void                    ToggleToBeDeleted();
     void                    ToggleFavorite();
 
@@ -238,6 +238,7 @@ protected:
     ZWinCheck*              mpDelFilterButton;
 
     bool                    mbSubsample;
+    bool                    mbShowUI;
     eFilterState            mFilterState;
 
    
