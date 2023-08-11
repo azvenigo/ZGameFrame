@@ -144,6 +144,8 @@ protected:
     int64_t                 CountInCurMode();
 
     ViewingIndex            IndexFromPath(const std::filesystem::path& imagePath);
+    std::filesystem::path   ToBeDeletedPath();
+    std::filesystem::path   FavoritesPath();
 
     void                    LimitIndex();
     bool                    ValidIndex(const ViewingIndex& vi);
@@ -173,9 +175,11 @@ protected:
     void                    DeleteFile(std::filesystem::path& f);
     void                    HandleQuitCommand();
     void                    HandleMoveCommand();
+    void                    HandleCopyCommand();
     void                    HandleNavigateToParentFolder();
 
     bool                    MoveImage(std::filesystem::path oldPath, std::filesystem::path newPath);
+    bool                    CopyImage(std::filesystem::path curPath, std::filesystem::path newPath);
 
     bool                    RemoveImageArrayEntry(const ViewingIndex& vi);
 
@@ -209,6 +213,7 @@ protected:
 
     std::filesystem::path   mCurrentFolder;
     std::filesystem::path   mMoveToFolder;
+    std::filesystem::path   mCopyToFolder;
 
     std::filesystem::path   mUndoFrom;  // previous move source
     std::filesystem::path   mUndoTo;    // previous move dest

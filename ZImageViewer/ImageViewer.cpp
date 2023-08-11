@@ -81,6 +81,7 @@ bool ImageViewer::ShowOpenImageDialog()
     if (ZWinFileDialog::ShowLoadDialog("Images", "*.jpg;*.jpeg;*.png;*.gif;*.tga;*.bmp;*.psd;*.hdr;*.pic;*.pnm", sFilename, sDefaultFolder))
     {
         mMoveToFolder.clear();
+        mCopyToFolder.clear();
         mUndoFrom.clear();
         mUndoTo.clear();
 
@@ -211,6 +212,17 @@ bool ImageViewer::OnKeyDown(uint32_t key)
             MoveImage(EntryFromIndex(mViewingIndex)->filename, mMoveToFolder);
         }
         break;
+    case 'c':
+    case 'C':
+        if (mCopyToFolder.empty())
+        {
+            HandleCopyCommand();
+        }
+        else
+        {
+            CopyImage(EntryFromIndex(mViewingIndex)->filename, mCopyToFolder);
+        }
+        break;
     case 'o':
     case 'O':
         return ShowOpenImageDialog();
@@ -302,6 +314,11 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     else if (sType == "set_move_folder")
     {
         HandleMoveCommand();
+        return true;
+    }
+    else if (sType == "set_copy_folder")
+    {
+        HandleCopyCommand();
         return true;
     }
     else if (sType == "filter_all")
@@ -406,7 +423,7 @@ void ImageViewer::ShowHelpDialog()
     pHelp->mbAcceptsCursorMessages = true;
     pHelp->mbAcceptsFocus = true;
 
-    ZRect r(1600, 1200);
+    ZRect r(1600, 1300);
     pHelp->SetArea(r);
     pHelp->mBehavior = ZWinDialog::Draggable | ZWinDialog::OKButton;
     pHelp->mStyle = gDefaultDialogStyle;
@@ -435,7 +452,7 @@ void ImageViewer::ShowHelpDialog()
     sectionText.look.colTop = 0xffaaaaaa;
     sectionText.look.colBottom = 0xffaaaaaa;
 
-    ZRect rForm(1400, 1000);
+    ZRect rForm(1400, 1100);
     rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
     pForm->SetArea(rForm);
     pForm->SetScrollable();
@@ -464,7 +481,8 @@ void ImageViewer::ShowHelpDialog()
     pForm->AddMultiLine("Hold ALT and use Mouse wheel zoom in and out.", text.fp, text.look, ZGUI::LT);
 
     pForm->AddMultiLine("\nUI", sectionText.fp, sectionText.look, ZGUI::LT);
-    pForm->AddMultiLine("Use TAB to show/hide UI", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use TAB to toggle UI visibility", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Hold ALT show UI (when hidden)", text.fp, text.look, ZGUI::LT);
     pForm->AddMultiLine("Use 'F' to switch windowed/fullscreen", text.fp, text.look, ZGUI::LT);
     pForm->AddMultiLine("Move mouse to the top of the screen to show toolbar even with UI hidden.", text.fp, text.look, ZGUI::LT);
     
@@ -524,6 +542,43 @@ void ImageViewer::HandleMoveCommand()
         mpWinImage->SetFocus();
 }
 
+void ImageViewer::HandleCopyCommand()
+{
+    if (!ValidIndex(mViewingIndex) || CountImagesMatchingFilter(mFilterState) == 0)
+    {
+        ZERROR("No image selected to copy");
+        return;
+    }
+
+    string sFolder;
+    if (ZWinFileDialog::ShowSelectFolderDialog(sFolder, mCurrentFolder.string()))
+    {
+        filesystem::path newPath(sFolder);
+
+        bool bNewPathInTree = newPath.parent_path() == mCurrentFolder || newPath.parent_path() == FavoritesPath() || newPath.parent_path() == ToBeDeletedPath();
+
+        if (bNewPathInTree)
+        {
+            // do not set copy to folder into our tree
+            mCopyToFolder.clear();
+            return;
+        }
+        if (CopyImage(EntryFromIndex(mViewingIndex)->filename, filesystem::path(sFolder)))
+            mCopyToFolder = sFolder;
+        else
+            mCopyToFolder.clear();
+    }
+    else
+    {
+        mCopyToFolder.clear();
+
+    }
+
+    if (mpWinImage)
+        mpWinImage->SetFocus();
+}
+
+
 bool ImageViewer::MoveImage(std::filesystem::path oldPath, std::filesystem::path newPath)
 {
     if (oldPath.empty() || newPath.empty())
@@ -542,8 +597,8 @@ bool ImageViewer::MoveImage(std::filesystem::path oldPath, std::filesystem::path
     // if the file is moving in/out of current tree, rescan
     bool bRequireRescan = false;
 
-    bool bOldPathInTree = oldPath.parent_path() == mCurrentFolder || oldPath.parent_path().filename() == ksToBeDeleted || oldPath.parent_path().filename() == ksFavorites;
-    bool bNewPathInTree = newPath.parent_path() == mCurrentFolder || newPath.parent_path().filename() == ksToBeDeleted || newPath.parent_path().filename() == ksFavorites;
+    bool bOldPathInTree = oldPath.parent_path() == mCurrentFolder || oldPath.parent_path() == ToBeDeletedPath() || oldPath.parent_path() == FavoritesPath();
+    bool bNewPathInTree = newPath.parent_path() == mCurrentFolder || newPath.parent_path() == ToBeDeletedPath() || newPath.parent_path() == FavoritesPath();
 
     bRequireRescan = bOldPathInTree^bNewPathInTree;     // xor
 
@@ -576,6 +631,46 @@ bool ImageViewer::MoveImage(std::filesystem::path oldPath, std::filesystem::path
 
     return true;
 }
+
+
+bool ImageViewer::CopyImage(std::filesystem::path curPath, std::filesystem::path newPath)
+{
+    if (curPath.empty() || newPath.empty())
+        return false;
+
+    if (!std::filesystem::exists(curPath))
+    {
+        ZERROR("No image selected to copy");
+        return false;
+    }
+
+    // if we were passed a folder name only, use the filename of the source
+    if (!newPath.has_extension())
+        newPath.append(curPath.filename().string());
+
+    ZOUT("Copying ", curPath, " -> ", newPath, "\n");
+
+    filesystem::create_directories(newPath.parent_path());
+
+    try
+    {
+        filesystem::copy_file(curPath, newPath);
+        mImageArray[mViewingIndex.absoluteIndex]->filename = newPath;
+
+        mUndoFrom.clear();
+        mUndoTo.clear();
+    }
+    catch (std::filesystem::filesystem_error err)
+    {
+        ZERROR("Error copying from \"", curPath, "\" to \"", newPath, "\"\ncode:", err.code(), " error:", err.what(), "\n");
+        return false;
+    };
+
+    Invalidate();
+
+    return true;
+}
+
 
 
 void ImageViewer::DeleteConfimed()
@@ -1001,6 +1096,21 @@ void ImageViewer::UpdateControlPanel()
     Sprintf(sMessage, "set_move_folder;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
+
+    rButton.OffsetRect(rButton.Width(), 0);
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    pBtn->SetCaption("copy");
+    pBtn->mStyle = gDefaultGroupingStyle;
+    //        pBtn->mStyle.look.colTop = 0xffff0000;
+    //        pBtn->mStyle.look.colBottom = 0xffff0000;
+    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->mStyle.pos = ZGUI::C;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "set_copy_folder;target=%s", GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+
 
 
 
@@ -1615,11 +1725,9 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
         }
     }
 
-    filesystem::path favoritesPath = mCurrentFolder;
-    favoritesPath.append(ksFavorites);
-    if (filesystem::exists(favoritesPath))
+    if (filesystem::exists(FavoritesPath()))
     {
-        for (auto filePath : std::filesystem::directory_iterator(favoritesPath))
+        for (auto filePath : std::filesystem::directory_iterator(FavoritesPath()))
         {
             if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
             {
@@ -1636,11 +1744,9 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
         }
     }
 
-    filesystem::path toBeDeletedPath = mCurrentFolder;
-    toBeDeletedPath.append(ksToBeDeleted);
-    if (filesystem::exists(toBeDeletedPath))
+    if (filesystem::exists(ToBeDeletedPath()))
     {
-        for (auto filePath : std::filesystem::directory_iterator(toBeDeletedPath))
+        for (auto filePath : std::filesystem::directory_iterator(ToBeDeletedPath()))
         {
             if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
             {
@@ -1707,6 +1813,20 @@ ViewingIndex ImageViewer::IndexFromPath(const std::filesystem::path& imagePath)
     return index;
 }
 
+
+filesystem::path ImageViewer::ToBeDeletedPath() 
+{ 
+    filesystem::path tbd(mCurrentFolder);
+    tbd.append(ksToBeDeleted);
+    return tbd;
+}
+
+filesystem::path ImageViewer::FavoritesPath() 
+{ 
+    filesystem::path fav(mCurrentFolder);
+    fav.append(ksFavorites);
+    return fav;
+}
 
 
 
@@ -1981,9 +2101,20 @@ void ImageViewer::UpdateCaptions()
 
         if (!mMoveToFolder.empty())
         {
-            Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "Hit 'M' for quick move to:\n%s", mMoveToFolder.string().c_str());
+            Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> move to:\n%s", mMoveToFolder.string().c_str());
             mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, gDefaultSpacer / 2, (int32_t)gDefaultSpacer / 2 + folderStyle.fp.nHeight*8, 0x88000000, true);
             mpWinImage->mCaptionMap["move_to_folder"].visible = bShow;
+        }
+        else
+        {
+            mpWinImage->mCaptionMap["move_to_folder"].Clear();
+        }
+
+        if (!mCopyToFolder.empty())
+        {
+            Sprintf(mpWinImage->mCaptionMap["copy_to_folder"].sText, "'C' -> copy to:\n%s", mCopyToFolder.string().c_str());
+            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, gDefaultSpacer / 2, (int32_t)gDefaultSpacer / 2 + folderStyle.fp.nHeight * 12, 0x88000000, true);
+            mpWinImage->mCaptionMap["copy_to_folder"].visible = bShow;
         }
         else
         {
@@ -2083,21 +2214,18 @@ void ImageViewer::ToggleFavorite()
     if (!ValidIndex(mViewingIndex))
         return;
 
-    filesystem::path favorites = mCurrentFolder;
-    favorites.append(ksFavorites);
-
     if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite())
     {
         // move from subfolder up
         MoveImage(EntryFromIndex(mViewingIndex)->filename, mCurrentFolder);
 
-        if (std::filesystem::is_empty(favorites))
-            std::filesystem::remove(favorites);
+        if (std::filesystem::is_empty(FavoritesPath()))
+            std::filesystem::remove(FavoritesPath());
     }
     else
     {
         // move into favorites subfolder
-        MoveImage(EntryFromIndex(mViewingIndex)->filename, favorites);
+        MoveImage(EntryFromIndex(mViewingIndex)->filename, FavoritesPath());
     }
 
     UpdateFilteredView(mFilterState);
