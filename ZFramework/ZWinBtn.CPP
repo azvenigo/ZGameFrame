@@ -473,17 +473,14 @@ bool ZWinSizablePushBtn::Paint()
 	int64_t nStrlen = msCaption.length();
 	if (nStrlen > 0)
 	{
-		ZRect rText(mStyle.Font()->Arrange(mAreaToDrawTo, (uint8_t*)msCaption.data(), nStrlen, mStyle.pos, mStyle.paddingV));
-
-		string sCaptionToDraw(msCaption);
-
+        ZRect rText(mAreaToDrawTo);
 
 		// Offset for text and shadow is based on font size.....but at least of 1
 		int64_t nOffset = max((int) mStyle.fp.nHeight/16, (int) 1);
 		if (mDrawState == kDown)
 			rText.OffsetRect(nOffset,nOffset);
 
-		mStyle.Font()->DrawText(mpTransformTexture.get(), sCaptionToDraw, rText, &mStyle.look);
+		mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), msCaption, rText, &mStyle);
 	}
 
 	return ZWin::Paint();

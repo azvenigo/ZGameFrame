@@ -471,9 +471,9 @@ void ImageViewer::ShowHelpDialog()
     pForm->AddMultiLine("\nManaging Images", sectionText.fp, sectionText.look, ZGUI::LT);
     pForm->AddMultiLine("Use '1' to toggle an image as favorite. (It will be moved into a 'favorites' subfolder.", text.fp, text.look, ZGUI::LT);
     pForm->AddMultiLine("Use 'DEL' to toggle an image as to-be-deleted. (It will be moved into a 'ZZ_TO_BE_DELETED_ZZ' subfolder.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Use the DELETE button in the toolbar to bring up a confirmation dialog with the list of photos flagged for deletion.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use the DELETE button in the toolbar to bring up a confirmation dialog with the list of photos marked for deletion.", text.fp, text.look, ZGUI::LT);
 
-    pForm->AddMultiLine("Use the filter buttons in the toolbar to view either all images, just favorites, or just images flagged for deletion.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use the filter buttons in the toolbar to view either all images, just favorites, or just images marked for deletion.", text.fp, text.look, ZGUI::LT);
 
 
     pForm->AddMultiLine("Use 'UNDO' to undo the previous toggle or move.", text.fp, text.look, ZGUI::LT);
@@ -791,16 +791,14 @@ bool ImageViewer::ImageMatchesCurFilter(const ViewingIndex& vi)
     if (mFilterState == kAll)
         return true;
 
-    int64_t i = IndexInCurMode();
-
-    if (!ValidIndex(i))
+    if (!ValidIndex(vi.absoluteIndex))
         return false;
 
     if (mFilterState == kToBeDeleted)
-        return mImageArray[i]->ToBeDeleted();
+        return mImageArray[vi.absoluteIndex]->ToBeDeleted();
 
     assert(mFilterState == kFavs);
-    return mImageArray[i]->IsFavorite();
+    return mImageArray[vi.absoluteIndex]->IsFavorite();
 }
 
 int64_t ImageViewer::CountImagesMatchingFilter(eFilterState state)
@@ -1009,11 +1007,12 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("Delete");
+    pBtn->SetCaption("delete\nmarked");
     pBtn->mStyle = gDefaultGroupingStyle;
     pBtn->mStyle.look.colTop = 0xffff0000;
     pBtn->mStyle.look.colBottom = 0xffff0000;
-    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->mStyle.fp.nHeight = nGroupSide / 3;
+    pBtn->mStyle.wrap = true;
     pBtn->mStyle.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "show_confirm;target=%s", GetTargetName().c_str());
@@ -1139,7 +1138,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->SetTooltip("Images flagged for deletion");
+    pCheck->SetTooltip("Images marked for deletion");
     mpPanel->ChildAdd(pCheck);
     mpDelFilterButton = pCheck;
 
@@ -1223,12 +1222,12 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mCheckedStyle.look.colTop = 0xff88ff88;
     pCheck->mCheckedStyle.look.colBottom = 0xff88ff88;
     pCheck->mCheckedStyle.pos = ZGUI::CB;
-    pCheck->mCheckedStyle.paddingV = (int32_t)(unicodeStyle.fp.nHeight / 10);
+    pCheck->mCheckedStyle.paddingV = (int32_t)(unicodeStyle.fp.nHeight / 4);
 
     pCheck->mUncheckedStyle = unicodeStyle;
     pCheck->mUncheckedStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
     pCheck->mUncheckedStyle.pos = ZGUI::CB;
-    pCheck->mUncheckedStyle.paddingV = (int32_t)(unicodeStyle.fp.nHeight / 10);
+    pCheck->mUncheckedStyle.paddingV = (int32_t)(unicodeStyle.fp.nHeight / 4);
 
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Sub-pixel sampling");
