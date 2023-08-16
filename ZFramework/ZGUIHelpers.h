@@ -103,6 +103,9 @@ namespace ZGUI
     };
 
     ZRect       Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t paddingH = 0, int64_t paddingV = 0);  // moves r relative to ref based on position flags
+
+    ZRect       ScaledFit(const ZRect& r, const ZRect& ref);    // scales r to fit inside ref maintaining r's aspect ratio
+
     std::string ToString(ePosition pos);
     ePosition   FromString(std::string s);
 };

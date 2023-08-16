@@ -10,6 +10,9 @@ using namespace std;
 
 bool ZWinControlPanel::Init()
 {
+    if (mbInitted)
+        return true;
+
     assert(mArea.Width() > 0 && mArea.Height() > 0);
 
     mrNextControl.SetRect(gnControlPanelEdge, gnControlPanelEdge, mArea.Width()- gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);
@@ -44,9 +47,9 @@ ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const st
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption(sCaption);
+    pBtn->mCaption.sText = sCaption;
+    pBtn->mCaption.style = style;
     pBtn->SetMessage(sMessage);
-    pBtn->mStyle = style;
     pBtn->SetArea(mrNextControl);
     ChildAdd(pBtn);
 
@@ -79,7 +82,7 @@ ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, co
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
     pCheck->SetRadioGroup(sRadioGroup);
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pCheck->SetCaption(sCaption);
+    pCheck->mCaption.sText = sCaption;
     pCheck->SetArea(mrNextControl);
     pCheck->mCheckedStyle = checkedStyle;
     pCheck->mUncheckedStyle = uncheckedStyle;

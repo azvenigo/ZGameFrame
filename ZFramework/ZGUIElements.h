@@ -4,16 +4,17 @@
 #include "ZFont.h"
 #include "ZGUIHelpers.h"
 #include "ZGUIStyle.h"
+#include "lunasvg.h"
 #include <map>
 
 namespace ZGUI
 {
-    typedef std::map<std::string, class TextBox> tTextboxMap; // named textbox to descriptor
+    typedef std::map<std::string, class TextBox> tTextboxMap; // named textboxes
 
     class TextBox
     {
     public:
-        void        Paint(ZBuffer* pDst);
+        bool        Paint(ZBuffer* pDst);
         static void Paint(ZBuffer* pDst, tTextboxMap& textBoxMap);
         void        Clear()
         {
@@ -28,6 +29,36 @@ namespace ZGUI
         ZRect       area;
         bool        visible;
     };
+
+    typedef std::map<std::string, class SVGImageBox> tSVGImageMap; // named SVGImageBoxes
+
+    class SVGImageBox
+    {
+    public:
+        bool    Load(const std::string& sFilename);
+
+        bool    Paint(ZBuffer* pDst);
+        static void Paint(ZBuffer* pDst, tSVGImageMap& svgImageBoxMap);
+
+        void        Clear()
+        {
+            mSVGDoc.reset();
+            style = {};
+            area = {};
+            visible = true;
+        }
+
+        Style       style;
+        ZRect       area;
+        bool        visible;
+
+    private:
+        std::recursive_mutex mDocMutex;
+        std::unique_ptr<lunasvg::Document> mSVGDoc;
+        tZBufferPtr mRendered;
+
+    };
+
 
 
     class ZCell
@@ -123,7 +154,6 @@ namespace ZGUI
         std::vector<size_t> mColumnWidths;
         std::vector<size_t> mRowHeights;
     };
-
 };
 
 

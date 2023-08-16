@@ -95,45 +95,6 @@ set(ZFRAMEWORK_FILES
 ../ZFramework/ZFramework.natvis
 )
 
-set(COMMON_FILES ../../ZLibraries/Common/helpers/FNMatch.h ../../ZLibraries/Common/helpers/FNMatch.cpp ../../ZLibraries/Common/helpers/HTTPCache.h ../../ZLibraries/Common/helpers/HTTPCache.cpp)
-list(APPEND COMMON_FILES 
-../../ZLibraries/Common/helpers/CommandLineParser.h 
-../../ZLibraries/Common/helpers/CommandLineParser.cpp 
-../../ZLibraries/Common/helpers/StringHelpers.h 
-../../ZLibraries/Common/helpers/StringHelpers.cpp 
-../../ZLibraries/Common/helpers/ThreadPool.h
-../../ZLibraries/Common/helpers/Registry.h
-../../ZLibraries/Common/helpers/Registry.cpp
-../../ZLibraries/Common/helpers/Logger.h
-../../ZLibraries/Common/helpers/Logger.cpp
-../../ZLibraries/Common/json/json.hpp
-../../ZLibraries/Common/stb/stb_image.h
-../../ZLibraries/Common/stb/stb_image_write.h
-../../ZLibraries/Common/easyexif/exif.h ../../ZLibraries/Common/easyexif/exif.cpp
-
-)
-
-list(APPEND COMMON_FILES  ../../ZLibraries/Common/zlib-1.2.11/deflate.c  ../../ZLibraries/Common/zlib-1.2.11/inflate.c 
-../../ZLibraries/Common/zlib-1.2.11/adler32.c ../../ZLibraries/Common/zlib-1.2.11/zutil.c ../../ZLibraries/Common/zlib-1.2.11/crc32.c 
-../../ZLibraries/Common/zlib-1.2.11/trees.c ../../ZLibraries/Common/zlib-1.2.11/inftrees.c ../../ZLibraries/Common/zlib-1.2.11/inffast.c)
-
-
-####################
-# common source
-list(APPEND INCLUDE_DIRS 
-../ZFramework 
-../../ZLibraries/Common 
-../../ZLibraries/Common/zlib-1.2.11 
-../../ZLibraries/Common/json 
-../../ZLibraries/Common/stb
-../ZFramework/platforms/windows
-)
-
-
-####################
-# PROJECT DEPENDENCY AND INCLUDES
-list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib )
-
 
 ####################
 # source and include sets

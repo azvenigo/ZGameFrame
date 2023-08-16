@@ -52,6 +52,9 @@ mbShutdownFlag(false),
 mIdleSleepMS(kDefaultIdleTime)
 {
     Sprintf(msWinName, "win_%x", this); // default to unique window name
+
+//    cout << "ZWin::ZWin() : msWinName:" << msWinName << "\n" << std::flush;
+
 }
 
 ZWin::~ZWin() 
@@ -927,9 +930,9 @@ bool ZWinDialog::Init()
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-        pBtn->SetCaption("Cancel");
+        pBtn->mCaption.sText = "Cancel";
+        pBtn->mCaption.style = gStyleButton;
         pBtn->SetMessage(ZMessage("dlg_cancel", this));
-        pBtn->mStyle = gStyleButton;
         pBtn->SetArea(rButton);
         ChildAdd(pBtn);
 
@@ -942,9 +945,10 @@ bool ZWinDialog::Init()
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-        pBtn->SetCaption("OK");
         pBtn->SetMessage(ZMessage("dlg_ok", this));
-        pBtn->mStyle = gStyleButton;
+        pBtn->mCaption.sText = "OK";
+        pBtn->mCaption.style = gStyleButton;
+
 
         pBtn->SetArea(rButton);
         ChildAdd(pBtn);

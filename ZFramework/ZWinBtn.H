@@ -8,6 +8,7 @@
 #include "ZMessageSystem.h"
 #include "ZFont.h"
 #include "ZGUIStyle.h"
+#include "ZGUIElements.h"
 #include <list>
 
 class ZBuffer;
@@ -121,25 +122,24 @@ public:
 	virtual bool            OnMouseMove(int64_t x, int64_t y);
     virtual bool            OnMouseHover(int64_t x, int64_t y);
 
-
-	virtual void            SetCaption(const std::string& sCaption);
     virtual void            SetTooltip(const std::string& sTooltip) { msTooltip = sTooltip; }
-    std::string             GetCaption() { return msCaption; };
 
 	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
 	virtual std::string     GetMessage() { return msButtonMessage; }
 
 	void                    SetImages(tZBufferPtr pUpEdgeImage, tZBufferPtr pDownEdgeImage, ZRect rUpEdge );
 
-    ZGUI::Style             mStyle;
+    ZGUI::TextBox           mCaption;
+    ZGUI::SVGImageBox       mSVGImage;
+    std::string		        msTooltip;
+
+    ZGUI::Style             mBtnStyle;
 
 protected:
     virtual bool            Paint();
     std::string             FitCaptionInWidth(int64_t nWidth, const std::string& sCaption, tZFontPtr pFont);		// Calculates an equal number of starting/ending chars with "..." in the middle
 
 	eSizablePushBtnState	mDrawState;
-	std::string             msCaption;
-    std::string		        msTooltip;
 
     tZBufferPtr             mpUpEdgeImage;              // not owned by this class
     tZBufferPtr             mpDownEdgeImage;            // not owned by this class

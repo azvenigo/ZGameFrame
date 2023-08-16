@@ -237,4 +237,24 @@ namespace ZGUI
 
         return ZRect(newX, newY, newX + w, newY + h);
     }
+
+    ZRect ScaledFit(const ZRect& r, const ZRect& ref)
+    {
+        double fRatio = (double)r.Height() / (double)r.Width();
+
+        int64_t nImageWidth = ref.Width();
+        int64_t nImageHeight = (int64_t)(nImageWidth * fRatio);
+
+        if (nImageHeight > ref.Height())
+        {
+            nImageHeight = ref.Height();
+            nImageWidth = (int64_t)(nImageHeight / fRatio);
+        }
+
+        int64_t nXOffset = (ref.Width() - nImageWidth) / 2;
+        int64_t nYOffset = (ref.Height() - nImageHeight) / 2;
+
+
+        return ZRect(nXOffset, nYOffset, nXOffset + nImageWidth, nYOffset + nImageHeight);
+    }
 };

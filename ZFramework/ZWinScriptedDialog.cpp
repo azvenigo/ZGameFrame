@@ -93,8 +93,8 @@ bool ZWinScriptedDialog::Init()
 		{
 			ZWinSizablePushBtn* pBtn = *it;
 
-			string sCaption = pBtn->GetCaption();
-			int64_t nSize = pBtn->mStyle.Font()->StringWidth(sCaption);
+			string sCaption = pBtn->mCaption.sText;
+			int64_t nSize = pBtn->mCaption.style.Font()->StringWidth(sCaption);
 			ZASSERT(nSize < mAreaToDrawTo.Width());
 
 			if (nSize > nLargestCaptionSize)
@@ -129,7 +129,7 @@ bool ZWinScriptedDialog::Init()
 		{
 			ZWinSizablePushBtn* pBtn = *it;
 
-			int64_t nFontSize = pBtn->mStyle.fp.nHeight;
+			int64_t nFontSize = pBtn->mCaption.style.fp.nHeight;
 
 			ZRect rButtonArea(nXPos, nYPos, nXPos + nLargestCaptionSize + nFontSize*kPadding*2, nYPos + kButtonMeasure);
 			pBtn ->SetArea(rButtonArea);

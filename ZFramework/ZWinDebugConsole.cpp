@@ -31,6 +31,7 @@ ZWinDebugConsole::ZWinDebugConsole()
 
     mIdleSleepMS = 200;
 	mbAcceptsCursorMessages = true;
+    msWinName = "ZWinDebugConsole";
 
 }
 
@@ -38,6 +39,9 @@ ZWinDebugConsole::ZWinDebugConsole()
 
 bool ZWinDebugConsole::Init()
 {
+    if (mbInitted)
+        return true;
+
     if (!mFont)
         mFont = gpFontSystem->GetFont(ZFontParams("consolas", 24, 200, 0, 14));
 

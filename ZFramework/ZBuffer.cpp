@@ -6,6 +6,7 @@
 #include <math.h>
 #include <fstream>
 #include "easyexif/exif.h"
+#include "lunasvg.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -94,16 +95,24 @@ bool ZBuffer::Shutdown()
 
 bool ZBuffer::LoadBuffer(const string& sFilename)
 {
-#ifdef STB_IMAGE_IMPLEMENTATION
-    int width;
-    int height;
-    int channels;
+    std::filesystem::path filename(sFilename);
 
-    if (!std::filesystem::exists(sFilename))
+    if (!std::filesystem::exists(filename))
     {
         ZDEBUG_OUT("ZBuffer::LoadBuffer failed to load ", sFilename, "..does not exist\n");
         return false;
     }
+
+    string sExt = filename.extension().string();
+    SH::makelower(sExt);
+    if (sExt == ".svg")
+        return LoadFromSVG(sFilename);
+
+
+#ifdef STB_IMAGE_IMPLEMENTATION
+    int width;
+    int height;
+    int channels;
 
     uint32_t nFileSize = (uint32_t)std::filesystem::file_size(sFilename);
     std::ifstream imageFile(sFilename.c_str(), ios::in | ios::binary);    // open and set pointer at end
@@ -270,6 +279,27 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 	return true;
 #endif
 }
+
+bool ZBuffer::LoadFromSVG(const std::string& sName)
+{
+    auto doc = lunasvg::Document::loadFromFile(sName);
+    auto svgbitmap = doc->renderToBitmap(mSurfaceArea.Width(), mSurfaceArea.Height()); // if the buffer is already initialized, this will render at the same dimensions. If not these will be 0x0 & it will render at the SVG embedded dimensions
+
+    int64_t w = (int64_t)svgbitmap.width();
+    int64_t h = (int64_t)svgbitmap.height();
+    uint32_t s = svgbitmap.stride();
+
+    if (!Init(w, h))
+        return false;
+
+    for (int64_t y = 0; y < h; y++)
+    {
+        memcpy(mpPixels + y * w, svgbitmap.data() + y * s, w * 4);
+    }
+
+    return true;
+}
+
 
 
 bool ZBuffer::SaveBuffer(const std::string& sName)

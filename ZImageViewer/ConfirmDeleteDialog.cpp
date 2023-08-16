@@ -72,11 +72,11 @@ bool ConfirmDeleteDialog::Init()
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-        pBtn->SetCaption("Confirm Delete");
         pBtn->SetMessage(ZMessage("deleteconfirm", this));
-        pBtn->mStyle = gStyleButton;
-        pBtn->mStyle.look.colTop = 0xffff0000;
-        pBtn->mStyle.look.colBottom = 0xffff0000;
+        pBtn->mCaption.sText = "Confirm Delete";
+        pBtn->mCaption.style = gStyleButton;
+        pBtn->mCaption.style.look.colTop = 0xffff0000;
+        pBtn->mCaption.style.look.colBottom = 0xffff0000;
 
 
         pBtn->SetArea(rButton);
@@ -89,9 +89,9 @@ bool ConfirmDeleteDialog::Init()
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-        pBtn->SetCaption("Go Back");
         pBtn->SetMessage(ZMessage("goback", this));
-        pBtn->mStyle = gStyleButton;
+        pBtn->mCaption.sText = "Go Back";
+        pBtn->mCaption.style = gStyleButton;
 
         pBtn->SetArea(rButton);
         ChildAdd(pBtn);

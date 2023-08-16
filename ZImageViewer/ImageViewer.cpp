@@ -78,7 +78,7 @@ bool ImageViewer::ShowOpenImageDialog()
     string sDefaultFolder;
     if (!mCurrentFolder.empty())
         sDefaultFolder = mCurrentFolder.string();
-    if (ZWinFileDialog::ShowLoadDialog("Images", "*.jpg;*.jpeg;*.png;*.gif;*.tga;*.bmp;*.psd;*.hdr;*.pic;*.pnm", sFilename, sDefaultFolder))
+    if (ZWinFileDialog::ShowLoadDialog("Images", "*.jpg;*.jpeg;*.png;*.gif;*.tga;*.bmp;*.psd;*.hdr;*.pic;*.pnm;*.svg", sFilename, sDefaultFolder))
     {
         mMoveToFolder.clear();
         mCopyToFolder.clear();
@@ -277,6 +277,15 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         if (ZWinFileDialog::ShowSaveDialog("Images", "*.jpg;*.jpeg;*.png;*.tga;*.bmp;*.hdr", sFilename))
             SaveImage(sFilename);
         return true;
+    }
+    else if (sType == "openfolder")
+    {
+#ifdef _WIN32
+        string sPath;
+        Sprintf(sPath, "/select,%s", EntryFromIndex(mViewingIndex)->filename.string().c_str());
+        ShellExecute(0, "open", "explorer", sPath.c_str(), 0,  SW_SHOWNORMAL);
+        return true;
+#endif
     }
     else if (sType == "show_confirm")
     {
@@ -1032,18 +1041,27 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("X");
+    pBtn->mCaption.sText = "X";
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("quit", this));
     mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize, 0);
 
+
+    int64_t nButtonPadding = rButton.Width() / 8;
+
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("1");  // wingdings open folder
+    //    pBtn->mCaption.sText = "1";  // wingdings open folder
+    //    pBtn->mCaption.style = wingdingsStyle;
+
+    pBtn->mSVGImage.Load("res/openfile.svg");
+    pBtn->SetTooltip("Load Image");
+    pBtn->mSVGImage.style.paddingH = nButtonPadding;
+    pBtn->mSVGImage.style.paddingV = nButtonPadding;
+
     pBtn->SetArea(rButton);
-    pBtn->mStyle = wingdingsStyle;
     pBtn->SetMessage(ZMessage("loadimg", this));
     mpPanel->ChildAdd(pBtn);
 
@@ -1051,14 +1069,50 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("<"); // wingdings save
-    pBtn->mStyle = wingdingsStyle;
+//    pBtn->mCaption.sText = "<"; // wingdings save
+//    pBtn->mCaption.style = wingdingsStyle;
+    pBtn->mSVGImage.Load("res/save.svg");
+    pBtn->SetTooltip("Save Image");
+
+    pBtn->mSVGImage.style.paddingH = nButtonPadding;
+    pBtn->mSVGImage.style.paddingV = nButtonPadding;
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("saveimg", this));
     mpPanel->ChildAdd(pBtn);
 
+    rButton.OffsetRect(rButton.Width(), 0);
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
+    //    pBtn->mCaption.sText = "1";  // wingdings open folder
+    //    pBtn->mCaption.style = wingdingsStyle;
+
+    pBtn->mSVGImage.Load("res/openfolder.svg");
+    pBtn->SetTooltip("Go to Folder");
+    pBtn->mSVGImage.style.paddingH = nButtonPadding;
+    pBtn->mSVGImage.style.paddingV = nButtonPadding;
+
+    pBtn->SetArea(rButton);
+    pBtn->SetMessage(ZMessage("openfolder", this));
+    mpPanel->ChildAdd(pBtn);
+
+    rButton.OffsetRect(rButton.Width(), 0);
+
+
+
+
+
     rGroup.right = rButton.right + gnDefaultGroupInlaySize;
     mpPanel->AddGrouping("File", rGroup);
+
+
+
+
+
+
+
+
+
 
     string sMessage;
 
@@ -1072,12 +1126,12 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("undo");  // undo glyph
-    pBtn->mStyle = gDefaultGroupingStyle;
-    //        pBtn->mStyle.look.colTop = 0xffff0000;
-    //        pBtn->mStyle.look.colBottom = 0xffff0000;
-    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
-    pBtn->mStyle.pos = ZGUI::C;
+    pBtn->mCaption.sText = "undo";  // undo glyph
+    pBtn->mCaption.style = gDefaultGroupingStyle;
+    //        pBtn->mCaption.style .look.colTop = 0xffff0000;
+    //        pBtn->mCaption.style .look.colBottom = 0xffff0000;
+    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
+    pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "undo;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -1086,12 +1140,12 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("move");
-    pBtn->mStyle = gDefaultGroupingStyle;
-    //        pBtn->mStyle.look.colTop = 0xffff0000;
-    //        pBtn->mStyle.look.colBottom = 0xffff0000;
-    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
-    pBtn->mStyle.pos = ZGUI::C;
+    pBtn->mCaption.sText = "move";
+    pBtn->mCaption.style = gDefaultGroupingStyle;
+    //        pBtn->mCaption.style .look.colTop = 0xffff0000;
+    //        pBtn->mCaption.style .look.colBottom = 0xffff0000;
+    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
+    pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "set_move_folder;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -1100,12 +1154,12 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("copy");
-    pBtn->mStyle = gDefaultGroupingStyle;
+    pBtn->mCaption.sText = "copy";
+    pBtn->mCaption.style = gDefaultGroupingStyle;
     //        pBtn->mStyle.look.colTop = 0xffff0000;
     //        pBtn->mStyle.look.colBottom = 0xffff0000;
-    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
-    pBtn->mStyle.pos = ZGUI::C;
+    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
+    pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "set_copy_folder;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -1117,13 +1171,13 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("delete\nmarked");
-    pBtn->mStyle = gDefaultGroupingStyle;
-    pBtn->mStyle.look.colTop = 0xffff0000;
-    pBtn->mStyle.look.colBottom = 0xffff0000;
-    pBtn->mStyle.fp.nHeight = nGroupSide / 3;
-    pBtn->mStyle.wrap = true;
-    pBtn->mStyle.pos = ZGUI::C;
+    pBtn->mCaption.sText = "delete\nmarked";
+    pBtn->mCaption.style = gDefaultGroupingStyle;
+    pBtn->mCaption.style.look.colTop = 0xffff0000;
+    pBtn->mCaption.style.look.colBottom = 0xffff0000;
+    pBtn->mCaption.style.fp.nHeight = nGroupSide / 3;
+    pBtn->mCaption.style.wrap = true;
+    pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "show_confirm;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -1147,8 +1201,8 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("<"); // unicode rotate left
-    pBtn->mStyle = unicodeStyle;
+    pBtn->mCaption.sText = "<"; // unicode rotate left
+    pBtn->mCaption.style = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -1158,8 +1212,8 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption(">"); // unicode rotate right
-    pBtn->mStyle = unicodeStyle;
+    pBtn->mCaption.sText = ">"; // unicode rotate right
+    pBtn->mCaption.style = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -1169,8 +1223,8 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("-"); // unicode flip H
-    pBtn->mStyle = unicodeStyle;
+    pBtn->mCaption.sText = "-"; // unicode flip H
+    pBtn->mCaption.style = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -1180,8 +1234,8 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("|"); // unicode flip V
-    pBtn->mStyle = unicodeStyle;
+    pBtn->mCaption.sText = "|"; // unicode flip V
+    pBtn->mCaption.style = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
@@ -1219,7 +1273,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->SetState(true, false);
     pCheck->SetMessages(ZMessage("filter_all", this), "");
     pCheck->SetRadioGroup("filter_group");
-    pCheck->SetCaption("all");
+    pCheck->mCaption.sText = "all";
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 
     pCheck->mCheckedStyle = filterButtonStyle;
@@ -1238,7 +1292,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck = new ZWinCheck();
     pCheck->SetMessages(ZMessage("filter_del", this), "");
     pCheck->SetRadioGroup("filter_group");
-    pCheck->SetCaption("del");
+    pCheck->mCaption.sText = "del";
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 
     pCheck->mCheckedStyle = filterButtonStyle;
@@ -1258,7 +1312,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck = new ZWinCheck();
     pCheck->SetMessages(ZMessage("filter_favs", this), "");
     pCheck->SetRadioGroup("filter_group");
-    pCheck->SetCaption("favs");
+    pCheck->mCaption.sText = "favs";
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 
     pCheck->mCheckedStyle = filterButtonStyle;
@@ -1312,10 +1366,10 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("F");
-    pBtn->mStyle = unicodeStyle;
-    pBtn->mStyle.pos = ZGUI::C;
-    pBtn->mStyle.paddingV = (int32_t) (-pBtn->mStyle.fp.nHeight/10);
+    pBtn->mCaption.sText = "F";
+    pBtn->mCaption.style = unicodeStyle;
+    pBtn->mCaption.style.pos = ZGUI::C;
+    pBtn->mCaption.style.paddingV = (int32_t) (-pBtn->mCaption.style.fp.nHeight/10);
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "toggle_fullscreen");
     pBtn->SetMessage(sMessage);
@@ -1324,7 +1378,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(-rButton.Width(), 0);
     pCheck = new ZWinCheck(&mbSubsample);
     pCheck->SetMessages(ZMessage("invalidate", this), ZMessage("invalidate", this));
-    pCheck->SetCaption("Q");
+    pCheck->mCaption.sText = "Q";
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 
     pCheck->mCheckedStyle = unicodeStyle;
@@ -1347,9 +1401,9 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(-rButton.Width(), 0);
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->SetCaption("?"); // unicode flip H
-    pBtn->mStyle = filterButtonStyle;
-    pBtn->mStyle.fp.nHeight = nGroupSide / 2;
+    pBtn->mCaption.sText = "?"; // unicode flip H
+    pBtn->mCaption.style = filterButtonStyle;
+    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("show_help", this));
     mpPanel->ChildAdd(pBtn);
@@ -1433,6 +1487,10 @@ void ImageViewer::LoadImageProc(std::filesystem::path& imagePath, shared_ptr<Ima
 //    ZOUT("Loading:", imagePath, "\n");
 
     tZBufferPtr pNewImage(new ZBuffer);
+
+    if (imagePath.extension() == ".svg")
+        pNewImage->Init(100, 100);
+
     if (!pNewImage->LoadBuffer(imagePath.string()))
     {
         pNewImage->Init(1920, 1080);
@@ -2006,15 +2064,15 @@ void ImageViewer::UpdateCaptions()
     // need to make sure panel isn't being reset while updating these
     mPanelMutex.lock();
     if (mpFavsFilterButton)
-        mpFavsFilterButton->SetCaption(sCaption);
+        mpFavsFilterButton->mCaption.sText = sCaption;
 
     Sprintf(sCaption, "%d del", mToBeDeletedImageArray.size());
     if (mpDelFilterButton)
-        mpDelFilterButton->SetCaption(sCaption);
+        mpDelFilterButton->mCaption.sText = sCaption;
  
     Sprintf(sCaption, "%d all", mImageArray.size());
     if (mpAllFilterButton)
-        mpAllFilterButton->SetCaption(sCaption);
+        mpAllFilterButton->mCaption.sText = sCaption;
     mPanelMutex.unlock();
 
 

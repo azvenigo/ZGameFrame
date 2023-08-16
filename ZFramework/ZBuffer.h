@@ -109,6 +109,9 @@ protected:
 	bool                    FloatScanLineIntersection(double fScanLine, const ZColorVertex& v1, const ZColorVertex& v2, double& fIntersection, double& fR, double& fG, double& fB, double& fA);
 	void                    FillInSpan(uint32_t* pDest, int64_t nNumPixels, double fR, double fG, double fB, double fA);
 
+    bool                    LoadFromSVG(const std::string& sName);
+
+
 	uint32_t*               mpPixels;        // The color data
 	ZRect                   mSurfaceArea;
     easyexif::EXIFInfo      mEXIF;

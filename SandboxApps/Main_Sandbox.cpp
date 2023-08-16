@@ -10,6 +10,7 @@
 #include "ZWinSlider.h"
 #include "FloatLinesWin.h"
 #include "TextTestWin.h"
+#include "TestWin.h"
 #include "3DTestWin.h"
 #include "ZChessWin.h"
 #include "Resources.h"
@@ -98,6 +99,9 @@ void Sandbox::InitControlPanel()
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->AddButton("ChessWin", "initchildwindows;mode=8;target=MainAppMessageTarget");
 
+    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
+    gpControlPanel->AddButton("TestWin", "initchildwindows;mode=9;target=MainAppMessageTarget");
+
     gpControlPanel->FitToControls();
 
     gpMainWin->ChildAdd(gpControlPanel);
@@ -125,13 +129,13 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
 
     gRegistry["sandbox"]["mode"] = (int32_t)mode;
 
-/*    if (mode == eSandboxMode::kTestWin)
+    if (mode == eSandboxMode::kTestWin)
     {
         TestWin* pWin = new TestWin();
         pWin->SetArea(grFullArea);
         gpMainWin->ChildAdd(pWin);
 
-    }*/
+    }
     if (mode == eSandboxMode::kFloatLinesWin)
 	{
 
@@ -240,6 +244,13 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
     else if (mode == eSandboxMode::kChessWin)
     {
         ZChessWin* pWin = new ZChessWin();
+        pWin->SetArea(grFullArea);
+        //pWin->SetDemoMode(true);
+        gpMainWin->ChildAdd(pWin);
+    }
+    else if (mode == eSandboxMode::kTestWin)
+    {
+        TestWin* pWin = new TestWin();
         pWin->SetArea(grFullArea);
         //pWin->SetDemoMode(true);
         gpMainWin->ChildAdd(pWin);
@@ -357,6 +368,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 void ZFrameworkApp::Shutdown()
 {
 //    gbApplicationExiting = true;
+    gRegistry.Save();
 
     if (gpMainWin)
     {

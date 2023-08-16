@@ -169,7 +169,9 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
         }
     }
 
-    mrIntersectionWorkArea.SetRect((*mChildImageWins.begin())->mpImage->GetArea());  // set the work area to the first image to generate the result buffer
+    tZBufferPtr pImage = (*mChildImageWins.begin())->mpImage;
+    if (pImage)
+        mrIntersectionWorkArea.SetRect(pImage->GetArea());  // set the work area to the first image to generate the result buffer
     ResetResultsBuffer();
     Process_SelectImage(*filenames.begin());
 

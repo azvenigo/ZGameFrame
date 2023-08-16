@@ -232,7 +232,7 @@ protected:
     eLastAction             mLastAction;
     eCachingState           mCachingState;
 
-    std::list<std::string>  mAcceptedExtensions = { "jpg", "jpeg", "png", "gif", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" };
+    std::list<std::string>  mAcceptedExtensions = { "jpg", "jpeg", "png", "gif", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm", "svg" };
 
     uint32_t                mToggleUIHotkey;
     tZFontPtr               mpSymbolicFont;

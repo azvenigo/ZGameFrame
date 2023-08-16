@@ -296,12 +296,12 @@ bool ZWinCheck::Paint()
     if (*mpbChecked)
     {
         mDrawState = kDown;
-        mStyle= mCheckedStyle;
+        mCaption.style = mCheckedStyle;
     }
     else
     {
         mDrawState = kUp;
-        mStyle = mUncheckedStyle;
+        mCaption.style = mUncheckedStyle;
     }
 
 	return ZWinSizablePushBtn::Paint();
@@ -393,8 +393,10 @@ ZWinSizablePushBtn::ZWinSizablePushBtn()
 	mpDownEdgeImage     = NULL;
 	mDrawState          = kUp;
 	msButtonMessage     = "btn_pressed";
+    mBtnStyle           = gStyleButton;
+    mCaption.style      = gStyleCaption;
+    mSVGImage.style     = gStyleCaption;
 	mbTransformable     = false;
-    mStyle              = gStyleButton;
 }
 
 ZWinSizablePushBtn::~ZWinSizablePushBtn()
@@ -421,14 +423,12 @@ bool ZWinSizablePushBtn::Shutdown()
 
 bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 {
-	msCaption = pNode->GetText();
-	msWinName = pNode->GetAttribute("winname");
+	mCaption.sText = pNode->GetText();
+    mCaption.style = ZGUI::Style(pNode->GetAttribute("style"));
+    msWinName = pNode->GetAttribute("winname");
 
 //	int64_t nFontID = SH::ToInt(pNode->GetAttribute("size"));
     ZFontParams params(pNode->GetAttribute("fontparams"));
-
-    mStyle = ZGUI::Style(pNode->GetAttribute("style"));
-
 
 	msButtonMessage = pNode->GetAttribute("message");
 
@@ -447,10 +447,11 @@ bool ZWinSizablePushBtn::Paint()
 
     if (!mpTransformTexture.get())
         return false;
+
     // experimentally blt parent's buffer to test transparency
     if (mpParentWin && mpParentWin->IsVisible())
     {
-        //        cout << "mpParentWin:" << (uint64_t)mpParentWin;
+        cout << "mpParentWin:" << (uint64_t)mpParentWin << "\n" << std::flush;
         tZBufferPtr parentBuffer = mpParentWin->GetTransformTexture();
         mpTransformTexture.get()->Blt(parentBuffer.get(), mAreaToDrawTo, mpTransformTexture.get()->GetArea());
     }
@@ -470,7 +471,7 @@ bool ZWinSizablePushBtn::Paint()
 
 
 	// Draw the text
-	int64_t nStrlen = msCaption.length();
+/*	int64_t nStrlen = msCaption.length();
 	if (nStrlen > 0)
 	{
         ZRect rText(mAreaToDrawTo);
@@ -481,7 +482,27 @@ bool ZWinSizablePushBtn::Paint()
 			rText.OffsetRect(nOffset,nOffset);
 
 		mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), msCaption, rText, &mStyle);
-	}
+	}*/
+
+    int64_t nOffset = max((int)mCaption.style.fp.nHeight / 16, (int)1);
+    ZRect rCaption = mAreaToDrawTo;
+    if (mDrawState == kDown)
+        rCaption.OffsetRect(nOffset, nOffset);
+
+    mSVGImage.area = rCaption;
+    if (!mSVGImage.Paint(mpTransformTexture.get()))
+    {
+//        cout << "mSVGImage.Paint failed\n" << std::flush;
+        return false;
+    }
+
+    mCaption.area = rCaption;
+    if (!mCaption.Paint(mpTransformTexture.get()))
+    {
+//        cout << "mCaption.Paint failed\n" << std::flush;
+        return false;
+    }
+
 
 	return ZWin::Paint();
 }
@@ -554,14 +575,6 @@ bool ZWinSizablePushBtn::OnMouseHover(int64_t x, int64_t y)
 
     return true;
 }
-
-
-void ZWinSizablePushBtn::SetCaption(const string& sCaption) 
-{ 
-	msCaption = sCaption; 
-    Invalidate();
-}
-
 
 void ZWinSizablePushBtn::SetImages(tZBufferPtr pUpEdgeImage, tZBufferPtr pDownEdgeImage, ZRect rEdge )
 {

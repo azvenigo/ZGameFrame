@@ -322,30 +322,9 @@ void ZWinImage::FitImageToWindow()
     if (!mpImage)
         return;
 
-    // determine initial scale to fit into window
-
-    ZRect rImageArea(mpImage->GetArea());
-
-    double fRatio = (double)rImageArea.Height() / (double)rImageArea.Width();
-
-    int64_t nImageWidth = mArea.Width();
-    int64_t nImageHeight = (int64_t)(nImageWidth * fRatio);
-
-    mfPerfectFitZoom = (double)nImageHeight / (double)rImageArea.Height();
-
-    if (nImageHeight > mArea.Height())
-    {
-        nImageHeight = mArea.Height();
-        nImageWidth = (int64_t) (nImageHeight / fRatio);
-        mfPerfectFitZoom = (double)nImageWidth / (double)rImageArea.Width();
-    }
-
-    int64_t nXOffset = (mArea.Width() - nImageWidth) / 2;
-    int64_t nYOffset = (mArea.Height() - nImageHeight) / 2;
-
-
-    mfZoom = mfPerfectFitZoom;
-    mImageArea.SetRect(nXOffset, nYOffset, nXOffset + nImageWidth, nYOffset + nImageHeight);
+    mImageArea = ZGUI::ScaledFit(mpImage->GetArea(), mArea);
+    mfZoom = (double)mImageArea.Width() / (double)mpImage->GetArea().Width();
+    mfPerfectFitZoom = mfZoom;
 
     mViewState = kFitToWindow;
 

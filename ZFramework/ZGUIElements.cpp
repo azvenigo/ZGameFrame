@@ -5,10 +5,10 @@ using namespace std;
 
 namespace ZGUI
 {
-    void TextBox::Paint(ZBuffer* pDst)
+    bool TextBox::Paint(ZBuffer* pDst)
     {
-        if (sText.empty() || !visible)
-            return;
+        if (sText.empty()/* || !visible*/)
+            return true;
 
         assert(pDst);
         // assuming pDst is locked
@@ -16,7 +16,7 @@ namespace ZGUI
         if (rDraw.Width() == 0 || rDraw.Height() == 0)
             rDraw = pDst->GetArea();
 
-        style.Font()->DrawTextParagraph(pDst, sText, rDraw, &style);
+        return style.Font()->DrawTextParagraph(pDst, sText, rDraw, &style);
     }
 
     void TextBox::Paint(ZBuffer* pDst, tTextboxMap& textBoxMap)
@@ -25,6 +25,64 @@ namespace ZGUI
             t.second.Paint(pDst);
     }
 
+
+    bool SVGImageBox::Load(const std::string& sFilename)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(mDocMutex);
+        
+        mSVGDoc = lunasvg::Document::loadFromFile(sFilename);
+
+        if (!mSVGDoc)
+        {
+            cerr << "Failed to load SVG:" << sFilename << "\n";
+            return false;
+        }
+
+        return true;
+    }
+
+    bool SVGImageBox::Paint(ZBuffer* pDest)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(mDocMutex);
+
+        if (mSVGDoc == nullptr /*|| !visible*/)
+        {
+            return true;
+        }
+
+        ZRect rDest(0,0,mSVGDoc->width(), mSVGDoc->height());
+        rDest = ZGUI::ScaledFit(rDest, area);
+        rDest.DeflateRect(style.paddingH, style.paddingV);
+        rDest = ZGUI::Arrange(rDest, area, style.pos);
+
+        if (mRendered == nullptr || rDest.Width() != mRendered->GetArea().Width() || rDest.Height() != mRendered->GetArea().Height())
+        {
+            mRendered.reset(new ZBuffer());
+            auto svgbitmap = mSVGDoc->renderToBitmap(rDest.Width(), rDest.Height());
+
+            int64_t w = (int64_t)svgbitmap.width();
+            int64_t h = (int64_t)svgbitmap.height();
+            uint32_t s = svgbitmap.stride();
+            ZDEBUG_OUT("Rendering SVG at:", w, "x", h, "\n");
+
+            mRendered->Init(w, h);
+            uint32_t* pPixels = mRendered->GetPixels();
+            for (int64_t y = 0; y < h; y++)
+            {
+                memcpy(pPixels + y * w, svgbitmap.data() + y * s, w * 4);
+            }
+        }
+
+        pDest->Blt(mRendered.get(), mRendered->GetArea(), rDest);
+
+        return true;
+    }
+
+    void SVGImageBox::Paint(ZBuffer* pDst, tSVGImageMap& svgImageBoxMap)
+    {
+        for (auto& i : svgImageBoxMap)
+            i.second.Paint(pDst);
+    }
 
 
 
@@ -179,6 +237,4 @@ namespace ZGUI
 
         return &rowArray[col];
     }
-
-
 };

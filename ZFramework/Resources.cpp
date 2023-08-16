@@ -2,6 +2,8 @@
 #include "Resources.h"
 #include "ZBuffer.h"
 #include "helpers/Registry.h"
+#include "lunasvg.h"
+
 
 using namespace std;
 
