@@ -1082,10 +1082,12 @@ void ImageViewer::UpdateControlPanel()
 
     ZRect rButton(rGroup.left + gnDefaultGroupInlaySize, rGroup.top + gnDefaultGroupInlaySize, rGroup.left + nGroupSide, rGroup.bottom - gnDefaultGroupInlaySize / 2);
 
+    string sAppPath = gRegistry["apppath"];
+
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     //pBtn->mCaption.sText = "X";
-    pBtn->mSVGImage.Load("res/exit.svg");
+    pBtn->mSVGImage.Load(sAppPath+"/res/exit.svg");
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("quit", this));
     mpPanel->ChildAdd(pBtn);
@@ -1100,7 +1102,7 @@ void ImageViewer::UpdateControlPanel()
     //    pBtn->mCaption.sText = "1";  // wingdings open folder
     //    pBtn->mCaption.style = wingdingsStyle;
 
-    pBtn->mSVGImage.Load("res/openfile.svg");
+    pBtn->mSVGImage.Load(sAppPath + "/res/openfile.svg");
     pBtn->SetTooltip("Load Image");
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
@@ -1115,7 +1117,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 //    pBtn->mCaption.sText = "<"; // wingdings save
 //    pBtn->mCaption.style = wingdingsStyle;
-    pBtn->mSVGImage.Load("res/save.svg");
+    pBtn->mSVGImage.Load(sAppPath + "/res/save.svg");
     pBtn->SetTooltip("Save Image");
 
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
@@ -1131,7 +1133,7 @@ void ImageViewer::UpdateControlPanel()
     //    pBtn->mCaption.sText = "1";  // wingdings open folder
     //    pBtn->mCaption.style = wingdingsStyle;
 
-    pBtn->mSVGImage.Load("res/openfolder.svg");
+    pBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
     pBtn->SetTooltip("Go to Folder");
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;

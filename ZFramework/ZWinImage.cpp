@@ -96,6 +96,11 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
         {
             if (SetCapture())
             {
+                if (x < 0)
+                    x = 0;
+                if (y < 0)
+                    y = 0;
+
                 SetMouseDownPos(x,y);
                 return true;
             }
@@ -511,6 +516,10 @@ ZRect ZWinImage::GetSelection()
 
     ZRect rSelection(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x + nMin, mMouseDownOffset.y + nMin);
     rSelection.NormalizeRect();
+    limit<int64_t>(rSelection.left, mImageArea.left, mImageArea.right);
+    limit<int64_t>(rSelection.right, mImageArea.left, mImageArea.right);
+    limit<int64_t>(rSelection.top, mImageArea.top, mImageArea.bottom);
+    limit<int64_t>(rSelection.bottom, mImageArea.top, mImageArea.bottom);
 
     return rSelection;
 }
