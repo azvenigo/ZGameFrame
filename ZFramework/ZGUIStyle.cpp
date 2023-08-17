@@ -42,7 +42,7 @@ namespace ZGUI
         gStyleButton.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
         gStyleToggleChecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
         gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
-        gStyleTooltip.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 70, 10);
+        gStyleTooltip.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 80, 10);
         gStyleCaption.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 55, 10);
 //        gDefaultGroupingStyle.fp.nHeight = grFullArea.Height()/135;
 

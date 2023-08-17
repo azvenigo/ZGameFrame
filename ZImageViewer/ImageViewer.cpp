@@ -1041,16 +1041,17 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    pBtn->mCaption.sText = "X";
+    //pBtn->mCaption.sText = "X";
+    pBtn->mSVGImage.Load("res/exit.svg");
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("quit", this));
     mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize, 0);
-
+    
 
     int64_t nButtonPadding = rButton.Width() / 8;
-
+    
     pBtn = new ZWinSizablePushBtn();
     pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     //    pBtn->mCaption.sText = "1";  // wingdings open folder

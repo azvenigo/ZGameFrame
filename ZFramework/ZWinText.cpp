@@ -41,7 +41,13 @@ bool ZWinLabel::OnMouseHover(int64_t x, int64_t y)
         rTextArea.InflateRect(pTooltipFont->Height()/4, pTooltipFont->Height()/4);
 
 
-        rTextArea.MoveRect(ZPoint(x - rTextArea.Width() + 16, y - rTextArea.Height() + 16));
+        // ensure the tooltip is entirely visible on the window
+        ZPoint pt(x - rTextArea.Width() + 16, y - rTextArea.Height() + 16);
+        limit<int64_t>(pt.x, grFullArea.left, grFullArea.right - rTextArea.Width());
+        limit<int64_t>(pt.y, grFullArea.top, grFullArea.bottom - rTextArea.Height());
+
+
+        rTextArea.MoveRect(pt);
         pWin->SetArea(rTextArea);
 
         GetTopWindow()->ChildAdd(pWin);
@@ -114,7 +120,12 @@ ZWinLabel* ZWinLabel::ShowTooltip(ZWin* pMainWin, const std::string& sTooltip, c
     rTextArea.InflateRect(pTooltipFont->Height() / 4, pTooltipFont->Height() / 4);
 
 
-    rTextArea.MoveRect(ZPoint(gInput.lastMouseMove.x - rTextArea.Width() + pTooltipFont->Height() / 4, gInput.lastMouseMove.y - rTextArea.Height() + pTooltipFont->Height() / 4));
+    // ensure the tooltip is entirely visible on the window
+    ZPoint pt(gInput.lastMouseMove.x - rTextArea.Width() + pTooltipFont->Height() / 4, gInput.lastMouseMove.y - rTextArea.Height() + pTooltipFont->Height() / 4);
+    limit<int64_t>(pt.x, grFullArea.left, grFullArea.right - rTextArea.Width());
+    limit<int64_t>(pt.y, grFullArea.top, grFullArea.bottom - rTextArea.Height());
+
+    rTextArea.MoveRect(pt);
     pWin->SetArea(rTextArea);
 
     if (pMainWin->ChildAdd(pWin))
