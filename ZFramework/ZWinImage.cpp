@@ -485,7 +485,7 @@ bool ZWinImage::Paint()
         }
     }
 
-    if ((mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
+    if (AmCapturing() && (mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
     {
         mpTransformTexture->FillAlpha(GetSelection(), 0x88555588);
     }
