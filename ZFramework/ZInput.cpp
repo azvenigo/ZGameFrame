@@ -88,6 +88,8 @@ void ZInput::OnRButtonUp(int64_t x, int64_t y)
 
 void ZInput::OnRButtonDown(int64_t x, int64_t y)
 {
+    mouseDown.Set(x, y);
+
     ZMessage cursorMessage;
     cursorMessage.SetType("cursor_msg");
     cursorMessage.SetParam("subtype", "r_down");

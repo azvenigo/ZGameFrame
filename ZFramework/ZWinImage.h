@@ -19,6 +19,7 @@ public:
         kHotkeyZoom             = 1 << 2,   // 4
         kShowZoomCaption        = 1 << 3,   // 8
         kShowCaption            = 1 << 4,   // 16
+        kSelectableArea         = 1 << 5,   // 32
     };
 
     enum eViewState : uint32_t
@@ -82,6 +83,9 @@ public:
 
 protected:
     bool HandleMessage(const ZMessage& message);
+    ZRect GetSelection();   // in window
+    void ToImageCoords(ZRect& r);   // compute image coords
+
 
 private:
     double              mfZoom;

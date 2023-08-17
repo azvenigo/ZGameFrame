@@ -73,6 +73,13 @@ bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 {
     if (AmCapturing())
     {
+        if ((mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
+        {
+            ZRect rSelection = GetSelection();
+            ToImageCoords(rSelection);
+            gMessageSystem.Post("image_selection", mpParentWin, "r", RectToString(rSelection));
+        }
+
         Invalidate();
         ReleaseCapture();
     }
@@ -85,6 +92,14 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 {
     if (mpImage)
     {
+        if ((mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
+        {
+            if (SetCapture())
+            {
+                SetMouseDownPos(x,y);
+                return true;
+            }
+        }
 
         easyexif::EXIFInfo& exif = mpImage->GetEXIF();
         bool bHasGeoLocation = exif.GeoLocation.Latitude != 0.0 || exif.GeoLocation.Longitude != 0.0;
@@ -158,6 +173,12 @@ bool ZWinImage::OnMouseMove(int64_t x, int64_t y)
 
     if (AmCapturing())
     {
+        if ((mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
+        {
+            Invalidate();   // paint function to show highlight
+            return true;
+        }
+
         int32_t dX = (int32_t) (x+mMouseDownOffset.x);
         int32_t dY = (int32_t) (y+mMouseDownOffset.y);
         ScrollTo(dX, dY);
@@ -459,6 +480,13 @@ bool ZWinImage::Paint()
         }
     }
 
+    if ((mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
+    {
+        mpTransformTexture->FillAlpha(GetSelection(), 0x88555588);
+    }
+
+
+
     if ((mBehavior & kShowCaption) != 0)
     {
         ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);
@@ -474,6 +502,32 @@ bool ZWinImage::Paint()
 
 	return ZWin::Paint();
 }
+
+ZRect ZWinImage::GetSelection()
+{
+    int64_t nW = abs(mMouseDownOffset.x - gInput.lastMouseMove.x);
+    int64_t nH = abs(mMouseDownOffset.y - gInput.lastMouseMove.y);
+    int64_t nMin = min<int64_t>(nW, nH);
+
+    ZRect rSelection(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x + nMin, mMouseDownOffset.y + nMin);
+    rSelection.NormalizeRect();
+
+    return rSelection;
+}
+
+void ZWinImage::ToImageCoords(ZRect& r)
+{
+    r.OffsetRect(-mImageArea.left, -mImageArea.top);
+    int64_t nW = r.Width();
+    int64_t nH = r.Height();
+
+    r.left /= mfZoom;
+    r.top /= mfZoom;
+
+    r.right = r.left + (nW / mfZoom);
+    r.bottom = r.top + (nH / mfZoom);
+}
+
 
 bool ZWinImage::HandleMessage(const ZMessage& message)
 {

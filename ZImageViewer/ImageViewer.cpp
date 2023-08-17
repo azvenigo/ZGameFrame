@@ -354,6 +354,45 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         InvalidateChildren();
         return true;
     }
+    else if (sType == "image_selection")
+    {
+        ZRect rSelection = StringToRect(message.GetParam("r"));
+
+        ZOUT("Rect Selected:", message.GetParam("r"), "\n");
+        string sFolder;
+        gRegistry.Get("ZImageViewer", "selectionsave", sFolder);
+
+        filesystem::path fileName(EntryFromIndex(mViewingIndex)->filename.filename());
+        fileName.replace_extension(".png");
+        string sFilename = fileName.string();
+
+        if (ZWinFileDialog::ShowSaveDialog("Images", "*.png;*.jpg;*.jpeg;*.tga;*.bmp;*.hdr", sFilename, sFolder))
+        {
+            ZRect rSourceImage(mpWinImage->mpImage->GetArea());
+
+            ZBuffer imageSelection;
+            imageSelection.Init(rSelection.Width(), rSelection.Height());
+            imageSelection.Blt(mpWinImage->mpImage.get(), rSelection, imageSelection.GetArea(), 0, ZBuffer::kAlphaSource);
+
+            ZBuffer image256;
+            image256.Init(256, 256);
+            image256.Fill(image256.GetArea(), 0xff000000);
+
+
+            tUVVertexArray verts;
+            gRasterizer.RectToVerts(image256.GetArea(), verts);
+            gRasterizer.MultiSampleRasterizeWithAlpha(&image256, &imageSelection, verts, &image256.GetArea(), 5);
+
+            image256.SaveBuffer(sFilename);
+            //        imageSelection.SaveBuffer(sFilename);
+
+            filesystem::path folder(sFilename);
+            gRegistry.Set("ZImageViewer", "selectionsave", folder.parent_path().string());
+        }
+
+        InvalidateChildren();
+        return true;
+    }
 
     if (mpWinImage && mpWinImage->mpImage)
     {
@@ -506,6 +545,10 @@ void ImageViewer::ShowHelpDialog()
     pForm->AddMultiLine("Use 'UNDO' to undo the previous toggle or move.", text.fp, text.look, ZGUI::LT);
 
     pForm->AddMultiLine("\nYou can also use 'M' to quickly set a destination folder. Afterward 'M' will instantly move the image to that destination. (UNDO is available for this as well.)", text.fp, text.look, ZGUI::LT);
+
+    pForm->AddMultiLine("\nAI Training Images", sectionText.fp, sectionText.look, ZGUI::LT);
+    pForm->AddMultiLine("Hold SHIFT and left drag a selection rectangle to crop/resize to 256x256 and save the result. This is for quickly generating training data for Dreambooth....maybe others.", text.fp, text.look, ZGUI::LT);
+
 
 
     pForm->Invalidate();
@@ -930,7 +973,7 @@ bool ImageViewer::Init()
         mpWinImage->SetArea(rImageArea);
         mpWinImage->mFillColor = 0xff000000;
         mpWinImage->mZoomHotkey = VK_MENU;
-        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable;
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable|ZWinImage::kSelectableArea;
 
 //        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
 

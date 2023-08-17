@@ -234,6 +234,7 @@ namespace ZWinFileDialog
 
     bool ShowSaveDialog(std::string fileTypeDescription, std::string fileTypes, std::string& sFilenameResult, std::string sDefaultFolder)
     {
+        wstring sPresetFilename(SH::string2wstring(sFilenameResult));
         wstring sFileTypeDescription(SH::string2wstring(fileTypeDescription));
         wstring sFileTypes(SH::string2wstring(fileTypes));
 
@@ -256,6 +257,9 @@ namespace ZWinFileDialog
                 };
 
                 pDialog->SetFileTypes(2, rgSpec);
+                if (!sPresetFilename.empty())
+                    pDialog->SetFileName(sPresetFilename.c_str());
+
 
                 if (!sDefaultFolder.empty())
                 {
