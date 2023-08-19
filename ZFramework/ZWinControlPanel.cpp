@@ -80,7 +80,7 @@ ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, co
 
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
-    pCheck->SetRadioGroup(sRadioGroup);
+    pCheck->msWinGroup = sRadioGroup;
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pCheck->mCaption.sText = sCaption;
     pCheck->SetArea(mrNextControl);

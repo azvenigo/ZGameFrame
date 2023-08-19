@@ -196,13 +196,6 @@ void ZWin::TransformOut()
 }
 
 
-void ZWin::SetWinName(const string& sWinName) 
-{
-	ZASSERT_MESSAGE(!mbInitted, "Window name must be set before init for message target registration.");
-	msWinName = sWinName; 
-}
-
-
 void  ZWin::CalcAbsoluteArea() 
 {
 	ZRect tempArea( mArea );
@@ -389,7 +382,7 @@ ZWin* ZWin::GetChildWindowByWinName(const string& sWinName)
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     for (tWinList::iterator it = mChildList.begin(); it != mChildList.end(); it++)
 	{
-		if ((*it)->GetWinName() == sWinName)
+		if ((*it)->msWinName == sWinName)
 			return *it;
 	}
 
@@ -719,7 +712,7 @@ string ZWin::GetFullWinName()
 	while (pParent)
 	{
 		string sCur = sFullName;
-		sFullName = pParent->GetWinName();
+		sFullName = pParent->msWinName;
 		sFullName += string(".");
 		sFullName += sCur;
 

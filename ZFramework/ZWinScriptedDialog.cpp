@@ -202,7 +202,7 @@ bool ZWinScriptedDialog::ExecuteScript(string sDialogScript)
 		return false;
 
 	// Window Attributes
-	SetWinName(pDialogNode->GetAttribute(ksElementWinName));
+	msWinName = pDialogNode->GetAttribute(ksElementWinName);
 	if (pDialogNode->HasAttribute(ksTransformable))
 		mbTransformable	= SH::ToBool(pDialogNode->GetAttribute(ksTransformable));
 
@@ -276,9 +276,7 @@ bool ZWinScriptedDialog::ProcessNode(ZXMLNode* pNode)
 	string sComponent = pNode->GetName();
 
 	// Set the window name if there is one
-	string sWinName = pNode->GetAttribute(ksElementWinName);
-	if (!sWinName.empty())
-		SetWinName(sWinName);
+    msWinName = pNode->GetAttribute(ksElementWinName);
 
 	if (sComponent == ksElementTextWin)
 	{

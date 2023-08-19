@@ -92,9 +92,7 @@ public:
 	virtual void		SetVisible(bool bVisible = true);
     virtual bool		IsVisible() { return mbVisible; }
 	
-    std::string&        GetWinName() { return msWinName; }
     std::string         GetFullWinName();		// returns the fully qualified name all the way up the parental chain.  Example: A.B.C.D or main.quitdialog.ok
-	void				SetWinName(const std::string& sWinName);
 	const ZPoint&		GetLastMouseMove();
 	
 	ZWin*				GetChildWindowByWinName(const std::string& sWinName);
@@ -161,8 +159,6 @@ protected:
 
 
 protected:
-
-    std::string						msWinName;
 	ZRect   						mAreaAbsolute;
 	ZRect   						mAreaToDrawTo;
 	ZPoint  						mMouseDownOffset;
@@ -177,7 +173,11 @@ protected:
 	tMessageList					mMessages;
 
 public:
-	// Flags
+    std::string						msWinName;
+    std::string                     msWinGroup; // optional for organizational purposes
+
+    
+    // Flags
 	bool							mbVisible;
 	bool							mbAcceptsCursorMessages;
 	bool							mbTransformable;

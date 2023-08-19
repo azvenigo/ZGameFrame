@@ -171,7 +171,6 @@ public:  // ZWinCheck ///////////////////////////////////////////////////////
 	bool					GetState() { return *mpbChecked; }
 	void					SetState(bool bChecked, bool bPostNotifications = true);
 	void					SetMessages(const std::string& sCheckMessage, const std::string sUncheckMessage) { msButtonMessage = sCheckMessage; msUncheckMessage = sUncheckMessage; }
-    void                    SetRadioGroup(const std::string& sRadioGroupName); // If part of a radio group, when any other in the same group is checked, automatically unchecks
 
     // Style
     ZGUI::Style             mCheckedStyle;
@@ -183,7 +182,6 @@ protected:
     bool*					mpbChecked;
     bool                    mbInternal;     // if control has no external bool, keep it internal
 	std::string				msUncheckMessage;
-    std::string             msRadioGroupName;
 };
 
 

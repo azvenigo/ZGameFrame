@@ -467,7 +467,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
 void ImageViewer::ShowHelpDialog()
 {
     ZWinDialog* pHelp = new ZWinDialog();
-    pHelp->SetWinName("ImageViewerHelp");
+    pHelp->msWinName = "ImageViewerHelp";
     pHelp->mbAcceptsCursorMessages = true;
     pHelp->mbAcceptsFocus = true;
 
@@ -1318,7 +1318,7 @@ void ImageViewer::UpdateControlPanel()
     ZWinCheck* pCheck = new ZWinCheck();
     pCheck->SetState(true, false);
     pCheck->SetMessages(ZMessage("filter_all", this), "");
-    pCheck->SetRadioGroup("filter_group");
+    pCheck->msWinGroup = "filter_group";
     pCheck->mCaption.sText = "all";
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 
@@ -1337,7 +1337,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
     pCheck = new ZWinCheck();
     pCheck->SetMessages(ZMessage("filter_del", this), "");
-    pCheck->SetRadioGroup("filter_group");
+    pCheck->msWinGroup = "filter_group";
     pCheck->mCaption.sText = "del";
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 
@@ -1357,7 +1357,7 @@ void ImageViewer::UpdateControlPanel()
 
     pCheck = new ZWinCheck();
     pCheck->SetMessages(ZMessage("filter_favs", this), "");
-    pCheck->SetRadioGroup("filter_group");
+    pCheck->msWinGroup = "filter_group";
     pCheck->mCaption.sText = "favs";
     pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 

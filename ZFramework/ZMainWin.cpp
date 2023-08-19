@@ -121,7 +121,7 @@ bool ZMainWin::HandleMessage(const ZMessage& message)
 void ZMainWin::ShowMessageBox(std::string caption, std::string text, std::string onOKMessage)
 {
     ZWinDialog* pMsgBox = new ZWinDialog();
-    pMsgBox->SetWinName("MessageBox");
+    pMsgBox->msWinName = "MessageBox";
     pMsgBox->mbAcceptsCursorMessages = true;
     pMsgBox->mbAcceptsFocus = true;
 

@@ -88,7 +88,7 @@ bool cProcessImageWin::RemoveImage(const std::string& sFilename)
 
     for (auto pWin : mChildImageWins)
     {
-        if (pWin->GetWinName() == sFilename)
+        if (pWin->msWinName == sFilename)
         {
             ChildDelete(pWin);
             mChildImageWins.remove(pWin);
@@ -138,7 +138,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
         // check that this image isn't already loaded
         for (auto pImageWins : mChildImageWins)
         {
-            if (pImageWins->GetWinName() == filename)
+            if (pImageWins->msWinName == filename)
             {
                 bAlreadyLoaded = true;
                 break;
@@ -151,8 +151,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
             pOriginalImageWin->SetArea(mrThumbnailSize);
             if (pOriginalImageWin->LoadImage(filename))
             {
-                pOriginalImageWin->SetWinName(filename);
-
+                pOriginalImageWin->msWinName = filename;
 
                 Sprintf(pOriginalImageWin->msMouseUpLMessage, "selectimg;name=%s;target=imageprocesswin", filename.c_str());
                 Sprintf(pOriginalImageWin->msCloseButtonMessage, "closeimg;name=%s;target=imageprocesswin", filename.c_str());
@@ -234,7 +233,7 @@ void cProcessImageWin::Process_SelectImage(string sImageName)
 {
     for (auto pWin : mChildImageWins)
     {
-        if (pWin->GetWinName() == sImageName)
+        if (pWin->msWinName == sImageName)
         {
             mrIntersectionWorkArea.SetRect(pWin->mpImage.get()->GetArea());
 
@@ -1225,7 +1224,7 @@ void cProcessImageWin::UpdatePrefs()
 {
     std::list<string> filenames;
     for (auto pWin : mChildImageWins)
-        filenames.push_back(pWin->GetWinName());
+        filenames.push_back(pWin->msWinName);
 
     gRegistry["ProcessImageWin"]["images"] = filenames;
 }
