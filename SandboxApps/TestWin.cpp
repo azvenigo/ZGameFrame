@@ -33,14 +33,14 @@ bool TestWin::Init()
     ZWinSlider* pWin = new ZWinSlider(&mnSliderVal);
     pWin->SetArea(ZRect(500, 1800, 1900, 1850));
     pWin->SetSliderRange(0, 1000, 2, 0.5);
-    pWin->SetBehavior(ZWinSlider::kDrawSliderValueOnMouseOver | ZWinSlider::kHorizontal, gStyleButton.Font());
+    pWin->mBehavior = ZWinSlider::kDrawSliderValueOnMouseOver;
 
     ChildAdd(pWin);
 
     pWin = new ZWinSlider(&mnSliderVal);
     pWin->SetArea(ZRect(2000, 100, 2060, 1150));
     pWin->SetSliderRange(10, 20000, 1, 0.2);
-    pWin->SetBehavior(ZWinSlider::kDrawSliderValueAlways| ZWinSlider::kVertical, gStyleButton.Font());
+    pWin->mBehavior = ZWinSlider::kDrawSliderValueAlways;
     ChildAdd(pWin);
 
 

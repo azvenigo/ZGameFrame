@@ -246,7 +246,7 @@ void ZWinFormattedText::UpdateScrollbar()
         if (!mpWinSlider)
         {
             mpWinSlider = new ZWinSlider(&mnSliderVal);
-            mpWinSlider->SetBehavior(ZWinSlider::kInvalidateOnMove| ZWinSlider::kVertical);
+            mpWinSlider->mBehavior = ZWinSlider::kInvalidateOnMove;
             mpWinSlider->Init();
             mpWinSlider->SetArea(ZRect(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height()));
             ChildAdd(mpWinSlider);

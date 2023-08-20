@@ -3,6 +3,7 @@
 #include "ZDebug.h"
 #include "ZGraphicSystem.h"
 #include "ZStringHelpers.h"
+#include "ZGUIStyle.h"
 #include "Resources.h"
 #include "ZInput.h"
 
@@ -16,8 +17,7 @@ using namespace std;
 
 ZWinSlider::ZWinSlider(int64_t* pnSliderValue)
 {
-	mpBufSliderThumb = NULL;
-	mpBufSliderBackground = NULL;
+    mStyle = gStyleButton;
 
 	mpnSliderValue = pnSliderValue;	// bound value
 	mnSliderUnscaledValMin = 0;
@@ -25,7 +25,7 @@ ZWinSlider::ZWinSlider(int64_t* pnSliderValue)
     mnSliderValScalar = 1;
     mfThumbSizeRatio = 0.1;
 
-    mBehavior = kVertical|kInvalidateOnMouseUp|kDrawSliderValueOnMouseOver;
+    mBehavior = kInvalidateOnMouseUp|kDrawSliderValueOnMouseOver;
     mbInvalidateParentWhenInvalid = true;
 }
 
@@ -36,21 +36,6 @@ ZWinSlider::~ZWinSlider()
 bool ZWinSlider::Init()
 {
 	mbAcceptsCursorMessages = true;
-
-    if (!mpBufSliderThumb)
-    {
-        if (mBehavior & kHorizontal)
-            mpBufSliderThumb = gSliderThumbHorizontal;
-        else
-            mpBufSliderThumb = gSliderThumbVertical;
-        mrEdgeThumb = grSliderThumbEdge;
-    }
-
-    if (!mpBufSliderBackground)
-    {
-        mpBufSliderBackground = gSliderBackground;
-        mrEdgeBackground = grSliderBgEdge;
-    }
 
 	return ZWin::Init();
 }
@@ -87,7 +72,7 @@ bool ZWinSlider::OnMouseDownL(int64_t x, int64_t y)
         return true;
     }
 
-	if (mBehavior & kVertical)
+	if (IsVertical())
 	{
 		if (y < rThumbRect.top)
 			SetSliderValue((*mpnSliderValue - PageSize()));
@@ -128,7 +113,7 @@ int64_t ZWinSlider::WindowToScaledValue(int64_t x, int64_t y)
 {
     double fNormalizedValue;
     int64_t nThumbSize = ThumbSize();
-    if (mBehavior & kVertical)
+    if (IsVertical())
         fNormalizedValue = (double)(y - mAreaToDrawTo.top - nThumbSize/2) / ((double)mAreaToDrawTo.Height() - nThumbSize);
     else
         fNormalizedValue = (double)(x - mAreaToDrawTo.left - nThumbSize/2) / ((double)mAreaToDrawTo.Width() - nThumbSize);
@@ -153,7 +138,7 @@ ZPoint ZWinSlider::ScaledValueToWindowPosition(int64_t val)
         double fNormalizedValue = (double)(nUnscaledVal-mnSliderUnscaledValMin) / nUnscaledValRange;
         limit<double>(fNormalizedValue, 0.0, 1.0);
         int64_t nThumbSize = ThumbSize();
-        if (mBehavior & kVertical)
+        if (IsVertical())
             pt.y = mAreaToDrawTo.top + fNormalizedValue * (double)(mAreaToDrawTo.Height() - nThumbSize);
         else
             pt.x = mAreaToDrawTo.left + fNormalizedValue * (double)(mAreaToDrawTo.Width() - nThumbSize);
@@ -180,7 +165,7 @@ bool ZWinSlider::OnMouseMove(int64_t x, int64_t y)
 bool ZWinSlider::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 {
     // for vertical slider, wheel forward is up.... for horizontal, wheel forward is right
-    if (mBehavior & kVertical)
+    if (IsVertical())
         nDelta = -nDelta;
 
     if (nDelta > 0)
@@ -214,26 +199,45 @@ bool ZWinSlider::Paint()
 	if (!mbInvalid || !mbInitted|| !mpTransformTexture.get())
 		return false;
 
+    tZBufferPtr pThumb = mCustomSliderThumb;
+    ZRect rThumbEdge = mrCustomThumbEdge;
+    if (!pThumb)
+    {
+        if (IsVertical())
+            pThumb = gSliderThumbVertical;
+        else
+            pThumb = gSliderThumbHorizontal;
+        rThumbEdge = grSliderThumbEdge;
+    }
+
+    tZBufferPtr pBackground = mCustomSliderBackground;
+    ZRect rBackgroundEdge = mrCustomBackgroundEdge;
+    if (!pBackground)
+    {
+        pBackground = gSliderBackground;
+        rBackgroundEdge = grSliderBgEdge;
+    }
+
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
    
-    mpTransformTexture.get()->BltEdge(mpBufSliderBackground.get(), mrEdgeBackground, mAreaToDrawTo);
+    mpTransformTexture.get()->BltEdge(pBackground.get(), rBackgroundEdge, mAreaToDrawTo);
 
 	ZRect rThumb(ThumbRect());
 	rThumb.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
-    mpTransformTexture.get()->BltEdge(mpBufSliderThumb.get(), mrEdgeThumb, rThumb);
+    mpTransformTexture.get()->BltEdge(pThumb.get(), rThumbEdge, rThumb);
 
 
     bool bDrawLabel = mBehavior & kDrawSliderValueAlways;
     bDrawLabel |= (mBehavior & kDrawSliderValueOnMouseOver && (gInput.mouseOverWin == this || gInput.captureWin == this));
 
-	if (bDrawLabel && mpFont)
+	if (bDrawLabel)
 	{
 		string sLabel;
 		Sprintf(sLabel, "%d", *mpnSliderValue);
-		ZRect rText(mpFont->Arrange(rThumb, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center));
-        mpFont->DrawText(mpTransformTexture.get(), sLabel, rText, &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff));
+        
+        mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), sLabel, rThumb, &mStyle);
 	}
 
 
@@ -245,15 +249,28 @@ int64_t ZWinSlider::ThumbSize()
 {
     int64_t nThumbSize = 0;
 
-    if (mBehavior & kVertical)
+    tZBufferPtr pThumb = mCustomSliderThumb;
+    ZRect rThumbEdge = mrCustomThumbEdge;
+    if (!pThumb)
+    {
+        if (IsVertical())
+            pThumb = gSliderThumbVertical;
+        else
+            pThumb = gSliderThumbHorizontal;
+        rThumbEdge = grSliderThumbEdge;
+    }
+
+
+
+    if (IsVertical())
     {
         nThumbSize = mAreaToDrawTo.Height() * mfThumbSizeRatio;
-        limit <int64_t>(nThumbSize, grSliderThumbEdge.top + mpBufSliderThumb->GetArea().Height() - grSliderThumbEdge.bottom, mAreaToDrawTo.Height());
+        limit <int64_t>(nThumbSize, rThumbEdge.top + pThumb->GetArea().Height() - rThumbEdge.bottom, mAreaToDrawTo.Height());
     }
     else
     {
         nThumbSize = mAreaToDrawTo.Width() * mfThumbSizeRatio;
-        limit <int64_t>(nThumbSize, grSliderThumbEdge.left + mpBufSliderThumb->GetArea().Width() - grSliderThumbEdge.right, mAreaToDrawTo.Width());
+        limit <int64_t>(nThumbSize, rThumbEdge.left + pThumb->GetArea().Width() - rThumbEdge.right, mAreaToDrawTo.Width());
     }
 
 
@@ -265,7 +282,7 @@ ZRect ZWinSlider::ThumbRect()
     ZPoint sliderPt = ScaledValueToWindowPosition(*mpnSliderValue);
     int64_t nThumbSize = ThumbSize();
 
-	if (mBehavior & kVertical)
+	if (IsVertical())
 	{
 		int64_t nSliderTop = sliderPt.y;
 		int64_t nSliderBottom = nSliderTop + nThumbSize;
@@ -280,18 +297,30 @@ ZRect ZWinSlider::ThumbRect()
 
 int64_t ZWinSlider::PageSize()
 {
+    tZBufferPtr pThumb = mCustomSliderThumb;
+    ZRect rThumbEdge = mrCustomThumbEdge;
+    if (!pThumb)
+    {
+        if (IsVertical())
+            pThumb = gSliderThumbVertical;
+        else
+            pThumb = gSliderThumbHorizontal;
+        rThumbEdge = grSliderThumbEdge;
+    }
+
+
     double fThumbGUIRatio;
     int64_t nThumbSize;
-    if (mBehavior & kVertical)
+    if (IsVertical())
     {
         nThumbSize = mAreaToDrawTo.Height() * mfThumbSizeRatio;
-        limit <int64_t>(nThumbSize, grSliderThumbEdge.top + mpBufSliderThumb->GetArea().Height() - grSliderThumbEdge.bottom, mAreaToDrawTo.Height());
+        limit <int64_t>(nThumbSize, rThumbEdge.top + pThumb->GetArea().Height() - rThumbEdge.bottom, mAreaToDrawTo.Height());
         fThumbGUIRatio = (double)nThumbSize / (double)mAreaToDrawTo.Height();
     }
     else
     {
         nThumbSize = mAreaToDrawTo.Width() * mfThumbSizeRatio;
-        limit <int64_t>(nThumbSize, grSliderThumbEdge.left + mpBufSliderThumb->GetArea().Width() - grSliderThumbEdge.right, mAreaToDrawTo.Width());
+        limit <int64_t>(nThumbSize, rThumbEdge.left + pThumb->GetArea().Width() - rThumbEdge.right, mAreaToDrawTo.Width());
         fThumbGUIRatio = (double)nThumbSize / (double)mAreaToDrawTo.Width();
     }
 
@@ -314,20 +343,3 @@ void ZWinSlider::SetSliderValue(int64_t nVal)
     }
 }
 
-void ZWinSlider::SetSliderImages(tZBufferPtr pBufSliderThumb, ZRect rEdgeThumb, tZBufferPtr pBufSliderBackground, ZRect& rEdgeBackground)
-{
-    ZASSERT(pBufSliderThumb);
-    ZASSERT(pBufSliderBackground);
-
-    mpBufSliderBackground = pBufSliderBackground;
-    mpBufSliderThumb = pBufSliderThumb;
-
-    mrEdgeBackground = rEdgeBackground;
-    mrEdgeThumb = rEdgeThumb;
-}
-
-void ZWinSlider::SetBehavior(uint32_t behavior_flags, tZFontPtr pFont)
-{
-    mBehavior = behavior_flags;
-    mpFont = pFont;
-}

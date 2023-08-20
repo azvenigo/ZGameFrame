@@ -52,8 +52,7 @@ public:
                                 double fThumbSizeRatio = 0.1,
                                 const std::string& sMessage = "", 
                                 bool bDrawValue = false, 
-                                bool bMouseOnlyDrawValue = false, 
-                                tZFontPtr pFont = nullptr);
+                                bool bMouseOnlyDrawValue = false);
 
     void                AddGrouping(const std::string& sCaption, const ZRect& rArea, const ZGUI::Style& groupingStyle = gDefaultGroupingStyle);
 

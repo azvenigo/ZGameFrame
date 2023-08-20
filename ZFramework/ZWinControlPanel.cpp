@@ -84,17 +84,15 @@ ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, co
 }
 
 
-ZWinSlider* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, double fThumbSizeRatio, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue, tZFontPtr pFont)
+ZWinSlider* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, double fThumbSizeRatio, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue)
 {
     ZWinSlider* pSlider = new ZWinSlider(pnSliderValue);
     pSlider->SetArea(mrNextControl);
 
-    uint32_t nBehavior = ZWinSlider::kHorizontal;
     if (bDrawValue && bMouseOnlyDrawValue)
-        nBehavior |= ZWinSlider::kDrawSliderValueOnMouseOver;
+        pSlider->mBehavior |= ZWinSlider::kDrawSliderValueOnMouseOver;
     else if (bDrawValue)
-        nBehavior |= ZWinSlider::kDrawSliderValueAlways;
-    pSlider->SetBehavior(nBehavior, pFont);
+        pSlider->mBehavior |= ZWinSlider::kDrawSliderValueAlways;
 
     pSlider->Init();
     pSlider->SetSliderRange(nMin, nMax, nMultiplier, fThumbSizeRatio);
