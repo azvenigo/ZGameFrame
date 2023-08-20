@@ -612,12 +612,12 @@ bool ZChessWin::Init()
         ZGUI::ZTextLook buttonLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
         ZGUI::ZTextLook checkedButtonLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff73ff73);
 
-        ZWin* pEditButton = pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this), "");
+        ZWin* pEditButton = pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this));
 
 
         pCP->AddSpace(panelH / 30);
 //        pCP->AddButton("Load Random Game", ZMessage("randgame", this));
-        pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg, "");
+        pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg);
 
         pCP->AddCaption("Animation Speed");
         pCP->AddSlider(&mAutoplayMSBetweenMoves, kAutoplayMinMSBetweenMoves, kAutoplayMaxMSBetweenMoves, 1);

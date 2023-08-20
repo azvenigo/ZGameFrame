@@ -42,11 +42,8 @@ public:
 
     ZWinCheck*          AddToggle(  bool* pbValue,
                                 const std::string& sCaption, 
-                                const std::string& sCheckMessage, 
-                                const std::string& sUncheckMessage,         
-                                const std::string& sRadioGroup,             // If part of a radio group, all others in the group get auto unchecked
-                                const ZGUI::Style& checkedStyle = gStyleToggleChecked,
-                                const ZGUI::Style& uncheckedStyle = gStyleToggleUnchecked);
+                                const std::string& sCheckMessage = "", 
+                                const std::string& sUncheckMessage = "");
 
     ZWinSlider*         AddSlider(  int64_t* pnSliderValue,
                                 int64_t nMin, 

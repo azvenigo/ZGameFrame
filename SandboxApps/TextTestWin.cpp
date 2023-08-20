@@ -198,15 +198,15 @@ bool TextTestWin::Init()
     pCP->AddCaption("Fixed Width");
     pCP->AddSlider(&mCustomFontParams.nFixedWidth, 0, 200, 1, 0.1, "setcustomfont;target=TextTestWin", true, false, gStyleButton.Font());
 
-    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
+    pCP->AddToggle(&mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin");
 
-    pCP->AddToggle(&mCustomFontParams.bSymbolic, "Symbolic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin", "");
+    pCP->AddToggle(&mCustomFontParams.bSymbolic, "Symbolic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin");
 
 
 
     pCP->AddSpace(16);
 
-    pCP->AddToggle(&mbEnableKerning, "View Kerning", "togglekerning;enable=1;target=TextTestWin", "togglekerning;enable=0;target=TextTestWin", "");
+    pCP->AddToggle(&mbEnableKerning, "View Kerning", "togglekerning;enable=1;target=TextTestWin", "togglekerning;enable=0;target=TextTestWin");
     pCP->AddSpace(16);
 
     pCP->AddButton("Load Font", "loadfont;target=TextTestWin");

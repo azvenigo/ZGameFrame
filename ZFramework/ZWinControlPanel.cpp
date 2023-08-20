@@ -69,17 +69,14 @@ ZWinLabel* ZWinControlPanel::AddCaption(const std::string& sCaption)
 }
 
 
-ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage, const std::string& sRadioGroup, const ZGUI::Style& checkedStyle, const ZGUI::Style& uncheckedStyle)
+ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage)
 {
     ZASSERT(mbInitted);
 
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
-    pCheck->msWinGroup = sRadioGroup;
     pCheck->mCaption.sText = sCaption;
     pCheck->SetArea(mrNextControl);
-    pCheck->mCheckedStyle = checkedStyle;
-    pCheck->mUncheckedStyle = uncheckedStyle;
     ChildAdd(pCheck);
 
     mrNextControl.OffsetRect(0, mrNextControl.Height());

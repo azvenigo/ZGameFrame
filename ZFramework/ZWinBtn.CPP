@@ -258,6 +258,10 @@ bool ZWinPushBtn::OnMouseMove(int64_t x, int64_t y)
 ///////////////////////////////////////////////////////////////////////////////
 ZWinCheck::ZWinCheck(bool* pbChecked)
 {
+   
+    mCheckedStyle = gStyleToggleChecked;
+    mUncheckedStyle = gStyleToggleUnchecked;
+
     mbInternal = false;
 
     if (!pbChecked)

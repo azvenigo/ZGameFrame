@@ -12,6 +12,7 @@
 #include "ZWinControlPanel.h"
 #include "Resources.h"
 #include "helpers/Registry.h"
+#include "ZWinBtn.H"
 #include "ZInput.h"
 
 using namespace std;
@@ -1053,10 +1054,17 @@ bool Z3DTestWin::Init()
         ZGUI::ZTextLook toggleLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
         pCP->AddSpace(16);
-        pCP->AddToggle(&mbRenderCube, "Render Cube", "", "", "rendermode");
-        pCP->AddToggle(&mbRenderSpheres, "Render Spheres", "", "", "rendermode");
-        pCP->AddToggle(&mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "");
-        pCP->AddToggle(&mbCenterSphere, "Center Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg, "");
+
+        ZWinCheck* pToggle;
+
+        pToggle = pCP->AddToggle(&mbRenderCube, "Render Cube");
+        pToggle->msWinGroup = "rendermode";
+
+        pToggle = pCP->AddToggle(&mbRenderSpheres, "Render Spheres");
+        pToggle->msWinGroup = "rendermode";
+
+        pCP->AddToggle(&mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg);
+        pCP->AddToggle(&mbCenterSphere, "Center Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg);
 
         ChildAdd(pCP);
     }
