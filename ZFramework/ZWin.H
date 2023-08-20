@@ -21,6 +21,8 @@ class ZScreenBuffer;
 
 typedef std::list<ZWin*> tWinList;
 
+typedef std::map< std::string, tWinList > tGroupNameToWinList;
+
 
 ////////////////////////////////////////////////////
 // class ZWin
@@ -94,7 +96,11 @@ public:
 	
     std::string         GetFullWinName();		// returns the fully qualified name all the way up the parental chain.  Example: A.B.C.D or main.quitdialog.ok
 	const ZPoint&		GetLastMouseMove();
-	
+
+    tWinList            GetChildrenInGroup(const std::string& sGroup);
+    tGroupNameToWinList GetChildGroups();        // returns a map of group name to child windows in those groups (does not return any children with no groups)
+
+
 	ZWin*				GetChildWindowByWinName(const std::string& sWinName);
 	ZWin*				GetChildWindowByWinNameRecursive(const std::string& sWinName);
 	ZWin*				GetChildWindowByPoint( int64_t x, int64_t y );

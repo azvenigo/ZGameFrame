@@ -6,6 +6,7 @@
 #include "ZXMLNode.h"
 #include "helpers/StringHelpers.h"
 #include "ZStringHelpers.h"
+#include "Resources.h"
 #include "ZWinText.H"
 
 #ifdef _DEBUG
@@ -393,6 +394,13 @@ ZWinSizablePushBtn::ZWinSizablePushBtn()
     mBtnStyle           = gStyleButton;
     mCaption.style      = gStyleCaption;
     mSVGImage.style     = gStyleCaption;
+
+    mpUpEdgeImage = gStandardButtonUpEdgeImage;
+    mpDownEdgeImage = gStandardButtonDownEdgeImage;
+
+    mrEdge = grStandardButtonEdge;
+
+
 	mbTransformable     = false;
 }
 
@@ -410,11 +418,6 @@ bool ZWinSizablePushBtn::Init()
 
 bool ZWinSizablePushBtn::Shutdown()
 {
-	if (mbInitted)
-	{
-//		PrivateBuffer(false);
-	}
-
 	return ZWin::Shutdown();
 }
 
@@ -465,21 +468,6 @@ bool ZWinSizablePushBtn::Paint()
 	ZASSERT(pBufferToUse);
 
     mpTransformTexture.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch);
-
-
-	// Draw the text
-/*	int64_t nStrlen = msCaption.length();
-	if (nStrlen > 0)
-	{
-        ZRect rText(mAreaToDrawTo);
-
-		// Offset for text and shadow is based on font size.....but at least of 1
-		int64_t nOffset = max((int) mStyle.fp.nHeight/16, (int) 1);
-		if (mDrawState == kDown)
-			rText.OffsetRect(nOffset,nOffset);
-
-		mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), msCaption, rText, &mStyle);
-	}*/
 
     int64_t nOffset = max((int)mCaption.style.fp.nHeight / 16, (int)1);
     ZRect rCaption = mAreaToDrawTo;
@@ -571,17 +559,6 @@ bool ZWinSizablePushBtn::OnMouseHover(int64_t x, int64_t y)
     ZWinLabel::ShowTooltip(GetTopWindow(), msTooltip, gStyleTooltip);
 
     return true;
-}
-
-void ZWinSizablePushBtn::SetImages(tZBufferPtr pUpEdgeImage, tZBufferPtr pDownEdgeImage, ZRect rEdge )
-{
-	ZASSERT(pUpEdgeImage);
-	ZASSERT(pDownEdgeImage);
-
-	mpUpEdgeImage = pUpEdgeImage;
-	mpDownEdgeImage = pDownEdgeImage;
-
-	mrEdge = rEdge;
 }
 
 string ZWinSizablePushBtn::FitCaptionInWidth(int64_t nWidth, const string& sCaption, tZFontPtr pFont)

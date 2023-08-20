@@ -50,10 +50,6 @@ bool TestWin::Init()
     {
 
         ZWinSizablePushBtn* pBtn = new ZWinSizablePushBtn();
-        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-        //    pBtn->mCaption.sText = "1";  // wingdings open folder
-        //    pBtn->mCaption.style = wingdingsStyle;
-
         pBtn->mSVGImage.Load("C:/temp/svg/tivo.svg");
         pBtn->SetTooltip("Load Image");
         pBtn->mSVGImage.style.paddingH = 3;

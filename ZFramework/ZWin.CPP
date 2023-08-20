@@ -428,6 +428,37 @@ ZWin* ZWin::GetChildWindowByPoint( int64_t x, int64_t y )
 	return pWin;   
 }
 
+
+
+tWinList ZWin::GetChildrenInGroup(const std::string& sGroup)
+{
+    tWinList l;
+    for (auto pChild : mChildList)
+    {
+        if (pChild->msWinGroup == sGroup)
+            l.push_back(pChild);
+    }
+
+    return l;
+}
+
+tGroupNameToWinList ZWin::GetChildGroups()
+{
+    tGroupNameToWinList groups;
+
+    // create a map of any child belonging to groups
+    for (auto pChild : mChildList)
+    {
+        if (!pChild->msWinGroup.empty())
+            groups[pChild->msWinGroup].push_back(pChild);
+    }
+
+    return groups;
+}
+
+
+
+
 bool ZWin::SetFocus()
 {
 //    ZDEBUG_OUT("SetFocus: mWorkToDoCV\n");
@@ -922,7 +953,6 @@ bool ZWinDialog::Init()
         ZWinSizablePushBtn* pBtn;
 
         pBtn = new ZWinSizablePushBtn();
-        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->mCaption.sText = "Cancel";
         pBtn->mCaption.style = gStyleButton;
         pBtn->SetMessage(ZMessage("dlg_cancel", this));
@@ -937,7 +967,6 @@ bool ZWinDialog::Init()
         ZWinSizablePushBtn* pBtn;
 
         pBtn = new ZWinSizablePushBtn();
-        pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
         pBtn->SetMessage(ZMessage("dlg_ok", this));
         pBtn->mCaption.sText = "OK";
         pBtn->mCaption.style = gStyleButton;

@@ -39,16 +39,14 @@ void ZWinControlPanel::FitToControls()
 }
 
 
-ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const std::string& sMessage, const ZGUI::Style& style)
+ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const std::string& sMessage)
 {
     ZASSERT(mbInitted);
 
     ZWinSizablePushBtn* pBtn;
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = sCaption;
-    pBtn->mCaption.style = style;
     pBtn->SetMessage(sMessage);
     pBtn->SetArea(mrNextControl);
     ChildAdd(pBtn);
@@ -58,13 +56,10 @@ ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const st
     return pBtn;
 }
 
-ZWinLabel* ZWinControlPanel::AddCaption(const std::string& sCaption, const ZGUI::Style& style)
+ZWinLabel* ZWinControlPanel::AddCaption(const std::string& sCaption)
 {
-    ZASSERT(mbInitted);
-
     ZWinLabel* pWin = new ZWinLabel();
     pWin->msText = sCaption;
-    pWin->mStyle = style;
     pWin->SetArea(mrNextControl);
     ChildAdd(pWin);
 
@@ -81,7 +76,6 @@ ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, co
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
     pCheck->msWinGroup = sRadioGroup;
-    pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pCheck->mCaption.sText = sCaption;
     pCheck->SetArea(mrNextControl);
     pCheck->mCheckedStyle = checkedStyle;

@@ -61,7 +61,6 @@ bool ZChoosePGNWin::Init()
 
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "Random Game";
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
@@ -73,7 +72,6 @@ bool ZChoosePGNWin::Init()
 
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "Cancel";
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
@@ -256,6 +254,10 @@ bool ZPGNWin::Init()
 
     ZWinSizablePushBtn* pBtn;
 
+    ZGUI::Style wd = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.nHeight, 200, 0, 0, false, true), {}, ZGUI::C);
+    ZGUI::Style wd3 = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nHeight, 200, 0, 0, false, true), {}, ZGUI::C);
+
+
     size_t nButtonSlots = 10;
     size_t nButtonSize = (mAreaToDrawTo.Width() - gDefaultSpacer *2) / nButtonSlots;
 
@@ -263,44 +265,39 @@ bool ZPGNWin::Init()
     rButton.OffsetRect(gDefaultSpacer, mAreaToDrawTo.Height() - gDefaultSpacer - rButton.Height()); 
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = ")"; // wingdings 3 to the beggining
-    pBtn->mCaption.style = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nHeight));
+    pBtn->mCaption.style = wd3;
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("beginning", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "v"; // back one
-    pBtn->mCaption.style = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nHeight));
+    pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("backone", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "w"; // forward one
-    pBtn->mCaption.style = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nHeight));
+    pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("forwardone", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "*"; // to end
-    pBtn->mCaption.style = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nHeight));
+    pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("end", this));
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "5"; // file cabinet
-    pBtn->mCaption.style = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.nHeight));
+    pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width() * 2, 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("chessdb", mpParentWin));
@@ -308,9 +305,8 @@ bool ZPGNWin::Init()
 
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "1"; // open file
-    pBtn->mCaption.style = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.nHeight));
+    pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width() *2, 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("loadgame", mpParentWin));
@@ -318,9 +314,8 @@ bool ZPGNWin::Init()
 
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "<"; // save file
-    pBtn->mCaption.style = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.nHeight));
+    pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("savegame", mpParentWin));

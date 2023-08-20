@@ -36,8 +36,9 @@ public:
 
     void                FitToControls();
 
-    ZWinLabel*          AddCaption(const std::string& sCaption, const ZGUI::Style& style = gStyleCaption);
-    ZWinSizablePushBtn* AddButton(  const std::string& sCaption, const std::string& sMessage, const ZGUI::Style& style = gStyleButton);
+    ZWinLabel*          AddCaption(const std::string& sCaption);
+
+    ZWinSizablePushBtn* AddButton(  const std::string& sCaption, const std::string& sMessage);
 
     ZWinCheck*          AddToggle(  bool* pbValue,
                                 const std::string& sCaption, 

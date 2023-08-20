@@ -240,6 +240,7 @@ bool ImageViewer::RemoveImageArrayEntry(const ViewingIndex& vi)
         return false;
 
     filesystem::path curViewingImagePath = EntryFromIndex(mViewingIndex)->filename;
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     mImageArray.erase(mImageArray.begin() + vi.absoluteIndex);
 
     mViewingIndex = IndexFromPath(curViewingImagePath);
@@ -661,6 +662,7 @@ bool ImageViewer::MoveImage(std::filesystem::path oldPath, std::filesystem::path
     try
     {
         filesystem::rename(oldPath, newPath);
+        const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
         mImageArray[mViewingIndex.absoluteIndex]->filename = newPath;
 
         mUndoFrom = oldPath;
@@ -707,6 +709,7 @@ bool ImageViewer::CopyImage(std::filesystem::path curPath, std::filesystem::path
     try
     {
         filesystem::copy_file(curPath, newPath);
+        const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
         mImageArray[mViewingIndex.absoluteIndex]->filename = newPath;
 
         mUndoFrom.clear();
@@ -776,6 +779,7 @@ void ImageViewer::SetFirstImage()
 {
     if (!mImageArray.empty())
     {
+        const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
         mViewingIndex = IndexFromPath(mImageArray[0]->filename);
         if (!ImageMatchesCurFilter(mViewingIndex))
         {
@@ -800,6 +804,7 @@ void ImageViewer::SetLastImage()
 {
     if (!mImageArray.empty())
     {
+        const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
         mViewingIndex = IndexFromPath(mImageArray[mImageArray.size()-1]->filename);
         if (!ImageMatchesCurFilter(mViewingIndex))
         {
@@ -861,6 +866,7 @@ bool ImageViewer::FindImageMatchingCurFilter(ViewingIndex& vi, int64_t offset)
     int64_t nAbsIndex = vi.absoluteIndex + offset;
     while (nAbsIndex >= 0 && nAbsIndex < (int64_t)mImageArray.size())
     {
+        const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
         if (mFilterState == kAll)
         {
             vi = IndexFromPath(mImageArray[nAbsIndex]->filename);   // fill out ViewingIndex
@@ -940,6 +946,8 @@ bool ImageViewer::ImageMatchesCurFilter(const ViewingIndex& vi)
 
     if (!ValidIndex(vi.absoluteIndex))
         return false;
+
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
 
     if (mFilterState == kToBeDeleted)
         return mImageArray[vi.absoluteIndex]->ToBeDeleted();
@@ -1085,8 +1093,6 @@ void ImageViewer::UpdateControlPanel()
     string sAppPath = gRegistry["apppath"];
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    //pBtn->mCaption.sText = "X";
     pBtn->mSVGImage.Load(sAppPath+"/res/exit.svg");
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("quit", this));
@@ -1098,10 +1104,6 @@ void ImageViewer::UpdateControlPanel()
     int64_t nButtonPadding = rButton.Width() / 8;
     
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    //    pBtn->mCaption.sText = "1";  // wingdings open folder
-    //    pBtn->mCaption.style = wingdingsStyle;
-
     pBtn->mSVGImage.Load(sAppPath + "/res/openfile.svg");
     pBtn->SetTooltip("Load Image");
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
@@ -1114,9 +1116,6 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-//    pBtn->mCaption.sText = "<"; // wingdings save
-//    pBtn->mCaption.style = wingdingsStyle;
     pBtn->mSVGImage.Load(sAppPath + "/res/save.svg");
     pBtn->SetTooltip("Save Image");
 
@@ -1129,10 +1128,6 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-    //    pBtn->mCaption.sText = "1";  // wingdings open folder
-    //    pBtn->mCaption.style = wingdingsStyle;
-
     pBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
     pBtn->SetTooltip("Go to Folder");
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
@@ -1171,11 +1166,8 @@ void ImageViewer::UpdateControlPanel()
 
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "undo";  // undo glyph
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    //        pBtn->mCaption.style .look.colTop = 0xffff0000;
-    //        pBtn->mCaption.style .look.colBottom = 0xffff0000;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
@@ -1185,11 +1177,8 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "move";
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    //        pBtn->mCaption.style .look.colTop = 0xffff0000;
-    //        pBtn->mCaption.style .look.colBottom = 0xffff0000;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
@@ -1199,11 +1188,8 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "copy";
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    //        pBtn->mStyle.look.colTop = 0xffff0000;
-    //        pBtn->mStyle.look.colBottom = 0xffff0000;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
@@ -1216,7 +1202,6 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "delete\nmarked";
     pBtn->mCaption.style = gDefaultGroupingStyle;
     pBtn->mCaption.style.look.colTop = 0xffff0000;
@@ -1246,7 +1231,6 @@ void ImageViewer::UpdateControlPanel()
     rGroup.left = rButton.left - gnDefaultGroupInlaySize;   // start new grouping
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "<"; // unicode rotate left
     pBtn->mCaption.style = unicodeStyle;
     pBtn->SetArea(rButton);
@@ -1257,7 +1241,6 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = ">"; // unicode rotate right
     pBtn->mCaption.style = unicodeStyle;
     pBtn->SetArea(rButton);
@@ -1268,7 +1251,6 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "-"; // unicode flip H
     pBtn->mCaption.style = unicodeStyle;
     pBtn->SetArea(rButton);
@@ -1279,7 +1261,6 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "|"; // unicode flip V
     pBtn->mCaption.style = unicodeStyle;
     pBtn->SetArea(rButton);
@@ -1320,8 +1301,6 @@ void ImageViewer::UpdateControlPanel()
     pCheck->SetMessages(ZMessage("filter_all", this), "");
     pCheck->msWinGroup = "filter_group";
     pCheck->mCaption.sText = "all";
-    pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffffffff;
     pCheck->mCheckedStyle.look.colBottom = 0xffffffff;
@@ -1339,8 +1318,6 @@ void ImageViewer::UpdateControlPanel()
     pCheck->SetMessages(ZMessage("filter_del", this), "");
     pCheck->msWinGroup = "filter_group";
     pCheck->mCaption.sText = "del";
-    pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffff4444;
     pCheck->mCheckedStyle.look.colBottom = 0xffff4444;
@@ -1359,8 +1336,6 @@ void ImageViewer::UpdateControlPanel()
     pCheck->SetMessages(ZMessage("filter_favs", this), "");
     pCheck->msWinGroup = "filter_group";
     pCheck->mCaption.sText = "favs";
-    pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffe1b131;
     pCheck->mCheckedStyle.look.colBottom = 0xffe1b131;
@@ -1411,7 +1386,6 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(-gnDefaultGroupInlaySize, 0);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "F";
     pBtn->mCaption.style = unicodeStyle;
     pBtn->mCaption.style.pos = ZGUI::C;
@@ -1425,8 +1399,6 @@ void ImageViewer::UpdateControlPanel()
     pCheck = new ZWinCheck(&mbSubsample);
     pCheck->SetMessages(ZMessage("invalidate", this), ZMessage("invalidate", this));
     pCheck->mCaption.sText = "Q";
-    pCheck->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
-
     pCheck->mCheckedStyle = unicodeStyle;
     pCheck->mCheckedStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
     pCheck->mCheckedStyle.look.colTop = 0xff88ff88;
@@ -1446,7 +1418,6 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.OffsetRect(-rButton.Width(), 0);
     pBtn = new ZWinSizablePushBtn();
-    pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
     pBtn->mCaption.sText = "?"; // unicode flip H
     pBtn->mCaption.style = filterButtonStyle;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
@@ -1559,6 +1530,7 @@ void ImageViewer::LoadImageProc(std::filesystem::path& imagePath, shared_ptr<Ima
 
 tZBufferPtr ImageViewer::GetCurImage()
 {
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     if (!ValidIndex(mViewingIndex))    // also handles empty array case
         return nullptr;
 
@@ -1589,6 +1561,7 @@ int64_t ImageViewer::CurMemoryUsage()
 
 int64_t ImageViewer::GetLoadsInProgress()
 {
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     int64_t nCount = 0;
     for (auto& i : mImageArray)
     {
@@ -1603,6 +1576,7 @@ int64_t ImageViewer::GetLoadsInProgress()
 // check ahead in the direction of last action....two forward, one back
 tImageEntryPtr ImageViewer::NextImageToCache()
 {
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     if (!ValidIndex(mViewingIndex))
         return nullptr;
 
@@ -1648,6 +1622,7 @@ bool ImageViewer::FreeCacheMemory()
 
     const int64_t kUnloadViewDistance = mMaxCacheReadAhead;
 
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     if (CurMemoryUsage() > mMaxMemoryUsage)
     {
         // unload everything not matching current filter
@@ -1820,6 +1795,7 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
 
     bool bErrors = false;
 
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     for (auto filePath : std::filesystem::directory_iterator(mCurrentFolder))
     {
         if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
@@ -1887,6 +1863,7 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
 ViewingIndex ImageViewer::IndexFromPath(const std::filesystem::path& imagePath)
 {
     ViewingIndex index;
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     for (int i = 0; i < mImageArray.size(); i++)
     {
         if (mImageArray[i]->filename.filename() == imagePath.filename())
@@ -1941,6 +1918,7 @@ bool ImageViewer::ValidIndex(const ViewingIndex& vi)
 
 tImageEntryPtr ImageViewer::EntryFromIndex(const ViewingIndex& vi)
 {
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     if (!ValidIndex(vi))
         return nullptr;
 
@@ -2003,6 +1981,7 @@ bool ImageViewer::Process()
 
             mpWinImage->mCaptionMap["no_image"].Clear();
 
+            const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
             gRegistry["ZImageViewer"]["image"] = mImageArray[mViewingIndex.absoluteIndex]->filename.string();
 
             UpdateCaptions();
@@ -2175,6 +2154,7 @@ void ImageViewer::UpdateCaptions()
                     mpWinImage->mCaptionMap["filename"].style = filenameStyle;
                     mpWinImage->mCaptionMap["filename"].visible = true;
 
+                    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
                     if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite() && mpFavoritesFont)
                     {
                         mpWinImage->mCaptionMap["favorite"].sText = "C";
@@ -2296,6 +2276,7 @@ void ImageViewer::ToggleToBeDeleted()
     filesystem::path toBeDeleted = mCurrentFolder;
     toBeDeleted.append(ksToBeDeleted);
 
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
     {
         // move from subfolder up
@@ -2318,6 +2299,7 @@ void ImageViewer::ToggleFavorite()
     if (!ValidIndex(mViewingIndex))
         return;
 
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite())
     {
         // move from subfolder up

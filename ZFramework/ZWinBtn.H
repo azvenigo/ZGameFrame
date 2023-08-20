@@ -127,23 +127,22 @@ public:
 	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
 	virtual std::string     GetMessage() { return msButtonMessage; }
 
-	void                    SetImages(tZBufferPtr pUpEdgeImage, tZBufferPtr pDownEdgeImage, ZRect rUpEdge );
-
     ZGUI::TextBox           mCaption;
     ZGUI::SVGImageBox       mSVGImage;
     std::string		        msTooltip;
 
     ZGUI::Style             mBtnStyle;
 
+    tZBufferPtr             mpUpEdgeImage;
+    tZBufferPtr             mpDownEdgeImage;
+    ZRect                   mrEdge;
+
+
 protected:
     virtual bool            Paint();
     std::string             FitCaptionInWidth(int64_t nWidth, const std::string& sCaption, tZFontPtr pFont);		// Calculates an equal number of starting/ending chars with "..." in the middle
 
 	eSizablePushBtnState	mDrawState;
-
-    tZBufferPtr             mpUpEdgeImage;              // not owned by this class
-    tZBufferPtr             mpDownEdgeImage;            // not owned by this class
-	ZRect                   mrEdge;
 
 	std::string             msButtonMessage;
 };

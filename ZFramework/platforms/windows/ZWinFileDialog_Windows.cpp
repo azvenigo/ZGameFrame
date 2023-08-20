@@ -50,9 +50,11 @@ namespace ZWinFileDialog
                     wstring sDefaultFolderW(SH::string2wstring(sDefaultFolder));
                     IShellItem* pShellItem = nullptr;
                     SHCreateItemFromParsingName(sDefaultFolderW.c_str(), nullptr, IID_IShellItem, (void**)(&pShellItem));
-
-                    pFileOpen->SetFolder(pShellItem);
-                    pShellItem->Release();
+                    if (pShellItem)
+                    {
+                        pFileOpen->SetFolder(pShellItem);
+                        pShellItem->Release();
+                    }
                 }
 
                 // Show the Open dialog box.
@@ -123,9 +125,11 @@ namespace ZWinFileDialog
                     wstring sDefaultFolderW(SH::string2wstring(sDefaultFolder));
                     IShellItem* pShellItem = nullptr;
                     SHCreateItemFromParsingName(sDefaultFolderW.c_str(), nullptr, IID_IShellItem, (void**)(&pShellItem));
-
-                    pFileOpen->SetFolder(pShellItem);
-                    pShellItem->Release();
+                    if (pShellItem)
+                    {
+                        pFileOpen->SetFolder(pShellItem);
+                        pShellItem->Release();
+                    }
                 }
 
 
@@ -266,9 +270,11 @@ namespace ZWinFileDialog
                     wstring sDefaultFolderW(SH::string2wstring(sDefaultFolder));
                     IShellItem* pShellItem = nullptr;
                     SHCreateItemFromParsingName(sDefaultFolderW.c_str(), nullptr, IID_IShellItem, (void**)(&pShellItem));
-
-                    pDialog->SetFolder(pShellItem);
-                    pShellItem->Release();
+                    if (pShellItem)
+                    {
+                        pDialog->SetFolder(pShellItem);
+                        pShellItem->Release();
+                    }
                 }
 
                 // Show the Open dialog box.

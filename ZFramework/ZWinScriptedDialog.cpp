@@ -287,7 +287,6 @@ bool ZWinScriptedDialog::ProcessNode(ZXMLNode* pNode)
 	else if (sComponent == ksElementButton)
 	{
 		ZWinSizablePushBtn* pBtn = new ZWinSizablePushBtn();
-		pBtn->SetImages(gStandardButtonUpEdgeImage, gStandardButtonDownEdgeImage, grStandardButtonEdge);
 		pBtn->InitFromXML(pNode);
 		ChildAdd(pBtn);
 		bool bArrangedButton = pNode->GetAttribute(ksAreaTag).empty();	// if there is no area specified, then this button is auto-arranged
