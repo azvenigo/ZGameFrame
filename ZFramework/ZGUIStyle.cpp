@@ -6,7 +6,7 @@ using namespace std;
 uint32_t        gDefaultDialogFill(0xff575757);
 uint32_t        gDefaultTextAreaFill(0xff888888);
 uint32_t        gDefaultSpacer(16);
-int64_t         gnDefaultGroupInlaySize(8);
+int64_t         gnDefaultGroupInlaySize(9);
 ZRect           grDefaultDialogBackgroundEdgeRect(3, 3, 53, 52);
 
 //Fonts
@@ -37,7 +37,7 @@ namespace ZGUI
     void ComputeSizes()
     {
         gDefaultSpacer = (uint32_t)(grFullArea.Height() / 125);
-        gnDefaultGroupInlaySize = 10;
+        gnDefaultGroupInlaySize = 9;
 
         gStyleButton.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
         gStyleToggleChecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
@@ -141,6 +141,7 @@ namespace ZGUI
         if (!mpFont)
             mpFont = gpFontSystem->GetFont(fp); // cache
 
+        assert(mpFont);
         return mpFont;
     }
 

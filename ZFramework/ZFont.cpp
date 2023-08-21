@@ -699,6 +699,9 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
     if (pStyle->pos != ZGUI::C)
         rTextLine.DeflateRect(pStyle->paddingH, pStyle->paddingV);
 
+    if (rTextLine.bottom <= rTextLine.top || rTextLine.right <= rTextLine.left)
+        return false;
+
     int64_t nLines = 1;
     if (pStyle->wrap)
         nLines = CalculateNumberOfLines(rTextLine.Width(), (uint8_t*)sText.data(), sText.length());

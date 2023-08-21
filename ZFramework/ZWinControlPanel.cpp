@@ -8,6 +8,11 @@
 
 using namespace std;
 
+ZWinControlPanel::ZWinControlPanel() : mbHideOnMouseExit(false), mStyle(gDefaultDialogStyle), mGroupingStyle(gDefaultGroupingStyle)
+{
+}
+
+
 bool ZWinControlPanel::Init()
 {
     if (mbInitted)
@@ -104,13 +109,6 @@ ZWinSlider* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, in
     return pSlider;
 }
 
-void ZWinControlPanel::AddGrouping(const std::string& sCaption, const ZRect& rArea, const ZGUI::Style& groupingStyle)
-{
-    mGroupingBorders.push_back(GroupingBorder(sCaption, rArea, groupingStyle));
-    Invalidate();
-}
-
-
 bool ZWinControlPanel::Paint()
 {
     if (!mbVisible)
@@ -128,20 +126,20 @@ bool ZWinControlPanel::Paint()
 
     mpTransformTexture->Fill(mAreaToDrawTo, mStyle.bgCol);
 
-    for (auto group : mGroupingBorders)
+    tGroupNameToWinList groups = GetChildGroups();
+    for (auto& group : groups)
     {
         // draw embossed rect
-        ZRect r(group.mArea);
+        ZRect rBounds(GetBounds(group.second));
+        rBounds.InflateRect(gnDefaultGroupInlaySize, gnDefaultGroupInlaySize);
+        rBounds.right--;
+        rBounds.bottom--;
 
-        mpTransformTexture->DrawRectAlpha(r, 0x88000000);
-        r.OffsetRect(1, 1);
-        mpTransformTexture->DrawRectAlpha(r, 0x88ffffff);
-
-        ZRect rCaption = group.mArea;
-//        rCaption.InflateRect(-group.mStyle.paddingH, group.mStyle.paddingV);
+        mpTransformTexture->DrawRectAlpha(rBounds, 0x88000000);
+        rBounds.OffsetRect(1, 1);
+        mpTransformTexture->DrawRectAlpha(rBounds, 0x88ffffff);
         
-
-        group.mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), group.msCaption, rCaption, &group.mStyle);
+        mGroupingStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), group.first, rBounds, &mGroupingStyle);
 
 
 

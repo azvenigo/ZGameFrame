@@ -99,6 +99,7 @@ public:
 
     tWinList            GetChildrenInGroup(const std::string& sGroup);
     tGroupNameToWinList GetChildGroups();        // returns a map of group name to child windows in those groups (does not return any children with no groups)
+    ZRect               GetBounds(const tWinList& list);
 
 
 	ZWin*				GetChildWindowByWinName(const std::string& sWinName);

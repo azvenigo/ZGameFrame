@@ -1098,7 +1098,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetMessage(ZMessage("quit", this));
     mpPanel->ChildAdd(pBtn);
 
-    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize, 0);
+    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize*2, 0);
     
 
     int64_t nButtonPadding = rButton.Width() / 8;
@@ -1106,6 +1106,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/openfile.svg");
     pBtn->SetTooltip("Load Image");
+    pBtn->msWinGroup = "File";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
 
@@ -1117,12 +1118,14 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/save.svg");
+    pBtn->msWinGroup = "File";
     pBtn->SetTooltip("Save Image");
 
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("saveimg", this));
+    pBtn->msWinGroup = "File";
     mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(rButton.Width(), 0);
@@ -1135,24 +1138,10 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("openfolder", this));
+    pBtn->msWinGroup = "File";
     mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(rButton.Width(), 0);
-
-
-
-
-
-    rGroup.right = rButton.right + gnDefaultGroupInlaySize;
-    mpPanel->AddGrouping("File", rGroup);
-
-
-
-
-
-
-
-
 
 
     string sMessage;
@@ -1162,15 +1151,13 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
     rButton.right = rButton.left + (int64_t) (rButton.Width() * 2.5);     // wider buttons for management
 
-    rGroup.left = rButton.left - gnDefaultGroupInlaySize;
-
-
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "undo";  // undo glyph
     pBtn->mCaption.style = gDefaultGroupingStyle;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
+    pBtn->msWinGroup = "Manage";
     Sprintf(sMessage, "undo;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
@@ -1182,6 +1169,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
+    pBtn->msWinGroup = "Manage";
     Sprintf(sMessage, "set_move_folder;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
@@ -1193,6 +1181,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
+    pBtn->msWinGroup = "Manage";
     Sprintf(sMessage, "set_copy_folder;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
@@ -1210,15 +1199,10 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mCaption.style.wrap = true;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
+    pBtn->msWinGroup = "Manage";
     Sprintf(sMessage, "show_confirm;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
-
-
-
-
-    rGroup.right = rButton.right + gnDefaultGroupInlaySize;
-    mpPanel->AddGrouping("Manage", rGroup);
 
 
 
@@ -1236,6 +1220,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
+    pBtn->msWinGroup = "Rotate";
     mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(rButton.Width(), 0);
@@ -1246,6 +1231,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
+    pBtn->msWinGroup = "Rotate";
     mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(rButton.Width(), 0);
@@ -1256,6 +1242,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
+    pBtn->msWinGroup = "Rotate";
     mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(rButton.Width(), 0);
@@ -1266,12 +1253,8 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);
+    pBtn->msWinGroup = "Rotate";
     mpPanel->ChildAdd(pBtn);
-
-
-
-    rGroup.right = rButton.right + gnDefaultGroupInlaySize;
-    mpPanel->AddGrouping("Rotate", rGroup);
 
 
 
@@ -1299,7 +1282,6 @@ void ImageViewer::UpdateControlPanel()
     ZWinCheck* pCheck = new ZWinCheck();
     pCheck->SetState(true, false);
     pCheck->SetMessages(ZMessage("filter_all", this), "");
-    pCheck->msWinGroup = "filter_group";
     pCheck->mCaption.sText = "all";
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffffffff;
@@ -1309,6 +1291,7 @@ void ImageViewer::UpdateControlPanel()
 
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("All images");
+    pCheck->msWinGroup = "Filter";
     mpPanel->ChildAdd(pCheck);
     mpAllFilterButton = pCheck;
 
@@ -1316,7 +1299,6 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
     pCheck = new ZWinCheck();
     pCheck->SetMessages(ZMessage("filter_del", this), "");
-    pCheck->msWinGroup = "filter_group";
     pCheck->mCaption.sText = "del";
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffff4444;
@@ -1326,6 +1308,7 @@ void ImageViewer::UpdateControlPanel()
 
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Images marked for deletion");
+    pCheck->msWinGroup = "Filter";
     mpPanel->ChildAdd(pCheck);
     mpDelFilterButton = pCheck;
 
@@ -1334,7 +1317,6 @@ void ImageViewer::UpdateControlPanel()
 
     pCheck = new ZWinCheck();
     pCheck->SetMessages(ZMessage("filter_favs", this), "");
-    pCheck->msWinGroup = "filter_group";
     pCheck->mCaption.sText = "favs";
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffe1b131;
@@ -1344,25 +1326,13 @@ void ImageViewer::UpdateControlPanel()
 
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Favorites");
+    pCheck->msWinGroup = "Filter";
     mpPanel->ChildAdd(pCheck);
     mpFavsFilterButton = pCheck;
   
     mpFavsFilterButton->SetState(mFilterState == kFavs, false);
     mpDelFilterButton->SetState(mFilterState == kToBeDeleted, false);
     mpAllFilterButton->SetState(mFilterState == kAll, false);
-
-
-
-
-
-    rGroup.right = rButton.right + gnDefaultGroupInlaySize;
-    mpPanel->AddGrouping("Filter", rGroup);
-
-
-
-
-
-
 
 
 
@@ -1393,6 +1363,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "toggle_fullscreen");
     pBtn->SetMessage(sMessage);
+    pBtn->msWinGroup = "View";
     mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(-rButton.Width(), 0);
@@ -1413,6 +1384,7 @@ void ImageViewer::UpdateControlPanel()
 
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Sub-pixel sampling");
+    pCheck->msWinGroup = "View";
     mpPanel->ChildAdd(pCheck);
 
 
@@ -1423,12 +1395,8 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("show_help", this));
+    pBtn->msWinGroup = "View";
     mpPanel->ChildAdd(pBtn);
-
-
-
-    rGroup.left = rButton.left- gnDefaultGroupInlaySize;
-    mpPanel->AddGrouping("view", rGroup);
 }
 
 bool ImageViewer::OnParentAreaChange()

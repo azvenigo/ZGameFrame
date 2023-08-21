@@ -456,6 +456,21 @@ tGroupNameToWinList ZWin::GetChildGroups()
     return groups;
 }
 
+ZRect ZWin::GetBounds(const tWinList& list)
+{
+    if (list.empty())
+        return {};
+
+    tWinList::const_iterator it = list.begin();
+    ZRect rBounds((*it)->mArea);
+    while (it != list.end())
+    {
+        rBounds.UnionRect((*it++)->mArea);
+    }
+
+    return rBounds;
+}
+
 
 
 
