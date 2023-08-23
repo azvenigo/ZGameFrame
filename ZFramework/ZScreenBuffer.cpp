@@ -344,6 +344,8 @@ bool ZScreenBuffer::RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst)
 
 bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenRect)
 {
+    assert(screenRect.mpSourceBuffer);
+
     if (!mbRenderingEnabled)
         return false;
 

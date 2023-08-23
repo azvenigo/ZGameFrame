@@ -445,6 +445,9 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 
 bool ZWinSizablePushBtn::Paint()
 {
+    if (!mpTransformTexture)
+        return false;
+
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
     if (!mbInvalid)
         return false;

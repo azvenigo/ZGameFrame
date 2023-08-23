@@ -76,7 +76,8 @@ bool ZMainWin::ComputeVisibility()
 
         //ZDEBUG_OUT("ChildPaint:0x%x\n", uint32_t(pWin));
 
-        pWin->ComputeVisibility();
+        if (pWin->mbVisible)
+            pWin->ComputeVisibility();
     }
 
     return true;

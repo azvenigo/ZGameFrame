@@ -50,6 +50,7 @@ ImageViewer::ImageViewer()
     mLastAction = kNone;
     msWinName = "ZWinImageViewer";
     mpPanel = nullptr;
+    mpRotationMenu = nullptr;
     mpSymbolicFont = nullptr;
     mpFavoritesFont = nullptr;
     mpWinImage = nullptr;
@@ -442,6 +443,31 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
 
             InvalidateChildren();
             return true;
+        }
+        else if (sType == "show_rotation_menu")
+        {
+            if (mpRotationMenu)
+            {
+                if (mpRotationMenu->IsVisible())
+                {
+                    mpRotationMenu->SetVisible(false);
+                }
+                else
+                {
+                    mpRotationMenu->mStyle.paddingH = gDefaultSpacer;
+                    mpRotationMenu->mStyle.paddingV = gDefaultSpacer;
+
+                    ZRect r = StringToRect(message.GetParam("r"));
+                    r.InflateRect(gnDefaultGroupInlaySize*2, gnDefaultGroupInlaySize*2);
+                    r.bottom = r.top + r.Height() * 4 + gnDefaultGroupInlaySize * 5;
+
+                    mpRotationMenu->SetArea(r);
+                    mpRotationMenu->ArrangeChildren(1, -1);
+                    mpRotationMenu->SetVisible();
+                    ChildToFront(mpRotationMenu);
+                }
+                return true;
+            }
         }
         else if (sType == "undo")
         {
@@ -996,6 +1022,39 @@ bool ImageViewer::Init()
         {
             ViewImage(sPersistedViewPath);
         }
+
+
+        string sMessage;
+        ZGUI::Style unicodeStyle = ZGUI::Style(mpSymbolicFont->GetFontParams(), ZGUI::ZTextLook{}, ZGUI::C, 0);
+        mpRotationMenu = new ZWinControlPanel();
+
+        string sAppPath = gRegistry["apppath"];
+        Sprintf(sMessage, "show_rotation_menu;target=%s", GetTargetName().c_str());
+        ZWinSizablePushBtn* pBtn = mpRotationMenu->AddSVGButton(sAppPath + "/res/rotate.svg", sMessage);
+        pBtn->msWinGroup = "Rotate";
+
+        Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
+        pBtn = mpRotationMenu->AddButton("<", sMessage);
+        pBtn->mCaption.style = unicodeStyle;
+        pBtn->msWinGroup = "Rotate";
+
+        Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
+        pBtn = mpRotationMenu->AddButton(">", sMessage);
+        pBtn->mCaption.style = unicodeStyle;
+        pBtn->msWinGroup = "Rotate";
+
+        Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
+        pBtn = mpRotationMenu->AddButton("-", sMessage);
+        pBtn->mCaption.style = unicodeStyle;
+        pBtn->msWinGroup = "Rotate";
+
+        Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
+        pBtn = mpRotationMenu->AddButton("|", sMessage);
+        pBtn->mCaption.style = unicodeStyle;
+        pBtn->msWinGroup = "Rotate";
+
+        mpRotationMenu->mbHideOnMouseExit = true;
+        ChildAdd(mpRotationMenu, false);
     }
 
     if (!ValidIndex(mViewingIndex))
@@ -1086,9 +1145,7 @@ void ImageViewer::UpdateControlPanel()
 
     ZWinSizablePushBtn* pBtn;
 
-    ZRect rGroup(gnDefaultGroupInlaySize, gnDefaultGroupInlaySize, -1, nControlPanelSide - gnDefaultGroupInlaySize);  // start the first grouping
-
-    ZRect rButton(rGroup.left + gnDefaultGroupInlaySize, rGroup.top + gnDefaultGroupInlaySize, rGroup.left + nGroupSide, rGroup.bottom - gnDefaultGroupInlaySize / 2);
+    ZRect rButton(gnDefaultGroupInlaySize*2, gnDefaultGroupInlaySize * 2, gnDefaultGroupInlaySize + nGroupSide, nControlPanelSide - gnDefaultGroupInlaySize);
 
     string sAppPath = gRegistry["apppath"];
 
@@ -1208,28 +1265,41 @@ void ImageViewer::UpdateControlPanel()
 
 
 
-    // Rotation Group
+    // Transformation (rotation, flip, etc.)
     rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 8, 0);
     rButton.right = rButton.left + rButton.Height();    // square button
 
-    rGroup.left = rButton.left - gnDefaultGroupInlaySize;   // start new grouping
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "<"; // unicode rotate left
-    pBtn->mCaption.style = unicodeStyle;
-    pBtn->SetArea(rButton);
-    Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
+//    ZWinSizablePushBtn* pBtn = mpRotationMenu->AddButton("Transform", sMessage);
+
+
+    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
+    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
+
+//    rButton.right = rButton.left + rButton.Width();     // wider buttons for management
+
+    bool bRet = pBtn->mSVGImage.Load(sAppPath +"/res/rotate.svg");
+    assert(bRet);
+    Sprintf(sMessage, "show_rotation_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
     pBtn->SetMessage(sMessage);
+    pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Rotate";
     mpPanel->ChildAdd(pBtn);
 
-    rButton.OffsetRect(rButton.Width(), 0);
 
+    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
+
+    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
+/*
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = ">"; // unicode rotate right
     pBtn->mCaption.style = unicodeStyle;
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
+
+//    Sprintf(sMessage, "show_rotation_menu;target=%s", GetTargetName().c_str());
+
     pBtn->SetMessage(sMessage);
     pBtn->msWinGroup = "Rotate";
     mpPanel->ChildAdd(pBtn);
@@ -1257,18 +1327,10 @@ void ImageViewer::UpdateControlPanel()
     mpPanel->ChildAdd(pBtn);
 
 
-
-
-
+    */
 
 
     // Filter group
-    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 2.5);     // wider buttons for management
-
-    rButton.right = rButton.left + rButton.Width();     // wider buttons for management
-
-    rGroup.left = rButton.left - gnDefaultGroupInlaySize;
 
     ZGUI::Style filterButtonStyle = gDefaultGroupingStyle;
     filterButtonStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
@@ -1352,7 +1414,6 @@ void ImageViewer::UpdateControlPanel()
 
     rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gnDefaultGroupInlaySize);
 
-    rGroup.right = rButton.right;
     rButton.OffsetRect(-gnDefaultGroupInlaySize, 0);
 
     pBtn = new ZWinSizablePushBtn();

@@ -204,6 +204,8 @@ protected:
     ZWinControlPanel*       mpPanel;
     std::recursive_mutex    mPanelMutex;
 
+    ZWinControlPanel*       mpRotationMenu;
+
     ZWinImage*              mpWinImage;  
 
 
@@ -244,9 +246,7 @@ protected:
 
     bool                    mbSubsample;
     bool                    mbShowUI;
-    eFilterState            mFilterState;
-
-   
+    eFilterState            mFilterState;   
 };
 
 

@@ -128,7 +128,9 @@ ZTransformable::~ZTransformable()
 
 bool ZTransformable::Init(const ZRect& rArea)
 {
-	ZASSERT(rArea.Width() > 0 && rArea.Height() > 0);
+    if (rArea.Width() < 1 || rArea.Height() < 1)
+        return false;
+//	ZASSERT(rArea.Width() > 0 && rArea.Height() > 0);
 
 	gTickManager.AddObject(this);
 

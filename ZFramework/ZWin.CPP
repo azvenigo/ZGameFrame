@@ -82,13 +82,11 @@ bool ZWin::Init()
 		if (mArea.Width() > 0 && mArea.Height() > 0)
 		{
 			ZTransformable::Init(mAreaAbsolute);
-		}
+            Paint();        // TBD this may be desired since our texture may be requested before the threadproc has a chance to call paint
+            TransformIn();
+        }
 
 		gMessageSystem.RegisterTarget(this);
-
-        Paint();        // TBD this may be desired since our texture may be requested before the threadproc has a chance to call paint
-
-        TransformIn();
 
 		mbShutdownFlag = false;
 		mThread = std::thread(&WindowThreadProc, (void*)this);
@@ -121,7 +119,7 @@ bool ZWin::Shutdown()
             gInput.mouseOverWin = NULL;
 
 
-        const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+        //const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
 		mbInitted = false;
 	}
@@ -289,7 +287,7 @@ bool ZWin::ChildRemove(ZWin* child)
 			mChildList.erase( it );
 //			ZDEBUG_OUT("ChildRemove:0x%x\n", uint32_t(child));
 
-            const std::lock_guard<std::recursive_mutex> surfaceLock(child->mpTransformTexture.get()->GetMutex());
+//            const std::lock_guard<std::recursive_mutex> surfaceLock(child->mpTransformTexture.get()->GetMutex());
 			child->SetParentWin(NULL);
 
             if (mChildList.empty())
@@ -339,8 +337,8 @@ bool ZWin::ChildToFront(ZWin *child)
    
     if(child && ChildExists(child))
 	{
-		if (mpParentWin)
-			mpParentWin->ChildToFront(this);
+//		if (mpParentWin)
+//			mpParentWin->ChildToFront(this);
 
 		ZDEBUG_OUT("ChildToFront:0x%x\n", uint64_t(child));
 		mChildList.remove( child );
@@ -617,7 +615,8 @@ bool ZWin::ComputeVisibility()
 
 		//ZDEBUG_OUT("ChildPaint:0x%x\n", uint32_t(pWin));
 
-		pWin->ComputeVisibility();
+        if ( pWin->mbVisible && pWin->mpTransformTexture)
+		    pWin->ComputeVisibility();
 	}
 
 	return true;
@@ -828,7 +827,7 @@ void ZWin::SetVisible(bool bVisible)
     if (bVisible != mbVisible)
     {
         mbVisible = bVisible;
-        Invalidate();
+        InvalidateChildren();
         gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
     }
 }

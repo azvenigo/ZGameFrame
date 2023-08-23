@@ -22,9 +22,13 @@ public:
 
     void                FitToControls();
 
+    void                ArrangeChildren(int64_t nCols = -1, int64_t nRows = -1);    // -1 means unlocked
+
     ZWinLabel*          AddCaption(const std::string& sCaption);
 
     ZWinSizablePushBtn* AddButton(  const std::string& sCaption, const std::string& sMessage);
+
+    ZWinSizablePushBtn* AddSVGButton(const std::string& sSVGFilepath, const std::string& sMessage);
 
     ZWinCheck*          AddToggle(  bool* pbValue,
                                 const std::string& sCaption, 
@@ -42,6 +46,7 @@ public:
 
     void                AddSpace(int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
 
+    bool		        OnMouseOut();
     bool                Process();
     bool		        Paint();
 

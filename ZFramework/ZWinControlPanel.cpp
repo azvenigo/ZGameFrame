@@ -18,9 +18,8 @@ bool ZWinControlPanel::Init()
     if (mbInitted)
         return true;
 
-    assert(mArea.Width() > 0 && mArea.Height() > 0);
-
-    mrNextControl.SetRect(gnControlPanelEdge, gnControlPanelEdge, mArea.Width()- gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);
+    if (mArea.Width() > 0 && mArea.Height() > 0)
+        mrNextControl.SetRect(gnControlPanelEdge, gnControlPanelEdge, mArea.Width()- gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);  
 
 
     mbAcceptsCursorMessages = true;
@@ -43,10 +42,56 @@ void ZWinControlPanel::FitToControls()
     SetArea(rFit);
 }
 
+void ZWinControlPanel::ArrangeChildren(int64_t nCols, int64_t nRows)
+{
+    assert(mArea.Width() > 0 && mArea.Height() > 0);
+    if (mChildList.empty())
+        return;
+
+    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
+
+    if (nCols < 1)  // undefined number of columns
+    {
+        nRows = 1;
+        nCols = mChildList.size();
+    }
+    else if (nRows < 1) // undefined number of rows
+    {
+        nCols = 1;
+        nRows = mChildList.size();
+    }
+
+    int64_t nTotalHPadding = (nCols + 1) * mStyle.paddingH;
+    int64_t nTotalVPadding = (nRows + 1) * mStyle.paddingV;
+
+    int64_t btnW = (mArea.Width() - nTotalHPadding) / nCols;
+    int64_t btnH = (mArea.Height() - nTotalVPadding) / nRows;
+
+    assert(btnW > 0 && btnH > 0);
+
+    tWinList::reverse_iterator childIt = mChildList.rbegin();
+    for (int64_t row = 0; row < nRows; row++)
+    {
+        for (int64_t col = 0; col < nCols; col++)
+        {
+            ZRect rBtn(btnW, btnH);
+            rBtn.OffsetRect(mStyle.paddingH * (col + 1) + col*btnW,     // offset H by number of horizontal paddings by column number
+                            mStyle.paddingV * (row + 1) + row*btnH);    // same for V offset
+
+            (*childIt)->SetArea(rBtn);
+
+            childIt++;
+            if (childIt == mChildList.rend())
+                break;
+        }
+    }
+}
+
+
 
 ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const std::string& sMessage)
 {
-    ZASSERT(mbInitted);
+//    ZASSERT(mbInitted);
 
     ZWinSizablePushBtn* pBtn;
 
@@ -56,10 +101,29 @@ ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const st
     pBtn->SetArea(mrNextControl);
     ChildAdd(pBtn);
 
-    mrNextControl.OffsetRect(0,mrNextControl.Height());
+    mrNextControl.OffsetRect(0, mrNextControl.Height());
 
     return pBtn;
 }
+
+ZWinSizablePushBtn* ZWinControlPanel::AddSVGButton(const string& sSVGFilepath, const std::string& sMessage)
+{
+//    ZASSERT(mbInitted);
+
+    ZWinSizablePushBtn* pBtn;
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->mSVGImage.Load(sSVGFilepath);
+    pBtn->SetMessage(sMessage);
+    pBtn->SetArea(mrNextControl);
+    ChildAdd(pBtn);
+
+    mrNextControl.OffsetRect(0, mrNextControl.Height());
+
+    return pBtn;
+}
+
+
 
 ZWinLabel* ZWinControlPanel::AddCaption(const std::string& sCaption)
 {
@@ -76,7 +140,7 @@ ZWinLabel* ZWinControlPanel::AddCaption(const std::string& sCaption)
 
 ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage)
 {
-    ZASSERT(mbInitted);
+//    ZASSERT(mbInitted);
 
     ZWinCheck* pCheck = new ZWinCheck(pbValue);
     pCheck->SetMessages(sCheckMessage, sUncheckMessage);
@@ -150,6 +214,13 @@ bool ZWinControlPanel::Paint()
     return ZWin::Paint();
 }
 
+bool ZWinControlPanel::OnMouseOut()
+{
+    mWorkToDoCV.notify_one();
+    return ZWin::OnMouseOut();
+}
+
+
 bool ZWinControlPanel::Process()
 {
     if (gInput.captureWin == nullptr)   // only process this if no window has capture
@@ -164,12 +235,15 @@ bool ZWinControlPanel::Process()
         }
         else
         {
-            ZRect rOverArea(mrTrigger);
-            rOverArea.UnionRect(mAreaAbsolute);
+            ZRect rOverArea(mAreaAbsolute);
+            if (mrTrigger.Width() > 0 && mrTrigger.Height() > 0)
+                rOverArea.UnionRect(mrTrigger);
 
             if (!rOverArea.PtInRect(gInput.lastMouseMove) && mbHideOnMouseExit)        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
             {
                 SetVisible(false);
+                if (mpParentWin)
+                    mpParentWin->InvalidateChildren();
                 return true;
             }
         }
