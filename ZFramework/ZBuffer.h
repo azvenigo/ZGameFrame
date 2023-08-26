@@ -88,6 +88,9 @@ public:
 
 	virtual bool            BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle, double fScale, ZRect* pClip = NULL);
 
+    virtual bool            BltScaled(ZBuffer* pSrc);
+
+
 	virtual void            DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRect* pClip = NULL);
     virtual void            DrawRectAlpha(ZRect& rDst, uint32_t nCol);
 

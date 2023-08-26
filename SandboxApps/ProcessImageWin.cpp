@@ -235,17 +235,20 @@ void cProcessImageWin::Process_SelectImage(string sImageName)
     {
         if (pWin->msWinName == sImageName)
         {
-            mrIntersectionWorkArea.SetRect(pWin->mpImage.get()->GetArea());
+            if (pWin->mpImage)
+            {
+                mrIntersectionWorkArea.SetRect(pWin->mpImage.get()->GetArea());
 
-            ZRect r(mrIntersectionWorkArea);
-            mpResultBuffer.get()->GetMutex().lock();
-            mpResultBuffer.get()->Init(r.Width(), r.Height());
-            mpResultBuffer.get()->Blt(pWin->mpImage.get(), r, r, &r);
-            mpResultBuffer.get()->GetMutex().unlock();
+                ZRect r(mrIntersectionWorkArea);
+                mpResultBuffer.get()->GetMutex().lock();
+                mpResultBuffer.get()->Init(r.Width(), r.Height());
+                mpResultBuffer.get()->Blt(pWin->mpImage.get(), r, r, &r);
+                mpResultBuffer.get()->GetMutex().unlock();
 
-            mpResultWin->SetImage(mpResultBuffer);
+                mpResultWin->SetImage(mpResultBuffer);
 
-            UpdateImageProps(pWin->mpImage.get());
+                UpdateImageProps(pWin->mpImage.get());
+            }
 
             InvalidateChildren();
             return;
@@ -945,8 +948,8 @@ bool cProcessImageWin::Init()
 {
 	SetFocus();
 
-    int64_t panelW = grFullArea.Width() / 10;
-    int64_t panelH = grFullArea.Height() / 2;
+    int64_t panelW = gM * 10;
+    int64_t panelH = gM * 16;
     mrControlPanel.SetRect(grFullArea.right-panelW, grFullArea.bottom-panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
 
     ZWinControlPanel* pCP = new ZWinControlPanel();
@@ -995,14 +998,14 @@ bool cProcessImageWin::Init()
 
 
     mrWatchPanel.SetRect(0,0,mrControlPanel.Width()*2, mrControlPanel.Height());
-    mrWatchPanel.MoveRect(mrControlPanel.left-mrWatchPanel.Width() + gDefaultSpacer, mrControlPanel.top);
+    mrWatchPanel.MoveRect(mrControlPanel.left-mrWatchPanel.Width() + gSpacer, mrControlPanel.top);
     ZWinWatchPanel* pWP = new ZWinWatchPanel();
     pWP->SetArea(mrWatchPanel);
     pWP->Init();
     pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff000000, 0xff000000));
     ChildAdd(pWP);
 
-    ZRect rImageProps(gDefaultSpacer, gDefaultTextFont.nHeight*2, mrWatchPanel.Width() - gDefaultSpacer, mrWatchPanel.Height() - gDefaultSpacer);
+    ZRect rImageProps(gSpacer, gDefaultTextFont.nHeight*2, mrWatchPanel.Width() - gSpacer, mrWatchPanel.Height() - gSpacer);
 
     mpImageProps = new ZWinFormattedText();
     mpImageProps->SetArea(rImageProps);
@@ -1083,7 +1086,8 @@ void cProcessImageWin::ResetResultsBuffer()
 		return;
 	}
 
-    ZASSERT(mrIntersectionWorkArea.Width() > 0 && mrIntersectionWorkArea.Height() > 0);
+    if (mrIntersectionWorkArea.Width() == 0 || mrIntersectionWorkArea.Height() == 0)
+        return;
 
     // Arrange all thumbnails
     double fImageAspect = (double)mrIntersectionWorkArea.Width() / (double)mrIntersectionWorkArea.Height();

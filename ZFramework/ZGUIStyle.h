@@ -12,12 +12,13 @@
 // Default styles to be instantiated by app
 
 extern ZRect		grFullArea;
-extern uint32_t     gDefaultSpacer;
 
+extern int64_t      gM; // default measure defined by window diagonal ( diagonal / 100 )... all scaled GUI elements should be based off of this measure
+extern int64_t      gSpacer;
 
 extern uint32_t     gDefaultDialogFill;
 extern uint32_t     gDefaultTextAreaFill;
-extern int64_t      gnDefaultGroupInlaySize;
+//extern int64//_t      gnDefaultGroupInlaySize;
 
 
 

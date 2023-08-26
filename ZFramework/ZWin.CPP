@@ -958,8 +958,8 @@ ZWinDialog::ZWinDialog() : mStyle(gDefaultDialogStyle), mBehavior(eBehavior::Non
 
 bool ZWinDialog::Init()
 {
-    ZRect rButton(0, 0, gDefaultSpacer * 8, gDefaultSpacer * 3);
-    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gDefaultSpacer, gDefaultSpacer);
+    ZRect rButton(0, 0, gM * 4, gM * 3);
+    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
 
 
     if (mBehavior & eBehavior::CancelButton)
@@ -973,7 +973,7 @@ bool ZWinDialog::Init()
         pBtn->SetArea(rButton);
         ChildAdd(pBtn);
 
-        rButton.OffsetRect(-rButton.Width() - gDefaultSpacer, 0);
+        rButton.OffsetRect(-rButton.Width() - gSpacer, 0);
     }
 
     if (mBehavior & eBehavior::OKButton)

@@ -29,7 +29,7 @@ bool ConfirmDeleteDialog::Init()
         ZWinLabel* pLabel = new ZWinLabel();
         pLabel->msText = msCaption;
 
-        ZRect rLabel = gStyleCaption.Font()->Arrange(mAreaToDrawTo, (uint8_t*)pLabel->msText.c_str(), pLabel->msText.length(), ZGUI::LT, gDefaultSpacer);
+        ZRect rLabel = gStyleCaption.Font()->Arrange(mAreaToDrawTo, (uint8_t*)pLabel->msText.c_str(), pLabel->msText.length(), ZGUI::LT, gSpacer);
 
         pLabel->SetArea(rLabel);
         pLabel->mStyle = gStyleCaption;
@@ -51,10 +51,8 @@ bool ConfirmDeleteDialog::Init()
         ChildAdd(pLabel);
 
 
-        int nButtonWidth = (mAreaToDrawTo.Width() - gDefaultSpacer * 4) / 3;
-
-        ZRect rButton(0, 0, nButtonWidth, gDefaultSpacer * 3);
-        rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gDefaultSpacer, gDefaultSpacer);
+        ZRect rButton(0, 0, gM*3, gM*2);
+        rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
 
 
         ZWinSizablePushBtn* pBtn;
@@ -71,7 +69,7 @@ bool ConfirmDeleteDialog::Init()
         pBtn->SetArea(rButton);
         ChildAdd(pBtn);
 
-        rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::LB, gDefaultSpacer, gDefaultSpacer);
+        rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::LB, gSpacer, gSpacer);
 
 //        rButton.MoveRect(-rButton.Width()*2 - gDefaultSpacer, 0);
 
@@ -86,7 +84,7 @@ bool ConfirmDeleteDialog::Init()
 
 
 
-        ZRect rFileList(gDefaultSpacer, gDefaultSpacer + rLabel.bottom, mAreaToDrawTo.Width() - gDefaultSpacer, rButton.top - gDefaultSpacer);
+        ZRect rFileList(gSpacer, gSpacer + rLabel.bottom, mAreaToDrawTo.Width() - gSpacer, rButton.top - gSpacer);
 
         mpFilesList = new ZWinFormattedText();
         mpFilesList->SetArea(rFileList);

@@ -36,8 +36,11 @@ ZWinImage::~ZWinImage()
 
 bool ZWinImage::Init()
 {
+    if (mbInitted)
+        return true;
+
     mIdleSleepMS = 10000;
-    Clear();
+//    Clear();
     return ZWin::Init();
 }
 
@@ -271,6 +274,13 @@ bool ZWinImage::OnKeyDown(uint32_t c)
 
 bool ZWinImage::OnKeyUp(uint32_t c)
 {
+    if (AmCapturing() && (mBehavior & kSelectableArea) != 0 && c == VK_SHIFT)
+    {
+        ReleaseCapture();
+        mpParentWin->InvalidateChildren();
+    }
+
+
     if (c == mZoomHotkey)
         mpParentWin->InvalidateChildren();
 
@@ -510,12 +520,22 @@ bool ZWinImage::Paint()
 
 ZRect ZWinImage::GetSelection()
 {
-    int64_t nW = abs(mMouseDownOffset.x - gInput.lastMouseMove.x);
-    int64_t nH = abs(mMouseDownOffset.y - gInput.lastMouseMove.y);
-    int64_t nMin = min<int64_t>(nW, nH);
+    int64_t nW = gInput.lastMouseMove.x- mMouseDownOffset.x;
+    int64_t nH = gInput.lastMouseMove.y- mMouseDownOffset.y;
 
-    ZRect rSelection(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x + nMin, mMouseDownOffset.y + nMin);
+    if (abs(nW) > abs(nH))
+        nW = (int64_t)((double)nW / (double)abs(nW) * (double)abs(nH));
+    else
+        nH = (int64_t)((double)nH / (double)abs(nH) * (double)abs(nW));
+
+    ZRect rSelection(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x+nW, mMouseDownOffset.y+nH);
     rSelection.NormalizeRect();
+
+    if (rSelection.Width() > rSelection.Height())
+        rSelection.right = rSelection.left + rSelection.Height();
+    else
+        rSelection.bottom = rSelection.top + rSelection.Width();
+
     limit<int64_t>(rSelection.left, mImageArea.left, mImageArea.right);
     limit<int64_t>(rSelection.right, mImageArea.left, mImageArea.right);
     limit<int64_t>(rSelection.top, mImageArea.top, mImageArea.bottom);

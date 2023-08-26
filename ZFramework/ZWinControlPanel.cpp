@@ -195,7 +195,7 @@ bool ZWinControlPanel::Paint()
     {
         // draw embossed rect
         ZRect rBounds(GetBounds(group.second));
-        rBounds.InflateRect(gnDefaultGroupInlaySize, gnDefaultGroupInlaySize);
+        rBounds.InflateRect(gSpacer, gSpacer);
         rBounds.right--;
         rBounds.bottom--;
 

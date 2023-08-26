@@ -5,9 +5,11 @@ using namespace std;
 
 uint32_t        gDefaultDialogFill(0xff575757);
 uint32_t        gDefaultTextAreaFill(0xff888888);
-uint32_t        gDefaultSpacer(16);
-int64_t         gnDefaultGroupInlaySize(9);
+//uint32_t        gDefaultSpacer(16);
+//int64_t         gnDefaultGroupInlaySize(9);
 ZRect           grDefaultDialogBackgroundEdgeRect(3, 3, 53, 52);
+int64_t         gM; // default measure defined by window diagonal ( diagonal / 100 )... all scaled GUI elements should be based off of this measure
+int64_t         gSpacer;
 
 //Fonts
 ZFontParams     gDefaultTitleFont("Gadugi", 40);
@@ -19,8 +21,8 @@ ZGUI::Style gStyleButton(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::
 ZGUI::Style gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, 0, 0, gDefaultDialogFill);
 ZGUI::Style gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, 0, 0, gDefaultDialogFill);
 ZGUI::Style gStyleGeneralText(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, 0, 0, 0, true);
-ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultSpacer, gDefaultDialogFill, true);
-ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gDefaultSpacer, gDefaultSpacer, gDefaultTextAreaFill);
+ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gSpacer, gSpacer, gDefaultDialogFill, true);
+ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gSpacer, gSpacer, gDefaultTextAreaFill);
 ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 16, 2);
 
 ZGUI::Palette gAppPalette{
@@ -36,20 +38,24 @@ namespace ZGUI
 {
     void ComputeSizes()
     {
-        gDefaultSpacer = (uint32_t)(grFullArea.Height() / 125);
-        gnDefaultGroupInlaySize = 9;
+//        gDefaultSpacer = (uint32_t)(grFullArea.Height() / 125);
+//        gnDefaultGroupInlaySize = 9;
+        gM = sqrt(grFullArea.Width() * grFullArea.Width() + grFullArea.Height() * grFullArea.Height()) / 100;  // default measure
+        gSpacer = gM / 5;
 
-        gStyleButton.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
-        gStyleToggleChecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
-        gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 62, 10);
-        gStyleTooltip.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 80, 10);
-        gStyleCaption.fp.nHeight = std::max<int64_t>(grFullArea.Height() / 55, 10);
-//        gDefaultGroupingStyle.fp.nHeight = grFullArea.Height()/135;
+        gStyleButton.fp.nHeight = std::max<int64_t>(gM/2, 10);
+        gStyleToggleChecked.fp.nHeight = std::max<int64_t>(gM, 10);
+        gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(gM, 10);
+        gStyleTooltip.fp.nHeight = std::max<int64_t>(gM/3, 10);
+        gStyleCaption.fp.nHeight = std::max<int64_t>(gM*.75, 10);
+        gStyleGeneralText.fp.nHeight = std::max<int64_t>(gM/3, 10);
+        gDefaultGroupingStyle.fp.nHeight = gM*2/5;
+        gDefaultGroupingStyle.paddingH = gM*2/7;
+        gDefaultGroupingStyle.paddingV = gM / 32;
 
-
-        gDefaultTitleFont.nHeight = std::max<int64_t>(grFullArea.Height() / 54, 10);
+        gDefaultTitleFont.nHeight = std::max<int64_t>(gM, 10);
         //    gDefaultCaptionFont.nHeight = grFullArea.Height() / 60;
-        gDefaultTextFont.nHeight = std::max<int64_t>(grFullArea.Height() / 108, 10);
+        gDefaultTextFont.nHeight = std::max<int64_t>(gM/4, 10);
 
     }
 

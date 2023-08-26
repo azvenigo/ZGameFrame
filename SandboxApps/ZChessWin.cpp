@@ -33,10 +33,10 @@ bool ZChoosePGNWin::Init()
     mFont.nHeight = 24;
     mFont.nWeight = 200;
 
-    size_t nButtonWidth = (mAreaToDrawTo.Width() - gDefaultSpacer * 2) / 2;
-    size_t nButtonHeight = (mFont.nHeight + gDefaultSpacer * 2);
+    size_t nButtonWidth = gM*3;
+    size_t nButtonHeight = gM*2;
 
-    ZRect rControl(gDefaultSpacer, gDefaultSpacer, mAreaToDrawTo.Width() - gDefaultSpacer, gDefaultSpacer + nButtonHeight);
+    ZRect rControl(gSpacer, gSpacer, mAreaToDrawTo.Width() - gSpacer, gSpacer + nButtonHeight);
 
     ZWinLabel* pLabel = new ZWinLabel();
     pLabel->msText = "Filter";
@@ -55,7 +55,7 @@ bool ZChoosePGNWin::Init()
     ZWinSizablePushBtn* pBtn;
 
     ZRect rButton(0, 0, nButtonWidth, nButtonHeight);
-    rButton.OffsetRect(gDefaultSpacer, mAreaToDrawTo.Height() - gDefaultSpacer - rButton.Height());
+    rButton.OffsetRect(gSpacer, mAreaToDrawTo.Height() - gSpacer - rButton.Height());
 
 
 
@@ -79,7 +79,7 @@ bool ZChoosePGNWin::Init()
     pBtn->SetMessage(ZMessage("cancelpgnselect", mpParentWin));
     ChildAdd(pBtn);
 
-    ZRect rListbox(gDefaultSpacer, gDefaultSpacer + rControl.bottom, mAreaToDrawTo.Width() - gDefaultSpacer, rButton.top - gDefaultSpacer);
+    ZRect rListbox(gSpacer, gSpacer + rControl.bottom, mAreaToDrawTo.Width() - gSpacer, rButton.top - gSpacer);
 
     mpGamesList = new ZWinFormattedText();
     mpGamesList->SetArea(rListbox);
@@ -99,7 +99,7 @@ bool ZChoosePGNWin::Paint()
     mpTransformTexture->Fill(mAreaToDrawTo, mFillColor);
 
     ZRect rText(mAreaToDrawTo);
-    rText.OffsetRect(gDefaultSpacer, gDefaultSpacer);
+    rText.OffsetRect(gSpacer, gSpacer);
     gpFontSystem->GetFont(mFont)->DrawTextParagraph(mpTransformTexture.get(), msCaption, rText);
     return ZWin::Paint();
 }
@@ -241,7 +241,7 @@ bool ZPGNWin::Init()
     mBoldFont.nWeight = 800;
 
 
-    ZRect rGameTags(gDefaultSpacer, gDefaultSpacer, mAreaToDrawTo.Width() - gDefaultSpacer, mAreaToDrawTo.Height() / 2 - gDefaultSpacer);
+    ZRect rGameTags(gSpacer, gSpacer, mAreaToDrawTo.Width() - gSpacer, mAreaToDrawTo.Height() / 2 - gSpacer);
 
     mpGameTagsWin = new ZWinFormattedText();
     mpGameTagsWin->SetArea(rGameTags);
@@ -259,10 +259,10 @@ bool ZPGNWin::Init()
 
 
     size_t nButtonSlots = 10;
-    size_t nButtonSize = (mAreaToDrawTo.Width() - gDefaultSpacer *2) / nButtonSlots;
+    size_t nButtonSize = (mAreaToDrawTo.Width() - gSpacer *2) / nButtonSlots;
 
     ZRect rButton(0, 0, nButtonSize, nButtonSize);
-    rButton.OffsetRect(gDefaultSpacer, mAreaToDrawTo.Height() - gDefaultSpacer - rButton.Height()); 
+    rButton.OffsetRect(gSpacer, mAreaToDrawTo.Height() - gSpacer - rButton.Height());
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = ")"; // wingdings 3 to the beggining
@@ -321,7 +321,7 @@ bool ZPGNWin::Init()
     pBtn->SetMessage(ZMessage("savegame", mpParentWin));
     ChildAdd(pBtn);
 
-    ZRect rMoves(rGameTags.left, rGameTags.bottom + gDefaultSpacer, rGameTags.right, rButton.top - gDefaultSpacer * 2);
+    ZRect rMoves(rGameTags.left, rGameTags.bottom + gSpacer, rGameTags.right, rButton.top - gSpacer * 2);
 
     mpMovesWin = new ZWinFormattedText();
     mpMovesWin->SetArea(rMoves);
@@ -626,7 +626,7 @@ bool ZChessWin::Init()
 
 
         ZRect rEditBoard(rControlPanel);
-        rEditBoard.OffsetRect(0, pEditButton->GetArea().bottom + gDefaultSpacer);
+        rEditBoard.OffsetRect(0, pEditButton->GetArea().bottom + gSpacer);
         mpEditBoardWin = new ZWinControlPanel();
         mpEditBoardWin->SetArea(rEditBoard);
         mpEditBoardWin->Init();
@@ -655,7 +655,7 @@ bool ZChessWin::Init()
 
         mpPGNWin = new ZPGNWin();
         ZRect rPGNPanel(0, 0, rControlPanel.Width() * 1.5, rControlPanel.Height());
-        rPGNPanel.OffsetRect(rControlPanel.left - rPGNPanel.Width() - gDefaultSpacer, rControlPanel.top);
+        rPGNPanel.OffsetRect(rControlPanel.left - rPGNPanel.Width() - gSpacer, rControlPanel.top);
         mpPGNWin->SetArea(rPGNPanel);
         ChildAdd(mpPGNWin);
 
@@ -665,8 +665,8 @@ bool ZChessWin::Init()
         mpStatusWin = new ZWinTextEdit(&msStatus);
         //mpStatusWin->msText = "Welcome to ZChess";
         msStatus = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, gDefaultSpacer, gDefaultSpacer, gDefaultTextAreaFill, false);
-        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, gSpacer, gSpacer, gDefaultTextAreaFill, false);
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gSpacer, gSpacer));
         ChildAdd(mpStatusWin);
     }
 
@@ -730,8 +730,8 @@ void ZChessWin::UpdateSize()
     if (mpStatusWin)
     {
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
-        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gDefaultSpacer, gDefaultSpacer));
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, gDefaultSpacer, gDefaultSpacer, gDefaultTextAreaFill, true);
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gSpacer, gSpacer));
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, gSpacer, gSpacer, gDefaultTextAreaFill, true);
     }
 
 
@@ -955,7 +955,7 @@ bool ZChessWin::Paint()
 
             rMoveLabel = pLabelFont->Arrange(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
-            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gDefaultSpacer, gDefaultSpacer);
+            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gSpacer, gSpacer);
 
             mpTransformTexture->Fill(rMoveLabel, 0xffffffff);
             pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
@@ -972,7 +972,7 @@ bool ZChessWin::Paint()
             }
             rMoveLabel = pLabelFont->Arrange(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
-            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gDefaultSpacer, gDefaultSpacer);
+            rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gSpacer, gSpacer);
             mpTransformTexture->Fill(rMoveLabel, 0xff000000);
             pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
         }
@@ -1413,7 +1413,7 @@ bool ZChessWin::LoadPGN(string sFilename)
             ZRect rControlPanel(grFullArea.right - panelW, grFullArea.bottom - panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
 
             ZRect rChoosePGNWin(0, 0, rControlPanel.Width() * 1.5, rControlPanel.Height());
-            rChoosePGNWin.OffsetRect(rControlPanel.left - rChoosePGNWin.Width() - gDefaultSpacer, rControlPanel.top);
+            rChoosePGNWin.OffsetRect(rControlPanel.left - rChoosePGNWin.Width() - gSpacer, rControlPanel.top);
             mpChoosePGNWin->SetArea(rChoosePGNWin);
             ChildAdd(mpChoosePGNWin);
             mpChoosePGNWin->ListGamesFromPGN(sFilename, sPGN);

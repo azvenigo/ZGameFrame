@@ -1554,5 +1554,86 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 	delete[] spanMaxHeap;
 
 	return true;
+
+#define M_PI 3.141592653
 }
 
+
+
+bool ZBuffer::BltScaled(ZBuffer* pSrc)
+{
+    //const uint32_t* srcBuffer, int srcWidth, int srcHeight, uint32_t* destBuffer, int destWidth, int destHeight
+    uint32_t* srcBuffer = pSrc->mpPixels;
+    int srcWidth = pSrc->GetArea().Width();
+    int srcHeight = pSrc->GetArea().Height();
+    uint32_t* destBuffer = mpPixels;
+    int destWidth = mSurfaceArea.Width();
+    int destHeight = mSurfaceArea.Height();
+
+    double xScale = static_cast<double>(srcWidth) / destWidth;
+    double yScale = static_cast<double>(srcHeight) / destHeight;
+
+    
+    double fMaxRadius = sqrt(xScale * xScale + yScale * yScale);
+
+    // if scaling up, we need to look at inverse radius
+    if (fMaxRadius < 1.0)
+        fMaxRadius = 1.0 / fMaxRadius;
+
+    for (int y = 0; y < destHeight; ++y) 
+    {
+        for (int x = 0; x < destWidth; ++x) 
+        {
+            double srcX = x * xScale;
+            double srcY = y * yScale;
+
+            int srcXInt = static_cast<int>(srcX);
+            int srcYInt = static_cast<int>(srcY);
+
+            double r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
+            double weightSum = 0.0f;
+
+            for (int j = srcYInt - yScale/2; j <= srcYInt + yScale/2; ++j) {
+                for (int i = srcXInt - xScale/2; i <= srcXInt + xScale/2; ++i) {
+
+                    double xDiff = std::abs(srcX - i);
+                    double yDiff = std::abs(srcY - j);
+                    double fDist = (sqrt(xDiff * xDiff + yDiff * yDiff));
+
+                    if (i >= 0 && i < srcWidth && j >= 0 && j < srcHeight && fDist <= fMaxRadius) {
+                        double weight = (fMaxRadius - fDist)/ fMaxRadius;
+
+                        uint32_t pixel = srcBuffer[j * srcWidth + i];
+                        double pixelA = static_cast<double>((pixel >> 24) & 0xFF);
+                        double pixelR = static_cast<double>((pixel >> 16) & 0xFF);
+                        double pixelG = static_cast<double>((pixel >> 8) & 0xFF);
+                        double pixelB = static_cast<double>(pixel & 0xFF);
+
+                        a += weight * pixelA;
+                        r += weight * pixelR;
+                        g += weight * pixelG;
+                        b += weight * pixelB;
+
+                        weightSum += weight;
+                    }
+                }
+            }
+
+            if (weightSum > 0.0f) {
+                a /= weightSum;
+                r /= weightSum;
+                g /= weightSum;
+                b /= weightSum;
+            }
+
+            uint32_t destPixel = ((static_cast<uint32_t>(a) & 0xFF) << 24) |
+                ((static_cast<uint32_t>(r) & 0xFF) << 16) |
+                ((static_cast<uint32_t>(g) & 0xFF) << 8) |
+                (static_cast<uint32_t>(b) & 0xFF);
+
+            destBuffer[y * destWidth + x] = destPixel;
+        }
+    }
+
+    return true;
+}

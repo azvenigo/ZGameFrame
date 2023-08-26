@@ -376,18 +376,23 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             imageSelection.Init(rSelection.Width(), rSelection.Height());
             imageSelection.Blt(mpWinImage->mpImage.get(), rSelection, imageSelection.GetArea(), 0, ZBuffer::kAlphaSource);
 
-            ZBuffer image256;
-            image256.Init(256, 256);
-            image256.Fill(image256.GetArea(), 0xff000000);
+#define RESIZE
+#ifdef RESIZE
+            ZBuffer image512;
+            image512.Init(512, 512);
+            image512.Fill(image512.GetArea(), 0xff000000);
 
+            image512.BltScaled(&imageSelection);
 
-            tUVVertexArray verts;
-            gRasterizer.RectToVerts(image256.GetArea(), verts);
-            gRasterizer.MultiSampleRasterizeWithAlpha(&image256, &imageSelection, verts, &image256.GetArea(), 5);
+/*            tUVVertexArray verts;
+            gRasterizer.RectToVerts(image512.GetArea(), verts);
+            gRasterizer.MultiSampleRasterizeWith5Alpha(&image512, &imageSelection, verts, &image512.GetArea(), 16);*/
 
-            image256.SaveBuffer(sFilename);
+            image512.SaveBuffer(sFilename);
             //        imageSelection.SaveBuffer(sFilename);
-
+#else
+            imageSelection.SaveBuffer(sFilename);
+#endif
             filesystem::path folder(sFilename);
             gRegistry.Set("ZImageViewer", "selectionsave", folder.parent_path().string());
         }
@@ -454,12 +459,12 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                 }
                 else
                 {
-                    mpRotationMenu->mStyle.paddingH = gDefaultSpacer;
-                    mpRotationMenu->mStyle.paddingV = gDefaultSpacer;
+                    mpRotationMenu->mStyle.paddingH = gSpacer;
+                    mpRotationMenu->mStyle.paddingV = gSpacer;
 
                     ZRect r = StringToRect(message.GetParam("r"));
-                    r.InflateRect(gnDefaultGroupInlaySize*2, gnDefaultGroupInlaySize*2);
-                    r.bottom = r.top + r.Height() * 4 + gnDefaultGroupInlaySize * 5;
+                    r.InflateRect(gSpacer *2, gSpacer *2);
+                    r.bottom = r.top + r.Height() * 4 + gM;
 
                     mpRotationMenu->SetArea(r);
                     mpRotationMenu->ArrangeChildren(1, -1);
@@ -1078,8 +1083,8 @@ void ImageViewer::LimitIndex()
 
 void ImageViewer::UpdateControlPanel()
 {
-    int64_t nControlPanelSide = mAreaToDrawTo.Height() / 24;
-    limit<int64_t>(nControlPanelSide, 64, 128);
+    int64_t nControlPanelSide = gM * 2;
+//    limit<int64_t>(nControlPanelSide, 64, 128);
 
 
     const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
@@ -1090,8 +1095,8 @@ void ImageViewer::UpdateControlPanel()
         if (gInput.IsKeyDown(VK_MENU))
             bShow = true;
 
-        mpPanel->SetVisible(bShow);
         mpPanel->mbHideOnMouseExit = !bShow;
+        mpPanel->SetVisible(bShow);
         return;
     }
 
@@ -1106,11 +1111,11 @@ void ImageViewer::UpdateControlPanel()
 
     mpPanel = new ZWinControlPanel();
         
-    int64_t nGroupSide = nControlPanelSide - gnDefaultGroupInlaySize * 2;
+    int64_t nGroupSide = (gM * 2) - gSpacer * 4;
 
 
 
-    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide * 3 /4, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     ZGUI::Style wingdingsStyle = ZGUI::Style(ZFontParams("Wingdings", nGroupSide /2, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
 
     mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
@@ -1140,12 +1145,14 @@ void ImageViewer::UpdateControlPanel()
     mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
     mpPanel->SetArea(rPanelArea);
     mpPanel->mrTrigger = rPanelArea;
+    mpPanel->mrTrigger.bottom = mpPanel->mrTrigger.top + mpPanel->mrTrigger.Height() / 4;
     ChildAdd(mpPanel, mbShowUI);
     mpPanel->mbHideOnMouseExit = !mbShowUI;
 
     ZWinSizablePushBtn* pBtn;
 
-    ZRect rButton(gnDefaultGroupInlaySize*2, gnDefaultGroupInlaySize * 2, gnDefaultGroupInlaySize + nGroupSide, nControlPanelSide - gnDefaultGroupInlaySize);
+    ZRect rButton(nGroupSide, nGroupSide);
+    rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
 
     string sAppPath = gRegistry["apppath"];
 
@@ -1155,7 +1162,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetMessage(ZMessage("quit", this));
     mpPanel->ChildAdd(pBtn);
 
-    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize*2, 0);
+    rButton.OffsetRect(rButton.Width() + gSpacer*2, 0);
     
 
     int64_t nButtonPadding = rButton.Width() / 8;
@@ -1205,7 +1212,7 @@ void ImageViewer::UpdateControlPanel()
 
 
     // Management
-    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
+    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
     rButton.right = rButton.left + (int64_t) (rButton.Width() * 2.5);     // wider buttons for management
 
     pBtn = new ZWinSizablePushBtn();
@@ -1266,7 +1273,7 @@ void ImageViewer::UpdateControlPanel()
 
 
     // Transformation (rotation, flip, etc.)
-    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 8, 0);
+    rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
     rButton.right = rButton.left + rButton.Height();    // square button
 
 
@@ -1274,8 +1281,8 @@ void ImageViewer::UpdateControlPanel()
 //    ZWinSizablePushBtn* pBtn = mpRotationMenu->AddButton("Transform", sMessage);
 
 
-    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
+    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
+    rButton.right = rButton.left + (int64_t)(rButton.Width()*1.25 );     // wider buttons for management
 
 //    rButton.right = rButton.left + rButton.Width();     // wider buttons for management
 
@@ -1290,7 +1297,7 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
 
-    rButton.OffsetRect(rButton.Width() + gnDefaultGroupInlaySize * 4, 0);
+    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
 /*
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = ">"; // unicode rotate right
@@ -1412,9 +1419,9 @@ void ImageViewer::UpdateControlPanel()
 
 
 
-    rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gnDefaultGroupInlaySize);
+    rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gSpacer/2);
 
-    rButton.OffsetRect(-gnDefaultGroupInlaySize, 0);
+    rButton.OffsetRect(-gSpacer/2, 0);
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "F";
@@ -2140,8 +2147,8 @@ void ImageViewer::UpdateCaptions()
         ZGUI::Style folderStyle(gStyleButton);
         folderStyle.pos = ZGUI::LT;
         folderStyle.look = ZGUI::ZTextLook::kShadowed;
-        folderStyle.paddingH = gDefaultSpacer / 2;
-        folderStyle.paddingV = gDefaultSpacer / 2;
+        folderStyle.paddingH = gSpacer / 2;
+        folderStyle.paddingV = gSpacer / 2;
 
 
         if (CountImagesMatchingFilter(mFilterState) == 0)
@@ -2157,13 +2164,13 @@ void ImageViewer::UpdateCaptions()
             {
                 mpWinImage->mpTable->mCellStyle = gStyleCaption;
                 mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
-                mpWinImage->mpTable->mCellStyle.paddingH = gDefaultSpacer / 2;
-                mpWinImage->mpTable->mCellStyle.paddingV = gDefaultSpacer / 2;
+                mpWinImage->mpTable->mCellStyle.paddingH = gSpacer / 2;
+                mpWinImage->mpTable->mCellStyle.paddingV = gSpacer / 2;
 
                 mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
                 mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
-                mpWinImage->mpTable->mTableStyle.paddingH = gDefaultSpacer;
-                mpWinImage->mpTable->mTableStyle.paddingV = gDefaultSpacer;
+                mpWinImage->mpTable->mTableStyle.paddingH = gSpacer;
+                mpWinImage->mpTable->mTableStyle.paddingV = gSpacer;
 
                 string sImageCount = "Viewing: [" + SH::FromInt(IndexInCurMode() + 1) + "/" + SH::FromInt(CountInCurMode()) + "]";
                 mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
@@ -2194,7 +2201,7 @@ void ImageViewer::UpdateCaptions()
                     if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
                     {
                         mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, gDefaultSpacer / 2, 100, 0x88000000, true);
+                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, gSpacer / 2, 100, 0x88000000, true);
                         mpWinImage->mCaptionMap["for_delete"].visible = true;
                         bShow = true;
                     }
@@ -2215,7 +2222,7 @@ void ImageViewer::UpdateCaptions()
         if (!mMoveToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> move to:\n%s", mMoveToFolder.string().c_str());
-            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, gDefaultSpacer / 2, (int32_t)gDefaultSpacer / 2 + folderStyle.fp.nHeight*8, 0x88000000, true);
+            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, gSpacer / 2, (int32_t)gSpacer / 2 + folderStyle.fp.nHeight*8, 0x88000000, true);
             mpWinImage->mCaptionMap["move_to_folder"].visible = bShow;
         }
         else
@@ -2226,7 +2233,7 @@ void ImageViewer::UpdateCaptions()
         if (!mCopyToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["copy_to_folder"].sText, "'C' -> copy to:\n%s", mCopyToFolder.string().c_str());
-            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, gDefaultSpacer / 2, (int32_t)gDefaultSpacer / 2 + folderStyle.fp.nHeight * 12, 0x88000000, true);
+            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, gSpacer / 2, (int32_t)gSpacer / 2 + folderStyle.fp.nHeight * 12, 0x88000000, true);
             mpWinImage->mCaptionMap["copy_to_folder"].visible = bShow;
         }
         else

@@ -213,7 +213,7 @@ bool ZWinPaletteDialog::Paint()
     ZWinDialog::Paint();
 
     tZFontPtr pTitleFont = gpFontSystem->GetFont(gDefaultTitleFont);
-    pTitleFont->DrawText(mpTransformTexture.get(), msCaption, ZGUI::Arrange(pTitleFont->StringRect(msCaption), mAreaToDrawTo, ZGUI::ICIT, gDefaultSpacer, gDefaultSpacer), &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffeeeeee, 0xffaaaaaa));
+    pTitleFont->DrawText(mpTransformTexture.get(), msCaption, ZGUI::Arrange(pTitleFont->StringRect(msCaption), mAreaToDrawTo, ZGUI::ICIT, gSpacer, gSpacer), &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffeeeeee, 0xffaaaaaa));
 
 
     double fScalar = 1023.0/(double)mrSVArea.Height();
@@ -290,9 +290,9 @@ bool ZWinPaletteDialog::Paint()
     ZRect rCaption(mrPaletteArea);
     rCaption.bottom = (mrPaletteArea.top + mrPaletteArea.bottom) / 2;
 
-    mStyle.Font()->DrawText(mpTransformTexture.get(), "new", ZGUI::Arrange(mStyle.Font()->StringRect("new"), rCaption, ZGUI::ORIC, gDefaultSpacer, gDefaultSpacer));
+    mStyle.Font()->DrawText(mpTransformTexture.get(), "new", ZGUI::Arrange(mStyle.Font()->StringRect("new"), rCaption, ZGUI::ORIC, gSpacer, gSpacer));
     rCaption.OffsetRect(0, rCaption.Height());
-    mStyle.Font()->DrawText(mpTransformTexture.get(), "old", ZGUI::Arrange(mStyle.Font()->StringRect("old"), rCaption, ZGUI::ORIC, gDefaultSpacer, gDefaultSpacer));
+    mStyle.Font()->DrawText(mpTransformTexture.get(), "old", ZGUI::Arrange(mStyle.Font()->StringRect("old"), rCaption, ZGUI::ORIC, gSpacer, gSpacer));
 
 
     mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mrPaletteArea, ZBuffer::kEdgeBltMiddle_None);
