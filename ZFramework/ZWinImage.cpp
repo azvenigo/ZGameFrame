@@ -40,6 +40,8 @@ bool ZWinImage::Init()
         return true;
 
     mIdleSleepMS = 10000;
+    mCaptionMap["zoom"].style = gStyleCaption;
+    mCaptionMap["zoom"].style.pos = ZGUI::LB;
 //    Clear();
     return ZWin::Init();
 }
@@ -95,6 +97,15 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 {
     if (mpImage)
     {
+        if ((mBehavior & kNotifyOnClick) != 0 && mpParentWin)
+        {
+            // convert coordinates to parent's
+            WindowToScreenCoordinates(x, y);
+            mpParentWin->ScreenToWindowCoordinates(x, y);
+
+            return mpParentWin->OnMouseDownL(x, y);
+        }
+
         if ((mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
         {
             if (SetCapture())
@@ -109,20 +120,23 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
             }
         }
 
-        easyexif::EXIFInfo& exif = mpImage->GetEXIF();
-        bool bHasGeoLocation = exif.GeoLocation.Latitude != 0.0 || exif.GeoLocation.Longitude != 0.0;
+        if ((mBehavior & kLaunchGeolocation) != 0)
+        {
+            easyexif::EXIFInfo& exif = mpImage->GetEXIF();
+            bool bHasGeoLocation = exif.GeoLocation.Latitude != 0.0 || exif.GeoLocation.Longitude != 0.0;
 
 #ifdef _WIN32
-        if (((mBehavior & kShowCaption) != 0) && bHasGeoLocation && mpTable && mpTable->mrAreaToDrawTo.PtInRect(x, y))
-        {
-            // open geolocation https://maps.google.com/?q=<lat>,<lng>
-            string sURL;
-            Sprintf(sURL, "https://maps.google.com/?t=k&q=%f,%f", exif.GeoLocation.Latitude, exif.GeoLocation.Longitude);
-            ShellExecute(0, "open", sURL.c_str(), 0, 0, SW_SHOWNORMAL);
+            if (((mBehavior & kShowCaption) != 0) && bHasGeoLocation && mpTable && mpTable->mrAreaToDrawTo.PtInRect(x, y))
+            {
+                // open geolocation https://maps.google.com/?q=<lat>,<lng>
+                string sURL;
+                Sprintf(sURL, "https://maps.google.com/?t=k&q=%f,%f", exif.GeoLocation.Latitude, exif.GeoLocation.Longitude);
+                ShellExecute(0, "open", sURL.c_str(), 0, 0, SW_SHOWNORMAL);
 
-            return true;
-        }
+                return true;
+            }
 #endif
+        }
         if ((mBehavior & kScrollable) && mImageArea.PtInRect(x, y))
         {
             if (SetCapture())
@@ -267,9 +281,12 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 
 bool ZWinImage::OnKeyDown(uint32_t c)
 {
-    if (c == mZoomHotkey)
-        mpParentWin->InvalidateChildren();
-    return mpParentWin->OnKeyDown(c);
+    if (mpParentWin)
+    {
+        if (c == mZoomHotkey)
+            mpParentWin->InvalidateChildren();
+        return mpParentWin->OnKeyDown(c);
+    }
 }
 
 bool ZWinImage::OnKeyUp(uint32_t c)

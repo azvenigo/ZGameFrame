@@ -60,8 +60,9 @@ bool ConfirmDeleteDialog::Init()
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetMessage(ZMessage("deleteconfirm", this));
-        pBtn->mCaption.sText = "Confirm Delete";
+        pBtn->mCaption.sText = "Confirm\nDelete";
         pBtn->mCaption.style = gStyleButton;
+        pBtn->mCaption.style.pos = ZGUI::C;
         pBtn->mCaption.style.look.colTop = 0xffff0000;
         pBtn->mCaption.style.look.colBottom = 0xffff0000;
 

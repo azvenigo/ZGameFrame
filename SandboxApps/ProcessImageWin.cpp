@@ -980,6 +980,7 @@ bool cProcessImageWin::Init()
     pCP->AddCaption("Ops");
     pCP->AddButton("Negative", "negative;target=imageprocesswin");
     pCP->AddButton("Monochrome", "mono;target=imageprocesswin");
+    pCP->AddButton("resize_256x256", "resize;target=imageprocesswin");
 
 
     pCP->AddSpace(64);
@@ -1022,7 +1023,7 @@ bool cProcessImageWin::Init()
 
     list<string> filenames;
 
-    if (!gRegistry.Get("ProcessImageWin", "images", filenames))
+    if (!gRegistry.Get("ProcessImageWin", "images", filenames) || filenames.empty())
     {
         filenames = list<string>{
             "res/414A2616.jpg",
@@ -1035,7 +1036,7 @@ bool cProcessImageWin::Init()
             "res/414A2623.jpg",
             "res/414A2624.jpg"
         };
-        gRegistry.SetDefault("ProcessImageWin", "images", filenames); 
+//        gRegistry.SetDefault("ProcessImageWin", "images", filenames); 
     }
    
 
@@ -1047,8 +1048,11 @@ bool cProcessImageWin::Init()
             checkedFilenames.push_back(filename);
     }
 
-    LoadImages(checkedFilenames);
-    Process_SelectImage(*checkedFilenames.begin());
+    if (!checkedFilenames.empty())
+    {
+        LoadImages(checkedFilenames);
+        Process_SelectImage(*checkedFilenames.begin());
+    }
 
 	return ZWin::Init();
 }
@@ -1203,6 +1207,16 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
     else if (sType == "mono")
     {
         SpawnWork(&Mono, true);
+        return true;
+    }
+    else if (sType == "resize")
+    {
+        tZBufferPtr image256(new ZBuffer());
+        image256->Init(256, 256);
+        image256->Fill(image256->GetArea(), 0xff000000);
+
+        image256->BltScaled(mpResultWin->mpImage.get());
+        mpResultWin->SetImage(image256);
         return true;
     }
     else if (sType == "computecontrast")

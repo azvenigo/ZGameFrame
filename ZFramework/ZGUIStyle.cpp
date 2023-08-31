@@ -48,7 +48,7 @@ namespace ZGUI
         gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(gM, 10);
         gStyleTooltip.fp.nHeight = std::max<int64_t>(gM/3, 10);
         gStyleCaption.fp.nHeight = std::max<int64_t>(gM*.75, 10);
-        gStyleGeneralText.fp.nHeight = std::max<int64_t>(gM/3, 10);
+        gStyleGeneralText.fp.nHeight = std::max<int64_t>(gM/2, 10);
         gDefaultGroupingStyle.fp.nHeight = gM*2/5;
         gDefaultGroupingStyle.paddingH = gM*2/7;
         gDefaultGroupingStyle.paddingV = gM / 32;

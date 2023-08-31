@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "ZWinBtn.H"
 #include "helpers/Registry.h"
+#include "ImageContest.h"
 #include "ZTimer.h"
 
 
@@ -354,6 +355,15 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         else
             mpWinImage->nSubsampling = 0;
         InvalidateChildren();
+        return true;
+    }
+    else if (sType == "show_contest")
+    {
+        ImageContest* pWin = new ImageContest();
+        pWin->SetArea(mArea);
+        GetTopWindow()->ChildAdd(pWin);
+        pWin->ScanFolder(mCurrentFolder);
+        SetVisible(false);
         return true;
     }
     else if (sType == "image_selection")
@@ -1012,7 +1022,7 @@ bool ImageViewer::Init()
         mpWinImage->SetArea(rImageArea);
         mpWinImage->mFillColor = 0xff000000;
         mpWinImage->mZoomHotkey = VK_MENU;
-        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable|ZWinImage::kSelectableArea;
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable|ZWinImage::kSelectableArea|ZWinImage::kLaunchGeolocation;
 
 //        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
 
@@ -1403,6 +1413,16 @@ void ImageViewer::UpdateControlPanel()
     mpDelFilterButton->SetState(mFilterState == kToBeDeleted, false);
     mpAllFilterButton->SetState(mFilterState == kAll, false);
 
+    rButton.right = rButton.left + rButton.Width() * 2;
+    rButton.OffsetRect(rButton.Width(), 0);
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->mCaption.sText = "Contest";
+    pBtn->mCaption.style = gDefaultGroupingStyle;
+    pBtn->mCaption.style.pos = ZGUI::C;
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "show_contest;target=%s", GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
 
 
 

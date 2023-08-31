@@ -958,7 +958,7 @@ ZWinDialog::ZWinDialog() : mStyle(gDefaultDialogStyle), mBehavior(eBehavior::Non
 
 bool ZWinDialog::Init()
 {
-    ZRect rButton(0, 0, gM * 4, gM * 3);
+    ZRect rButton(0, 0, gM * 4, gM * 2);
     rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
 
 

@@ -20,6 +20,8 @@ public:
         kShowZoomCaption        = 1 << 3,   // 8
         kShowCaption            = 1 << 4,   // 16
         kSelectableArea         = 1 << 5,   // 32
+        kNotifyOnClick          = 1 << 6,   // 64
+        kLaunchGeolocation      = 1 << 7,   // 128
     };
 
     enum eViewState : uint32_t

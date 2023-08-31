@@ -646,6 +646,7 @@ ZRect ZFont::StringRect(const std::string& sText)
 // It will not clip, however... That should be done by the caller if necessary
 ZRect ZFont::Arrange(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding)
 {
+    assert(pChars && nNumChars > 0);
 	ZRect rText(0,0, StringWidth(string((char*)pChars,nNumChars)), mFontParams.nHeight);
 	rArea.DeflateRect(nPadding, nPadding);
 
