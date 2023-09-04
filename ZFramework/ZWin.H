@@ -71,7 +71,8 @@ public:
 //	virtual void		SetArea(int64_t l,int64_t t,int64_t r,int64_t b);
 	
 	virtual void		Arrange(ZGUI::ePosition pos, const ZRect &outerRect, int64_t padding = 0);
-	
+    static  void        ArrangeWindows(tWinList windows, ZRect rArea, ZGUI::Style& style, int64_t nCols = -1, int64_t nRows = -1);    // -1 means unlocked
+
 	virtual void		MoveTo(int64_t newX, int64_t newY);
 //	virtual void		OffsetTo(int64_t deltaX, int64_t deltaY);
 	

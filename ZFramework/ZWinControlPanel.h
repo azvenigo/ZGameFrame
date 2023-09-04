@@ -22,8 +22,6 @@ public:
 
     void                FitToControls();
 
-    void                ArrangeChildren(int64_t nCols = -1, int64_t nRows = -1);    // -1 means unlocked
-
     ZWinLabel*          AddCaption(const std::string& sCaption);
 
     ZWinSizablePushBtn* AddButton(  const std::string& sCaption, const std::string& sMessage);

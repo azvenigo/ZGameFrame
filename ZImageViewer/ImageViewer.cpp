@@ -388,18 +388,16 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
 
 #define RESIZE
 #ifdef RESIZE
-            ZBuffer image512;
-            image512.Init(512, 512);
-            image512.Fill(image512.GetArea(), 0xff000000);
 
-            image512.BltScaled(&imageSelection);
+            const int kSize = 1024;
 
-/*            tUVVertexArray verts;
-            gRasterizer.RectToVerts(image512.GetArea(), verts);
-            gRasterizer.MultiSampleRasterizeWith5Alpha(&image512, &imageSelection, verts, &image512.GetArea(), 16);*/
+            ZBuffer resizedimage;
+            resizedimage.Init(kSize, kSize);
+            resizedimage.Fill(resizedimage.GetArea(), 0xff000000);
 
-            image512.SaveBuffer(sFilename);
-            //        imageSelection.SaveBuffer(sFilename);
+            resizedimage.BltScaled(&imageSelection);
+
+            resizedimage.SaveBuffer(sFilename);
 #else
             imageSelection.SaveBuffer(sFilename);
 #endif
@@ -477,7 +475,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                     r.bottom = r.top + r.Height() * 4 + gM;
 
                     mpRotationMenu->SetArea(r);
-                    mpRotationMenu->ArrangeChildren(1, -1);
+                    mpRotationMenu->ArrangeWindows(mpRotationMenu->GetChildrenInGroup("Rotate"), mAreaToDrawTo, mpRotationMenu->mStyle, 1, -1);
                     mpRotationMenu->SetVisible();
                     ChildToFront(mpRotationMenu);
                 }

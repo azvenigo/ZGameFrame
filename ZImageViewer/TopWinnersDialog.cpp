@@ -60,7 +60,7 @@ bool TopWinnersDialog::Init()
 
         ZFontParams font;
         font.sFacename = "Verdana";
-        font.nHeight = gM*2;
+        font.nHeight = gM;
 
         size_t nCount = 1;
         for (auto& entry : sortedList)

@@ -198,7 +198,11 @@ void ImageContest::ShowWinnersDialog()
         for (auto& entry : metalist.second)
         {
             if (entry.wins > 0)
-                fullList.push_back(entry);
+            {
+                filesystem::path filepath(entry.filename);
+                if (filepath.parent_path() == mCurrentFolder)
+                    fullList.push_back(entry);
+            }
         }
     }
 

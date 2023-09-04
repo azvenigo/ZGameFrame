@@ -228,6 +228,49 @@ void ZWin::Arrange(ZGUI::ePosition pos, const ZRect& outerRect, int64_t padding)
     SetArea(ZGUI::Arrange(mArea, outerRect, pos, padding, padding));
 }
 
+void ZWin::ArrangeWindows(tWinList windows, ZRect rArea, ZGUI::Style& style, int64_t nCols, int64_t nRows)
+{
+    assert(rArea.Width() > 0 && rArea.Height() > 0);
+    if (windows.empty())
+        return;
+
+    if (nCols < 1)  // undefined number of columns
+    {
+        nRows = 1;
+        nCols = windows.size();
+    }
+    else if (nRows < 1) // undefined number of rows
+    {
+        nCols = 1;
+        nRows = windows.size();
+    }
+
+    int64_t nTotalHPadding = (nCols + 1) * style.paddingH;
+    int64_t nTotalVPadding = (nRows + 1) * style.paddingV;
+
+    int64_t w = (rArea.Width() - nTotalHPadding) / nCols;
+    int64_t h = (rArea.Height() - nTotalVPadding) / nRows;
+
+    assert(w > 0 && h > 0);
+
+    tWinList::reverse_iterator childIt = windows.rbegin();
+    for (int64_t row = 0; row < nRows; row++)
+    {
+        for (int64_t col = 0; col < nCols; col++)
+        {
+            ZRect r(w, h);
+            r.OffsetRect(rArea.left + style.paddingH * (col + 1) + col * w,     // offset H by number of horizontal paddings by column number
+                rArea.top + style.paddingV * (row + 1) + row * h);    // same for V offset
+
+            (*childIt)->SetArea(r);
+
+            childIt++;
+            if (childIt == windows.rend())
+                break;
+        }
+    }
+}
+
 
 ZWin* ZWin::GetTopWindow()
 {
@@ -651,6 +694,7 @@ void ZWin::SetAreaToDrawTo()
 			pCurrParent = pCurrParent->GetParentWin();
 		}
 	} 
+    Invalidate();
 }
 
 void ZWin::SetAreaToDrawToRecursive() 
@@ -958,9 +1002,12 @@ ZWinDialog::ZWinDialog() : mStyle(gDefaultDialogStyle), mBehavior(eBehavior::Non
 
 bool ZWinDialog::Init()
 {
-    ZRect rButton(0, 0, gM * 4, gM * 2);
-    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
+    //ZRect rButton(0, 0, gM * 4, gM * 2);
+    ZRect rButtonArea(mAreaToDrawTo);
+    rButtonArea.top = rButtonArea.bottom - gM * 2;
+//    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
 
+    tWinList arrangeList;
 
     if (mBehavior & eBehavior::CancelButton)
     {
@@ -970,10 +1017,11 @@ bool ZWinDialog::Init()
         pBtn->mCaption.sText = "Cancel";
         pBtn->mCaption.style = gStyleButton;
         pBtn->SetMessage(ZMessage("dlg_cancel", this));
-        pBtn->SetArea(rButton);
+//        pBtn->SetArea(rButton);
         ChildAdd(pBtn);
+        arrangeList.push_back(pBtn);
 
-        rButton.OffsetRect(-rButton.Width() - gSpacer, 0);
+//        rButton.OffsetRect(-rButton.Width() - gSpacer, 0);
     }
 
     if (mBehavior & eBehavior::OKButton)
@@ -984,11 +1032,14 @@ bool ZWinDialog::Init()
         pBtn->SetMessage(ZMessage("dlg_ok", this));
         pBtn->mCaption.sText = "OK";
         pBtn->mCaption.style = gStyleButton;
+        arrangeList.push_back(pBtn);
 
-
-        pBtn->SetArea(rButton);
+//        pBtn->SetArea(rButton);
         ChildAdd(pBtn);
     }
+
+    if (!arrangeList.empty())
+        ArrangeWindows(arrangeList, rButtonArea, gStyleButton, -1, 1);
 
     ZWin::Init();
     SetFocus();

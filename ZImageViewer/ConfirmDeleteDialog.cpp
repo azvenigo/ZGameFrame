@@ -29,11 +29,12 @@ bool ConfirmDeleteDialog::Init()
         ZWinLabel* pLabel = new ZWinLabel();
         pLabel->msText = msCaption;
 
-        ZRect rLabel = gStyleCaption.Font()->Arrange(mAreaToDrawTo, (uint8_t*)pLabel->msText.c_str(), pLabel->msText.length(), ZGUI::LT, gSpacer);
+        ZRect rLabel = gStyleCaption.Font()->Arrange(mAreaToDrawTo, (uint8_t*)pLabel->msText.c_str(), pLabel->msText.length(), ZGUI::CT, gSpacer);
 
         pLabel->SetArea(rLabel);
         pLabel->mStyle = gStyleCaption;
         pLabel->mStyle.bgCol = 0;
+        pLabel->mStyle.pos = ZGUI::C;
         ChildAdd(pLabel);
 
         string sFolder = mFiles.begin()->parent_path().string();
@@ -41,51 +42,60 @@ bool ConfirmDeleteDialog::Init()
         rLabel.OffsetRect(0, rLabel.Height());
 //        rLabel = gStyleButton.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sFolder.c_str(), sFolder.length(), ZGUI::LT, gDefaultSpacer);
 
+        ZGUI::Style labelstyle(gStyleCaption);
+        labelstyle.fp.nHeight = gM * 0.5;
+        labelstyle.bgCol = 0;
+        labelstyle.look.colTop = 0xffffff00;
+        labelstyle.look.colBottom = 0xffffff00;
+
         pLabel = new ZWinLabel();
-        pLabel->msText = sFolder;
+        pLabel->msText = "Folder: " + sFolder;
         pLabel->SetArea(rLabel);
-        pLabel->mStyle = gDefaultDialogStyle;
-        pLabel->mStyle.bgCol = 0;
-        pLabel->mStyle.look.colTop = 0xffffff00;
-        pLabel->mStyle.look.colBottom = 0xffffff00;
+        pLabel->mStyle = labelstyle;
         ChildAdd(pLabel);
 
 
-        ZRect rButton(0, 0, gM*3, gM*2);
-        rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
+
+
+
+
+        ZGUI::Style style(gStyleButton);
+        style.fp.nHeight = gM;
+        style.paddingH = gSpacer;
+        style.paddingV = gSpacer;
+        style.pos = ZGUI::C;
+
+        tWinList arrangeList;
+
 
 
         ZWinSizablePushBtn* pBtn;
-
-
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetMessage(ZMessage("deleteconfirm", this));
-        pBtn->mCaption.sText = "Confirm\nDelete";
-        pBtn->mCaption.style = gStyleButton;
-        pBtn->mCaption.style.pos = ZGUI::C;
+        pBtn->mCaption.sText = "Confirm Delete";
+        pBtn->mCaption.style = style;
         pBtn->mCaption.style.look.colTop = 0xffff0000;
         pBtn->mCaption.style.look.colBottom = 0xffff0000;
 
 
-        pBtn->SetArea(rButton);
         ChildAdd(pBtn);
-
-        rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::LB, gSpacer, gSpacer);
-
-//        rButton.MoveRect(-rButton.Width()*2 - gDefaultSpacer, 0);
-
+        arrangeList.push_back(pBtn);
 
         pBtn = new ZWinSizablePushBtn();
         pBtn->SetMessage(ZMessage("goback", this));
         pBtn->mCaption.sText = "Go Back";
-        pBtn->mCaption.style = gStyleButton;
+        pBtn->mCaption.style = style;
 
-        pBtn->SetArea(rButton);
         ChildAdd(pBtn);
+        arrangeList.push_back(pBtn);
+
+        ZRect rButtonArea(mAreaToDrawTo);
+        rButtonArea.top = rButtonArea.bottom - gM * 2;
+        ZWin::ArrangeWindows(arrangeList, rButtonArea, style, -1, 1);
 
 
 
-        ZRect rFileList(gSpacer, gSpacer + rLabel.bottom, mAreaToDrawTo.Width() - gSpacer, rButton.top - gSpacer);
+        ZRect rFileList(gSpacer, gSpacer + rLabel.bottom, mAreaToDrawTo.Width() - gSpacer, rButtonArea.top - gSpacer);
 
         mpFilesList = new ZWinFormattedText();
         mpFilesList->SetArea(rFileList);
@@ -110,7 +120,6 @@ bool ConfirmDeleteDialog::Init()
         mpFilesList->SetUnderlineLinks(false);
 
         ChildAdd(mpFilesList);
-
 
 
 

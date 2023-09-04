@@ -74,6 +74,7 @@ namespace ZGUI
         tZFontPtr Font();
 
         operator std::string() const;
+        void operator = (const Style& rhs);
 
         ZFontParams fp;
         ZTextLook   look;

@@ -43,11 +43,14 @@ namespace ZGUI
         gM = sqrt(grFullArea.Width() * grFullArea.Width() + grFullArea.Height() * grFullArea.Height()) / 100;  // default measure
         gSpacer = gM / 5;
 
-        gStyleButton.fp.nHeight = std::max<int64_t>(gM/2, 10);
+        gStyleButton.fp.nHeight = std::max<int64_t>(gM/1.5, 10);
+        gStyleButton.paddingH = gSpacer;
+        gStyleButton.paddingV = gSpacer;
+
         gStyleToggleChecked.fp.nHeight = std::max<int64_t>(gM, 10);
         gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(gM, 10);
         gStyleTooltip.fp.nHeight = std::max<int64_t>(gM/3, 10);
-        gStyleCaption.fp.nHeight = std::max<int64_t>(gM*.75, 10);
+        gStyleCaption.fp.nHeight = std::max<int64_t>(gM, 10);
         gStyleGeneralText.fp.nHeight = std::max<int64_t>(gM/2, 10);
         gDefaultGroupingStyle.fp.nHeight = gM*2/5;
         gDefaultGroupingStyle.paddingH = gM*2/7;
@@ -142,9 +145,23 @@ namespace ZGUI
         return j.dump();
     }
 
+    void Style::operator = (const Style& rhs)
+    {
+        fp = rhs.fp;
+        look = rhs.look;
+        pos = rhs.pos;
+        paddingH = rhs.paddingH;
+        paddingV = rhs.paddingV;
+        bgCol = rhs.bgCol;
+        wrap = rhs.wrap;
+        if (rhs.mpFont && rhs.mpFont->GetFontParams() == fp)
+            mpFont = rhs.mpFont;
+    }
+
+
     tZFontPtr Style::Font()
     {
-        if (!mpFont)
+        if (!mpFont || !(mpFont->GetFontParams() == fp))
             mpFont = gpFontSystem->GetFont(fp); // cache
 
         assert(mpFont);

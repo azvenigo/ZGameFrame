@@ -42,50 +42,7 @@ void ZWinControlPanel::FitToControls()
     SetArea(rFit);
 }
 
-void ZWinControlPanel::ArrangeChildren(int64_t nCols, int64_t nRows)
-{
-    assert(mArea.Width() > 0 && mArea.Height() > 0);
-    if (mChildList.empty())
-        return;
 
-    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
-
-    if (nCols < 1)  // undefined number of columns
-    {
-        nRows = 1;
-        nCols = mChildList.size();
-    }
-    else if (nRows < 1) // undefined number of rows
-    {
-        nCols = 1;
-        nRows = mChildList.size();
-    }
-
-    int64_t nTotalHPadding = (nCols + 1) * mStyle.paddingH;
-    int64_t nTotalVPadding = (nRows + 1) * mStyle.paddingV;
-
-    int64_t btnW = (mArea.Width() - nTotalHPadding) / nCols;
-    int64_t btnH = (mArea.Height() - nTotalVPadding) / nRows;
-
-    assert(btnW > 0 && btnH > 0);
-
-    tWinList::reverse_iterator childIt = mChildList.rbegin();
-    for (int64_t row = 0; row < nRows; row++)
-    {
-        for (int64_t col = 0; col < nCols; col++)
-        {
-            ZRect rBtn(btnW, btnH);
-            rBtn.OffsetRect(mStyle.paddingH * (col + 1) + col*btnW,     // offset H by number of horizontal paddings by column number
-                            mStyle.paddingV * (row + 1) + row*btnH);    // same for V offset
-
-            (*childIt)->SetArea(rBtn);
-
-            childIt++;
-            if (childIt == mChildList.rend())
-                break;
-        }
-    }
-}
 
 
 
