@@ -32,7 +32,7 @@ protected:
 
     bool        Paint();
 
-    ZWinFormattedText* mpFilesList;
+    ZWinFormattedDoc* mpFilesList;
     std::string     msCaption;
 
     std::list<std::filesystem::path> mFiles;

@@ -4,6 +4,7 @@
 #include "Resources.h"
 #include "ZMainWin.h"
 #include "ZWinText.H"
+#include "ZThumbCache.h"
 
 using namespace std;
 
@@ -51,7 +52,7 @@ bool TopWinnersDialog::Init()
 
         ZRect rFileList(gSpacer, gSpacer + rLabel.bottom, mAreaToDrawTo.Width() - gSpacer, rButton.top - gSpacer);
 
-        mpFilesList = new ZWinFormattedText();
+        mpFilesList = new ZWinFormattedDoc();
         mpFilesList->SetArea(rFileList);
         mpFilesList->SetFill(gDefaultTextAreaFill);
         mpFilesList->SetDrawBorder();
@@ -69,9 +70,12 @@ bool TopWinnersDialog::Init()
             if (entry.wins == 1)
                 sWin = " win";
 
-            string sListBoxEntry = "<line wrap=0><text color=0xffffdd00 color2=0xffffdd00 fontparams=" + SH::URL_Encode(font) + " position=lb link=select;filename=" + SH::URL_Encode(entry.filename) + ";target=ZWinImageContest>[" + SH::FromInt(entry.wins) + sWin + "] " + std::filesystem::path(entry.filename).filename().string() + "</text></line>";
+            //            string sListBoxEntry = "<line wrap=0><text color=0xffffdd00 color2=0xffffdd00 fontparams=" + SH::URL_Encode(font) + " position=lb link=select;filename=" + SH::URL_Encode(entry.filename) + ";target=ZWinImageContest>[ELO:" + SH::FromInt(entry.elo) + " " + SH::FromInt(entry.wins) + sWin + "] " + std::filesystem::path(entry.filename).filename().string() + "</text></line>";
+            string sListBoxEntry = "<line wrap=0><img>" + gThumbCache.ThumbPath(entry.filename).string() + "</img><text color=0xffffdd00 color2=0xffffdd00 fontparams=" + SH::URL_Encode(font) + " position=lb link=select;filename=" + SH::URL_Encode(entry.filename) + ";target=ZWinImageContest>[ELO:" + SH::FromInt(entry.elo) + " " + SH::FromInt(entry.wins) + sWin + "] " + std::filesystem::path(entry.filename).filename().string() + "</text></line>";
             nCount++;
             mpFilesList->AddLineNode(sListBoxEntry);
+
+
         }
 
         mpFilesList->SetScrollable();

@@ -18,17 +18,18 @@ const int kLeft = 0;
 const int kRight = 1;
 
 const std::string kImageListExt(".imlist");
-const uint32_t kImageListTAG = 0xDAFA0001;
+const uint32_t kImageListTAG = 0xDAFA0002;
 
 class ImageMetaEntry
 {
 public:
-    ImageMetaEntry(const std::string& _filename = "", int64_t _size = 0, int64_t _contests = 0, int64_t _wins = 0)
+    ImageMetaEntry(const std::string& _filename = "", int64_t _size = 0, int64_t _contests = 0, int64_t _wins = 0, int64_t _elo = 1000)
     {
         filename = _filename;
         filesize = _size;
         contests = _contests;
         wins = _wins;
+        elo = _elo;
     };
 
     int32_t     ReadEntry(const uint8_t* pData);        // fills out entry and returns number of bytes processed
@@ -39,6 +40,7 @@ public:
 
     int32_t     contests;  // number of times the image has been shown 
     int32_t     wins;      // number of times the image has been selected
+    int32_t     elo;        // rating
 };
 
 typedef std::list<ImageMetaEntry> tImageMetaList;

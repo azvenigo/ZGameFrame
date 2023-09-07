@@ -148,7 +148,7 @@ void ZMainWin::ShowMessageBox(std::string caption, std::string text, std::string
 
 
 
-    ZWinFormattedText* pForm = new ZWinFormattedText();
+    ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
 
     ZGUI::Style textStyle(gStyleGeneralText);
     ZGUI::Style sectionText(gStyleGeneralText);
@@ -166,7 +166,7 @@ void ZMainWin::ShowMessageBox(std::string caption, std::string text, std::string
     ChildAdd(pMsgBox);
     pMsgBox->Arrange(ZGUI::C, mAreaToDrawTo);
 
-    pForm->AddMultiLine(text, textStyle.fp, textStyle.look, ZGUI::LT);
+    pForm->AddMultiLine(text, textStyle);
 
 
     pForm->Invalidate();

@@ -532,7 +532,7 @@ void ImageViewer::ShowHelpDialog()
 
 
 
-    ZWinFormattedText* pForm = new ZWinFormattedText();
+    ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
 
     ZGUI::Style text(gStyleGeneralText);
     ZGUI::Style sectionText(gStyleGeneralText);
@@ -550,44 +550,44 @@ void ImageViewer::ShowHelpDialog()
     ChildAdd(pHelp);
     pHelp->Arrange(ZGUI::C, mAreaToDrawTo);
 
-    pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Loading, quickly zooming and exiting are prioritized.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("\nAnother key feature is to sort through which images are favorites, and which should be deleted.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("So that you have time to change your mind, images are moved into subfolders.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text);
+    pForm->AddMultiLine("Loading, quickly zooming and exiting are prioritized.", text);
+    pForm->AddMultiLine("\nAnother key feature is to sort through which images are favorites, and which should be deleted.", text);
+    pForm->AddMultiLine("So that you have time to change your mind, images are moved into subfolders.", text);
 
 
-    pForm->AddMultiLine("\nViewing", sectionText.fp, sectionText.look, ZGUI::LT);
-    pForm->AddMultiLine("Associate image types with ZView or open an image from the toolbar or press 'O' to open a new image.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Once an image is loaded, all images in the same folder are scanned and available to sort through.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Use Left/Right or Mouse wheel to flip through images.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Use Home/End to go to the beginning/end of the list.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("\nViewing", sectionText);
+    pForm->AddMultiLine("Associate image types with ZView or open an image from the toolbar or press 'O' to open a new image.", text);
+    pForm->AddMultiLine("Once an image is loaded, all images in the same folder are scanned and available to sort through.", text);
+    pForm->AddMultiLine("Use Left/Right or Mouse wheel to flip through images.", text);
+    pForm->AddMultiLine("Use Home/End to go to the beginning/end of the list.", text);
 
-    pForm->AddMultiLine("Use toolbar rotation buttons to rotate/flip", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use toolbar rotation buttons to rotate/flip", text);
 
-    pForm->AddMultiLine("\nZoom/Scroll", sectionText.fp, sectionText.look, ZGUI::LT);
-    pForm->AddMultiLine("Right-click on a portion of the image to quickly switch between 100% zoom and fit to window..", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Hold ALT and use Mouse wheel zoom in and out.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("\nZoom/Scroll", sectionText);
+    pForm->AddMultiLine("Right-click on a portion of the image to quickly switch between 100% zoom and fit to window..", text);
+    pForm->AddMultiLine("Hold ALT and use Mouse wheel zoom in and out.", text);
 
-    pForm->AddMultiLine("\nUI", sectionText.fp, sectionText.look, ZGUI::LT);
-    pForm->AddMultiLine("Use TAB to toggle UI visibility", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Hold ALT show UI (when hidden)", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Use 'F' to switch windowed/fullscreen", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Move mouse to the top of the screen to show toolbar even with UI hidden.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("\nUI", sectionText);
+    pForm->AddMultiLine("Use TAB to toggle UI visibility", text);
+    pForm->AddMultiLine("Hold ALT show UI (when hidden)", text);
+    pForm->AddMultiLine("Use 'F' to switch windowed/fullscreen", text);
+    pForm->AddMultiLine("Move mouse to the top of the screen to show toolbar even with UI hidden.", text);
     
-    pForm->AddMultiLine("\nManaging Images", sectionText.fp, sectionText.look, ZGUI::LT);
-    pForm->AddMultiLine("Use '1' to toggle an image as favorite. (It will be moved into a 'favorites' subfolder.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Use 'DEL' to toggle an image as to-be-deleted. (It will be moved into a 'ZZ_TO_BE_DELETED_ZZ' subfolder.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Use the DELETE button in the toolbar to bring up a confirmation dialog with the list of photos marked for deletion.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("\nManaging Images", sectionText);
+    pForm->AddMultiLine("Use '1' to toggle an image as favorite. (It will be moved into a 'favorites' subfolder.", text);
+    pForm->AddMultiLine("Use 'DEL' to toggle an image as to-be-deleted. (It will be moved into a 'ZZ_TO_BE_DELETED_ZZ' subfolder.", text);
+    pForm->AddMultiLine("Use the DELETE button in the toolbar to bring up a confirmation dialog with the list of photos marked for deletion.", text);
 
-    pForm->AddMultiLine("Use the filter buttons in the toolbar to view either all images, just favorites, or just images marked for deletion.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use the filter buttons in the toolbar to view either all images, just favorites, or just images marked for deletion.", text);
 
 
-    pForm->AddMultiLine("Use 'UNDO' to undo the previous toggle or move.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("Use 'UNDO' to undo the previous toggle or move.", text);
 
-    pForm->AddMultiLine("\nYou can also use 'M' to quickly set a destination folder. Afterward 'M' will instantly move the image to that destination. (UNDO is available for this as well.)", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("\nYou can also use 'M' to quickly set a destination folder. Afterward 'M' will instantly move the image to that destination. (UNDO is available for this as well.)", text);
 
-    pForm->AddMultiLine("\nAI Training Images", sectionText.fp, sectionText.look, ZGUI::LT);
-    pForm->AddMultiLine("Hold SHIFT and left drag a selection rectangle to crop/resize to 256x256 and save the result. This is for quickly generating training data for Dreambooth....maybe others.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("\nAI Training Images", sectionText);
+    pForm->AddMultiLine("Hold SHIFT and left drag a selection rectangle to crop/resize to 256x256 and save the result. This is for quickly generating training data for Dreambooth....maybe others.", text);
 
 
 

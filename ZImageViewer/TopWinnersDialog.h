@@ -26,7 +26,7 @@ protected:
     void        OnOK();
     bool        Paint();
 
-    ZWinFormattedText* mpFilesList;
+    ZWinFormattedDoc* mpFilesList;
 
     tImageMetaList sortedList;
 };

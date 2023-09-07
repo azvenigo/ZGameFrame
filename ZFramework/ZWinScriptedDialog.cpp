@@ -280,7 +280,7 @@ bool ZWinScriptedDialog::ProcessNode(ZXMLNode* pNode)
 
 	if (sComponent == ksElementTextWin)
 	{
-		ZWinFormattedText* pWin = new ZWinFormattedText();
+		ZWinFormattedDoc* pWin = new ZWinFormattedDoc();
 		pWin->InitFromXML(pNode);
 		ChildAdd(pWin);
 	}

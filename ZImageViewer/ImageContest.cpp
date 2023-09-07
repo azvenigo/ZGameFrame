@@ -15,6 +15,7 @@
 #include "helpers/Registry.h"
 #include "ZTimer.h"
 #include "ZRandom.h"
+#include "ZThumbCache.h"
 
 using namespace std;
 
@@ -197,7 +198,7 @@ void ImageContest::ShowWinnersDialog()
     {
         for (auto& entry : metalist.second)
         {
-            if (entry.wins > 0)
+            if (entry.wins > 0 && entry.elo > 1000)
             {
                 filesystem::path filepath(entry.filename);
                 if (filepath.parent_path() == mCurrentFolder)
@@ -209,7 +210,7 @@ void ImageContest::ShowWinnersDialog()
     if (fullList.empty())
         return;
 
-    fullList.sort([](const ImageMetaEntry& a, const ImageMetaEntry& b) -> bool { return a.wins > b.wins; });
+    fullList.sort([](const ImageMetaEntry& a, const ImageMetaEntry& b) -> bool { return a.elo > b.elo; });
     TopWinnersDialog* pDialog = TopWinnersDialog::ShowDialog(fullList, mpWinImage[kRight]->GetArea());
 }
 
@@ -222,6 +223,7 @@ void ImageContest::ResetContest()
         {
             entry.wins = 0;
             entry.contests = 0;
+            entry.elo = 1000;
         }
     }
     mMeta.Save();
@@ -256,7 +258,7 @@ void ImageContest::ShowHelpDialog()
 
 
 
-    ZWinFormattedText* pForm = new ZWinFormattedText();
+    ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
 
     ZGUI::Style text(gStyleGeneralText);
     ZGUI::Style sectionText(gStyleGeneralText);
@@ -274,10 +276,10 @@ void ImageContest::ShowHelpDialog()
     ChildAdd(pHelp);
     pHelp->Arrange(ZGUI::C, mAreaToDrawTo);
 
-    pForm->AddMultiLine("\nImage Contest", sectionText.fp, sectionText.look, ZGUI::LT);
-    pForm->AddMultiLine("Use this feature to randomly choose two images from a folder and snap-judge which is the best.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("Click on either image or use LEFT/RIGHT to select.", text.fp, text.look, ZGUI::LT);
-    pForm->AddMultiLine("View the top winners with the button in the control panel.", text.fp, text.look, ZGUI::LT);
+    pForm->AddMultiLine("\nImage Contest", sectionText);
+    pForm->AddMultiLine("Use this feature to randomly choose two images from a folder and snap-judge which is the best.", text);
+    pForm->AddMultiLine("Click on either image or use LEFT/RIGHT to select.", text);
+    pForm->AddMultiLine("View the top winners with the button in the control panel.", text);
 
     pForm->Invalidate();
 
@@ -633,8 +635,6 @@ bool ImageContest::PickRandomPair()
 
     mpWinImage[kRight]->SetImage(p2);
 
-    
-
     mImageMeta[kLeft] = &mMeta.Entry(file1, std::filesystem::file_size(*it1));
     mImageMeta[kRight] = &mMeta.Entry(file2, std::filesystem::file_size(*it2));
 
@@ -642,6 +642,8 @@ bool ImageContest::PickRandomPair()
 
     return true;
 }
+
+
 
 bool ImageContest::SelectWinner(int leftOrRight)
 {
@@ -652,11 +654,41 @@ bool ImageContest::SelectWinner(int leftOrRight)
 
         mImageMeta[leftOrRight]->wins++;
 
+        double fExpectedLeft = 1.0 / (1.0 + std::pow(10, (mImageMeta[kRight]->elo - mImageMeta[kLeft]->elo) / 400.0));
+        double fExpectedRight = 1.0 / (1.0 + std::pow(10, (mImageMeta[kLeft]->elo - mImageMeta[kRight]->elo) / 400.0));
 
-        ZOUT("Image:", mImageMeta[leftOrRight]->filename, " wins/contests:", mImageMeta[leftOrRight]->wins, "/", mImageMeta[leftOrRight]->contests);
+        double fWeight = 100.0;
+
+        // Assume kLeft
+        double fActualLeft = 1;
+        double fActualRight = 0;
+
+        if (leftOrRight == kRight)
+        {
+            fActualLeft = 0;
+            fActualRight = 1;
+        }
+
+        mImageMeta[kLeft]->elo += fWeight * (fActualLeft - fExpectedLeft);
+        mImageMeta[kRight]->elo += fWeight * (fActualRight - fExpectedRight);
+
+        ZOUT("Image:", mImageMeta[leftOrRight]->filename, " wins/contests:", mImageMeta[leftOrRight]->wins, "/", mImageMeta[leftOrRight]->contests, " ELO:", mImageMeta[leftOrRight]->elo);
 
         mMeta.SaveBucket(mImageMeta[kLeft]->filesize);
         mMeta.SaveBucket(mImageMeta[kRight]->filesize);
+
+
+
+        // Store thumbnails for winning images
+        if (mImageMeta[leftOrRight]->elo > 1000)
+        {
+            tZBufferPtr thumb = gThumbCache.GetThumb(mImageMeta[leftOrRight]->filename);
+            if (!thumb)
+            {
+                gThumbCache.Add(mImageMeta[leftOrRight]->filename, mpWinImage[leftOrRight]->mpImage);
+            }
+        }
+
 
 
         PickRandomPair();
@@ -677,10 +709,10 @@ void ImageContest::UpdateCaptions()
         bShow = true;
 
     string sCap;
-    Sprintf(sCap, "Wins %d/%d", mImageMeta[kLeft]->wins, mImageMeta[kLeft]->contests);
+    Sprintf(sCap, "Wins %d/%d ELO:%d", mImageMeta[kLeft]->wins, mImageMeta[kLeft]->contests, mImageMeta[kLeft]->elo);
     mpWinImage[kLeft]->mCaptionMap["contests"].sText = sCap;
 
-    Sprintf(sCap, "Wins %d/%d", mImageMeta[kRight]->wins, mImageMeta[kRight]->contests);
+    Sprintf(sCap, "Wins %d/%d ELO:%d", mImageMeta[kRight]->wins, mImageMeta[kRight]->contests, mImageMeta[kRight]->elo);
     mpWinImage[kRight]->mCaptionMap["contests"].sText = sCap;
 
     if (bShow)
@@ -830,7 +862,7 @@ bool ImageMeta::Load(const std::filesystem::path& imagelist)
         nBytesLeft -= nRead;
         pWalker += nRead;
 
-        cout << "Read ImageMetaEntry: filename:" << entry.filename << " size:" << entry.filesize << " wins/contests:" << entry.wins << "/" << entry.contests << "\n";
+        cout << "Read ImageMetaEntry: filename:" << entry.filename << " size:" << entry.filesize << " wins/contests:" << entry.wins << "/" << entry.contests << " elo:" << entry.elo << "\n";
 
         mSizeToMetaLists[nImageSizes].emplace_back(std::move(entry));
     }
@@ -919,7 +951,9 @@ int32_t ImageMetaEntry::ReadEntry(const uint8_t* pData)
     pWalker += sizeof(int32_t);
 
     wins = *((int32_t*)pWalker);
+    pWalker += sizeof(int32_t);
 
+    elo = *((int32_t*)pWalker);
     pWalker += sizeof(int32_t);
 
     return (int32_t)(pWalker - pData);
@@ -944,6 +978,9 @@ int32_t ImageMetaEntry::WriteEntry(uint8_t* pDest)
     pWriter += sizeof(int32_t);
 
     *(int32_t*)pWriter = wins;
+    pWriter += sizeof(int32_t);
+
+    *(int32_t*)pWriter = elo;
     pWriter += sizeof(int32_t);
 
     return (int32_t)(pWriter - pDest);

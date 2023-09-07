@@ -18,7 +18,7 @@ ZWinDebugConsole::ZWinDebugConsole()
 {
 	mpWinSlider = NULL;
 
-	mrTextArea.SetRect(0,0,0,0);
+	mrDocumentArea.SetRect(0,0,0,0);
     mTextCol = 0xff00ffff;
 
 	mbScrollable				= true;
@@ -99,9 +99,9 @@ void ZWinDebugConsole::UpdateScrollbar()
 {
 	int64_t nFullTextHeight = gDebug.mHistory.size();
 
-    mrTextArea.SetRect(mAreaToDrawTo);
-    mrTextArea.DeflateRect(gSpacer, gSpacer);
-    mrTextArea.right -= 16;
+    mrDocumentArea.SetRect(mAreaToDrawTo);
+    mrDocumentArea.DeflateRect(gSpacer, gSpacer);
+    mrDocumentArea.right -= 16;
 
     size_t nVisible = GetVisibleLines();
 
@@ -133,7 +133,7 @@ void ZWinDebugConsole::UpdateScrollbar()
 size_t ZWinDebugConsole::GetVisibleLines()
 {
     if (mFont)
-        return mrTextArea.Height() / mFont->Height();
+        return mrDocumentArea.Height() / mFont->Height();
     return 0;
 }
 
@@ -150,12 +150,12 @@ bool ZWinDebugConsole::Paint()
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
-    mpTransformTexture.get()->Fill(mrTextArea, 0xff000000);
+    mpTransformTexture.get()->Fill(mrDocumentArea, 0xff000000);
 
 
     int64_t nHeight = mFont->Height();
     int64_t nFixedWidth = mFont->GetFontParams().nFixedWidth;
-    int64_t nCharsPerLine = mrTextArea.Width() / nFixedWidth;
+    int64_t nCharsPerLine = mrDocumentArea.Width() / nFixedWidth;
 
     const std::lock_guard<std::mutex> lock(gDebug.mHistoryMutex);
     list<sDbgMsg>::reverse_iterator it = gDebug.mHistory.rbegin();       // reverse begin
@@ -176,7 +176,7 @@ bool ZWinDebugConsole::Paint()
 
 
 
-    int64_t nCurLineBottom = mrTextArea.bottom;
+    int64_t nCurLineBottom = mrDocumentArea.bottom;
 
     while (it != gDebug.mHistory.rend())
     {
@@ -186,7 +186,7 @@ bool ZWinDebugConsole::Paint()
         int64_t nOffset = 0;
         while (nOffset < msg.sLine.length())
         {
-            ZRect rLine(mrTextArea.left, nCurLineBottom - nLines * mFont->Height(), mrTextArea.right, nCurLineBottom);
+            ZRect rLine(mrDocumentArea.left, nCurLineBottom - nLines * mFont->Height(), mrDocumentArea.right, nCurLineBottom);
             string sPartial(msg.sLine.substr(nOffset, nCharsPerLine));
             mFont->DrawTextA(mpTransformTexture.get(), sPartial, rLine, &ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, msg.nLevel, msg.nLevel));
             nOffset += sPartial.length();
@@ -194,7 +194,7 @@ bool ZWinDebugConsole::Paint()
             nCurLineBottom -= nHeight;
         };
 
-        if (nCurLineBottom <= mrTextArea.top)
+        if (nCurLineBottom <= mrDocumentArea.top)
             break;
 
         it++;

@@ -99,7 +99,7 @@ private:
 //	cCEBuffer*	mpBufferToProcess;
 
 	ZWinImage*                  mpProcessedImageWin;
-    ZWinFormattedText*          mpImageProps;
+    ZWinFormattedDoc*          mpImageProps;
 
     ZFloatColorBuffer           mFloatColorBuffer;
 

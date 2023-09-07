@@ -35,7 +35,7 @@ private:
 
     size_t              mnDebugHistoryLastSeenCounter;
 
-    ZRect        		mrTextArea;
+    ZRect        		mrDocumentArea;
     tZFontPtr           mFont;
 
     uint32_t            mTextCol;

@@ -57,6 +57,7 @@ set (GUI_FILES
 ../ZFramework/ZGUIStyle.h           ../ZFramework/ZGUIStyle.cpp
 ../ZFramework/ZGUIElements.h        ../ZFramework/ZGUIElements.cpp
 
+../ZFramework/ZThumbCache.h         ../ZFramework/ZThumbCache.cpp
 ../ZFramework/ZRasterizer.h         ../ZFramework/ZRasterizer.cpp
 ../ZFramework/ZScreenBuffer.h       ../ZFramework/ZScreenBuffer.cpp
 ../ZFramework/ZFont.h               ../ZFramework/ZFont.cpp

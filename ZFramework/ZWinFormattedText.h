@@ -9,23 +9,41 @@
 class ZWinSlider;
 class ZFont;
 
-struct sTextEntry
-{
-    std::string         sText;
-	ZFontParams         fontParams;
-    ZGUI::ZTextLook     look;
-    ZGUI::ePosition     pos;
-    std::string         sLink;
-};
-
-typedef std::list<sTextEntry>	tTextLine;
-typedef std::list<tTextLine>	tDocument;
-
-class ZWinFormattedText : public ZWin
+class FormattedEntry
 {
 public:
-	ZWinFormattedText();
-	~ZWinFormattedText();
+    enum tEntry
+    {
+        Text = 1,
+        Image = 2
+    };
+
+    FormattedEntry(tEntry _type = Text, const std::string _text = "", tZBufferPtr _buffer = nullptr, const ZGUI::Style& _style = {}, const std::string _link = "")
+    {
+        type = _type;
+        text = _text;
+        pBuffer = _buffer;
+        style = _style;
+        link = _link;
+    }
+
+
+    tEntry              type;
+    std::string         text;
+    tZBufferPtr         pBuffer;
+
+    ZGUI::Style         style;
+    std::string         link;
+};
+
+typedef std::list<FormattedEntry>	tFormattedLine;
+typedef std::list<tFormattedLine>	tDocument;
+
+class ZWinFormattedDoc : public ZWin
+{
+public:
+	ZWinFormattedDoc();
+	~ZWinFormattedDoc();
 
 	virtual bool		Init();
 	virtual bool		InitFromXML(ZXMLNode* pNode);
@@ -38,7 +56,7 @@ public:
     virtual void        SetFill(uint32_t nCol, bool bEnable = true) { mnFillColor = nCol; mbFillBackground = bEnable && ARGB_A(mnFillColor) > 5; }
 
     virtual void		AddLineNode(std::string sLine);
-    virtual void		AddMultiLine(std::string sLine, ZFontParams fontParams, const ZGUI::ZTextLook& look = {}, ZGUI::ePosition = ZGUI::LB, const std::string& sLink = "");
+    virtual void		AddMultiLine(std::string sLine, ZGUI::Style style = {}, const std::string& sLink = "");
     int64_t   			GetFullDocumentHeight() { return mnFullDocumentHeight; }
 
 	void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
@@ -58,30 +76,25 @@ public:
 private:
 
 	void				CalculateFullDocumentHeight();
-	int64_t   			GetLineHeight(tTextLine& textLine);     // returns the font height of the largest font on the line
+	int64_t   			GetLineHeight(tFormattedLine& line);     // returns the font height of the largest font on the line
 
 	bool 				ParseDocument(ZXMLNode* pNode);
 	bool 				ProcessLineNode(ZXMLNode* pLineNode);
-	void				ExtractTextParameters(ZXMLNode* pTextNode);
+	void				ExtractParameters(ZXMLNode* pNode);
 
 
 	ZWinSlider*         mpWinSlider;
 	int64_t				mnSliderVal;
-	//cCEFont*     		mpFont[3];
 
-	ZRect        		mrTextArea;
-	ZRect        		mrTextBorderArea;
+	ZRect        		mrDocumentArea;
+	ZRect        		mrDocumentBorderArea;
 
 	tDocument    		mDocument;     // parsed document
     std::mutex          mDocumentMutex;		// when held, document may not be modified
 
 
 	// Storage for text parameters while parsing the document
-	ZFontParams		    mCurrentFont;
-    ZGUI::ZTextLook     mCurrentLook;
-	ZGUI::ePosition	    mCurrentTextPosition;
 	bool				mbScrollable;
-    std::string         msLink;
 
 	int64_t				mnMouseDownSliderVal;
 	double				mfMouseMomentum;

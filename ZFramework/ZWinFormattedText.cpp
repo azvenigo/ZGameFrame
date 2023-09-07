@@ -31,6 +31,7 @@ const string				ksPositionTag("position");
 const string				ksDecoTag("deco");
 const string				ksWrapTag("wrap");
 const string				ksLinkTag("link");
+const string                ksImageTag("img");
 
 const string				ksUnderlineLinksTag("underline_links");
 const string				ksTextFillTag("text_background_fill");
@@ -46,16 +47,13 @@ const string				ksTextScrollToBottom("text_scroll_to_bottom");
 static char THIS_FILE[] = __FILE__;
 #endif
 
-ZWinFormattedText::ZWinFormattedText()
+ZWinFormattedDoc::ZWinFormattedDoc()
 {
     mpWinSlider = NULL;
 
-	mrTextArea.SetRect(0,0,0,0);
-	mrTextBorderArea.SetRect(0,0,0,0);
+	mrDocumentArea.SetRect(0,0,0,0);
+	mrDocumentBorderArea.SetRect(0,0,0,0);
 
-    mCurrentFont                = ZFontParams("Ariel", 12);
-    mCurrentLook                = kDefaultLook;
-	mCurrentTextPosition		= kDefaultTextPosition;       
 	mnFullDocumentHeight		= 0;
 	mbScrollable				= false;
 
@@ -71,11 +69,11 @@ ZWinFormattedText::ZWinFormattedText()
 
 }
 
-ZWinFormattedText::~ZWinFormattedText()
+ZWinFormattedDoc::~ZWinFormattedDoc()
 {
 }
 
-bool ZWinFormattedText::InitFromXML(ZXMLNode* pNode)
+bool ZWinFormattedDoc::InitFromXML(ZXMLNode* pNode)
 {
 	ZASSERT(pNode);
 
@@ -90,7 +88,7 @@ bool ZWinFormattedText::InitFromXML(ZXMLNode* pNode)
 	return false;
 }
 
-bool ZWinFormattedText::Init()
+bool ZWinFormattedDoc::Init()
 {
 	if (ZWin::Init())
 	{
@@ -102,13 +100,13 @@ bool ZWinFormattedText::Init()
 }
 
 
-void ZWinFormattedText::SetArea(const ZRect& newArea)
+void ZWinFormattedDoc::SetArea(const ZRect& newArea)
 {
 	ZWin::SetArea(newArea);
 	UpdateScrollbar();
 }
 
-void ZWinFormattedText::SetScrollable(bool bScrollable) 
+void ZWinFormattedDoc::SetScrollable(bool bScrollable) 
 { 
     mbScrollable = bScrollable;
     if (mbScrollable)
@@ -116,15 +114,15 @@ void ZWinFormattedText::SetScrollable(bool bScrollable)
 }
 
 
-bool ZWinFormattedText::OnMouseDownL(int64_t x, int64_t y)
+bool ZWinFormattedDoc::OnMouseDownL(int64_t x, int64_t y)
 {
 	ZRect rEdgeSrc(3,5,21,61);
 
 	// Get a local rect
-	ZRect rLocalTextBorderArea(mrTextArea);
+	ZRect rLocalTextBorderArea(mrDocumentArea);
 	rLocalTextBorderArea.InflateRect(6,6);
 
-	ZRect rLocalTextArea(mrTextArea);
+	ZRect rLocalTextArea(mrDocumentArea);
 
 	ZRect rClip(rLocalTextArea);
 
@@ -147,25 +145,22 @@ bool ZWinFormattedText::OnMouseDownL(int64_t x, int64_t y)
     std::unique_lock<std::mutex> lk(mDocumentMutex);
 	for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
 	{
-		tTextLine& textLine = *it;
+		tFormattedLine& textLine = *it;
 
 		ZRect rLine(rLocalTextArea.left, nY, rLocalTextArea.right, nY + GetLineHeight(textLine));
 
 		if (rLocalTextArea.Overlaps(&rLine))
 		{
-			for (tTextLine::iterator lineIt = textLine.begin(); lineIt != textLine.end(); lineIt++)
+			for (tFormattedLine::iterator lineIt = textLine.begin(); lineIt != textLine.end(); lineIt++)
 			{
-				sTextEntry& entry = *lineIt;
+				FormattedEntry& entry = *lineIt;
 
-                tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
-				ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.pos);
-				if (rText.PtInRect(nMouseX, nMouseY))
+                tZFontPtr pFont(entry.style.Font());
+				ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.text.data(), entry.text.length(), entry.style.pos);
+				if (rText.PtInRect(nMouseX, nMouseY) && !entry.link.empty())
 				{
-					if (!entry.sLink.empty())
-					{
-						gMessageSystem.Post(entry.sLink);
-						return true;
-					}
+					gMessageSystem.Post(entry.link);
+					return true;
 				}
 			}
 		}
@@ -183,7 +178,7 @@ bool ZWinFormattedText::OnMouseDownL(int64_t x, int64_t y)
 	return ZWin::OnMouseDownL(x, y);
 }
 
-bool ZWinFormattedText::OnMouseUpL(int64_t x, int64_t y)
+bool ZWinFormattedDoc::OnMouseUpL(int64_t x, int64_t y)
 {
 	ReleaseCapture();
 
@@ -191,7 +186,7 @@ bool ZWinFormattedText::OnMouseUpL(int64_t x, int64_t y)
 }
 
 
-bool ZWinFormattedText::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
+bool ZWinFormattedDoc::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 {
 	if (mpWinSlider)
 	{
@@ -209,7 +204,7 @@ bool ZWinFormattedText::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelt
 	return true;
 }
 
-bool ZWinFormattedText::OnMouseMove(int64_t x, int64_t y)
+bool ZWinFormattedDoc::OnMouseMove(int64_t x, int64_t y)
 {
 	if (AmCapturing() && mpWinSlider)
 	{
@@ -226,21 +221,21 @@ bool ZWinFormattedText::OnMouseMove(int64_t x, int64_t y)
 	return ZWin::OnMouseMove(x, y);
 }
 
-void ZWinFormattedText::UpdateScrollbar()
+void ZWinFormattedDoc::UpdateScrollbar()
 {
 	int64_t nFullTextHeight = GetFullDocumentHeight();
 
-    mrTextBorderArea.SetRect(mAreaToDrawTo);
+    mrDocumentBorderArea.SetRect(mAreaToDrawTo);
 
-    mrTextArea.SetRect(mrTextBorderArea);
+    mrDocumentArea.SetRect(mrDocumentBorderArea);
     if (mbDrawBorder)
-        mrTextArea.DeflateRect(6, 6);
+        mrDocumentArea.DeflateRect(6, 6);
 
 
-	if (mbScrollable && nFullTextHeight > mrTextArea.Height())
+	if (mbScrollable && nFullTextHeight > mrDocumentArea.Height())
 	{
-        mrTextBorderArea.right -= kSliderWidth;
-        mrTextArea.right -= kSliderWidth;
+        mrDocumentBorderArea.right -= kSliderWidth;
+        mrDocumentArea.right -= kSliderWidth;
 
 
         if (!mpWinSlider)
@@ -252,8 +247,8 @@ void ZWinFormattedText::UpdateScrollbar()
             ChildAdd(mpWinSlider);
         }
 
-        double fThumbRatio = (double)mrTextArea.Height()/(double)nFullTextHeight;
-        mpWinSlider->SetSliderRange(0, nFullTextHeight-mrTextArea.Height(), 1, fThumbRatio);
+        double fThumbRatio = (double)mrDocumentArea.Height()/(double)nFullTextHeight;
+        mpWinSlider->SetSliderRange(0, nFullTextHeight-mrDocumentArea.Height(), 1, fThumbRatio);
 
 		if (mnScrollToOnInit > 0)
 		{
@@ -263,7 +258,7 @@ void ZWinFormattedText::UpdateScrollbar()
             std::unique_lock<std::mutex> lk(mDocumentMutex);
 			for (tDocument::iterator it = mDocument.begin(); it != mDocument.end() && nLine < mnScrollToOnInit; it++, nLine++)
 			{
-				tTextLine& textLine = *it;
+				tFormattedLine& textLine = *it;
 
 				nHeight += GetLineHeight(textLine);
 			}
@@ -282,7 +277,7 @@ void ZWinFormattedText::UpdateScrollbar()
     Invalidate();
 }
 
-bool ZWinFormattedText::Paint()
+bool ZWinFormattedDoc::Paint()
 {
 	if (!mbInvalid)
 		return false;
@@ -293,11 +288,11 @@ bool ZWinFormattedText::Paint()
 	ZRect rEdgeSrc(3,5,21,61);
 
 	// Get a local rect
-	ZRect rLocalTextBorderArea(mrTextArea);
+	ZRect rLocalTextBorderArea(mrDocumentArea);
 	rLocalTextBorderArea.InflateRect(6,6);
 	//   rLocalTextBorderArea.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
-	ZRect rLocalTextArea(mrTextArea);
+	ZRect rLocalTextArea(mrDocumentArea);
 	//   rLocalTextArea.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
@@ -328,37 +323,47 @@ bool ZWinFormattedText::Paint()
     std::unique_lock<std::mutex> lk(mDocumentMutex);
     for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
 	{
-		tTextLine& textLine = *it;
+		tFormattedLine& textLine = *it;
 
 		ZRect rLine(rLocalTextArea.left, nY, rLocalTextArea.right, nY + GetLineHeight(textLine));
 
 		if (rLocalTextArea.Overlaps(&rLine))
 		{
-			for (tTextLine::iterator lineIt = textLine.begin(); lineIt != textLine.end(); lineIt++)
+			for (tFormattedLine::iterator lineIt = textLine.begin(); lineIt != textLine.end(); lineIt++)
 			{
-				sTextEntry& entry = *lineIt;
+				FormattedEntry& entry = *lineIt;
 
-                tZFontPtr pFont(gpFontSystem->GetFont(entry.fontParams));
-				ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.sText.data(), entry.sText.length(), entry.pos);
+                if (entry.pBuffer)
+                {
+                    ZRect rDst(entry.pBuffer->GetArea());
+                    rDst = ZGUI::Arrange(rDst, rLine, entry.style.pos);
+                    mpTransformTexture->Blt(entry.pBuffer.get(), entry.pBuffer->GetArea(), rDst);
+                }
+                else
+                {
 
-				int64_t nShadowOffset = max((int) pFont->Height()/16, (int) 1);
+                    tZFontPtr pFont(entry.style.Font());
+                    ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.text.data(), entry.text.length(), entry.style.pos);
 
-				pFont->DrawText(mpTransformTexture.get(), entry.sText, rText, &entry.look, &rClip);
+                    int64_t nShadowOffset = max((int)pFont->Height() / 16, (int)1);
 
-				if (mbUnderlineLinks && !entry.sLink.empty())
-				{
-					ZRect rUnderline(rText);
-					rUnderline.top = rUnderline.bottom-nShadowOffset;
-					rUnderline.IntersectRect(&rClip);
-                    mpTransformTexture.get()->Fill(rUnderline, entry.look.colBottom);
+                    pFont->DrawText(mpTransformTexture.get(), entry.text, rText, &entry.style.look, &rClip);
 
-					if (entry.look.decoration == ZGUI::ZTextLook::kShadowed)
-					{
-						rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
-						rUnderline.IntersectRect(&rClip);
-                        mpTransformTexture.get()->Fill(rUnderline, 0xff000000);
-					}
-				}
+                    if (mbUnderlineLinks && !entry.link.empty())
+                    {
+                        ZRect rUnderline(rText);
+                        rUnderline.top = rUnderline.bottom - nShadowOffset;
+                        rUnderline.IntersectRect(&rClip);
+                        mpTransformTexture.get()->Fill(rUnderline, entry.style.look.colBottom);
+
+                        if (entry.style.look.decoration == ZGUI::ZTextLook::kShadowed)
+                        {
+                            rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
+                            rUnderline.IntersectRect(&rClip);
+                            mpTransformTexture.get()->Fill(rUnderline, 0xff000000);
+                        }
+                    }
+                }
 			}
 		}
 
@@ -372,48 +377,42 @@ bool ZWinFormattedText::Paint()
 	return ZWin::Paint();
 }
 
-int64_t ZWinFormattedText::GetLineHeight(tTextLine& textLine)
+int64_t ZWinFormattedDoc::GetLineHeight(tFormattedLine& textLine)
 {
-	ZFontParams largestFont;
-	for (tTextLine::iterator it = textLine.begin(); it != textLine.end(); it++)
+    int64_t nLargest = 0;
+	for (tFormattedLine::iterator it = textLine.begin(); it != textLine.end(); it++)
 	{
-		sTextEntry& textEntry = *it;
-		if (textEntry.fontParams.nHeight > largestFont.nHeight)
-            largestFont = textEntry.fontParams;
+		FormattedEntry& textEntry = *it;
+        if (textEntry.pBuffer && textEntry.pBuffer->GetArea().Height() > nLargest)
+            nLargest = textEntry.pBuffer->GetArea().Height();
+		else if (textEntry.style.fp.nHeight > nLargest)
+            nLargest = textEntry.style.fp.nHeight;
 	}
 
-    tZFontPtr pLargestFont(gpFontSystem->GetFont(largestFont));
-    assert(pLargestFont);
-
-    return pLargestFont->Height();
+    return nLargest;
 }
 
-void ZWinFormattedText::CalculateFullDocumentHeight()
+void ZWinFormattedDoc::CalculateFullDocumentHeight()
 {
 	mnFullDocumentHeight = 0;
 
     std::unique_lock<std::mutex> lk(mDocumentMutex);
     for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
 	{
-		tTextLine& textLine = *it;
+		tFormattedLine& textLine = *it;
 
 		mnFullDocumentHeight += GetLineHeight(textLine);
 	}
 }
 
-void ZWinFormattedText::Clear()
+void ZWinFormattedDoc::Clear()
 {
     std::unique_lock<std::mutex> lk(mDocumentMutex);
     mDocument.clear();
 	mnFullDocumentHeight = 0;
-
-	// Restore the defaults
-	mCurrentFont			= ZFontParams("Arial", 12);
-    mCurrentLook = kDefaultLook;
-    mCurrentTextPosition	= kDefaultTextPosition;
 }
 
-bool ZWinFormattedText::ParseDocument(ZXMLNode* pNode)
+bool ZWinFormattedDoc::ParseDocument(ZXMLNode* pNode)
 {
 	Clear();
 
@@ -457,21 +456,8 @@ bool ZWinFormattedText::ParseDocument(ZXMLNode* pNode)
 	return true;
 }
 
-/*void ZWinFormattedText::AddLineNode(string sLine, ZFontParams fontParams, const ZGUI::ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
-{
-    // Treat the line as a line node
-    ZXMLNode lineNode;
-    lineNode.Init(sLine);
-    mCurrentLook = look;
-    mCurrentFont = fontParams;
-    mCurrentTextPosition = pos;
-    msLink = sLink;
 
-    ProcessLineNode(lineNode.GetChild("line"));
-}*/
-
-
-void ZWinFormattedText::AddLineNode(string sLine)
+void ZWinFormattedDoc::AddLineNode(string sLine)
 {
     // Treat the line as a line node
     ZXMLNode lineNode;
@@ -480,85 +466,116 @@ void ZWinFormattedText::AddLineNode(string sLine)
 }
 
 
-void ZWinFormattedText::AddMultiLine(string sLine, ZFontParams fontParams, const ZGUI::ZTextLook& look, ZGUI::ePosition pos, const string& sLink)
+void ZWinFormattedDoc::AddMultiLine(string sLine, ZGUI::Style style, const string& sLink)
 {
-    tTextLine textLine;
+    tFormattedLine line;
+    tZFontPtr pFont(style.Font());
+    assert(pFont);
+
     // Insert as much text on each line as will fit
     while (sLine.length() > 0)
     {
-        tZFontPtr pFont(gpFontSystem->GetFont(fontParams));
-        assert(pFont);
-        int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrTextArea.Width(), (uint8_t*)sLine.data(), sLine.length());
+        int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrDocumentArea.Width(), (uint8_t*)sLine.data(), sLine.length());
 
-        sTextEntry textEntry;
-        textEntry.sText = sLine.substr(0, nChars);
-        textEntry.look = look;
-        textEntry.fontParams = fontParams;
-        textEntry.pos = pos;
-        textEntry.sLink = sLink;
+        FormattedEntry entry;
+        entry.text = sLine.substr(0, nChars);
+        entry.style = style;
+        entry.link = sLink;
 
-        textLine.push_back(textEntry);
+        line.push_back(entry);
 
         // Add it to the document, and on to the next line
         std::unique_lock<std::mutex> lk(mDocumentMutex);
-        mDocument.push_back(textLine);
-        mnFullDocumentHeight += GetLineHeight(textLine);
-        textLine.clear();
+        mDocument.push_back(line);
+        mnFullDocumentHeight += GetLineHeight(line);
+        line.clear();
 
         sLine = sLine.substr((int)nChars);
     }
 }
 
-bool ZWinFormattedText::ProcessLineNode(ZXMLNode* pTextNode)
+bool ZWinFormattedDoc::ProcessLineNode(ZXMLNode* pTextNode)
 {
     if (!pTextNode)
         return false;
 
-	tTextLine textLine;
+	tFormattedLine formattedLine;
 
-	string sParam;
 	bool bWrapLine = SH::ToBool(pTextNode->GetAttribute(ksWrapTag));
 
-	tXMLNodeList elementNodeList;
-	pTextNode->GetChildren("text", elementNodeList);
+	tXMLNodeList lineElements;
+	pTextNode->GetChildren(lineElements);
 
-	ZASSERT(mrTextArea.Width() > 0);
+	ZASSERT(mrDocumentArea.Width() > 0);
 
-	for (tXMLNodeList::iterator it = elementNodeList.begin(); it != elementNodeList.end(); it++)
+	for (auto element : lineElements)
 	{
-		ZXMLNode* pTextChild = *it;
-		ExtractTextParameters(pTextChild);
+//		ExtractParameters(pChild);
 
-		string sCaption = pTextChild->GetText();
+        if (element->GetName() == "img")
+        {
+            string sPath = element->GetText();
+            tZBufferPtr img(new ZBuffer());
+            if (!img->LoadBuffer(sPath))
+            {
+                img->Init(4, 4);
+                img->Fill(img->GetArea(), 0xffff00ff);
+                ZERROR("Failed to load image element:", sPath, "\n");
+            }
 
-		if (bWrapLine)
-		{
-			AddMultiLine(sCaption, mCurrentFont, mCurrentLook, mCurrentTextPosition, msLink);
-		}
-		else
-		{
-			sTextEntry textEntry;
-			textEntry.sText         = sCaption;
-            textEntry.look          = mCurrentLook;
-			textEntry.fontParams    = mCurrentFont;
-			textEntry.pos           = mCurrentTextPosition;
-			textEntry.sLink         = msLink;
+            formattedLine.push_back(FormattedEntry(FormattedEntry::Image, "", img));
+        }
+        else if (element->GetName() == "text")
+        {
+            string sCaption = element->GetText();
+            string sLink = element->GetAttribute(ksLinkTag);
 
-			textLine.push_back(textEntry);
-		}
+            ZGUI::Style style;
+            if (element->HasAttribute(ksFontParamsTag))
+                style.fp = ZFontParams(SH::URL_Decode(element->GetAttribute(ksFontParamsTag)));
+            if (element->HasAttribute(ksColorTag))
+                style.look.colTop = (uint32_t)SH::ToInt(element->GetAttribute(ksColorTag));
+            if (element->HasAttribute(ksColor2Tag))
+                style.look.colBottom = (uint32_t)SH::ToInt(element->GetAttribute(ksColor2Tag));
+            if (element->HasAttribute(ksPositionTag))
+                style.pos = ZGUI::FromString(element->GetAttribute(ksPositionTag));
+            if (element->HasAttribute(ksDecoTag))
+            {
+                string sParam = element->GetAttribute(ksDecoTag);
+                SH::makelower(sParam);
+                if (sParam == "normal")        style.look.decoration = ZGUI::ZTextLook::kNormal;
+                else if (sParam == "shadowed") style.look.decoration = ZGUI::ZTextLook::kShadowed;
+                else if (sParam == "embossed") style.look.decoration = ZGUI::ZTextLook::kEmbossed;
+            }
+
+            if (bWrapLine)
+            {
+                AddMultiLine(sCaption, style, sLink);
+            }
+            else
+            {
+                formattedLine.push_back(FormattedEntry(FormattedEntry::Text, sCaption, nullptr, style, sLink));
+            }
+        }
+        else
+        {
+            // unknown element
+            assert(false);
+        }
+
 	}
 
-	if (textLine.size() > 0)
+	if (formattedLine.size() > 0)
 	{
         std::unique_lock<std::mutex> lk(mDocumentMutex);
-		mDocument.push_back(textLine);
-		mnFullDocumentHeight += GetLineHeight(textLine);
+		mDocument.push_back(formattedLine);
+		mnFullDocumentHeight += GetLineHeight(formattedLine);
 	}
 
 	return false;
 }
 
-void ZWinFormattedText::ExtractTextParameters(ZXMLNode* pTextNode)
+/*void ZWinFormattedDoc::ExtractParameters(ZXMLNode* pTextNode)
 {
 	string sParam;
 
@@ -585,27 +602,12 @@ void ZWinFormattedText::ExtractTextParameters(ZXMLNode* pTextNode)
 	}
 
 	sParam = pTextNode->GetAttribute(ksPositionTag);
-    mCurrentTextPosition = ZGUI::FromString(sParam);
-    ZASSERT(mCurrentTextPosition != ZGUI::Unknown);
+    if (!sParam.empty())
+    {
+        mCurrentTextPosition = ZGUI::FromString(sParam);
+        ZASSERT(mCurrentTextPosition != ZGUI::Unknown);
+    }
 
-/*	if (!sParam.empty())
-	{
-		SH::makelower(sParam);
-
-		if (sParam == "lt")         mCurrentTextPosition = ZGUI::LT;
-		else if (sParam == "ct")    mCurrentTextPosition = ZGUI::CT;
-		else if (sParam == "rt")    mCurrentTextPosition = ZGUI::RT;
-		else if (sParam == "lc")    mCurrentTextPosition = ZGUI::LC;
-		else if (sParam == "c")     mCurrentTextPosition = ZGUI::C;
-		else if (sParam == "rc")    mCurrentTextPosition = ZGUI::RC;
-		else if (sParam == "lb")    mCurrentTextPosition = ZGUI::LB;
-		else if (sParam == "cb")    mCurrentTextPosition = ZGUI::CB;
-		else if (sParam == "rb")    mCurrentTextPosition = ZGUI::RB;
-		else
-		{
-			ZASSERT(false);  // unknown position type
-		}
-	}*/
 
 	sParam = pTextNode->GetAttribute(ksDecoTag);
 	if (!sParam.empty())
@@ -626,10 +628,22 @@ void ZWinFormattedText::ExtractTextParameters(ZXMLNode* pTextNode)
 	{
 		msLink = sParam;
 	}
+
+    sParam = pTextNode->GetAttribute(ksImageTag);
+    if (!sParam.empty())
+    {
+        mImage.reset(new ZBuffer());
+        if (!mImage->LoadBuffer(sParam))
+        {
+            ZERROR("Failed to load image element:", sParam, "\n");
+            mImage.reset();
+        }
+    }
+
 }
+*/
 
-
-void ZWinFormattedText::ScrollTo(int64_t nSliderValue)
+void ZWinFormattedDoc::ScrollTo(int64_t nSliderValue)
 {
 	if (mpWinSlider)
         mpWinSlider->SetSliderValue(nSliderValue);

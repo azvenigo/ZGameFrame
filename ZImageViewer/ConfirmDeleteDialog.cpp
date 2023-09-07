@@ -97,7 +97,7 @@ bool ConfirmDeleteDialog::Init()
 
         ZRect rFileList(gSpacer, gSpacer + rLabel.bottom, mAreaToDrawTo.Width() - gSpacer, rButtonArea.top - gSpacer);
 
-        mpFilesList = new ZWinFormattedText();
+        mpFilesList = new ZWinFormattedDoc();
         mpFilesList->SetArea(rFileList);
         mpFilesList->SetFill(gDefaultTextAreaFill);
         mpFilesList->SetDrawBorder();

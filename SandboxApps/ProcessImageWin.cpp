@@ -1008,7 +1008,7 @@ bool cProcessImageWin::Init()
 
     ZRect rImageProps(gSpacer, gDefaultTextFont.nHeight*2, mrWatchPanel.Width() - gSpacer, mrWatchPanel.Height() - gSpacer);
 
-    mpImageProps = new ZWinFormattedText();
+    mpImageProps = new ZWinFormattedDoc();
     mpImageProps->SetArea(rImageProps);
     mpImageProps->SetFill(gDefaultTextAreaFill);
     mpImageProps->SetScrollable();

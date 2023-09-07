@@ -8,6 +8,7 @@
 #include "ZWinDebugConsole.h"
 #include "Resources.h"
 #include "ImageViewer.h"
+#include "ZThumbCache.h"
 
 
 using namespace std;
@@ -140,6 +141,18 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
     std::filesystem::path appPath(argv[0]);
     gRegistry["apppath"] = appPath.parent_path().string();
     gRegistry["appDataPath"] = appDataPath.string();
+
+
+    string sUserPath(getenv("APPDATA"));
+    std::filesystem::path thumbPath(sUserPath);
+    thumbPath.append("/ZImageViewer/thumbcache/");
+
+    if (!std::filesystem::exists(thumbPath))
+        std::filesystem::create_directories(thumbPath);
+    gThumbCache.Init(thumbPath);
+
+
+
 
     std::string sImageFilename;
     CLP::CommandLineParser parser;

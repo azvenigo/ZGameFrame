@@ -69,7 +69,7 @@ private:
 
     void    RefreshList();
 
-    ZWinFormattedText* mpGamesList;
+    ZWinFormattedDoc* mpGamesList;
 
     tPGNEntries     mPGNEntries;
     std::string     msFilter;
@@ -102,8 +102,8 @@ private:
 
     void        UpdateView();
 
-    ZWinFormattedText*  mpGameTagsWin;
-    ZWinFormattedText*  mpMovesWin;
+    ZWinFormattedDoc*  mpGameTagsWin;
+    ZWinFormattedDoc*  mpMovesWin;
 
     uint32_t            mFillColor;
     int64_t             mCurrentHalfMoveNumber;
