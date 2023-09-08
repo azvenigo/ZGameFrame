@@ -27,13 +27,14 @@ public:
         link = _link;
     }
 
+    tZBufferPtr         Buffer();       // lazy loads buffer with filename in text member
 
     tEntry              type;
     std::string         text;
-    tZBufferPtr         pBuffer;
 
     ZGUI::Style         style;
     std::string         link;
+    tZBufferPtr         pBuffer;
 };
 
 typedef std::list<FormattedEntry>	tFormattedLine;
@@ -49,15 +50,11 @@ public:
 	virtual bool		InitFromXML(ZXMLNode* pNode);
 	virtual bool 		Paint();
 
-    virtual void		SetScrollable(bool bScrollable = true);
-    virtual void        SetDrawBorder(bool bDraw = true) { mbDrawBorder = bDraw; }
-    virtual void        SetUnderlineLinks(bool bUnderline = true) { mbUnderlineLinks = bUnderline; }
 	virtual void		Clear();
-    virtual void        SetFill(uint32_t nCol, bool bEnable = true) { mnFillColor = nCol; mbFillBackground = bEnable && ARGB_A(mnFillColor) > 5; }
 
     virtual void		AddLineNode(std::string sLine);
     virtual void		AddMultiLine(std::string sLine, ZGUI::Style style = {}, const std::string& sLink = "");
-    int64_t   			GetFullDocumentHeight() { return mnFullDocumentHeight; }
+    int64_t   			GetFullDocumentHeight();
 
 	void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
 	void				UpdateScrollbar();					// Creates a scrollbar if one is needed
@@ -73,6 +70,14 @@ public:
 	virtual  bool		OnMouseMove(int64_t x, int64_t y);
 #endif*/
 
+
+    bool				mbScrollable;
+    bool  				mbDrawBorder;
+    bool				mbUnderlineLinks;
+    bool                mbEvenColumns;
+    int64_t				mnScrollToOnInit;
+    ZGUI::Style         mDialogStyle;
+
 private:
 
 	void				CalculateFullDocumentHeight();
@@ -81,6 +86,7 @@ private:
 	bool 				ParseDocument(ZXMLNode* pNode);
 	bool 				ProcessLineNode(ZXMLNode* pLineNode);
 	void				ExtractParameters(ZXMLNode* pNode);
+    void                ComputeColumnWidths();
 
 
 	ZWinSlider*         mpWinSlider;
@@ -94,17 +100,12 @@ private:
 
 
 	// Storage for text parameters while parsing the document
-	bool				mbScrollable;
 
 	int64_t				mnMouseDownSliderVal;
 	double				mfMouseMomentum;
 
-	bool  				mbDrawBorder;
-	bool				mbUnderlineLinks;
-	bool  				mbFillBackground;
-	uint32_t			mnFillColor;
+    std::vector<int64_t>mColumnWidths;
 
 	int64_t				mnFullDocumentHeight;
 
-	int64_t				mnScrollToOnInit;
 };

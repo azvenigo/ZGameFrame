@@ -24,6 +24,7 @@ ZGUI::Style gStyleGeneralText(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::
 ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gSpacer, gSpacer, gDefaultDialogFill, true);
 ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gSpacer, gSpacer, gDefaultTextAreaFill);
 ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 16, 2);
+ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, gSpacer, gSpacer, 0, false);
 
 ZGUI::Palette gAppPalette{
 {
@@ -59,6 +60,9 @@ namespace ZGUI
         gDefaultTitleFont.nHeight = std::max<int64_t>(gM, 10);
         //    gDefaultCaptionFont.nHeight = grFullArea.Height() / 60;
         gDefaultTextFont.nHeight = std::max<int64_t>(gM/4, 10);
+
+        gDefaultFormattedDocStyle.paddingH = gSpacer;
+        gDefaultFormattedDocStyle.paddingV = gSpacer;
 
     }
 

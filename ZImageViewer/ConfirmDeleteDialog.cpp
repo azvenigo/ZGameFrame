@@ -99,14 +99,14 @@ bool ConfirmDeleteDialog::Init()
 
         mpFilesList = new ZWinFormattedDoc();
         mpFilesList->SetArea(rFileList);
-        mpFilesList->SetFill(gDefaultTextAreaFill);
-        mpFilesList->SetDrawBorder();
+        mpFilesList->mDialogStyle.bgCol = gDefaultTextAreaFill;
+        mpFilesList->mbDrawBorder = true;
 
         mpFilesList->Clear();
 
         ZFontParams font;
         font.sFacename = "Verdana";
-        font.nHeight = 30;
+        font.nHeight = gM;
 
         size_t nCount = 1;
         for (auto& entry : mFiles)
@@ -116,8 +116,10 @@ bool ConfirmDeleteDialog::Init()
             mpFilesList->AddLineNode(sListBoxEntry);
         }
 
-        mpFilesList->SetScrollable();
-        mpFilesList->SetUnderlineLinks(false);
+        mpFilesList->mDialogStyle.paddingH = gM;
+        mpFilesList->mDialogStyle.paddingV = gSpacer;
+        mpFilesList->mbScrollable = true;
+        mpFilesList->mbUnderlineLinks = false;
 
         ChildAdd(mpFilesList);
 

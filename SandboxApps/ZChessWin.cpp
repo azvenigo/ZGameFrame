@@ -83,8 +83,8 @@ bool ZChoosePGNWin::Init()
 
     mpGamesList = new ZWinFormattedDoc();
     mpGamesList->SetArea(rListbox);
-    mpGamesList->SetFill(gDefaultTextAreaFill);
-    mpGamesList->SetDrawBorder();
+    mpGamesList->mDialogStyle.bgCol = gDefaultTextAreaFill;
+    mpGamesList->mbDrawBorder = true;
     ChildAdd(mpGamesList);
 
     return ZWin::Init();
@@ -214,7 +214,7 @@ void ZChoosePGNWin::RefreshList()
 
     msCaption = "Select from " + SH::FromInt(mPGNEntries.size()) + " games";
 
-    mpGamesList->SetScrollable();
+    mpGamesList->mbScrollable = true;
     InvalidateChildren();
 }
 
@@ -245,8 +245,8 @@ bool ZPGNWin::Init()
 
     mpGameTagsWin = new ZWinFormattedDoc();
     mpGameTagsWin->SetArea(rGameTags);
-    mpGameTagsWin->SetFill(gDefaultTextAreaFill);
-    mpGameTagsWin->SetDrawBorder();
+    mpGameTagsWin->mDialogStyle.bgCol = gDefaultTextAreaFill;
+    mpGameTagsWin->mbDrawBorder = true;
 
     ChildAdd(mpGameTagsWin); 
 
@@ -325,8 +325,8 @@ bool ZPGNWin::Init()
 
     mpMovesWin = new ZWinFormattedDoc();
     mpMovesWin->SetArea(rMoves);
-    mpMovesWin->SetFill(0xff444444);
-    mpMovesWin->SetDrawBorder();
+    mpMovesWin->mDialogStyle.bgCol = 0xff444444;
+    mpMovesWin->mbDrawBorder = true;
 
     ChildAdd(mpMovesWin);
 
@@ -421,7 +421,7 @@ void ZPGNWin::UpdateView()
     }
 
 
-    mpGameTagsWin->SetScrollable();
+    mpGameTagsWin->mbScrollable = true;
 
     mpMovesWin->Clear();
 
@@ -467,8 +467,8 @@ void ZPGNWin::UpdateView()
         nHalfMove += 2;
     }
 //    mpMovesWin->InvalidateChildren();
-    mpMovesWin->SetScrollable();
-    mpMovesWin->SetUnderlineLinks(false);
+    mpMovesWin->mbScrollable = true;
+    mpMovesWin->mbUnderlineLinks = false;
     mpMovesWin->ScrollTo(mMoveFont.nHeight * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
 
     InvalidateChildren();

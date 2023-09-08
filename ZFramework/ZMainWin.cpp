@@ -159,8 +159,8 @@ void ZMainWin::ShowMessageBox(std::string caption, std::string text, std::string
     ZRect rForm(1400, 1000);
     rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
     pForm->SetArea(rForm);
-    pForm->SetScrollable();
-    pForm->SetFill(gDefaultDialogFill);
+    pForm->mbScrollable = true;
+    pForm->mDialogStyle.bgCol = gDefaultDialogFill;
     pForm->mbAcceptsCursorMessages = false;
     pMsgBox->ChildAdd(pForm);
     ChildAdd(pMsgBox);

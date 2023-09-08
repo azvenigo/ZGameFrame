@@ -269,8 +269,8 @@ void ImageContest::ShowHelpDialog()
     ZRect rForm(1400, 1100);
     rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
     pForm->SetArea(rForm);
-    pForm->SetScrollable();
-    pForm->SetFill(gDefaultDialogFill);
+    pForm->mbScrollable = true;
+    pForm->mDialogStyle.bgCol = gDefaultDialogFill;
     pForm->mbAcceptsCursorMessages = false;
     pHelp->ChildAdd(pForm);
     ChildAdd(pHelp);
@@ -526,6 +526,19 @@ bool ImageContest::OnParentAreaChange()
     mpWinImage[kLeft]->SetArea(rImageArea);
     rImageArea.OffsetRect(rImageArea.Width(), 0);
     mpWinImage[kRight]->SetArea(rImageArea);
+
+    TopWinnersDialog* pDialog = (TopWinnersDialog*)GetChildWindowByWinName("TopWinnersDialog");
+
+    if (pDialog)    // hack to deal with resizing while winners dialog is visible
+    {
+     //   pDialog->SetArea(rImageArea);
+        ChildDelete(pDialog);
+        mbShowUI = false;
+        UpdateUI();
+        ShowWinnersDialog();
+
+    }
+
 
     //    static int count = 0;
 //    ZOUT("ImageViewer::OnParentAreaChange\n", count++);

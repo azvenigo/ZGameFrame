@@ -54,8 +54,8 @@ bool TopWinnersDialog::Init()
 
         mpFilesList = new ZWinFormattedDoc();
         mpFilesList->SetArea(rFileList);
-        mpFilesList->SetFill(gDefaultTextAreaFill);
-        mpFilesList->SetDrawBorder();
+        mpFilesList->mDialogStyle.bgCol = gDefaultTextAreaFill;
+        mpFilesList->mbDrawBorder = true;
 
         mpFilesList->Clear();
 
@@ -70,16 +70,19 @@ bool TopWinnersDialog::Init()
             if (entry.wins == 1)
                 sWin = " win";
 
-            //            string sListBoxEntry = "<line wrap=0><text color=0xffffdd00 color2=0xffffdd00 fontparams=" + SH::URL_Encode(font) + " position=lb link=select;filename=" + SH::URL_Encode(entry.filename) + ";target=ZWinImageContest>[ELO:" + SH::FromInt(entry.elo) + " " + SH::FromInt(entry.wins) + sWin + "] " + std::filesystem::path(entry.filename).filename().string() + "</text></line>";
-            string sListBoxEntry = "<line wrap=0><img>" + gThumbCache.ThumbPath(entry.filename).string() + "</img><text color=0xffffdd00 color2=0xffffdd00 fontparams=" + SH::URL_Encode(font) + " position=lb link=select;filename=" + SH::URL_Encode(entry.filename) + ";target=ZWinImageContest>[ELO:" + SH::FromInt(entry.elo) + " " + SH::FromInt(entry.wins) + sWin + "] " + std::filesystem::path(entry.filename).filename().string() + "</text></line>";
+            string sLink("select;filename=" + SH::URL_Encode(entry.filename) + ";target=ZWinImageContest");
+            string sListBoxEntry = "<line wrap=0><img link=" + sLink + ">" + gThumbCache.ThumbPath(entry.filename).string() + "</img><text color=0xffffdd00 color2=0xffffdd00 fontparams=" + SH::URL_Encode(font) + " position=lb link=" + sLink + "> [ELO:" + SH::FromInt(entry.elo) + " " + SH::FromInt(entry.wins) + sWin + "] " + std::filesystem::path(entry.filename).filename().string() + "</text></line>";
             nCount++;
+            mpFilesList->mbEvenColumns = true;
             mpFilesList->AddLineNode(sListBoxEntry);
 
 
         }
 
-        mpFilesList->SetScrollable();
-        mpFilesList->SetUnderlineLinks(false);
+        mpFilesList->mbScrollable = true;
+        mpFilesList->mDialogStyle.paddingH = gM;
+        mpFilesList->mDialogStyle.paddingV = gSpacer;
+        mpFilesList->mbUnderlineLinks = false;
 
         ChildAdd(mpFilesList);
     }
@@ -139,8 +142,15 @@ bool TopWinnersDialog::Paint()
 
 TopWinnersDialog* TopWinnersDialog::ShowDialog(tImageMetaList sortedList, ZRect rDialogArea)
 {
+    ZWin* pContestWin = (ZWin*)gpMainWin->GetChildWindowByWinName("ZWinImageContest");
+    if (!pContestWin)
+    {
+        ZERROR("Something terribly wrong. Couldn't retrieve contest dialog");
+        return nullptr;
+    }
+
     // only one dialog
-    TopWinnersDialog* pDialog = (TopWinnersDialog*)gpMainWin->GetChildWindowByWinName(kTopWinnersDialogName);
+    TopWinnersDialog* pDialog = (TopWinnersDialog*)pContestWin->GetChildWindowByWinName(kTopWinnersDialogName);
     if (pDialog)
     {
         pDialog->SetVisible();
@@ -153,7 +163,6 @@ TopWinnersDialog* TopWinnersDialog::ShowDialog(tImageMetaList sortedList, ZRect 
     pDialog->SetArea(rDialogArea);
     pDialog->sortedList = sortedList;
 
-    ZWin* pContestWin = (ZWin*)gpMainWin->GetChildWindowByWinName("ZWinImageContest");
     pContestWin->ChildAdd(pDialog);
     return pDialog;
 }

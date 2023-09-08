@@ -22,23 +22,23 @@ extern uint32_t     gDefaultTextAreaFill;
 
 
 
-extern ZFontParams  gDefaultButtonFont;
-extern ZFontParams  gDefaultTitleFont;
-extern ZFontParams  gDefaultTextFont;
+extern ZFontParams gDefaultButtonFont;
+extern ZFontParams gDefaultTitleFont;
+extern ZFontParams gDefaultTextFont;
 
-extern ZFontParams  gDefaultTooltipFont;
-extern ZTextLook    gDefaultToolitipLook;
+extern ZFontParams gDefaultTooltipFont;
+extern ZTextLook   gDefaultToolitipLook;
 
-extern ZGUI::Style  gStyleTooltip;
-extern ZGUI::Style  gStyleCaption;
-extern ZGUI::Style  gStyleButton;
-extern ZGUI::Style  gStyleToggleChecked;
-extern ZGUI::Style  gStyleToggleUnchecked;
-extern ZGUI::Style  gStyleGeneralText;
-extern ZGUI::Style  gDefaultDialogStyle;
-extern ZGUI::Style  gDefaultWinTextEditStyle;
-extern ZGUI::Style  gDefaultGroupingStyle;
-
+extern ZGUI::Style gStyleTooltip;
+extern ZGUI::Style gStyleCaption;
+extern ZGUI::Style gStyleButton;
+extern ZGUI::Style gStyleToggleChecked;
+extern ZGUI::Style gStyleToggleUnchecked;
+extern ZGUI::Style gStyleGeneralText;
+extern ZGUI::Style gDefaultDialogStyle;
+extern ZGUI::Style gDefaultWinTextEditStyle;
+extern ZGUI::Style gDefaultGroupingStyle;
+extern ZGUI::Style gDefaultFormattedDocStyle;
 
 namespace ZGUI
 {
