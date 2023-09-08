@@ -362,7 +362,10 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         ImageContest* pWin = new ImageContest();
         pWin->SetArea(mArea);
         GetTopWindow()->ChildAdd(pWin);
-        pWin->ScanFolder(mCurrentFolder);
+        if (mFilterState == kFavs)
+            pWin->ScanFolder(FavoritesPath());
+        else
+            pWin->ScanFolder(mCurrentFolder);
         SetVisible(false);
         return true;
     }
