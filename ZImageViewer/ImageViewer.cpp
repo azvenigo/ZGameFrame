@@ -1037,8 +1037,11 @@ bool ImageViewer::Init()
         }
 
 
+        int64_t nGroupSide = (gM * 2) - gSpacer * 4;
+        ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+        mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
+
         string sMessage;
-        ZGUI::Style unicodeStyle = ZGUI::Style(mpSymbolicFont->GetFontParams(), ZGUI::ZTextLook{}, ZGUI::C, 0);
         mpRotationMenu = new ZWinControlPanel();
 
         string sAppPath = gRegistry["apppath"];

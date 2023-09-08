@@ -145,7 +145,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 
     string sUserPath(getenv("APPDATA"));
     std::filesystem::path thumbPath(sUserPath);
-    thumbPath.append("/ZImageViewer/thumbcache/");
+    thumbPath.append("ZImageViewer/thumbcache/");
 
     if (!std::filesystem::exists(thumbPath))
         std::filesystem::create_directories(thumbPath);

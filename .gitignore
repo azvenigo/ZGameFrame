@@ -401,3 +401,4 @@ ZFramework/platforms/p/
 SandboxApps/ImageSandbox.vcxproj.filters
 build/
 font_cache/
+deploy_to_webserver.bat
