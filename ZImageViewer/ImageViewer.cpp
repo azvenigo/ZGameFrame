@@ -396,7 +396,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
 
             ZBuffer resizedimage;
             resizedimage.Init(kSize, kSize);
-            resizedimage.Fill(resizedimage.GetArea(), 0xff000000);
+            resizedimage.Fill(0xff000000, &resizedimage.GetArea());
 
             resizedimage.BltScaled(&imageSelection);
 
@@ -1132,23 +1132,28 @@ void ImageViewer::UpdateControlPanel()
     ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     ZGUI::Style wingdingsStyle = ZGUI::Style(ZFontParams("Wingdings", nGroupSide /2, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
 
-    mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
-    ((ZDynamicFont*) mpSymbolicFont.get())->GenerateSymbolicGlyph('<', 11119); // rotate left
-    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('>', 11118); // rotate right
+    if (!mpSymbolicFont)
+    {
+        mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
+        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('<', 11119); // rotate left
+        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('>', 11118); // rotate right
 
-    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('-', 11108); // flip H
-    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('|', 11109); // flip V
+        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('-', 11108); // flip H
+        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('|', 11109); // flip V
 
-    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('u', 0x238c); // undo
+        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('u', 0x238c); // undo
 
 
-    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x2750);
-    ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
+        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x2750);
+        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
+    }
 
     ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", nGroupSide*4, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
-    mpFavoritesFont = gpFontSystem->CreateFont(favorites.fp);
-    ((ZDynamicFont*)mpFavoritesFont.get())->GenerateSymbolicGlyph('C', 0x2655);  // crown
-
+    if (!mpFavoritesFont)
+    {
+        mpFavoritesFont = gpFontSystem->CreateFont(favorites.fp);
+        ((ZDynamicFont*)mpFavoritesFont.get())->GenerateSymbolicGlyph('C', 0x2655);  // crown
+    }
 
 
 //    ((ZDynamicFont*)wingdingsStyle.Font().get())->GenerateSymbolicGlyph('F', 0x2922);

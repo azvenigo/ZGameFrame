@@ -193,7 +193,7 @@ bool cLifeWin::OnKeyDown(uint32_t key)
 	case ' ':
 		mnIterations = 0;
 		//memset(mpCurGrid, 0, mnWidth*mnHeight);
-		mpCurGrid->Fill(mpCurGrid->GetArea(), mnOffPixelCol);
+		mpCurGrid->Fill(mnOffPixelCol, &mpCurGrid->GetArea());
 		break;
 
     case VK_ESCAPE:
@@ -274,7 +274,7 @@ bool cLifeWin::Process()
 
 
 	//memset(mpCurGrid, 0, mnWidth * mnHeight);
-	mpCurGrid->Fill(mpCurGrid->GetArea(), mnOffPixelCol);
+	mpCurGrid->Fill(mnOffPixelCol);
 
 	for (int64_t y = 1; y < mnHeight-1; y++)
 		for (int64_t x = 1; x < mnWidth-1; x++)

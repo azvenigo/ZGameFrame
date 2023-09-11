@@ -74,8 +74,8 @@ public:
 
 
     // Drawing
-	virtual bool            Fill(ZRect& rDst, uint32_t nCol);			// fills a rect with nCol, forcing alpha to ARGB_A(nCol)
-	virtual bool            FillAlpha(ZRect& rDst, uint32_t nCol);	// fills a rect with nCol, blending based on ARGB_A(nCol)
+	virtual bool            Fill(uint32_t nCol, ZRect* pRect = nullptr);			// fills a rect with nCol, forcing alpha to ARGB_A(nCol)
+	virtual bool            FillAlpha(uint32_t nCol, ZRect* pRect = nullptr);	// fills a rect with nCol, blending based on ARGB_A(nCol)
 
 	virtual bool            BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType type = kAlphaDest);
 	virtual bool            BltAlphaNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, uint32_t nAlpha, eAlphaBlendType type = kAlphaDest);
@@ -105,8 +105,8 @@ public:
     // Thread Safety
     virtual std::recursive_mutex& GetMutex() { return mMutex; }
 
-
-    static bool            Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect);
+    bool                    Clip(ZRect& dstRect);       // clips dst into mSurfaceArea
+    static bool             Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect);
 
 protected:
 	bool                    FloatScanLineIntersection(double fScanLine, const ZColorVertex& v1, const ZColorVertex& v2, double& fIntersection, double& fR, double& fG, double& fB, double& fA);

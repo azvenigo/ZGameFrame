@@ -39,6 +39,9 @@ bool ZThumbCache::Add(const std::filesystem::path& imagePath, tZBufferPtr image)
     entry.thumb->BltScaled(image.get());
 
     std::filesystem::path thumbPath(ThumbPath(imagePath));
+
+    assert(!std::filesystem::exists(thumbPath));
+
     entry.thumb->SaveBuffer(thumbPath.string());
     entry.writeTime = std::filesystem::last_write_time(thumbPath);
 
@@ -47,16 +50,48 @@ bool ZThumbCache::Add(const std::filesystem::path& imagePath, tZBufferPtr image)
     return true;
 }
 
-tZBufferPtr ZThumbCache::GetThumb(const std::filesystem::path& imagePath)
+tZBufferPtr ZThumbCache::GetThumb(const std::filesystem::path& imagePath, bool bGenerateIfMissing)
 {
     size_t hash = PathHash(imagePath);
 
     tFilenameToThumbEntry::iterator findit = mFilenameToThumbEntry.find(hash);
-    if (findit == mFilenameToThumbEntry.end())
-        return nullptr;
+    if (findit != mFilenameToThumbEntry.end())
+    {
+        assert((*findit).second.thumb);
+        return (*findit).second.thumb;
+    }
 
-    assert((*findit).second.thumb);
-    return (*findit).second.thumb;
+    // not already loaded..... see if thumbnail available
+
+    std::filesystem::path thumbPath(ThumbPath(imagePath));
+    if (std::filesystem::exists(thumbPath))
+    {
+        tZBufferPtr thumb(new ZBuffer());
+        if (thumb->LoadBuffer(thumbPath.string()))
+        {
+            ZDEBUG_OUT("Loaded thumb for image:", imagePath, "\n");
+            size_t hash = PathHash(imagePath);
+            ZThumbEntry& entry = mFilenameToThumbEntry[hash];
+            entry.thumb = thumb;
+            entry.writeTime = std::filesystem::last_write_time(thumbPath);
+            return thumb;
+        }
+
+    }
+
+    if (bGenerateIfMissing)
+    {
+        ZDEBUG_OUT("Generating missing thumb:", imagePath, "\n");
+        tZBufferPtr original(new ZBuffer());
+        if (original->LoadBuffer(imagePath.string()))
+        {
+            Add(imagePath, original);
+            return original;
+        }
+    }
+
+
+    return nullptr;
 }
 
 

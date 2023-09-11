@@ -168,7 +168,7 @@ namespace ZGUI
             ComputeAreas(pDest->GetArea());
 
         if (mTableStyle.bgCol != 0)
-            pDest->FillAlpha(mrAreaToDrawTo, mTableStyle.bgCol);
+            pDest->FillAlpha(mTableStyle.bgCol, &mrAreaToDrawTo);
 
 
         int64_t nY = mCellStyle.paddingV;

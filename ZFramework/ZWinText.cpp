@@ -82,7 +82,7 @@ bool ZWinLabel::Paint()
 
     if (ARGB_A(mStyle.bgCol) > 5)
     {
-        mpTransformTexture->Fill(mAreaToDrawTo, mStyle.bgCol);
+        mpTransformTexture->Fill(mStyle.bgCol);
     }
     else
     {
@@ -257,7 +257,7 @@ bool ZWinTextEdit::Paint()
 
     ZRect rString(mStyle.Font()->Arrange(rOut, (uint8_t*)mpText->c_str(), mpText->length(), posToUse, 0));
 
-    mpTransformTexture.get()->Fill(mAreaToDrawTo, mStyle.bgCol);
+    mpTransformTexture.get()->Fill(mStyle.bgCol);
 
     mStyle.Font()->DrawText(mpTransformTexture.get(), *mpText, rString, &mStyle.look, &mAreaToDrawTo);
 
@@ -273,12 +273,12 @@ bool ZWinTextEdit::Paint()
         ZRect rHighlight(0, mrVisibleTextArea.top, nWidthHighlighted, mrVisibleTextArea.bottom);
         rHighlight.OffsetRect(mrVisibleTextArea.left+nWidthBefore- mnViewOffset+StyleOffset(), 0);
         rHighlight.IntersectRect(mrVisibleTextArea);
-        mpTransformTexture.get()->FillAlpha(rHighlight, 0x8800ffff);
+        mpTransformTexture.get()->FillAlpha(0x8800ffff, &rHighlight);
     }
 
 
     if (mbCursorVisible)
-        mpTransformTexture.get()->Fill(mrCursorArea, mStyle.look.colTop);
+        mpTransformTexture.get()->Fill(mStyle.look.colTop, &mrCursorArea);
 
     return ZWin::Paint();
 }

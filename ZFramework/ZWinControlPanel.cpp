@@ -145,7 +145,7 @@ bool ZWinControlPanel::Paint()
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
 
-    mpTransformTexture->Fill(mAreaToDrawTo, mStyle.bgCol);
+    mpTransformTexture->Fill(mStyle.bgCol);
 
     tGroupNameToWinList groups = GetChildGroups();
     for (auto& group : groups)

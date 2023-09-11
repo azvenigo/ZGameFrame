@@ -113,7 +113,7 @@ void ZScreenBuffer::Render(tZBufferPtr pTexture, ZRect& rAreaToDrawTo)
 	string sTemp;
 	ZRect rArea(2,2,66,32);
 	Sprintf(sTemp, "FPS:%d\ntime:%d", gnFramesPerSecond, gTimer.GetElapsedTime());
-	FillAlpha(rArea, 0x66000000);
+	FillAlpha(0x66000000, &rArea);
     gpFontSystem->GetDefaultFont()->DrawTextParagraph(this, sTemp, ZRect(4,4,320,120), &gStyleGeneralText);
 #endif
 

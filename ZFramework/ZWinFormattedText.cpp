@@ -80,6 +80,7 @@ ZWinFormattedDoc::ZWinFormattedDoc()
 	mfMouseMomentum				= 0.0;
 
 	mbDrawBorder				= false;
+    mbEvenColumns               = false;
 
     mDialogStyle                = gDefaultFormattedDocStyle;
 
@@ -348,7 +349,7 @@ bool ZWinFormattedDoc::Paint()
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
 	if (ARGB_A(mDialogStyle.bgCol) > 5)
-        mpTransformTexture.get()->Fill(rLocalDocBorderArea, mDialogStyle.bgCol);
+        mpTransformTexture.get()->Fill(mDialogStyle.bgCol, &rLocalDocBorderArea);
     else if (mbDrawBorder)
         mpTransformTexture.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalDocBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mArea);
 
@@ -404,13 +405,13 @@ bool ZWinFormattedDoc::Paint()
                         ZRect rUnderline(rText);
                         rUnderline.top = rUnderline.bottom - nShadowOffset;
                         rUnderline.IntersectRect(&rClip);
-                        mpTransformTexture.get()->Fill(rUnderline, entry.style.look.colBottom);
+                        mpTransformTexture.get()->Fill(entry.style.look.colBottom, &rUnderline);
 
                         if (entry.style.look.decoration == ZGUI::ZTextLook::kShadowed)
                         {
                             rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
                             rUnderline.IntersectRect(&rClip);
-                            mpTransformTexture.get()->Fill(rUnderline, 0xff000000);
+                            mpTransformTexture.get()->Fill(0xff000000, &rUnderline);
                         }
                     }
 

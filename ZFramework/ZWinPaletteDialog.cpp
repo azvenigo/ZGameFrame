@@ -278,11 +278,11 @@ bool ZWinPaletteDialog::Paint()
         ZRect rSwatchHalf(rSwatch);
         rSwatchHalf.bottom = rSwatch.top + rSwatch.Height() / 2;
 
-        mpTransformTexture->Fill(rSwatchHalf, *watch.mpWatchColor);
+        mpTransformTexture->Fill(*watch.mpWatchColor, &rSwatchHalf);
         mStyle.Font()->DrawText(mpTransformTexture.get(), watch.msWatchLabel, ZGUI::Arrange(mStyle.Font()->StringRect(watch.msWatchLabel), rSwatch, ZGUI::ICOT));
 
         rSwatchHalf.OffsetRect(0, rSwatchHalf.Height());
-        mpTransformTexture->Fill(rSwatchHalf, watch.mOriginalColor);
+        mpTransformTexture->Fill(watch.mOriginalColor, &rSwatchHalf);
 
         rSwatch.OffsetRect(rSwatch.Width(), 0);
     }

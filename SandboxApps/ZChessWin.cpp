@@ -96,7 +96,7 @@ bool ZChoosePGNWin::Paint()
     if (!mbInvalid)
         return false;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, mFillColor);
+    mpTransformTexture->Fill(mFillColor);
 
     ZRect rText(mAreaToDrawTo);
     rText.OffsetRect(gSpacer, gSpacer);
@@ -342,7 +342,7 @@ bool ZPGNWin::Paint()
     if (!mbInvalid)
         return false;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, mFillColor);
+    mpTransformTexture->Fill(mFillColor);
 
 
     return ZWin::Paint();
@@ -933,7 +933,7 @@ bool ZChessWin::Paint()
     if (!mbInvalid)
         return false;
 
-    mpTransformTexture->Fill(mAreaToDrawTo, 0xff444444);
+    mpTransformTexture->Fill(0xff444444);
     DrawBoard();
 
     // Draw labels if not in demo mode
@@ -957,7 +957,7 @@ bool ZChessWin::Paint()
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gSpacer, gSpacer);
 
-            mpTransformTexture->Fill(rMoveLabel, 0xffffffff);
+            mpTransformTexture->Fill(0xffffffff, &rMoveLabel);
             pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
         }
         else
@@ -973,7 +973,7 @@ bool ZChessWin::Paint()
             rMoveLabel = pLabelFont->Arrange(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gSpacer, gSpacer);
-            mpTransformTexture->Fill(rMoveLabel, 0xff000000);
+            mpTransformTexture->Fill(0xff000000, &rMoveLabel);
             pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
         }
     }
@@ -1042,7 +1042,7 @@ char ZChessWin::ScreenToPalettePiece(int64_t x, int64_t y)
 
 void ZChessWin::DrawPalette()
 {
-    mpTransformTexture->Fill(mrPaletteArea, gDefaultTextAreaFill);
+    mpTransformTexture->Fill(gDefaultTextAreaFill, &mrPaletteArea);
 
     ZRect rPalettePiece(mrPaletteArea);
     rPalettePiece.bottom = mrPaletteArea.top + mnPalettePieceHeight;
@@ -1082,7 +1082,7 @@ void ZChessWin::DrawBoard()
                 nSquareColor = COL::AlphaBlend_BlendAlpha(nSquareColor, 0xff0088ff, 128);
 
 
-            mpTransformTexture->Fill(SquareArea(grid), nSquareColor);
+            mpTransformTexture->Fill(nSquareColor, &SquareArea(grid));
 
             if (mbShowAttackCount)
             {

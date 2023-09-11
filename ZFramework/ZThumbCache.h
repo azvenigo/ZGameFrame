@@ -28,7 +28,7 @@ public:
     bool        Init(const std::filesystem::path& thumbCachePath);
 
     bool        Add(const std::filesystem::path& imagePath, tZBufferPtr image);
-    tZBufferPtr GetThumb(const std::filesystem::path& imagePath);
+    tZBufferPtr GetThumb(const std::filesystem::path& imagePath, bool bGenerateIfMissing = false);
 
     std::filesystem::path   ThumbPath(const std::filesystem::path& imagePath); // returns a full path to the thumbnail for an image path
 

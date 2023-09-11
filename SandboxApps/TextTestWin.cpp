@@ -250,7 +250,7 @@ bool TextTestWin::Paint()
         gRasterizer.Rasterize(mpTransformTexture.get(), mpBackground.get(), verts);
     }
     else
-        mpTransformTexture.get()->Fill(mAreaToDrawTo, 0xff595850);
+        mpTransformTexture.get()->Fill(0xff595850);
 
     sTemp = msText + '|';
 

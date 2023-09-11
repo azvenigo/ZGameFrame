@@ -473,10 +473,7 @@ bool ZWinImage::Paint()
 
     ZRect rDest(mpTransformTexture.get()->GetArea());
 
-//    static int i = 0;
-//    ZOUT_LOCKLESS(i++, "about to Fill texture:", mpTransformTexture.get()->GetPixels(), "pixels:", mpTransformTexture.get()->GetArea().Width() * mpTransformTexture.get()->GetArea().Height());
-    mpTransformTexture.get()->Fill(mpTransformTexture.get()->GetArea(), mFillColor);
-//    ZOUT_LOCKLESS("filled\n");
+    mpTransformTexture.get()->Fill(mFillColor);
 
     ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
 
@@ -514,7 +511,7 @@ bool ZWinImage::Paint()
 
     if (AmCapturing() && (mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
     {
-        mpTransformTexture->FillAlpha(GetSelection(), 0x88555588);
+        mpTransformTexture->FillAlpha(0x88555588, &GetSelection());
     }
 
 

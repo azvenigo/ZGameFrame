@@ -66,7 +66,7 @@ bool ZBuffer::Init(int64_t nWidth, int64_t nHeight)
         }
 
 		mSurfaceArea.SetRect(0, 0, nWidth, nHeight);
-		Fill(mSurfaceArea, 0);
+        memset(mpPixels, 0, nWidth * nHeight * sizeof(uint32_t));
 
 		return true;
 	}
@@ -837,18 +837,57 @@ bool ZBuffer::BltAlpha(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, uint32_t nAlpha,
 	return false;
 }
 
-bool ZBuffer::Fill(ZRect& rDst, uint32_t nCol)
+bool ZBuffer::Fill(uint32_t nCol, ZRect* pRect)
 {
-	ZRect rSrcArea(mSurfaceArea);
+    ZRect rDst;
+    if (pRect)
+    {
+        rDst.SetRect(*pRect);
+        if (!Clip(rDst))
+            return false;
+    }
+    else
+        rDst.SetRect(mSurfaceArea);
 
-	if(Clip(rSrcArea, rSrcArea, rDst))
+	int64_t nDstStride = mSurfaceArea.Width();
+
+	int64_t nFillWidth = rDst.Width();
+	int64_t nFillHeight = rDst.Height();
+
+
+	// Fully opaque
+	for (int64_t y = 0; y < nFillHeight; y++)
 	{
-		int64_t nDstStride = mSurfaceArea.Width();
+		uint32_t* pDstBits = (uint32_t*) (mpPixels + ((y + rDst.top) * nDstStride) + rDst.left);
+		for (int64_t x = 0; x < nFillWidth; x++)
+			*pDstBits++ = nCol;
+	}
 
-		int64_t nFillWidth = rDst.Width();
-		int64_t nFillHeight = rDst.Height();
+	return true;
+}
+
+bool ZBuffer::FillAlpha(uint32_t nCol, ZRect* pRect)
+{
+    ZRect rDst;
+    if (pRect)
+    {
+        rDst.SetRect(*pRect);
+        if (!Clip(rDst))
+            return false;
+    }
+    else
+        rDst.SetRect(mSurfaceArea);
 
 
+	int64_t nDstStride = mSurfaceArea.Width();
+
+	int64_t nFillWidth = rDst.Width();
+	int64_t nFillHeight = rDst.Height();
+
+
+	int64_t nAlpha = ARGB_A(nCol);
+	if (nAlpha > 250)
+	{
 		// Fully opaque
 		for (int64_t y = 0; y < nFillHeight; y++)
 		{
@@ -857,42 +896,14 @@ bool ZBuffer::Fill(ZRect& rDst, uint32_t nCol)
 				*pDstBits++ = nCol;
 		}
 	}
-
-	return true;
-}
-
-bool ZBuffer::FillAlpha(ZRect& rDst, uint32_t nCol)
-{
-	ZRect rSrcArea(mSurfaceArea);
-
-	if(Clip(rSrcArea, rSrcArea, rDst))
+	else
 	{
-		int64_t nDstStride = mSurfaceArea.Width();
-
-		int64_t nFillWidth = rDst.Width();
-		int64_t nFillHeight = rDst.Height();
-
-
-		int64_t nAlpha = ARGB_A(nCol);
-		if (nAlpha > 250)
+		for (int64_t y = 0; y < nFillHeight; y++)
 		{
-			// Fully opaque
-			for (int64_t y = 0; y < nFillHeight; y++)
+			uint32_t* pDstBits = (uint32_t*) (mpPixels + ((y + rDst.top) * nDstStride) + rDst.left);
+			for (int64_t x = 0; x < nFillWidth; x++)
 			{
-				uint32_t* pDstBits = (uint32_t*) (mpPixels + ((y + rDst.top) * nDstStride) + rDst.left);
-				for (int64_t x = 0; x < nFillWidth; x++)
-					*pDstBits++ = nCol;
-			}
-		}
-		else
-		{
-			for (int64_t y = 0; y < nFillHeight; y++)
-			{
-				uint32_t* pDstBits = (uint32_t*) (mpPixels + ((y + rDst.top) * nDstStride) + rDst.left);
-				for (int64_t x = 0; x < nFillWidth; x++)
-				{
-					*pDstBits++ = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
-				}
+				*pDstBits++ = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
 			}
 		}
 	}
@@ -960,6 +971,38 @@ void  ZBuffer::DrawRectAlpha(ZRect& rRect, uint32_t nCol)
 
 
 
+
+bool ZBuffer::Clip(ZRect& dstRect)
+{
+    int64_t nOverhangDistance;
+
+    if ((nOverhangDistance = dstRect.right - mSurfaceArea.right) > 0)
+    {
+        dstRect.right -= nOverhangDistance;
+        if (dstRect.right <= dstRect.left)
+            return false; //The dest rect is entirely outside of clipping area.
+    }
+    if ((nOverhangDistance = mSurfaceArea.left - dstRect.left) > 0)
+    {
+        dstRect.left += nOverhangDistance;
+        if (dstRect.left >= dstRect.right)
+            return false; //The dest rect is entirely outside of clipping area.
+    }
+    if ((nOverhangDistance = dstRect.bottom - mSurfaceArea.bottom) > 0)
+    {
+        dstRect.bottom -= nOverhangDistance;
+        if (dstRect.bottom <= dstRect.top)
+            return false; //The dest rect is entirely outside of clipping area.
+    }
+    if ((nOverhangDistance = mSurfaceArea.top - dstRect.top) > 0)
+    {
+        dstRect.top += nOverhangDistance;
+        if (dstRect.top >= dstRect.bottom)
+            return false; //The dest rect is entirely outside of clipping area.
+    }
+
+    return true;
+}
 
 
 bool ZBuffer::Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect)

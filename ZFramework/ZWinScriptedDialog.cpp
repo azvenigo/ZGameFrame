@@ -163,7 +163,7 @@ bool ZWinScriptedDialog::Init()
 	mbAcceptsCursorMessages = true;
 
 	if (mbFillBackground)
-		mpTransformTexture->Fill(mpTransformTexture->GetArea(), mnBackgroundColor);
+		mpTransformTexture->Fill(mnBackgroundColor);
 
 	return ZWin::Init();
 }
@@ -184,7 +184,7 @@ bool ZWinScriptedDialog::Paint()
    
     // Draw the dialog edge
 	if (mbDrawDefaultBackground)
-		mpTransformTexture->Fill(mArea, gDefaultDialogFill);
+		mpTransformTexture->Fill(gDefaultDialogFill);
 	return ZWin::Paint();
 }
 

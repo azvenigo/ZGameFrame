@@ -464,7 +464,7 @@ void cFloatLinesWin::ClearBuffer(ZBuffer* pBufferToDrawTo)
     for (int64_t i = 0; i < nBufSize; i++)
         mpFloatBuffer[i] = 0.0f;
 
-    pBufferToDrawTo->Fill(mAreaToDrawTo, 0xff000000);
+    pBufferToDrawTo->Fill(0xff000000);
 }
 
 bool cFloatLinesWin::OnMouseDownL(int64_t x, int64_t y)

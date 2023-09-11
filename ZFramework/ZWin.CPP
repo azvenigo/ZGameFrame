@@ -854,6 +854,11 @@ bool ZWin::HandleMessage(const ZMessage& message)
 			return true;
 		}
 	}
+    else if (sType == "set_visible")
+    {
+        SetVisible( SH::ToBool(message.GetParam("visible")) );
+        return true;
+    }
 
 #ifdef _DEBUG
 	// If the message is targeted, this had better be the target window

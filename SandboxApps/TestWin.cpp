@@ -76,7 +76,7 @@ bool TestWin::Paint()
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
-    mpTransformTexture.get()->Fill(mAreaToDrawTo, 0xff003300);
+    mpTransformTexture.get()->Fill(0xff003300);
 
     return ZWin::Paint();
 }

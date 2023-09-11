@@ -11,6 +11,7 @@
 class ZWinImage;
 class ZWinCheck;
 class ZWinControlPanel;
+class WinTopWinners;
 
 typedef std::list<std::filesystem::path>    tImageFilenames;
 
@@ -30,6 +31,7 @@ public:
         contests = _contests;
         wins = _wins;
         elo = _elo;
+        mpThumb = nullptr;
     };
 
     int32_t     ReadEntry(const uint8_t* pData);        // fills out entry and returns number of bytes processed
@@ -41,6 +43,11 @@ public:
     int32_t     contests;  // number of times the image has been shown 
     int32_t     wins;      // number of times the image has been selected
     int32_t     elo;        // rating
+
+    tZBufferPtr Thumbnail();    // lazy loads
+
+private:
+    tZBufferPtr mpThumb;
 };
 
 typedef std::list<ImageMetaEntry> tImageMetaList;
@@ -93,6 +100,13 @@ public:
 
 
 protected:
+    enum State
+    {
+        kNone = 0,
+        kSelectingFromPair = 1,
+        kShowingSingle = 2
+    };
+
 
     void                    UpdateControlPanel();
 
@@ -110,8 +124,12 @@ protected:
     ZWinControlPanel*       mpPanel;
     std::recursive_mutex    mPanelMutex;
 
+    tZFontPtr               mpSymbolicFont;
+
     ZWinImage*              mpWinImage[2];  // left and right
     ImageMetaEntry*         mImageMeta[2];  // left and right
+
+    WinTopWinners*          mpRatedImagesStrip;
 
     std::filesystem::path   mCurrentFolder;
 
@@ -123,6 +141,9 @@ protected:
 
     bool                    mbShowUI;
     ImageMeta               mMeta;
+    tImageMetaList          mCurrentFolderImageMeta;
+
+    State                   mState;
 };
 
 

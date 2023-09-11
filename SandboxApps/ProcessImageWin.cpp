@@ -375,7 +375,7 @@ void cProcessImageWin::Process_ComputeGradient()
 
                 nCol = 0x80000000 | (nCol & 0x00ffffff); // 50% alpha
 
-                mpResultBuffer.get()->FillAlpha(rSubArea, nCol);
+                mpResultBuffer.get()->FillAlpha(nCol, &rSubArea);
 
             }
         }
@@ -1213,7 +1213,7 @@ bool cProcessImageWin::HandleMessage(const ZMessage& message)
     {
         tZBufferPtr image256(new ZBuffer());
         image256->Init(256, 256);
-        image256->Fill(image256->GetArea(), 0xff000000);
+        image256->Fill(0xff000000);
 
         image256->BltScaled(mpResultWin->mpImage.get());
         mpResultWin->SetImage(image256);
@@ -1355,7 +1355,7 @@ bool cProcessImageWin::Paint()
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
-    mpTransformTexture.get()->Fill(mAreaToDrawTo, 0xff000000);
+    mpTransformTexture.get()->Fill(0xff000000);
 
 	return ZWin::Paint();
 }

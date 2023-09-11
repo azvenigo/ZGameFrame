@@ -6,7 +6,7 @@
 #include "helpers/StringHelpers.h"
 #include "ZStringHelpers.h"
 #include "ZWinFileDialog.h"
-#include "TopWinnersDialog.h"
+#include "WinTopWinners.h"
 #include "ZWinControlPanel.h"
 #include "ZWinText.H"
 #include "ZGUIStyle.h"
@@ -23,7 +23,7 @@ using namespace std;
 ImageContest::ImageContest()
 {
     mbAcceptsCursorMessages = true;
-    mbAcceptsFocus = true;
+    mbAcceptsFocus = false;
     mIdleSleepMS = 250;
     msWinName = "ZWinImageContest";
     mpPanel = nullptr;
@@ -31,8 +31,11 @@ ImageContest::ImageContest()
     mpWinImage[kRight] = nullptr;
     mImageMeta[kLeft] = nullptr;
     mImageMeta[kRight] = nullptr;
+    mpRatedImagesStrip = nullptr;
     mToggleUIHotkey = 0;
     mbShowUI = true;
+    mpSymbolicFont = nullptr;
+    mState = kNone;
 }
  
 ImageContest::~ImageContest()
@@ -56,15 +59,40 @@ bool ImageContest::ShowOpenFolderDialog()
 
 void ImageContest::HandleQuitCommand()
 {
-    gMessageSystem.Post("quit_app_confirmed");
+    gMessageSystem.Post("set_visible", GetTopWindow()->GetChildWindowByWinName("ZWinImageViewer"), "visible", "1");
+    gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
+//    gMessageSystem.Post("quit_app_confirmed");
 }
 
 void ImageContest::UpdateUI()
 {
-
     ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
     UpdateControlPanel();
     UpdateCaptions();
+
+    ZRect rRatedStrip(mAreaToDrawTo);
+    rRatedStrip.left = rRatedStrip.right - 128;
+
+    ZRect rImageArea(mAreaToDrawTo);
+    rImageArea.right = rRatedStrip.left;
+
+    if (mState == kShowingSingle)
+    {
+        mpWinImage[kLeft]->SetArea(rImageArea);
+        mpWinImage[kRight]->SetVisible(false);
+    }
+    else
+    {
+        rImageArea.right = rImageArea.left + rImageArea.Width() / 2;
+        mpWinImage[kLeft]->SetArea(rImageArea);
+        rImageArea.OffsetRect(rImageArea.Width(), 0);
+        mpWinImage[kRight]->SetArea(rImageArea);
+        mpWinImage[kRight]->SetVisible();
+    }
+
+    if (mpRatedImagesStrip)
+        mpRatedImagesStrip->SetArea(rRatedStrip);
+
     InvalidateChildren();
 }
 
@@ -72,11 +100,19 @@ bool ImageContest::OnMouseDownL(int64_t x, int64_t y)
 {
     if (mpWinImage[kLeft]->GetArea().PtInRect(x, y))
     {
-        SelectWinner(kLeft);
+        if (mState == kSelectingFromPair)
+        {
+            return SelectWinner(kLeft);
+        }
+        else
+        {
+            PickRandomPair();
+            UpdateUI();
+        }
     }
     else if (mpWinImage[kRight]->GetArea().PtInRect(x, y))
     {
-        SelectWinner(kRight);
+        return SelectWinner(kRight);
     }
 
     return ZWin::OnMouseDownL(x, y);
@@ -125,11 +161,13 @@ bool ImageContest::OnKeyDown(uint32_t key)
     case VK_MENU:
         break;
     case VK_LEFT:
-        SelectWinner(kLeft);
+        if (mState == kSelectingFromPair)
+            SelectWinner(kLeft);
         return true;
         break;
     case VK_RIGHT:
-        SelectWinner(kRight);
+        if (mState == kSelectingFromPair)
+            SelectWinner(kRight);
         return true;
         break;
     case 'o':
@@ -158,13 +196,6 @@ bool ImageContest::HandleMessage(const ZMessage& message)
         ShowHelpDialog();
         return true;
     }
-    else if (sType == "show_winners")
-    {
-        mbShowUI = false;
-        UpdateUI();
-        ShowWinnersDialog();
-        return true;
-    }
     else if (sType == "reset_contest")
     {
         ResetContest();
@@ -180,8 +211,10 @@ bool ImageContest::HandleMessage(const ZMessage& message)
             return true;
         }
 
+        mState = kShowingSingle;
         mpWinImage[kLeft]->SetImage(p1);        
         mImageMeta[kLeft] = &mMeta.Entry(sFile, std::filesystem::file_size(sFile));
+        UpdateUI();
         return true;
     }
 
@@ -191,28 +224,6 @@ bool ImageContest::HandleMessage(const ZMessage& message)
 
 
 
-void ImageContest::ShowWinnersDialog()
-{
-    tImageMetaList fullList;
-    for (auto& metalist : mMeta.mSizeToMetaLists)
-    {
-        for (auto& entry : metalist.second)
-        {
-            if (entry.wins > 0 && entry.elo > 1000)
-            {
-                filesystem::path filepath(entry.filename);
-                if (filepath.parent_path() == mCurrentFolder)
-                    fullList.push_back(entry);
-            }
-        }
-    }
-
-    if (fullList.empty())
-        return;
-
-    fullList.sort([](const ImageMetaEntry& a, const ImageMetaEntry& b) -> bool { return a.elo > b.elo; });
-    TopWinnersDialog* pDialog = TopWinnersDialog::ShowDialog(fullList, mpWinImage[kRight]->GetArea());
-}
 
 void ImageContest::ResetContest()
 {
@@ -302,6 +313,8 @@ bool ImageContest::Init()
         else
             std::filesystem::create_directories(mMeta.basePath);
 
+        mpRatedImagesStrip = new WinTopWinners();
+        ChildAdd(mpRatedImagesStrip);
 
         SetFocus();
         mpWinImage[kLeft] = new ZWinImage();
@@ -347,8 +360,6 @@ bool ImageContest::Init()
 
         UpdateControlPanel();
         UpdateUI();
-
-
     }
 
     return ZWin::Init();
@@ -392,6 +403,13 @@ void ImageContest::UpdateControlPanel()
 
     ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     ZGUI::Style wingdingsStyle = ZGUI::Style(ZFontParams("Wingdings", nGroupSide /2, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
+
+    if (!mpSymbolicFont)
+    {
+        mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
+        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x2750);
+        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
+    }
 
 
     ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
@@ -505,6 +523,8 @@ void ImageContest::UpdateControlPanel()
     pBtn->SetMessage(ZMessage("show_help", this));
     pBtn->msWinGroup = "View";
     mpPanel->ChildAdd(pBtn);
+
+    SetFocus();
 }
 
 bool ImageContest::OnParentAreaChange()
@@ -516,32 +536,10 @@ bool ImageContest::OnParentAreaChange()
     SetArea(mpParentWin->GetArea());
 
 
-    UpdateControlPanel();
     ZWin::OnParentAreaChange();
-    UpdateCaptions();
+    UpdateUI();
 
     SetFocus();
-    ZRect rImageArea(mAreaToDrawTo);
-    rImageArea.right = rImageArea.left + rImageArea.Width() / 2;
-    mpWinImage[kLeft]->SetArea(rImageArea);
-    rImageArea.OffsetRect(rImageArea.Width(), 0);
-    mpWinImage[kRight]->SetArea(rImageArea);
-
-    TopWinnersDialog* pDialog = (TopWinnersDialog*)GetChildWindowByWinName("TopWinnersDialog");
-
-    if (pDialog)    // hack to deal with resizing while winners dialog is visible
-    {
-     //   pDialog->SetArea(rImageArea);
-        ChildDelete(pDialog);
-        mbShowUI = false;
-        UpdateUI();
-        ShowWinnersDialog();
-
-    }
-
-
-    //    static int count = 0;
-//    ZOUT("ImageViewer::OnParentAreaChange\n", count++);
 
     return true;
 }
@@ -578,6 +576,7 @@ bool ImageContest::ScanFolder(std::filesystem::path folder)
 
     mCurrentFolder = folder;
     mImagesInCurrentFolder.clear();
+    mCurrentFolderImageMeta.clear();
 
     bool bErrors = false;
 
@@ -588,8 +587,18 @@ bool ImageContest::ScanFolder(std::filesystem::path folder)
             mImagesInCurrentFolder.emplace_back(filePath);
 //            mImageArray.emplace_back(new ImageEntry(filePath));
             //ZDEBUG_OUT("Found image:", filePath, "\n");
+
+            ImageMetaEntry localEntry(mMeta.Entry(filePath.path().string(), filesystem::file_size(filePath)));
+            if (localEntry.elo > 1000)
+                mCurrentFolderImageMeta.emplace_back(std::move(localEntry));
         }
     }
+
+    mCurrentFolderImageMeta.sort([](const ImageMetaEntry& a, const ImageMetaEntry& b) -> bool { return a.elo > b.elo; });
+
+    const int kMaxStripResults = 20;
+    mCurrentFolderImageMeta.resize(kMaxStripResults);
+
 
     if (bErrors)
     {
@@ -597,10 +606,16 @@ bool ImageContest::ScanFolder(std::filesystem::path folder)
         return false;
     }
 
+    if (mpRatedImagesStrip)
+    {
+        mpRatedImagesStrip->pMetaList = &mCurrentFolderImageMeta;
+        mpRatedImagesStrip->Invalidate();
+    }
+
+
     PickRandomPair();
 
-    //std::sort(mImageArray.begin(), mImageArray.end(), [](const shared_ptr<ImageEntry>& a, const shared_ptr<ImageEntry>& b) -> bool { return a->filename.filename().string() < b->filename.filename().string(); });
-    
+   
 
     UpdateCaptions();
 
@@ -651,6 +666,7 @@ bool ImageContest::PickRandomPair()
     mImageMeta[kLeft] = &mMeta.Entry(file1, std::filesystem::file_size(*it1));
     mImageMeta[kRight] = &mMeta.Entry(file2, std::filesystem::file_size(*it2));
 
+    mState = kSelectingFromPair;
     UpdateCaptions();
 
     return true;
@@ -660,6 +676,8 @@ bool ImageContest::PickRandomPair()
 
 bool ImageContest::SelectWinner(int leftOrRight)
 {
+    assert(mState == kSelectingFromPair);
+
     if (leftOrRight == kLeft || leftOrRight == kRight)
     {
         mImageMeta[kLeft]->contests++;
@@ -998,4 +1016,22 @@ int32_t ImageMetaEntry::WriteEntry(uint8_t* pDest)
 
     return (int32_t)(pWriter - pDest);
 }
+
+tZBufferPtr ImageMetaEntry::Thumbnail()
+{
+    if (!mpThumb)
+        mpThumb = gThumbCache.GetThumb(filename, true);
+
+    if (!mpThumb && !filename.empty())
+    {
+        mpThumb.reset(new ZBuffer());
+        mpThumb->Init(256, 256);
+        mpThumb->Fill(0xff000000 | rand());
+
+        gDefaultGroupingStyle.Font()->DrawTextA(mpThumb.get(), std::filesystem::path(filename).filename().string(), mpThumb->GetArea(), &ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff));
+    }
+
+    return mpThumb;
+}
+
 

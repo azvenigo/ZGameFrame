@@ -1281,7 +1281,7 @@ bool Z3DTestWin::Paint()
 #endif
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
-    mpTransformTexture->FillAlpha(mAreaToDrawTo, 0xff000000);
+    mpTransformTexture->FillAlpha(0xff000000);
 
     mfBaseAngle += (mnRotateSpeed / 1000.0) * gTimer.GetElapsedTime() / 10000.0;
 

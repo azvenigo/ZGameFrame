@@ -150,7 +150,7 @@ bool ZWinDebugConsole::Paint()
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
-    mpTransformTexture.get()->Fill(mrDocumentArea, 0xff000000);
+    mpTransformTexture.get()->Fill(0xff000000, &mrDocumentArea);
 
 
     int64_t nHeight = mFont->Height();
