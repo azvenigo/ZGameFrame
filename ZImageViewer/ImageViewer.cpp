@@ -52,7 +52,7 @@ ImageViewer::ImageViewer()
     msWinName = "ZWinImageViewer";
     mpPanel = nullptr;
     mpRotationMenu = nullptr;
-    mpSymbolicFont = nullptr;
+    //mpSymbolicFont = nullptr;
     mpFavoritesFont = nullptr;
     mpWinImage = nullptr;
     mpPool = new ThreadPool(kPoolSize);
@@ -478,12 +478,12 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                     r.bottom = r.top + r.Height() * 4 + gM;
 
                     mpRotationMenu->SetArea(r);
-                    mpRotationMenu->ArrangeWindows(mpRotationMenu->GetChildrenInGroup("Rotate"), mAreaToDrawTo, mpRotationMenu->mStyle, 1, -1);
+                    mpRotationMenu->ArrangeWindows(mpRotationMenu->GetChildrenInGroup("Rotate"), ZRect(r.Width(),r.Height()), mpRotationMenu->mStyle, 1, -1);
                     mpRotationMenu->SetVisible();
                     ChildToFront(mpRotationMenu);
                 }
-                return true;
             }
+            return true;
         }
         else if (sType == "undo")
         {
@@ -1016,6 +1016,25 @@ bool ImageViewer::Init()
     {
         gRegistry.Get("ZImageViewer", "showui", mbShowUI);
 
+
+        int64_t nGroupSide = (gM * 2) - gSpacer * 4;
+
+        mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+        //        mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
+        ZDynamicFont* pFont = (ZDynamicFont*)mSymbolicStyle.Font().get();
+
+        pFont->GenerateSymbolicGlyph('<', 11119); // rotate left
+        pFont->GenerateSymbolicGlyph('>', 11118); // rotate right
+
+        pFont->GenerateSymbolicGlyph('-', 11108); // flip H
+        pFont->GenerateSymbolicGlyph('|', 11109); // flip V
+
+        pFont->GenerateSymbolicGlyph('u', 0x238c); // undo
+
+
+        pFont->GenerateSymbolicGlyph('F', 0x2750);
+        pFont->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
+
         SetFocus();
         mpWinImage = new ZWinImage();
         ZRect rImageArea(mAreaToDrawTo);
@@ -1040,10 +1059,6 @@ bool ImageViewer::Init()
         }
 
 
-        int64_t nGroupSide = (gM * 2) - gSpacer * 4;
-        ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
-        mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
-
         string sMessage;
         mpRotationMenu = new ZWinControlPanel();
 
@@ -1054,22 +1069,22 @@ bool ImageViewer::Init()
 
         Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
         pBtn = mpRotationMenu->AddButton("<", sMessage);
-        pBtn->mCaption.style = unicodeStyle;
+        pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
         Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
         pBtn = mpRotationMenu->AddButton(">", sMessage);
-        pBtn->mCaption.style = unicodeStyle;
+        pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
         Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
         pBtn = mpRotationMenu->AddButton("-", sMessage);
-        pBtn->mCaption.style = unicodeStyle;
+        pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
         Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
         pBtn = mpRotationMenu->AddButton("|", sMessage);
-        pBtn->mCaption.style = unicodeStyle;
+        pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
         mpRotationMenu->mbHideOnMouseExit = true;
@@ -1129,10 +1144,9 @@ void ImageViewer::UpdateControlPanel()
 
 
 
-    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     ZGUI::Style wingdingsStyle = ZGUI::Style(ZFontParams("Wingdings", nGroupSide /2, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
 
-    if (!mpSymbolicFont)
+/*    if (!mpSymbolicFont)
     {
         mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
         ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('<', 11119); // rotate left
@@ -1146,7 +1160,7 @@ void ImageViewer::UpdateControlPanel()
 
         ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x2750);
         ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
-    }
+    }*/
 
     ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", nGroupSide*4, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     if (!mpFavoritesFont)
@@ -1380,6 +1394,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("All images");
     pCheck->msWinGroup = "Filter";
+    pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
     mpAllFilterButton = pCheck;
 
@@ -1397,6 +1412,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Images marked for deletion");
     pCheck->msWinGroup = "Filter";
+    pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
     mpDelFilterButton = pCheck;
 
@@ -1415,6 +1431,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Favorites");
     pCheck->msWinGroup = "Filter";
+    pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
     mpFavsFilterButton = pCheck;
   
@@ -1434,6 +1451,11 @@ void ImageViewer::UpdateControlPanel()
     mpPanel->ChildAdd(pBtn);
 
 
+    
+
+
+
+    
 
 
 
@@ -1442,21 +1464,13 @@ void ImageViewer::UpdateControlPanel()
 
 
 
-
-
-
-
-
-
+    rButton.SetRect(0, 0, nGroupSide, nGroupSide);
     rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gSpacer/2);
-
     rButton.OffsetRect(-gSpacer/2, 0);
 
     pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "F";
-    pBtn->mCaption.style = unicodeStyle;
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->mCaption.style.paddingV = (int32_t) (-pBtn->mCaption.style.fp.nHeight/10);
+    pBtn->mSVGImage.Load(sAppPath + "/res/fullscreen.svg");
+    pBtn->msWinGroup = "View";
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "toggle_fullscreen");
     pBtn->SetMessage(sMessage);
@@ -1464,21 +1478,10 @@ void ImageViewer::UpdateControlPanel()
     mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(-rButton.Width(), 0);
+
     pCheck = new ZWinCheck(&mbSubsample);
     pCheck->SetMessages(ZMessage("invalidate", this), ZMessage("invalidate", this));
-    pCheck->mCaption.sText = "Q";
-    pCheck->mCheckedStyle = unicodeStyle;
-    pCheck->mCheckedStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
-    pCheck->mCheckedStyle.look.colTop = 0xff88ff88;
-    pCheck->mCheckedStyle.look.colBottom = 0xff88ff88;
-    pCheck->mCheckedStyle.pos = ZGUI::CB;
-    pCheck->mCheckedStyle.paddingV = (int32_t)(unicodeStyle.fp.nHeight / 4);
-
-    pCheck->mUncheckedStyle = unicodeStyle;
-    pCheck->mUncheckedStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
-    pCheck->mUncheckedStyle.pos = ZGUI::CB;
-    pCheck->mUncheckedStyle.paddingV = (int32_t)(unicodeStyle.fp.nHeight / 4);
-
+    pCheck->mSVGImage.Load(sAppPath + "/res/subpixel.svg");
     pCheck->SetArea(rButton);
     pCheck->SetTooltip("Sub-pixel sampling");
     pCheck->msWinGroup = "View";

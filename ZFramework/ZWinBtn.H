@@ -174,6 +174,7 @@ public:  // ZWinCheck ///////////////////////////////////////////////////////
     // Style
     ZGUI::Style             mCheckedStyle;
     ZGUI::Style             mUncheckedStyle;
+    std::string             msRadioGroup;   // only one in the group shoudl be checked
 
 protected:
     virtual bool  			Paint();

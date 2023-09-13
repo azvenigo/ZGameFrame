@@ -124,7 +124,8 @@ protected:
     ZWinControlPanel*       mpPanel;
     std::recursive_mutex    mPanelMutex;
 
-    tZFontPtr               mpSymbolicFont;
+//    tZFontPtr               mpSymbolicFont;
+    ZGUI::Style             mSymbolicStyle;
 
     ZWinImage*              mpWinImage[2];  // left and right
     ImageMetaEntry*         mImageMeta[2];  // left and right

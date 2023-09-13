@@ -283,7 +283,7 @@ bool ZWinCheck::Init()
 	// Init must be called after image, font, and captions are set.
 	ZWinSizablePushBtn::Init();
 
-    if (!msWinGroup.empty())
+    if (!msRadioGroup.empty())
     {
         gMessageSystem.AddNotification("radio_check", this);
     }
@@ -325,7 +325,7 @@ bool ZWinCheck::HandleMessage(const ZMessage& message)
     if (sType == "radio_check")
     {
         string sGroupName = message.GetParam("group");
-        if (sGroupName == msWinGroup)
+        if (sGroupName == msRadioGroup)
         {
             // Part of our group
 
@@ -359,13 +359,10 @@ void ZWinCheck::SetState(bool bChecked, bool bPostNotifications)
             gMessageSystem.Post(msUncheckMessage);
         }
 
-        if (bChecked && !msWinGroup.empty())
+        if (bChecked && !msRadioGroup.empty())
         {
             // If we're part of a radio group and we're being checked, send out a message to uncheck all others in the group
-    //        string sUncheckMessage;
-    //        Sprintf(sUncheckMessage, "radio_check;group=%s;checked=%s", msWinGroup.c_str(), msWinName.c_str());
-    //        gMessageSystem.Post(sUncheckMessage);
-            gMessageSystem.Post("radio_check", "group", msWinGroup, "checked", msWinName);
+            gMessageSystem.Post("radio_check", "group", msRadioGroup, "checked", msWinName);
         }
     }
 
@@ -381,7 +378,7 @@ bool ZWinCheck::OnMouseUpL(int64_t, int64_t)
 bool ZWinCheck::OnMouseDownL(int64_t, int64_t)
 {
     // if we're part of a radio group and area already checked, do nothing
-    if (!msWinGroup.empty() && *mpbChecked)
+    if (!msRadioGroup.empty() && *mpbChecked)
         return true;
 
     SetState(!*mpbChecked);

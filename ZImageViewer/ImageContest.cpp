@@ -34,7 +34,7 @@ ImageContest::ImageContest()
     mpRatedImagesStrip = nullptr;
     mToggleUIHotkey = 0;
     mbShowUI = true;
-    mpSymbolicFont = nullptr;
+    //mpSymbolicFont = nullptr;
     mState = kNone;
 }
  
@@ -401,15 +401,11 @@ void ImageContest::UpdateControlPanel()
 
 
 
-    ZGUI::Style unicodeStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
-    ZGUI::Style wingdingsStyle = ZGUI::Style(ZFontParams("Wingdings", nGroupSide /2, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
+    mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+    ZDynamicFont* pFont = (ZDynamicFont*)mSymbolicStyle.Font().get();
 
-    if (!mpSymbolicFont)
-    {
-        mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
-        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('F', 0x2750);
-        ((ZDynamicFont*)mpSymbolicFont.get())->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
-    }
+    pFont->GenerateSymbolicGlyph('F', 0x2750);
+    pFont->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
 
 
     ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
@@ -489,15 +485,20 @@ void ImageContest::UpdateControlPanel()
 
 
 
+    rButton.SetRect(0,0,nGroupSide, nGroupSide);
+
     rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gSpacer/2);
 
     rButton.OffsetRect(-gSpacer/2, 0);
 
+
     pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "F";
-    pBtn->mCaption.style = unicodeStyle;
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->mCaption.style.paddingV = (int32_t) (-pBtn->mCaption.style.fp.nHeight/10);
+    pBtn->mSVGImage.Load(sAppPath + "/res/fullscreen.svg");
+    pBtn->msWinGroup = "View";
+
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->mSVGImage.Load(sAppPath + "/res/fullscreen.svg");
+    pBtn->msWinGroup = "View";
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "toggle_fullscreen");
     pBtn->SetMessage(sMessage);
@@ -597,7 +598,8 @@ bool ImageContest::ScanFolder(std::filesystem::path folder)
     mCurrentFolderImageMeta.sort([](const ImageMetaEntry& a, const ImageMetaEntry& b) -> bool { return a.elo > b.elo; });
 
     const int kMaxStripResults = 20;
-    mCurrentFolderImageMeta.resize(kMaxStripResults);
+    if (mCurrentFolderImageMeta.size() > kMaxStripResults)
+        mCurrentFolderImageMeta.resize(kMaxStripResults);
 
 
     if (bErrors)

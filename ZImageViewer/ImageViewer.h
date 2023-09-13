@@ -102,7 +102,8 @@ class ImageViewer : public ZWin
     {
         kAll = 0,
         kFavs = 1,
-        kToBeDeleted = 2
+        kToBeDeleted = 2,
+        kRanked = 3
     };
 
 public:
@@ -237,7 +238,8 @@ protected:
     std::list<std::string>  mAcceptedExtensions = { "jpg", "jpeg", "png", "gif", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm", "svg" };
 
     uint32_t                mToggleUIHotkey;
-    tZFontPtr               mpSymbolicFont;
+    //tZFontPtr               mpSymbolicFont;
+    ZGUI::Style             mSymbolicStyle;
     tZFontPtr               mpFavoritesFont;
 
     ZWinCheck*              mpAllFilterButton;
