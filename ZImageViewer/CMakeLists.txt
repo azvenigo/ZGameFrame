@@ -27,6 +27,7 @@ set(ZIMAGEVIEWER_SOURCES
 Main_ZImageViewer.h Main_ZImageViewer.cpp
 ImageViewer.h ImageViewer.cpp
 ImageContest.h ImageContest.cpp
+ImageMeta.h     ImageMeta.cpp
 ConfirmDeleteDialog.h ConfirmDeleteDialog.cpp
 WinTopWinners.h WinTopWinners.cpp
 ZImageViewer.rc 

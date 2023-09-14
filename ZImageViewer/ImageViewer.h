@@ -6,6 +6,7 @@
 #include <future>
 #include <limits>
 #include "helpers/ThreadPool.h"
+#include "ImageContest.h"
 
 
 class ZWinImage;
@@ -19,16 +20,18 @@ const std::string ksFavorites("favorites");
 class ViewingIndex
 {
 public:
-    ViewingIndex(int64_t _abs = -1, int64_t _del = -1, int64_t _fav = -1)
+    ViewingIndex(int64_t _abs = -1, int64_t _del = -1, int64_t _fav = -1, int64_t _ranked = -1)
     {
         absoluteIndex = _abs;
         delIndex = _del;
         favIndex = _fav;
+        rankedIndex = _ranked;
     };
 
     int64_t absoluteIndex;
     int64_t delIndex;
     int64_t favIndex;
+    int64_t rankedIndex;
 };
 
 
@@ -72,6 +75,8 @@ public:
     tZBufferPtr             pImage;
     easyexif::EXIFInfo      mEXIF;
 
+    ImageMeta               mMeta;
+
     eImageEntryState        mState;
 };
 
@@ -103,7 +108,7 @@ class ImageViewer : public ZWin
         kAll = 0,
         kFavs = 1,
         kToBeDeleted = 2,
-        kRanked = 3
+        kRanked = 3,
     };
 
 public:
@@ -226,6 +231,7 @@ protected:
     tImageEntryArray        mImageArray;
     tImageEntryArray        mFavImageArray;
     tImageEntryArray        mToBeDeletedImageArray;
+    tImageEntryArray        mRankedArray;
     std::recursive_mutex    mImageArrayMutex;
 
 

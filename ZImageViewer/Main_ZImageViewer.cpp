@@ -9,6 +9,7 @@
 #include "Resources.h"
 #include "ImageViewer.h"
 #include "ZThumbCache.h"
+#include "ImageMeta.h"
 
 
 using namespace std;
@@ -150,6 +151,17 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
     if (!std::filesystem::exists(thumbPath))
         std::filesystem::create_directories(thumbPath);
     gThumbCache.Init(thumbPath);
+
+    gImageMeta.basePath = appDataPath;
+    gImageMeta.basePath += "contests/";
+
+/*    if (std::filesystem::exists(gImageMeta.basePath))
+        gImageMeta.LoadAll();
+    else
+        std::filesystem::create_directories(gImageMeta.basePath);*/
+    if (!std::filesystem::exists(gImageMeta.basePath))
+        std::filesystem::create_directories(gImageMeta.basePath);
+
 
 
 

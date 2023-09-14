@@ -1004,6 +1004,8 @@ int64_t ImageViewer::CountImagesMatchingFilter(eFilterState state)
         return mToBeDeletedImageArray.size();
     else if (state == kFavs)
         return mFavImageArray.size();
+    else if (state == kRanked)
+        return mRankedArray.size();
 
     return mImageArray.size();
 }
@@ -1108,6 +1110,7 @@ void ImageViewer::LimitIndex()
     limit<int64_t>(mViewingIndex.absoluteIndex, 0, mImageArray.size());
     limit<int64_t>(mViewingIndex.delIndex,      0, mToBeDeletedImageArray.size());
     limit<int64_t>(mViewingIndex.favIndex,      0, mFavImageArray.size());
+    limit<int64_t>(mViewingIndex.rankedIndex,   0, mRankedArray.size());
 }
 
 void ImageViewer::UpdateControlPanel()
@@ -1550,6 +1553,8 @@ void ImageViewer::LoadExifProc(std::filesystem::path& imagePath, shared_ptr<Imag
 
 //    ZOUT("Loading EXIF:", imagePath, "\n");
 
+//    pEntry->mMeta = 
+
     if (ZBuffer::ReadEXIFFromFile(imagePath.string(), pEntry->mEXIF))
         pEntry->mState = ImageEntry::kExifReady;
     else
@@ -1717,6 +1722,8 @@ bool ImageViewer::FreeCacheMemory()
         pArrayToScan = &mFavImageArray;
     else if (mFilterState == kToBeDeleted)
         pArrayToScan = &mToBeDeletedImageArray;
+    else if (mFilterState == kRanked)
+        pArrayToScan = &mRankedArray;
 
     int64_t nCurIndex = IndexInCurMode();
 
@@ -1959,6 +1966,15 @@ ViewingIndex ImageViewer::IndexFromPath(const std::filesystem::path& imagePath)
         }
     }
 
+    for (int i = 0; i < mRankedArray.size(); i++)
+    {
+        if (mRankedArray[i]->filename.filename() == imagePath.filename())
+        {
+            index.rankedIndex = i;
+            break;
+        }
+    }
+
     return index;
 }
 
@@ -1999,6 +2015,8 @@ int64_t ImageViewer::IndexInCurMode()
         return mViewingIndex.delIndex;
     else if (mFilterState == kFavs)
         return mViewingIndex.favIndex;
+    else if (mFilterState == kRanked)
+        return mViewingIndex.rankedIndex;
 
     return mViewingIndex.absoluteIndex;
 }
@@ -2009,6 +2027,8 @@ int64_t ImageViewer::CountInCurMode()
         return mToBeDeletedImageArray.size();
     else if (mFilterState == kFavs)
         return mFavImageArray.size();
+    else if (mFilterState == kRanked)
+        return mRankedArray.size();
 
     return mImageArray.size();;
 }
