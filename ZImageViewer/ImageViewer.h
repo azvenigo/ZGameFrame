@@ -12,6 +12,8 @@
 class ZWinImage;
 class ZWinCheck;
 class ZWinControlPanel;
+class WinTopWinners;
+
 
 
 const std::string ksToBeDeleted("ZZ_TO_BE_DELETED_ZZ");
@@ -41,8 +43,8 @@ public:
     enum eImageEntryState : uint32_t
     {
         kInit = 0,
-        kLoadingExif = 1,
-        kExifReady = 2,
+        kLoadingMetadata = 1,
+        kMetadataReady = 2,
         kNoExifAvailable = 3,
         kLoadInProgress = 4,
         kLoaded = 5
@@ -61,23 +63,25 @@ public:
     {
         pImage = nullptr;
         if (mEXIF.ImageWidth > 0 && mEXIF.ImageHeight > 0)
-            mState = ImageEntry::kExifReady;
+            mState = ImageEntry::kMetadataReady;
         else
             mState = ImageEntry::kInit;
     }
 
-    bool ReadyToLoad() { return mState == kExifReady || mState == kNoExifAvailable; }
+    bool ReadyToLoad() { return mState == kMetadataReady || mState == kNoExifAvailable; }
     bool ToBeDeleted(); // true if image is in the ZZ_to_be_deleted subfolder
     bool IsFavorite();  // true if image is in the "favorites" subfolder
 
 
+    eImageEntryState        mState;
+
     std::filesystem::path   filename;
     tZBufferPtr             pImage;
+
+    // metadata
     easyexif::EXIFInfo      mEXIF;
+    ImageMetaEntry          mMeta;
 
-    ImageMeta               mMeta;
-
-    eImageEntryState        mState;
 };
 
 typedef std::list<std::filesystem::path>    tImageFilenames;
@@ -160,13 +164,14 @@ protected:
 //    tImageFilenames         GetImagesFlaggedToBeDeleted();
 
     bool                    KickCaching();
+    bool                    KickMetadataLoading();
     bool                    FreeCacheMemory();
     tImageEntryPtr          NextImageToCache();
 
 
 
     static void             LoadImageProc(std::filesystem::path& imagePath, std::shared_ptr<ImageEntry> pEntry);
-    static void             LoadExifProc(std::filesystem::path& imagePath, std::shared_ptr<ImageEntry> pEntry);
+    static void             LoadMetadataProc(std::filesystem::path& imagePath, std::shared_ptr<ImageEntry> pEntry, std::atomic<int64_t>* pnOutstanding);
 
     void                    FlushLoads();
 
@@ -202,6 +207,8 @@ protected:
 
 
     int64_t                 CountImagesMatchingFilter(eFilterState state);
+    int64_t                 GetRank(const std::string& sFilename);
+    std::string             GetRankedFilename(int64_t nRank);
 
     bool                    ImageMatchesCurFilter(const ViewingIndex& vi);
 
@@ -227,13 +234,17 @@ protected:
     std::filesystem::path   mUndoTo;    // previous move dest
 
 
-    ThreadPool*             mpPool;              
+    ThreadPool*             mpImageLoaderPool;              
     tImageEntryArray        mImageArray;
     tImageEntryArray        mFavImageArray;
     tImageEntryArray        mToBeDeletedImageArray;
     tImageEntryArray        mRankedArray;
     std::recursive_mutex    mImageArrayMutex;
 
+    ThreadPool*             mpMetadataLoaderPool;
+    std::atomic<int64_t>    mOutstandingMetadataCount;      // to be set when kicking off threads to load metadata.....
+    tImageMetaList          mRankedImageMetadata;
+    std::recursive_mutex    mMetadataMutex;
 
 
 //    int64_t                 mnViewingIndex;
@@ -251,6 +262,10 @@ protected:
     ZWinCheck*              mpAllFilterButton;
     ZWinCheck*              mpFavsFilterButton;
     ZWinCheck*              mpDelFilterButton;
+    ZWinCheck*              mpRankedFilterButton;
+    WinTopWinners*          mpRatedImagesStrip;
+
+
 
     bool                    mbSubsample;
     bool                    mbShowUI;

@@ -455,7 +455,7 @@ bool ZWinSizablePushBtn::Paint()
     // experimentally blt parent's buffer to test transparency
     if (mpParentWin && mpParentWin->IsVisible())
     {
-        cout << "mpParentWin:" << (uint64_t)mpParentWin << "\n" << std::flush;
+//        cout << "mpParentWin:" << (uint64_t)mpParentWin << "\n" << std::flush;
         tZBufferPtr parentBuffer = mpParentWin->GetTransformTexture();
         mpTransformTexture.get()->Blt(parentBuffer.get(), mAreaToDrawTo, mpTransformTexture.get()->GetArea());
     }

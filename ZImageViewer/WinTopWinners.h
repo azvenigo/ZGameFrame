@@ -11,6 +11,7 @@
 
 class WinTopWinners : public ZWin
 {
+    const int64_t   kTopNEntries = 20;
 public:
     WinTopWinners();
     bool            Init();
@@ -20,11 +21,15 @@ public:
     bool            OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
     bool            OnMouseOut();
 
+    void		    SetArea(const ZRect& newArea);
+
     ZGUI::Style     mStyle;
 
     tImageMetaList* pMetaList;
 
     bool            mbDynamicThumbnailSizing;   // sizes thumbnails under the mouse larger....work in progress
+
+    int64_t         mnTopNEntries;
 
 protected:
 

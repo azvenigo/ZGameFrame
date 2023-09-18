@@ -72,7 +72,7 @@ void ImageContest::UpdateUI()
     UpdateCaptions();
 
     ZRect rRatedStrip(mAreaToDrawTo);
-    rRatedStrip.left = rRatedStrip.right - 128;
+    rRatedStrip.left = rRatedStrip.right - gM*4;
 
     ZRect rImageArea(mAreaToDrawTo);
     rImageArea.right = rRatedStrip.left;

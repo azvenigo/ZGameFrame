@@ -24,7 +24,12 @@ std::filesystem::path ImageMeta::BucketFilename(int64_t size)
 
 ImageMetaEntry& ImageMeta::Entry(const std::string& filename, int64_t size)
 {
+    if (size < 0)
+        size = std::filesystem::file_size(filename);
+
     uint16_t nSizeBucket = size % (16 * 1024);
+
+    const std::lock_guard<std::recursive_mutex> lock(mMutex);
     tImageSizeToMeta::iterator findIt = mSizeToMetaLists.find(nSizeBucket);
 
     // See if it needs loading
@@ -93,6 +98,8 @@ bool ImageMeta::Load(const std::filesystem::path& imagelist)
     int64_t nImageSizes = SH::ToInt(imagelist.filename().string());
 
     assert(nImageSizes > 0 && nImageSizes < 32 * 1024);     // 16bit value
+
+    const std::lock_guard<std::recursive_mutex> lock(mMutex);
     mSizeToMetaLists[nImageSizes].clear();
 
     uint8_t* pBuf = new uint8_t[nSize];
@@ -145,6 +152,7 @@ bool ImageMeta::Save()
     if (!std::filesystem::exists(basePath))
         return false;
 
+    const std::lock_guard<std::recursive_mutex> lock(mMutex);
     for (auto& bucket : mSizeToMetaLists)
     {
         SaveBucket(bucket.first);
@@ -154,6 +162,7 @@ bool ImageMeta::Save()
 bool ImageMeta::SaveBucket(int64_t size)
 {
     uint16_t nSizeBucket = size % (16 * 1024);
+    const std::lock_guard<std::recursive_mutex> lock(mMutex);
     tImageSizeToMeta::iterator findIt = mSizeToMetaLists.find(nSizeBucket);
 
     // See if it needs loading

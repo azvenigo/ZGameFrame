@@ -20,18 +20,21 @@ public:
         wins = _wins;
         elo = _elo;
         mpThumb = nullptr;
+
+
     };
 
     int32_t     ReadEntry(const uint8_t* pData);        // fills out entry and returns number of bytes processed
     int32_t     WriteEntry(uint8_t* pDest);             // writes to buffer and 
 
+    // persisted metadata
     std::string filename;  // just the filename, no path
     int64_t     filesize;  // filename + nFileSize will be considered a unique image
-
     int32_t     contests;  // number of times the image has been shown 
     int32_t     wins;      // number of times the image has been selected
     int32_t     elo;        // rating
 
+    // not persisted
     tZBufferPtr Thumbnail();    // lazy loads
 
 private:
@@ -46,7 +49,7 @@ typedef std::list<std::filesystem::path>    tImageFilenames;
 class ImageMeta
 {
 public:
-    ImageMetaEntry& Entry(const std::string& filename, int64_t size);
+    ImageMetaEntry& Entry(const std::string& filename, int64_t size = -1);  // if size is -1, retrieve size from filesystem
 
     bool LoadAll();
     bool Save();        // each list will be stored in a separate file, filename being the size mod 16k
@@ -58,6 +61,8 @@ public:
 protected:
     bool Load(const std::filesystem::path& imagelist);
     std::filesystem::path   BucketFilename(int64_t size);
+
+    std::recursive_mutex mMutex;
 };
 
 extern ImageMeta gImageMeta;

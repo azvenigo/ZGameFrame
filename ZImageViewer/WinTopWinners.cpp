@@ -9,15 +9,19 @@
 
 using namespace std;
 
-const string kTopWinnersDialogName("TopWinnersDialog");
-
 WinTopWinners::WinTopWinners()
 {
-    msWinName = kTopWinnersDialogName;
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = false;
     pMetaList = nullptr;
     mbDynamicThumbnailSizing = false;
+    mStyle = gStyleGeneralText;
+    mStyle.fp.nHeight = gM / 2;
+    mStyle.fp.nWeight = 800;
+    mStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
+    mStyle.look.colTop = 0xffff00ff;
+    mStyle.look.colTop = 0xffffffff;
+    mnTopNEntries = kTopNEntries;
 }
 
 bool WinTopWinners::Init()
@@ -28,11 +32,21 @@ bool WinTopWinners::Init()
 
 void WinTopWinners::UpdateUI()
 {
-    if (!pMetaList)
+    if (!pMetaList || pMetaList->empty())
         return;
-    mThumbRects.resize(pMetaList->size());
 
-    int64_t nThumbSide = mAreaToDrawTo.Height() / pMetaList->size();
+    int64_t nThumbSide;
+    if (pMetaList->size() < mnTopNEntries)
+    {
+        mThumbRects.resize(pMetaList->size());
+        nThumbSide = mAreaToDrawTo.Height() / pMetaList->size();
+    }
+    else
+    {
+        mThumbRects.resize(mnTopNEntries);
+        nThumbSide = mAreaToDrawTo.Height() / mnTopNEntries;
+    }
+
     ZRect rThumb(nThumbSide, nThumbSide);
     ZRect rThumbStrip(0, 0, nThumbSide, nThumbSide * pMetaList->size());
 
@@ -56,7 +70,7 @@ void WinTopWinners::UpdateUI()
         limit<int64_t>(nMouseOverThumb, 0, pMetaList->size() - 1);
     }
 
-    int64_t i = 0;
+    int64_t rank = 1;
     for (auto& entry : *pMetaList)
     {
         tZBufferPtr pThumb = entry.Thumbnail();
@@ -80,9 +94,10 @@ void WinTopWinners::UpdateUI()
         else
             rThumb.OffsetRect(0, rScaled.Height());
 
-        mThumbRects[i] = rScaled;
+        mThumbRects[rank-1] = rScaled;
 
-        i++;
+        if (rank++ >= mnTopNEntries)
+            break;
     }
 }
 
@@ -95,7 +110,7 @@ bool WinTopWinners::OnMouseDownL(int64_t x, int64_t y)
         if (r.PtInRect(x, y))
         {
             // post
-            string sLink("select;filename=" + SH::URL_Encode((*it).filename) + ";target=ZWinImageContest");
+            string sLink("select;filename=" + SH::URL_Encode((*it).filename) + ";target=" + mpParentWin->GetTargetName());
             gMessageSystem.Post(sLink);
             break;
         }
@@ -125,6 +140,12 @@ bool WinTopWinners::OnMouseOut()
         Invalidate();
     }
     return ZWin::OnMouseOut();
+}
+
+void WinTopWinners::SetArea(const ZRect& newArea)
+{
+    ZWin::SetArea(newArea);
+    UpdateUI();
 }
 
 
@@ -162,49 +183,26 @@ bool WinTopWinners::Paint()
         if (pMetaList->size() != mThumbRects.size())
             UpdateUI(); // compute thumb rects
 
-        int64_t i = 0;
+        int64_t rank = 1;
         for (auto& entry : *pMetaList)
         {
             tZBufferPtr pThumb = entry.Thumbnail();
 
             ZRasterizer rasterizer;
             tUVVertexArray verts;
-            rasterizer.RectToVerts(mThumbRects[i], verts);
+            rasterizer.RectToVerts(mThumbRects[rank - 1], verts);
 
             rasterizer.Rasterize(mpTransformTexture.get(), pThumb.get(), verts);
 
-            i++;
+            string sRank;
+            Sprintf(sRank, "#%d", rank);
+            mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), sRank, mThumbRects[rank-1], &mStyle);
+
+            if (rank++ >= mnTopNEntries)
+                break;
         }
     }
 
 
     return ZWin::Paint();
 }
-
-/*
-TopWinnersDialog* TopWinnersDialog::ShowDialog(tImageMetaList sortedList, ZRect rDialogArea)
-{
-    ZWin* pContestWin = (ZWin*)gpMainWin->GetChildWindowByWinName("ZWinImageContest");
-    if (!pContestWin)
-    {
-        ZERROR("Something terribly wrong. Couldn't retrieve contest dialog");
-        return nullptr;
-    }
-
-    // only one dialog
-    TopWinnersDialog* pDialog = (TopWinnersDialog*)pContestWin->GetChildWindowByWinName(kTopWinnersDialogName);
-    if (pDialog)
-    {
-        pDialog->SetVisible();
-        return pDialog;
-    }
-
-    pDialog = new TopWinnersDialog();
-
-    pDialog->mStyle = gDefaultDialogStyle;
-    pDialog->SetArea(rDialogArea);
-    pDialog->sortedList = sortedList;
-
-    pContestWin->ChildAdd(pDialog);
-    return pDialog;
-}*/

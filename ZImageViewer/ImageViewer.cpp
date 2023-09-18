@@ -15,6 +15,8 @@
 #include "helpers/Registry.h"
 #include "ImageContest.h"
 #include "ZTimer.h"
+#include "ImageMeta.h"
+#include "WinTopWinners.h"
 
 
 using namespace std;
@@ -25,7 +27,6 @@ bool is_ready(std::shared_future<R> const& f)
 {
     return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
-const int kPoolSize = 8;
 
 //#define DEBUG_CACHE
 
@@ -55,7 +56,8 @@ ImageViewer::ImageViewer()
     //mpSymbolicFont = nullptr;
     mpFavoritesFont = nullptr;
     mpWinImage = nullptr;
-    mpPool = new ThreadPool(kPoolSize);
+    mpImageLoaderPool = new ThreadPool(std::thread::hardware_concurrency()/2);
+    mpMetadataLoaderPool = new ThreadPool(std::thread::hardware_concurrency() / 2);
     mToggleUIHotkey = 0;
     mCachingState = kWaiting;
     mbSubsample = false;
@@ -64,13 +66,16 @@ ImageViewer::ImageViewer()
     mpAllFilterButton = nullptr;
     mpFavsFilterButton = nullptr;
     mpDelFilterButton = nullptr;
+    mpRankedFilterButton = nullptr;
+    mOutstandingMetadataCount = 0;
+    mpRatedImagesStrip = nullptr;
 
 }
  
 ImageViewer::~ImageViewer()
 {
-    if (mpPool)
-        delete mpPool;
+    if (mpImageLoaderPool)
+        delete mpImageLoaderPool;
 }
 
 
@@ -100,33 +105,45 @@ void ImageViewer::HandleQuitCommand()
 {
     mCachingState = kWaiting;
 
-//    tImageFilenames deletionList = GetImagesFlaggedToBeDeleted();
+    delete mpImageLoaderPool;
+    mpImageLoaderPool = nullptr;
 
-//    if (deletionList.empty())
-    {
-        if (mpPool)
-        {
-            delete mpPool;
-            mpPool = nullptr;
-        }
-        gMessageSystem.Post("quit_app_confirmed");
-    }
-/*    else
-    {
-        mnViewingIndex = IndexFromPath(*deletionList.begin());
-        ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", deletionList);
-        pDialog->msOnConfirmDelete = ZMessage("delete_confirm", this);
-        pDialog->msOnCancel = ZMessage("delete_cancel_and_quit", this);
-        pDialog->msOnGoBack = ZMessage("delete_goback", this);
-    }*/
+    delete mpMetadataLoaderPool;
+    mpMetadataLoaderPool = nullptr;
+
+    gMessageSystem.Post("quit_app_confirmed");
 }
 
 void ImageViewer::UpdateUI()
 {
 
     ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
-
     UpdateControlPanel();
+
+    if (mOutstandingMetadataCount == -1 && !mpRatedImagesStrip && !mRankedImageMetadata.empty())
+    {
+        mpRatedImagesStrip = new WinTopWinners();
+        ChildAdd(mpRatedImagesStrip);
+        mpRatedImagesStrip->pMetaList = &mRankedImageMetadata;
+    }
+
+    ZRect rImageArea(mAreaToDrawTo);
+
+    if (mpPanel && mpPanel->IsVisible())
+        rImageArea.top = mpPanel->GetArea().bottom;
+
+    if (mpRatedImagesStrip)
+    {
+        ZRect rRatedStrip(rImageArea);
+        rRatedStrip.left = rRatedStrip.right - gM * 4;
+
+        mpRatedImagesStrip->SetArea(rRatedStrip);
+        rImageArea.right = rRatedStrip.left;
+    }
+
+    if (mpWinImage)
+        mpWinImage->SetArea(rImageArea);
+
     UpdateCaptions();
     InvalidateChildren();
 }
@@ -346,6 +363,11 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     else if (sType == "filter_favs")
     {
         UpdateFilteredView(kFavs);
+        return true;
+    }
+    else if (sType == "filter_ranked")
+    {
+        UpdateFilteredView(kRanked);
         return true;
     }
     else if (sType == "invalidate")
@@ -822,14 +844,24 @@ void ImageViewer::SetFirstImage()
     if (!mImageArray.empty())
     {
         const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
-        mViewingIndex = IndexFromPath(mImageArray[0]->filename);
-        if (!ImageMatchesCurFilter(mViewingIndex))
+        if (mFilterState == kRanked)
         {
-            if (!FindImageMatchingCurFilter(mViewingIndex, 1))
+            if (mRankedArray.empty())
+                return;
+            mViewingIndex = IndexFromPath(GetRankedFilename(1));
+        }
+        else
+        {
+
+            mViewingIndex = IndexFromPath(mImageArray[0]->filename);
+            if (!ImageMatchesCurFilter(mViewingIndex))
             {
-                UpdateFilteredView(mFilterState);
-            }
-        };
+                if (!FindImageMatchingCurFilter(mViewingIndex, 1))
+                {
+                    UpdateFilteredView(mFilterState);
+                }
+            };
+        }
     }
     else
         mViewingIndex = {};
@@ -847,14 +879,23 @@ void ImageViewer::SetLastImage()
     if (!mImageArray.empty())
     {
         const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
-        mViewingIndex = IndexFromPath(mImageArray[mImageArray.size()-1]->filename);
-        if (!ImageMatchesCurFilter(mViewingIndex))
+        if (mFilterState == kRanked)
         {
-            if (!FindImageMatchingCurFilter(mViewingIndex, -1))
+            if (mRankedArray.empty())
+                return;
+            mViewingIndex = IndexFromPath(GetRankedFilename(mRankedArray.size()));
+        }
+        else
+        {
+            mViewingIndex = IndexFromPath(mImageArray[mImageArray.size() - 1]->filename);
+            if (!ImageMatchesCurFilter(mViewingIndex))
             {
-                UpdateFilteredView(mFilterState);
-            }
-        };
+                if (!FindImageMatchingCurFilter(mViewingIndex, -1))
+                {
+                    UpdateFilteredView(mFilterState);
+                }
+            };
+        }
     }
     else
         mViewingIndex = {};
@@ -905,7 +946,21 @@ bool ImageViewer::FindImageMatchingCurFilter(ViewingIndex& vi, int64_t offset)
         return false;
     }
 
+    if (mFilterState == kRanked)
+    {
+        int64_t nCurRank = GetRank(mImageArray[vi.absoluteIndex]->filename.string());
+        int64_t nNewRank = nCurRank + offset;
+        if (nNewRank < 1 || nNewRank > mRankedArray.size())
+            return false;
+
+        vi = IndexFromPath( GetRankedFilename(nNewRank));
+        return true;
+    }
+
+
+
     int64_t nAbsIndex = vi.absoluteIndex + offset;
+
     while (nAbsIndex >= 0 && nAbsIndex < (int64_t)mImageArray.size())
     {
         const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
@@ -990,6 +1045,9 @@ bool ImageViewer::ImageMatchesCurFilter(const ViewingIndex& vi)
         return false;
 
     const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
+
+    if (mFilterState == kRanked)
+        return mImageArray[vi.absoluteIndex]->mMeta.elo > 0;
 
     if (mFilterState == kToBeDeleted)
         return mImageArray[vi.absoluteIndex]->ToBeDeleted();
@@ -1116,7 +1174,7 @@ void ImageViewer::LimitIndex()
 void ImageViewer::UpdateControlPanel()
 {
     int64_t nControlPanelSide = gM * 2;
-//    limit<int64_t>(nControlPanelSide, 64, 128);
+    limit<int64_t>(nControlPanelSide, 64, 128);
 
 
     const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
@@ -1143,7 +1201,7 @@ void ImageViewer::UpdateControlPanel()
 
     mpPanel = new ZWinControlPanel();
         
-    int64_t nGroupSide = (gM * 2) - gSpacer * 4;
+    int64_t nGroupSide = nControlPanelSide - gSpacer * 4;
 
 
 
@@ -1254,7 +1312,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "undo";  // undo glyph
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
+    pBtn->mCaption.style.fp.nHeight = nGroupSide / 1.5;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Manage";
@@ -1266,7 +1324,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "move";
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
+    pBtn->mCaption.style.fp.nHeight = nGroupSide / 1.5;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Manage";
@@ -1278,7 +1336,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "copy";
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
+    pBtn->mCaption.style.fp.nHeight = nGroupSide / 1.5;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Manage";
@@ -1295,7 +1353,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mCaption.style = gDefaultGroupingStyle;
     pBtn->mCaption.style.look.colTop = 0xffff0000;
     pBtn->mCaption.style.look.colBottom = 0xffff0000;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 3;
+    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->mCaption.style.wrap = true;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
@@ -1437,10 +1495,41 @@ void ImageViewer::UpdateControlPanel()
     pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
     mpFavsFilterButton = pCheck;
+
+    // Ranked
+    rButton.OffsetRect(rButton.Width(), 0);
+
+    pCheck = new ZWinCheck();
+    pCheck->SetMessages(ZMessage("filter_ranked", this), "");
+    pCheck->mCaption.sText = "ranked";
+    pCheck->mCheckedStyle = filterButtonStyle;
+    pCheck->mCheckedStyle.look.colTop = 0xffe1b131;
+    pCheck->mCheckedStyle.look.colBottom = 0xffe1b131;
+
+    pCheck->mUncheckedStyle = filterButtonStyle;
+
+    pCheck->SetArea(rButton);
+    pCheck->SetTooltip("Ranked");
+    pCheck->msWinGroup = "Filter";
+    pCheck->msRadioGroup = "FilterGroup";
+    mpPanel->ChildAdd(pCheck);
+    mpRankedFilterButton = pCheck;
+
+
+
+
+
+
   
     mpFavsFilterButton->SetState(mFilterState == kFavs, false);
     mpDelFilterButton->SetState(mFilterState == kToBeDeleted, false);
     mpAllFilterButton->SetState(mFilterState == kAll, false);
+    mpRankedFilterButton->SetState(mFilterState == kRanked, false);
+
+
+
+    // Contest Button
+
 
     rButton.right = rButton.left + rButton.Width() * 2;
     rButton.OffsetRect(rButton.Width(), 0);
@@ -1453,8 +1542,6 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
 
-
-    
 
 
 
@@ -1510,9 +1597,8 @@ bool ImageViewer::OnParentAreaChange()
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
     SetArea(mpParentWin->GetArea());
 
-    UpdateControlPanel();
     ZWin::OnParentAreaChange();
-    UpdateCaptions();
+    UpdateUI();
 
 //    static int count = 0;
 //    ZOUT("ImageViewer::OnParentAreaChange\n", count++);
@@ -1546,25 +1632,34 @@ bool ImageViewer::ViewImage(const std::filesystem::path& filename)
     return true;
 }
 
-void ImageViewer::LoadExifProc(std::filesystem::path& imagePath, shared_ptr<ImageEntry> pEntry)
+void ImageViewer::LoadMetadataProc(std::filesystem::path& imagePath, shared_ptr<ImageEntry> pEntry, std::atomic<int64_t>* pnOutstanding)
 {
-    if (!pEntry)
+    if (!pEntry || !pnOutstanding)
         return;
 
 //    ZOUT("Loading EXIF:", imagePath, "\n");
 
-//    pEntry->mMeta = 
+    pEntry->mMeta = gImageMeta.Entry(imagePath.string());
 
     if (ZBuffer::ReadEXIFFromFile(imagePath.string(), pEntry->mEXIF))
-        pEntry->mState = ImageEntry::kExifReady;
+    {
+        pEntry->mState = ImageEntry::kMetadataReady;
+    }
     else
         pEntry->mState = ImageEntry::kNoExifAvailable;
+
+    (*pnOutstanding)--;
+    int64_t n = *pnOutstanding;
+    ZDEBUG_OUT("outstanding:", n, "\n");
 }
 
 void ImageViewer::FlushLoads()
 {
-    delete mpPool;  // will join
-    mpPool = new ThreadPool(kPoolSize);
+    delete mpImageLoaderPool;  // will join
+    mpImageLoaderPool = new ThreadPool(std::thread::hardware_concurrency() / 2);
+
+    delete mpMetadataLoaderPool;
+    mpMetadataLoaderPool = new ThreadPool(std::thread::hardware_concurrency() / 2);
 }
 
 
@@ -1755,7 +1850,25 @@ bool ImageViewer::FreeCacheMemory()
     return true;
 }
 
+bool ImageViewer::KickMetadataLoading()
+{
+    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
+    mOutstandingMetadataCount = mImageArray.size();;
+    static int64_t enqueued = 0;
 
+    // kick off exif reading if necessary
+    for (auto& entry : mImageArray)
+    {
+        if (entry->mState == ImageEntry::kInit)
+        {
+            entry->mState = ImageEntry::kLoadingMetadata;
+            mpImageLoaderPool->enqueue(&ImageViewer::LoadMetadataProc, entry->filename, entry, &mOutstandingMetadataCount);
+            enqueued++;
+        }
+    }
+
+    return true;
+}
 
 bool ImageViewer::KickCaching()
 {
@@ -1766,22 +1879,11 @@ bool ImageViewer::KickCaching()
     if (entry && entry->mState < ImageEntry::kLoadInProgress)
     {
         entry->mState = ImageEntry::kLoadInProgress;
-        mpPool->enqueue(&ImageViewer::LoadImageProc, entry->filename, entry);
+        mpImageLoaderPool->enqueue(&ImageViewer::LoadImageProc, entry->filename, entry);
     }
 
-    if (GetLoadsInProgress() > kPoolSize/2)
+    if (GetLoadsInProgress() > mpImageLoaderPool->size())
         return false;
-
-    // kick off exif reading if necessary
-    for (auto& entry : mImageArray)
-    {
-        if (entry->mState == ImageEntry::kInit)
-        {
-            entry->mState = ImageEntry::kLoadingExif;
-            mpPool->enqueue(&ImageViewer::LoadExifProc, entry->filename, entry);
-            break;
-        }
-    }
 
     if (CurMemoryUsage() < mMaxMemoryUsage)
     {
@@ -1797,7 +1899,7 @@ bool ImageViewer::KickCaching()
         {
 //            ZOUT("caching image ", entry->filename, "\n");
             entry->mState = ImageEntry::kLoadInProgress;
-            mpPool->enqueue(&ImageViewer::LoadImageProc, entry->filename, entry);
+            mpImageLoaderPool->enqueue(&ImageViewer::LoadImageProc, entry->filename, entry);
         }
     }
     else
@@ -1831,10 +1933,17 @@ void ImageViewer::Clear()
     FlushLoads();
     mImageArray.clear();
     mCurrentFolder.clear();
+    mRankedImageMetadata.clear();
     mViewingIndex = {};
     mLastAction = kNone;
     if (mpWinImage)
         mpWinImage->Clear();
+
+    if (mpRatedImagesStrip)
+    {
+        ChildDelete(mpRatedImagesStrip);
+        mpRatedImagesStrip = nullptr;
+    }
 
     UpdateCaptions();
     Invalidate();
@@ -1926,6 +2035,8 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
 
 
     std::sort(mImageArray.begin(), mImageArray.end(), [](const shared_ptr<ImageEntry>& a, const shared_ptr<ImageEntry>& b) -> bool { return a->filename.filename().string() < b->filename.filename().string(); });
+
+    KickMetadataLoading();
 
     if (!ValidIndex(mViewingIndex))
         SetFirstImage();
@@ -2056,10 +2167,60 @@ string ImageViewer::LoadStateString()
 
 #endif
 
+int64_t ImageViewer::GetRank(const std::string& sFilename)
+{
+    int64_t nRank = 1;
+    for (auto& i : mRankedImageMetadata)
+    {
+        if (i.filename == sFilename)
+            return nRank;
+        nRank++;
+    }
+
+    return -1;
+}
+
+std::string ImageViewer::GetRankedFilename(int64_t nRank)
+{
+    if (nRank > mRankedImageMetadata.size())
+        return "";
+
+    tImageMetaList::iterator it = mRankedImageMetadata.begin();
+    while (nRank-- > 1) // 1 not 0 because ranks are 1 through N
+        it++;
+
+    return (*it).filename;
+}
+
+
 bool ImageViewer::Process()
 {
     if (mpWinImage && !mImageArray.empty())
     {
+        if (mOutstandingMetadataCount == 0)
+        {
+            mOutstandingMetadataCount = -1;
+
+            for (auto& i : mImageArray)
+            {
+                if (i->mMeta.elo > 0)
+                    mRankedArray.emplace_back(i);
+            }
+
+            std::sort(mRankedArray.begin(), mRankedArray.end(), [](const shared_ptr<ImageEntry>& a, const shared_ptr<ImageEntry>& b) -> bool { return a->mMeta.elo > b->mMeta.elo; });
+
+            mRankedImageMetadata.clear();
+            for (auto& i : mRankedArray)
+            {
+                ImageMetaEntry rankedEntry(i->mMeta);
+                mRankedImageMetadata.emplace_back(std::move(rankedEntry));
+            }
+
+            UpdateUI();
+
+        }
+
+
         tZBufferPtr curImage = GetCurImage();
 
         if (curImage && mpWinImage->mpImage.get() != curImage.get())
@@ -2166,10 +2327,11 @@ void ImageViewer::UpdateCaptions()
     if (gInput.IsKeyDown(VK_MENU))
         bShow = true;
 
-    mpWinImage->mCaptionMap["favorite"].visible = false;
-    mpWinImage->mCaptionMap["for_delete"].visible = false;
-    mpWinImage->mCaptionMap["no_image"].visible = false;
-    mpWinImage->mCaptionMap["image_count"].visible = false;
+    mpWinImage->mCaptionMap["favorite"].Clear();
+    mpWinImage->mCaptionMap["for_delete"].Clear();
+    mpWinImage->mCaptionMap["no_image"].Clear();
+    mpWinImage->mCaptionMap["image_count"].Clear();
+    mpWinImage->mCaptionMap["rank"].Clear();
 
     string sCaption;
     Sprintf(sCaption, "%d favs", mFavImageArray.size());
@@ -2186,6 +2348,14 @@ void ImageViewer::UpdateCaptions()
     Sprintf(sCaption, "%d all", mImageArray.size());
     if (mpAllFilterButton)
         mpAllFilterButton->mCaption.sText = sCaption;
+
+/*    Sprintf(sCaption, "%d ranked", mRankedArray.size());
+    if (mpRankedFilterButton)
+        mpRankedFilterButton->mCaption.sText = sCaption;*/
+    if (mpRankedFilterButton)
+        mpRankedFilterButton->mCaption.sText = "ranked"; 
+
+
     mPanelMutex.unlock();
 
 
@@ -2224,19 +2394,18 @@ void ImageViewer::UpdateCaptions()
                 mpWinImage->mpTable->mTableStyle.paddingH = gSpacer;
                 mpWinImage->mpTable->mTableStyle.paddingV = gSpacer;
 
-                string sImageCount = "Viewing: [" + SH::FromInt(IndexInCurMode() + 1) + "/" + SH::FromInt(CountInCurMode()) + "]";
+                string sImageCount = "[" + SH::FromInt(IndexInCurMode() + 1) + "/" + SH::FromInt(CountInCurMode()) + "]";
                 mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
                 mpWinImage->mCaptionMap["image_count"].style = folderStyle;
-                mpWinImage->mCaptionMap["image_count"].style.paddingV += (int32_t)(topPadding + folderStyle.fp.nHeight);
-                mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::LT;
+                mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::LB;
                 mpWinImage->mCaptionMap["image_count"].visible = true;
 
                 if (ValidIndex(mViewingIndex))
                 {
                     string sFilename = EntryFromIndex(mViewingIndex)->filename.filename().string();
                     ZGUI::Style filenameStyle(gStyleButton);
-                    filenameStyle.pos = ZGUI::CB;
-                    filenameStyle.paddingV += (int32_t)folderStyle.fp.nHeight;
+                    filenameStyle.pos = ZGUI::LT;
+                    filenameStyle.paddingV += (int32_t)(folderStyle.fp.nHeight);
                     filenameStyle.look = ZGUI::ZTextLook::kShadowed;
                     mpWinImage->mCaptionMap["filename"].sText = sFilename;
                     mpWinImage->mCaptionMap["filename"].style = filenameStyle;
@@ -2257,6 +2426,25 @@ void ImageViewer::UpdateCaptions()
                         mpWinImage->mCaptionMap["for_delete"].visible = true;
                         bShow = true;
                     }
+
+                    ImageMetaEntry& meta = mImageArray[mViewingIndex.absoluteIndex]->mMeta;
+//                    if (meta.elo > 1000)
+                    {
+                        int64_t nRank = GetRank(meta.filename);
+                        if (nRank > 0)
+                        {
+                            ZGUI::Style eloStyle(gStyleCaption);
+                            eloStyle.fp.nHeight = gM * 2;
+                            eloStyle.look.colTop = 0xffffd800;
+                            eloStyle.look.colBottom = 0xff9d8500;
+                            eloStyle.look.decoration = ZGUI::ZTextLook::kShadowed;
+                            eloStyle.pos = ZGUI::RT;
+                            eloStyle.paddingH += (int32_t)eloStyle.fp.nHeight;
+                            Sprintf(mpWinImage->mCaptionMap["rank"].sText, "#%d", nRank);
+                            mpWinImage->mCaptionMap["rank"].visible = true;
+                            mpWinImage->mCaptionMap["rank"].style = eloStyle;
+                        }
+                    }
                 }
             }
 
@@ -2266,7 +2454,6 @@ void ImageViewer::UpdateCaptions()
 
         mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
         mpWinImage->mCaptionMap["folder"].style = folderStyle;
-        mpWinImage->mCaptionMap["folder"].style.paddingV += (int32_t)topPadding;
         mpWinImage->mCaptionMap["folder"].visible = bShow;
 
 

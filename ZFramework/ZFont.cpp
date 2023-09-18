@@ -714,7 +714,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 	case ZGUI::LT:
 	case ZGUI::CT:
 	case ZGUI::RT:
-        rTextLine.top = pStyle->paddingV;
+        rTextLine.top = rAreaToDrawTo.top + pStyle->paddingV;
 		break;
 	case ZGUI::LC:
 	case ZGUI::C:
