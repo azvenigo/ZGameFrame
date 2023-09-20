@@ -56,11 +56,11 @@ ImageViewer::ImageViewer()
     //mpSymbolicFont = nullptr;
     mpFavoritesFont = nullptr;
     mpWinImage = nullptr;
-    mpImageLoaderPool = new ThreadPool(std::thread::hardware_concurrency()/2);
-    mpMetadataLoaderPool = new ThreadPool(std::thread::hardware_concurrency() / 2);
+    mpImageLoaderPool = nullptr;
+    mpMetadataLoaderPool = nullptr;
     mToggleUIHotkey = 0;
     mCachingState = kWaiting;
-    mbSubsample = false;
+    mbSubsample = true;
     mbShowUI = true;
     mFilterState = kAll;
     mpAllFilterButton = nullptr;
@@ -134,11 +134,17 @@ void ImageViewer::UpdateUI()
 
     if (mpRatedImagesStrip)
     {
-        ZRect rRatedStrip(rImageArea);
-        rRatedStrip.left = rRatedStrip.right - gM * 4;
+        if (mFilterState == kRanked)
+        {
+            ZRect rRatedStrip(rImageArea);
+            rRatedStrip.left = rRatedStrip.right - gM * 4;
 
-        mpRatedImagesStrip->SetArea(rRatedStrip);
-        rImageArea.right = rRatedStrip.left;
+            mpRatedImagesStrip->SetArea(rRatedStrip);
+            mpRatedImagesStrip->SetVisible();
+            rImageArea.right = rRatedStrip.left;
+        }
+        else
+            mpRatedImagesStrip->SetVisible(false);
     }
 
     if (mpWinImage)
@@ -1656,10 +1662,10 @@ void ImageViewer::LoadMetadataProc(std::filesystem::path& imagePath, shared_ptr<
 void ImageViewer::FlushLoads()
 {
     delete mpImageLoaderPool;  // will join
-    mpImageLoaderPool = new ThreadPool(std::thread::hardware_concurrency() / 2);
+    mpImageLoaderPool = new ThreadPool(std::thread::hardware_concurrency() / 4);
 
     delete mpMetadataLoaderPool;
-    mpMetadataLoaderPool = new ThreadPool(std::thread::hardware_concurrency() / 2);
+    mpMetadataLoaderPool = new ThreadPool(1);
 }
 
 
@@ -2294,7 +2300,6 @@ void ImageViewer::UpdateFilteredView(eFilterState state)
     {
         mViewingIndex = {};
         mpWinImage->Clear();
-        UpdateUI();
     }
     else
     {
@@ -2317,8 +2322,9 @@ void ImageViewer::UpdateFilteredView(eFilterState state)
         }
     }
 
-    UpdateCaptions();
-    InvalidateChildren();
+    UpdateUI();
+//    UpdateCaptions();
+//    InvalidateChildren();
 }
 
 void ImageViewer::UpdateCaptions()
