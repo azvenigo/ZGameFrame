@@ -11,6 +11,7 @@
 
 class ZWinImage;
 class ZWinCheck;
+class ZWinSizablePushBtn;
 class ZWinControlPanel;
 class WinTopWinners;
 
@@ -263,6 +264,7 @@ protected:
     ZWinCheck*              mpFavsFilterButton;
     ZWinCheck*              mpDelFilterButton;
     ZWinCheck*              mpRankedFilterButton;
+    ZWinSizablePushBtn*     mpDeleteMarkedButton;
     WinTopWinners*          mpRatedImagesStrip;
 
 

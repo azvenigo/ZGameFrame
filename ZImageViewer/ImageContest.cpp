@@ -24,7 +24,7 @@ using namespace std;
 ImageContest::ImageContest()
 {
     mbAcceptsCursorMessages = true;
-    mbAcceptsFocus = false;
+    mbAcceptsFocus = true;
     mIdleSleepMS = 250;
     msWinName = "ZWinImageContest";
     mpPanel = nullptr;
@@ -62,6 +62,8 @@ void ImageContest::HandleQuitCommand()
 {
     gMessageSystem.Post("set_visible", GetTopWindow()->GetChildWindowByWinName("ZWinImageViewer"), "visible", "1");
     gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
+    gMessageSystem.Post("set_focus", "target", "ZWinImageViewer");
+
 //    gMessageSystem.Post("quit_app_confirmed");
 }
 
@@ -71,10 +73,14 @@ void ImageContest::UpdateUI()
     UpdateControlPanel();
     UpdateCaptions();
 
-    ZRect rRatedStrip(mAreaToDrawTo);
-    rRatedStrip.left = rRatedStrip.right - gM*4;
-
     ZRect rImageArea(mAreaToDrawTo);
+    if (mpPanel && mpPanel->IsVisible())
+        rImageArea.top = mpPanel->GetArea().bottom;
+
+
+    ZRect rRatedStrip(rImageArea);
+    rRatedStrip.left = rRatedStrip.right - gM * 4;
+
     rImageArea.right = rRatedStrip.left;
 
     if (mState == kShowingSingle)
@@ -90,6 +96,14 @@ void ImageContest::UpdateUI()
         mpWinImage[kRight]->SetArea(rImageArea);
         mpWinImage[kRight]->SetVisible();
     }
+
+    mCurrentFolderImageMeta.sort([](const ImageMetaEntry& a, const ImageMetaEntry& b) -> bool { return a.elo > b.elo; });
+    if (mpRatedImagesStrip)
+    {
+        mpRatedImagesStrip->pMetaList = &mCurrentFolderImageMeta;
+        mpRatedImagesStrip->Invalidate();
+    }
+
 
     if (mpRatedImagesStrip)
         mpRatedImagesStrip->SetArea(rRatedStrip);
@@ -295,7 +309,7 @@ void ImageContest::ShowHelpDialog()
     pForm->AddMultiLine("\nImage Contest", sectionText);
     pForm->AddMultiLine("Use this feature to randomly choose two images from a folder and snap-judge which is the best.", text);
     pForm->AddMultiLine("Click on either image or use LEFT/RIGHT to select.", text);
-    pForm->AddMultiLine("View the top winners with the button in the control panel.", text);
+    pForm->AddMultiLine("Thumbnails along the right show top ranked images.", text);
 
     pForm->Invalidate();
 
@@ -450,7 +464,7 @@ void ImageContest::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
     rButton.right = rButton.left + (int64_t) (rButton.Width() * 3);     // wider buttons for management
 
-    pBtn = new ZWinSizablePushBtn();
+/*    pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "Winners";  // undo glyph
     pBtn->mCaption.style = gDefaultGroupingStyle;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
@@ -461,7 +475,8 @@ void ImageContest::UpdateControlPanel()
     pBtn->SetMessage(sMessage);
     mpPanel->ChildAdd(pBtn);
 
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
+    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);*/
+
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "Reset";  // undo glyph
     pBtn->mCaption.style = gDefaultGroupingStyle;
@@ -585,28 +600,15 @@ bool ImageContest::ScanFolder(std::filesystem::path folder)
             //ZDEBUG_OUT("Found image:", filePath, "\n");
 
             ImageMetaEntry localEntry(gImageMeta.Entry(filePath.path().string(), filesystem::file_size(filePath)));
-            if (localEntry.elo > 1000)
+            if (localEntry.elo > 0)
                 mCurrentFolderImageMeta.emplace_back(std::move(localEntry));
         }
     }
-
-    mCurrentFolderImageMeta.sort([](const ImageMetaEntry& a, const ImageMetaEntry& b) -> bool { return a.elo > b.elo; });
-
-    const int kMaxStripResults = 20;
-    if (mCurrentFolderImageMeta.size() > kMaxStripResults)
-        mCurrentFolderImageMeta.resize(kMaxStripResults);
-
 
     if (bErrors)
     {
         gMessageSystem.Post("toggleconsole");
         return false;
-    }
-
-    if (mpRatedImagesStrip)
-    {
-        mpRatedImagesStrip->pMetaList = &mCurrentFolderImageMeta;
-        mpRatedImagesStrip->Invalidate();
     }
 
 
@@ -664,7 +666,8 @@ bool ImageContest::PickRandomPair()
     mImageMeta[kRight] = &gImageMeta.Entry(file2, std::filesystem::file_size(*it2));
 
     mState = kSelectingFromPair;
-    UpdateCaptions();
+    UpdateUI();
+//    UpdateCaptions();
 
     return true;
 }
@@ -696,6 +699,10 @@ bool ImageContest::SelectWinner(int leftOrRight)
             fActualLeft = 0;
             fActualRight = 1;
         }
+
+        assert(mImageMeta[kLeft]->elo > 0);
+        assert(mImageMeta[kRight]->elo > 0);
+
 
         mImageMeta[kLeft]->elo += fWeight * (fActualLeft - fExpectedLeft);
         mImageMeta[kRight]->elo += fWeight * (fActualRight - fExpectedRight);

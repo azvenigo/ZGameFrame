@@ -140,7 +140,10 @@ public:
     {
         std::stringstream ss;
         ss << val;
-        m.mKeyValueMap[key] = ss.str();
+        if (key == "target")
+            m.mTarget = ss.str();
+        else
+            m.mKeyValueMap[key] = ss.str();
         return ToMessage(m, moreargs...);
     }
 

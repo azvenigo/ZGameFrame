@@ -41,6 +41,7 @@ protected:
     bool                    mbInitted;
     int64_t                 mMaxThumbs;
     tFilenameToThumbEntry   mFilenameToThumbEntry;
+    std::recursive_mutex    mCacheMutex;
 
     std::filesystem::path   mThumbCachePath;
 };

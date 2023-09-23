@@ -1,6 +1,8 @@
 #include "ZBuffer.h"
 #include <algorithm>
-#include "ZStringHelpers.h"
+//#include "ZStringHelpers.h"
+#include "ZMemBuffer.h"
+#include "ZColor.h"
 #include "helpers/StringHelpers.h"
 #include "ZRasterizer.h"
 #include <math.h>
@@ -14,11 +16,11 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#ifdef _WIN64
+/*#ifdef _WIN64
 #include <GdiPlus.h>
 using namespace Gdiplus;
 #include "GDIImageTags.h"
-#endif
+#endif*/
 
 using namespace std;
 
@@ -910,6 +912,46 @@ bool ZBuffer::FillAlpha(uint32_t nCol, ZRect* pRect)
 
 	return true;
 }
+
+bool ZBuffer::Colorize(uint32_t nH, uint32_t nS, ZRect* pRect)
+{
+    ZRect rDst;
+    if (pRect)
+    {
+        rDst.SetRect(*pRect);
+        if (!Clip(rDst))
+            return false;
+    }
+    else
+        rDst.SetRect(mSurfaceArea);
+
+    int64_t nDstStride = mSurfaceArea.Width();
+
+    int64_t nFillWidth = rDst.Width();
+    int64_t nFillHeight = rDst.Height();
+
+
+    for (int64_t y = 0; y < nFillHeight; y++)
+    {
+        uint32_t* pDstBits = (uint32_t*)(mpPixels + ((y + rDst.top) * nDstStride) + rDst.left);
+        for (int64_t x = 0; x < nFillWidth; x++)
+        {
+            uint32_t nCol = *pDstBits;
+            uint32_t nHSV = COL::ARGB_To_AHSV(nCol);
+            uint8_t  a = AHSV_A(nHSV);
+            uint32_t h = AHSV_H(nHSV);
+            uint32_t s = AHSV_S(nHSV);
+            uint32_t v = AHSV_V(nHSV);
+            nCol = COL::AHSV_To_ARGB(a, nH, nS, v);
+
+           *pDstBits++ = nCol;
+        }
+    }
+
+    return true;
+
+}
+
 
 void  ZBuffer::DrawRectAlpha(ZRect& rRect, uint32_t nCol)
 {

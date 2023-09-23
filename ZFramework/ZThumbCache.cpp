@@ -29,6 +29,7 @@ bool ZThumbCache::Add(const std::filesystem::path& imagePath, tZBufferPtr image)
     ZRect rThumb = ZGUI::ScaledFit(r, ZRect(0,0,kThumbDimensions.x,kThumbDimensions.y));
 
 
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mCacheMutex);
     ZThumbEntry& entry = mFilenameToThumbEntry[hash];
     if (!entry.thumb)
     {
@@ -53,6 +54,8 @@ bool ZThumbCache::Add(const std::filesystem::path& imagePath, tZBufferPtr image)
 tZBufferPtr ZThumbCache::GetThumb(const std::filesystem::path& imagePath, bool bGenerateIfMissing)
 {
     size_t hash = PathHash(imagePath);
+
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mCacheMutex);
 
     tFilenameToThumbEntry::iterator findit = mFilenameToThumbEntry.find(hash);
     if (findit != mFilenameToThumbEntry.end())

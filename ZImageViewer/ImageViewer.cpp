@@ -67,6 +67,7 @@ ImageViewer::ImageViewer()
     mpFavsFilterButton = nullptr;
     mpDelFilterButton = nullptr;
     mpRankedFilterButton = nullptr;
+    mpDeleteMarkedButton = nullptr;
     mOutstandingMetadataCount = 0;
     mpRatedImagesStrip = nullptr;
 
@@ -1354,19 +1355,19 @@ void ImageViewer::UpdateControlPanel()
 
 
     rButton.OffsetRect(rButton.Width(), 0);
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "delete\nmarked";
-    pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.look.colTop = 0xffff0000;
-    pBtn->mCaption.style.look.colBottom = 0xffff0000;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
-    pBtn->mCaption.style.wrap = true;
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "Manage";
+    mpDeleteMarkedButton = new ZWinSizablePushBtn();
+    mpDeleteMarkedButton->mCaption.sText = "delete\nmarked";
+    mpDeleteMarkedButton->mCaption.style = gDefaultGroupingStyle;
+    mpDeleteMarkedButton->mCaption.style.look.colTop = 0xffff0000;
+    mpDeleteMarkedButton->mCaption.style.look.colBottom = 0xffff0000;
+    mpDeleteMarkedButton->mCaption.style.fp.nHeight = nGroupSide / 2;
+    mpDeleteMarkedButton->mCaption.style.wrap = true;
+    mpDeleteMarkedButton->mCaption.style.pos = ZGUI::C;
+    mpDeleteMarkedButton->SetArea(rButton);
+    mpDeleteMarkedButton->msWinGroup = "Manage";
     Sprintf(sMessage, "show_confirm;target=%s", GetTargetName().c_str());
-    pBtn->SetMessage(sMessage);
-    mpPanel->ChildAdd(pBtn);
+    mpDeleteMarkedButton->SetMessage(sMessage);
+    mpPanel->ChildAdd(mpDeleteMarkedButton);
 
 
 
@@ -1939,6 +1940,7 @@ void ImageViewer::Clear()
     FlushLoads();
     mImageArray.clear();
     mCurrentFolder.clear();
+    mRankedArray.clear();
     mRankedImageMetadata.clear();
     mViewingIndex = {};
     mLastAction = kNone;
@@ -2345,11 +2347,18 @@ void ImageViewer::UpdateCaptions()
     // need to make sure panel isn't being reset while updating these
     mPanelMutex.lock();
     if (mpFavsFilterButton)
+    {
         mpFavsFilterButton->mCaption.sText = sCaption;
+        mpFavsFilterButton->mbEnabled = !mFavImageArray.empty();
+    }
 
     Sprintf(sCaption, "%d del", mToBeDeletedImageArray.size());
     if (mpDelFilterButton)
+    {
         mpDelFilterButton->mCaption.sText = sCaption;
+        mpDelFilterButton->mbEnabled = !mToBeDeletedImageArray.empty();
+    }
+
  
     Sprintf(sCaption, "%d all", mImageArray.size());
     if (mpAllFilterButton)
@@ -2359,7 +2368,15 @@ void ImageViewer::UpdateCaptions()
     if (mpRankedFilterButton)
         mpRankedFilterButton->mCaption.sText = sCaption;*/
     if (mpRankedFilterButton)
-        mpRankedFilterButton->mCaption.sText = "ranked"; 
+    {
+        mpRankedFilterButton->mCaption.sText = "ranked";
+        mpRankedFilterButton->mbEnabled = !mRankedArray.empty();
+    }
+
+    if (mpDeleteMarkedButton)
+    {
+        mpDeleteMarkedButton->mbEnabled = !mToBeDeletedImageArray.empty();
+    }
 
 
     mPanelMutex.unlock();
@@ -2446,7 +2463,7 @@ void ImageViewer::UpdateCaptions()
                             eloStyle.look.decoration = ZGUI::ZTextLook::kShadowed;
                             eloStyle.pos = ZGUI::RT;
                             eloStyle.paddingH += (int32_t)eloStyle.fp.nHeight;
-                            Sprintf(mpWinImage->mCaptionMap["rank"].sText, "#%d", nRank);
+                            Sprintf(mpWinImage->mCaptionMap["rank"].sText, "#%d\n%d", nRank, meta.elo);
                             mpWinImage->mCaptionMap["rank"].visible = true;
                             mpWinImage->mCaptionMap["rank"].style = eloStyle;
                         }

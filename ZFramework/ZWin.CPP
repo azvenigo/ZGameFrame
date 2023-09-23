@@ -854,6 +854,11 @@ bool ZWin::HandleMessage(const ZMessage& message)
 			return true;
 		}
 	}
+    else if (sType == "set_focus")
+    {
+        SetFocus();
+        return true;
+    }
     else if (sType == "set_visible")
     {
         SetVisible( SH::ToBool(message.GetParam("visible")) );

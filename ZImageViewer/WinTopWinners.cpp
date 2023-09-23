@@ -36,16 +36,16 @@ void WinTopWinners::UpdateUI()
         return;
 
     int64_t nThumbSide;
-    if (pMetaList->size() < mnTopNEntries)
+/*    if (pMetaList->size() < mnTopNEntries)
     {
         mThumbRects.resize(pMetaList->size());
         nThumbSide = mAreaToDrawTo.Height() / pMetaList->size();
     }
     else
-    {
+    {*/
         mThumbRects.resize(mnTopNEntries);
         nThumbSide = mAreaToDrawTo.Height() / mnTopNEntries;
-    }
+//    }
 
     ZRect rThumb(nThumbSide, nThumbSide);
     ZRect rThumbStrip(0, 0, nThumbSide, nThumbSide * pMetaList->size());

@@ -19,9 +19,10 @@ using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 ZWinBtn::ZWinBtn() :
-mpButtonImage(NULL),
-mpMessageTarget(NULL),
-msTriggerMessage("btn_pressed")
+    mbEnabled(true),
+    mpButtonImage(NULL),
+    mpMessageTarget(NULL),
+    msTriggerMessage("btn_pressed")
 {   
 }
 
@@ -71,18 +72,6 @@ bool ZWinBtn::SetImage(tZBufferPtr pImage )
 
 	mpButtonImage = pImage;
 
-	return true;
-}
-
-bool ZWinBtn::SetSrcRect( ZRect rRect )
-{
-	mrSrcRect = rRect;
-	return true;
-}
-
-bool ZWinBtn::SetBaseRect( ZRect rRect )
-{
-	mrBaseRect = rRect;
 	return true;
 }
 
@@ -377,6 +366,9 @@ bool ZWinCheck::OnMouseUpL(int64_t, int64_t)
 
 bool ZWinCheck::OnMouseDownL(int64_t, int64_t)
 {
+    if (!mbEnabled)
+        return true;
+
     // if we're part of a radio group and area already checked, do nothing
     if (!msRadioGroup.empty() && *mpbChecked)
         return true;
@@ -391,6 +383,7 @@ ZWinSizablePushBtn::ZWinSizablePushBtn()
 	mpUpEdgeImage       = NULL;
 	mpDownEdgeImage     = NULL;
 	mDrawState          = kUp;
+    mbEnabled           = true;
 	msButtonMessage     = "btn_pressed";
     mBtnStyle           = gStyleButton;
     mCaption.style      = gStyleCaption;
@@ -492,15 +485,24 @@ bool ZWinSizablePushBtn::Paint()
         return false;
     }
 
+    if (!mbEnabled)
+    {
+        mpTransformTexture->FillAlpha(0x88333333); 
+        mpTransformTexture->FillAlpha(0x88888888);     
+        mpTransformTexture->Colorize(0, 0);             // gray
+    }
 
 	return ZWin::Paint();
 }
 
 bool ZWinSizablePushBtn::OnMouseDownL(int64_t /*x*/, int64_t /*y*/)
 {
-	SetCapture();
-	mDrawState = kDown;
-	Invalidate();
+    if (mbEnabled)
+    {
+        SetCapture();
+        mDrawState = kDown;
+    	Invalidate();
+    }
 
 	return true;
 }

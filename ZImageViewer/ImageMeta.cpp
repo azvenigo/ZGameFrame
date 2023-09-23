@@ -62,7 +62,7 @@ ImageMetaEntry& ImageMeta::Entry(const std::string& filename, int64_t size)
     }
 
     ZOUT("Creating entry for :", filename, " bucket:", nSizeBucket);
-    return mSizeToMetaLists[nSizeBucket].emplace_back(ImageMetaEntry(filename, size));
+    return mSizeToMetaLists[nSizeBucket].emplace_back(ImageMetaEntry(filename, size, 0, 0, 1000));
 }
 
 bool ImageMeta::LoadAll()

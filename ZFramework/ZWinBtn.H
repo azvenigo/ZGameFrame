@@ -32,26 +32,23 @@ public:
 	virtual	bool    SetImage(tZBufferPtr pImage );
     virtual void    SetFont(tZFontPtr pFont, uint32_t nCol1, uint32_t nCol2) { mpFont = pFont; mnTextColorTop = nCol1; mnTextColorBottom = nCol2; }
 
-	virtual void    SetText( std::string& text ) { sText = text; }
-    virtual void    SetTooltip(const std::string& sTooltip) { msTooltip = sTooltip; }
-    virtual bool    SetSrcRect( ZRect rBaseRect );
-	virtual bool    SetBaseRect( ZRect rBaseRect );
-
 	virtual void    SetTriggerMessage(const std::string& sMessage)	{ msTriggerMessage = sMessage; }
 	virtual void    SetCursorInMessage(const std::string& sMessage)	{ msCursorInMessage = sMessage; }
 	virtual void    SetCursorOutMessage(const std::string& sMessage)	{ msCursorOutMessage = sMessage; }
+
+    ZRect			mrBaseRect;
+    ZRect			mrSrcRect;
+    std::string		sText;
+    std::string		msTooltip;
 
 protected:   
     virtual bool    Paint();
 
     tZBufferPtr     mpButtonImage;
-	ZRect			mrBaseRect;
-	ZRect			mrSrcRect;
-	std::string		sText;
-    std::string		msTooltip;
     tZFontPtr       mpFont;
     uint32_t        mnTextColorTop;
     uint32_t        mnTextColorBottom;
+    bool            mbEnabled;
 
 	IMessageTarget*	mpMessageTarget;     // if this is NULL, the button posts the message to everyone
 
@@ -132,6 +129,8 @@ public:
     std::string		        msTooltip;
 
     ZGUI::Style             mBtnStyle;
+    bool                    mbEnabled;
+
 
     tZBufferPtr             mpUpEdgeImage;
     tZBufferPtr             mpDownEdgeImage;
