@@ -1118,7 +1118,7 @@ void cProcessImageWin::ResetResultsBuffer()
     if (!mpResultBuffer || mpResultBuffer->GetArea().Width() != mrIntersectionWorkArea.Width() || mpResultBuffer->GetArea().Height() != mrIntersectionWorkArea.Height())
     {
 //        OutputDebugImmediate("new mpResultBuffer. old:0x%x\n", (void*)mpResultBuffer.get());
-        ZDEBUG_OUT_LOCKLESS("new mpResultBuffer. old:0x", std::hex, (void*)mpResultBuffer.get(), std::dec);
+//        ZDEBUG_OUT_LOCKLESS("new mpResultBuffer. old:0x", std::hex, (void*)mpResultBuffer.get(), std::dec);
         mpResultBuffer.reset(new ZBuffer());
         mpResultBuffer->Init(mrIntersectionWorkArea.Width(), mrIntersectionWorkArea.Height());
     }

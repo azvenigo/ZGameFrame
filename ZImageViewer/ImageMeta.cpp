@@ -80,7 +80,7 @@ bool ImageMeta::LoadAll()
         }
     }
 
-
+    return true;
 }
 
 bool ImageMeta::Load(const std::filesystem::path& imagelist)
@@ -100,7 +100,7 @@ bool ImageMeta::Load(const std::filesystem::path& imagelist)
     assert(nImageSizes > 0 && nImageSizes < 32 * 1024);     // 16bit value
 
     const std::lock_guard<std::recursive_mutex> lock(mMutex);
-    mSizeToMetaLists[nImageSizes].clear();
+    mSizeToMetaLists[(uint16_t)nImageSizes].clear();
 
     uint8_t* pBuf = new uint8_t[nSize];
 
@@ -133,12 +133,12 @@ bool ImageMeta::Load(const std::filesystem::path& imagelist)
 
         cout << "Read ImageMetaEntry: filename:" << entry.filename << " size:" << entry.filesize << " wins/contests:" << entry.wins << "/" << entry.contests << " elo:" << entry.elo << "\n";
 
-        mSizeToMetaLists[nImageSizes].emplace_back(std::move(entry));
+        mSizeToMetaLists[(uint16_t)nImageSizes].emplace_back(std::move(entry));
     }
-    assert(mSizeToMetaLists[nImageSizes].size() == entries);
-    if (mSizeToMetaLists[nImageSizes].size() != entries)
+    assert(mSizeToMetaLists[(uint16_t)nImageSizes].size() == entries);
+    if (mSizeToMetaLists[(uint16_t)nImageSizes].size() != entries)
     {
-        ZERROR("Image file", imagelist, " was supposed to contain:", entries, " entries but only:", mSizeToMetaLists[nImageSizes].size(), " parsed.");
+        ZERROR("Image file", imagelist, " was supposed to contain:", entries, " entries but only:", mSizeToMetaLists[(uint16_t)nImageSizes].size(), " parsed.");
     }
 
     delete[] pBuf;
@@ -157,6 +157,8 @@ bool ImageMeta::Save()
     {
         SaveBucket(bucket.first);
     }
+
+    return true;
 }
 
 bool ImageMeta::SaveBucket(int64_t size)
@@ -190,7 +192,7 @@ bool ImageMeta::SaveBucket(int64_t size)
     std::ofstream outBucket(BucketFilename(size), ios::binary | ios::trunc);
 
     outBucket.write((char*)&kImageListTAG, sizeof(uint32_t));
-    uint32_t nEntries = filteredList.size();
+    uint32_t nEntries = (uint32_t)filteredList.size();
     outBucket.write((char*)&nEntries, sizeof(uint32_t));
 
     char buf[1024];
@@ -201,6 +203,8 @@ bool ImageMeta::SaveBucket(int64_t size)
         assert(bytes < 1024);
         outBucket.write(buf, bytes);
     }
+
+    return true;
 }
 
 
@@ -211,7 +215,6 @@ int32_t ImageMetaEntry::ReadEntry(const uint8_t* pData)
     uint8_t filenameSize = *pWalker;
     pWalker++;
 
-    char tempbuf[256];
     filename.assign((const char*)pWalker, filenameSize);
     pWalker += filenameSize;
 

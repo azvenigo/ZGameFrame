@@ -12,7 +12,7 @@ const uint32_t kImageListTAG = 0xDAFA0002;
 class ImageMetaEntry
 {
 public:
-    ImageMetaEntry(const std::string& _filename = "", int64_t _size = 0, int64_t _contests = 0, int64_t _wins = 0, int64_t _elo = 0)
+    ImageMetaEntry(const std::string& _filename = "", int64_t _size = 0, int32_t _contests = 0, int32_t _wins = 0, int32_t _elo = 0)
     {
         filename = _filename;
         filesize = _size;

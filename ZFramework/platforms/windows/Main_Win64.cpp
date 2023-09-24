@@ -383,13 +383,13 @@ BOOL WinInitInstance(int argc, char* argv[])
     {
         ghWnd = CreateWindow(szAppClass, szAppClass, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
         grFullArea.SetRect(0, 0, grFullScreenArea.Width(), grFullScreenArea.Height());
-        SizeWindowToClientArea(ghWnd, grFullScreenArea.left, grFullScreenArea.top, grFullArea.Width(), grFullArea.Height());
+        SizeWindowToClientArea(ghWnd, (int)grFullScreenArea.left, (int)grFullScreenArea.top, (int)grFullArea.Width(), (int)grFullArea.Height());
     }
     else
     {
         ghWnd = CreateWindow(szAppClass, szAppClass, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
         grFullArea.SetRect(0, 0, grWindowedArea.Width(), grWindowedArea.Height());
-        SizeWindowToClientArea(ghWnd, grWindowedArea.left, grWindowedArea.top, grWindowedArea.Width(), grWindowedArea.Height());
+        SizeWindowToClientArea(ghWnd, (int)grWindowedArea.left, (int)grWindowedArea.top, (int)grWindowedArea.Width(), (int)grWindowedArea.Height());
     }
 
     if (!ghWnd)
@@ -440,17 +440,17 @@ void SwitchFullscreen(bool bFullscreen)
     else
     {
         RECT rW;
-        rW.left = grWindowedArea.left;
-        rW.top = grWindowedArea.top;
-        rW.right = grWindowedArea.right;
-        rW.bottom = grWindowedArea.bottom;
+        rW.left = (LONG)grWindowedArea.left;
+        rW.top = (LONG)grWindowedArea.top;
+        rW.right = (LONG)grWindowedArea.right;
+        rW.bottom = (LONG)grWindowedArea.bottom;
 
         DWORD nStyle = GetWindowLong(ghWnd, GWL_STYLE);
         DWORD dwAdd = WS_OVERLAPPEDWINDOW;
         nStyle |= dwAdd;
 
         SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
-        MoveWindow(ghWnd, grWindowedArea.left, grWindowedArea.top, grWindowedArea.Width(), grWindowedArea.Height(), TRUE);
+        MoveWindow(ghWnd, (int)grWindowedArea.left, (int)grWindowedArea.top, (int)grWindowedArea.Width(), (int)grWindowedArea.Height(), TRUE);
     }
 
     gbWindowSizeChanged = true;

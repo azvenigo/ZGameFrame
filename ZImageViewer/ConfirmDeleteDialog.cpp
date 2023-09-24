@@ -43,7 +43,7 @@ bool ConfirmDeleteDialog::Init()
 //        rLabel = gStyleButton.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sFolder.c_str(), sFolder.length(), ZGUI::LT, gDefaultSpacer);
 
         ZGUI::Style labelstyle(gStyleCaption);
-        labelstyle.fp.nHeight = gM * 0.5;
+        labelstyle.fp.nHeight = (int64_t) (gM * 0.5);
         labelstyle.bgCol = 0;
         labelstyle.look.colTop = 0xffffff00;
         labelstyle.look.colBottom = 0xffffff00;
@@ -61,8 +61,8 @@ bool ConfirmDeleteDialog::Init()
 
         ZGUI::Style style(gStyleButton);
         style.fp.nHeight = gM;
-        style.paddingH = gSpacer;
-        style.paddingV = gSpacer;
+        style.paddingH = (int32_t)gSpacer;
+        style.paddingV = (int32_t)gSpacer;
         style.pos = ZGUI::C;
 
         tWinList arrangeList;
@@ -116,8 +116,8 @@ bool ConfirmDeleteDialog::Init()
             mpFilesList->AddLineNode(sListBoxEntry);
         }
 
-        mpFilesList->mDialogStyle.paddingH = gM;
-        mpFilesList->mDialogStyle.paddingV = gSpacer;
+        mpFilesList->mDialogStyle.paddingH = (int32_t)gM;
+        mpFilesList->mDialogStyle.paddingV = (int32_t)gSpacer;
         mpFilesList->mbScrollable = true;
         mpFilesList->mbUnderlineLinks = false;
 

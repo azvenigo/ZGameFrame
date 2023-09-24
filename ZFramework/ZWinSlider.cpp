@@ -139,9 +139,9 @@ ZPoint ZWinSlider::ScaledValueToWindowPosition(int64_t val)
         limit<double>(fNormalizedValue, 0.0, 1.0);
         int64_t nThumbSize = ThumbSize();
         if (IsVertical())
-            pt.y = mAreaToDrawTo.top + fNormalizedValue * (double)(mAreaToDrawTo.Height() - nThumbSize);
+            pt.y = (int64_t)(mAreaToDrawTo.top + fNormalizedValue * (double)(mAreaToDrawTo.Height() - nThumbSize));
         else
-            pt.x = mAreaToDrawTo.left + fNormalizedValue * (double)(mAreaToDrawTo.Width() - nThumbSize);
+            pt.x = (int64_t)(mAreaToDrawTo.left + fNormalizedValue * (double)(mAreaToDrawTo.Width() - nThumbSize));
     }
 
     return pt;
@@ -264,12 +264,12 @@ int64_t ZWinSlider::ThumbSize()
 
     if (IsVertical())
     {
-        nThumbSize = mAreaToDrawTo.Height() * mfThumbSizeRatio;
+        nThumbSize = (int64_t)(mAreaToDrawTo.Height() * mfThumbSizeRatio);
         limit <int64_t>(nThumbSize, rThumbEdge.top + pThumb->GetArea().Height() - rThumbEdge.bottom, mAreaToDrawTo.Height());
     }
     else
     {
-        nThumbSize = mAreaToDrawTo.Width() * mfThumbSizeRatio;
+        nThumbSize = (int64_t)(mAreaToDrawTo.Width() * mfThumbSizeRatio);
         limit <int64_t>(nThumbSize, rThumbEdge.left + pThumb->GetArea().Width() - rThumbEdge.right, mAreaToDrawTo.Width());
     }
 
@@ -313,19 +313,19 @@ int64_t ZWinSlider::PageSize()
     int64_t nThumbSize;
     if (IsVertical())
     {
-        nThumbSize = mAreaToDrawTo.Height() * mfThumbSizeRatio;
+        nThumbSize = (int64_t)(mAreaToDrawTo.Height() * mfThumbSizeRatio);
         limit <int64_t>(nThumbSize, rThumbEdge.top + pThumb->GetArea().Height() - rThumbEdge.bottom, mAreaToDrawTo.Height());
         fThumbGUIRatio = (double)nThumbSize / (double)mAreaToDrawTo.Height();
     }
     else
     {
-        nThumbSize = mAreaToDrawTo.Width() * mfThumbSizeRatio;
+        nThumbSize = (int64_t)(mAreaToDrawTo.Width() * mfThumbSizeRatio);
         limit <int64_t>(nThumbSize, rThumbEdge.left + pThumb->GetArea().Width() - rThumbEdge.right, mAreaToDrawTo.Width());
         fThumbGUIRatio = (double)nThumbSize / (double)mAreaToDrawTo.Width();
     }
 
 
-    int64_t nScaledSliderPageDelta = (int64_t)((double)(mnSliderUnscaledValMax - mnSliderUnscaledValMin) * mnSliderValScalar) * fThumbGUIRatio;
+    int64_t nScaledSliderPageDelta = (int64_t) (((double)(mnSliderUnscaledValMax - mnSliderUnscaledValMin) * mnSliderValScalar) * fThumbGUIRatio);
     nScaledSliderPageDelta = ((nScaledSliderPageDelta + mnSliderValScalar - 1) / mnSliderValScalar) * mnSliderValScalar;
     return nScaledSliderPageDelta;
 }

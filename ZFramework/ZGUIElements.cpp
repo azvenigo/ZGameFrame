@@ -50,7 +50,7 @@ namespace ZGUI
             return true;
         }
 
-        ZRect rDest(0,0,mSVGDoc->width(), mSVGDoc->height());
+        ZRect rDest(0,0, (int64_t)mSVGDoc->width(), (int64_t)mSVGDoc->height());
         rDest = ZGUI::ScaledFit(rDest, area);
         rDest.DeflateRect(style.paddingH, style.paddingV);
         rDest = ZGUI::Arrange(rDest, area, style.pos);
@@ -58,7 +58,7 @@ namespace ZGUI
         if (mRendered == nullptr || rDest.Width() != mRendered->GetArea().Width() || rDest.Height() != mRendered->GetArea().Height())
         {
             mRendered.reset(new ZBuffer());
-            auto svgbitmap = mSVGDoc->renderToBitmap(rDest.Width(), rDest.Height());
+            auto svgbitmap = mSVGDoc->renderToBitmap((uint32_t)rDest.Width(), (uint32_t)rDest.Height());
 
             int64_t w = (int64_t)svgbitmap.width();
             int64_t h = (int64_t)svgbitmap.height();
@@ -86,13 +86,13 @@ namespace ZGUI
 
 
 
-    void ZTable::SetRowStyle(size_t row, const ZGUI::Style& style)
+    void ZTable::SetRowStyle(int32_t row, const ZGUI::Style& style)
     {
         if (row > mRows.size())
             return;
 
         auto& rowIterator = mRows.begin();
-        size_t r = 0;
+        int32_t r = 0;
         for (r = 0; r < row; r++)
         {
             rowIterator++;
@@ -106,7 +106,7 @@ namespace ZGUI
         mbAreaNeedsComputing = true;
     }
 
-    void ZTable::SetColStyle(size_t col, const ZGUI::Style& style)
+    void ZTable::SetColStyle(int32_t col, const ZGUI::Style& style)
     {
         for (auto& row : mRows)
         {
@@ -128,13 +128,13 @@ namespace ZGUI
         size_t nRow = 0;
         for (auto& row : mRows)
         {
-            size_t nCol = 0;
-            size_t nTallestCell = 0;    // track the tallest cell on each row
+            int32_t nCol = 0;
+            int32_t nTallestCell = 0;    // track the tallest cell on each row
             for (auto& s : row)
             {
-                int64_t nWidth = s.style.Font()->StringWidth(s.val);
+                int32_t nWidth = (int32_t)s.style.Font()->StringWidth(s.val);
                 if (s.style.fp.nHeight > nTallestCell)
-                    nTallestCell = s.style.fp.nHeight;
+                    nTallestCell = (int32_t)s.style.fp.nHeight;
 
                 if (mColumnWidths[nCol] < nWidth)
                     mColumnWidths[nCol] = nWidth;
@@ -147,11 +147,11 @@ namespace ZGUI
 
         mrAreaToDrawTo.SetRect(0, 0, 0, 0);
 
-        size_t nTotalColumnWidths = mCellStyle.paddingH * 4;  // left and right margins
+        int32_t nTotalColumnWidths = mCellStyle.paddingH * 4;  // left and right margins
         for (auto& c : mColumnWidths)
             mrAreaToDrawTo.right += (c + mCellStyle.paddingH);
 
-        size_t nTotalRowHeights = mCellStyle.paddingV;    // top and bottom margins
+        int32_t nTotalRowHeights = mCellStyle.paddingV;    // top and bottom margins
         for (auto& r : mRowHeights)
             mrAreaToDrawTo.bottom += (r + mCellStyle.paddingV);
 
@@ -183,10 +183,10 @@ namespace ZGUI
 
             size_t nRowHeight = mRowHeights[nRow];
 
-            int64_t nX = mCellStyle.paddingH;
-            for (size_t nCol = 0; nCol < mColumns; nCol++)
+            int32_t nX = mCellStyle.paddingH;
+            for (int32_t nCol = 0; nCol < mColumns; nCol++)
             {
-                size_t nColWidth = mColumnWidths[nCol];
+                int32_t nColWidth = mColumnWidths[nCol];
                 ZCell& cell = row[nCol];
                 ZRect rCellArea(0, 0, nColWidth, nRowHeight);
                 rCellArea.OffsetRect(nX + mrAreaToDrawTo.left, nY + mrAreaToDrawTo.top);
@@ -219,13 +219,13 @@ namespace ZGUI
     }
 
 
-    ZCell* ZTable::ElementAt(size_t row, size_t col)
+    ZCell* ZTable::ElementAt(int32_t row, int32_t col)
     {
         if (row > mRows.size() || col > mColumns)
             return nullptr;
 
         auto& rowIterator = mRows.begin();
-        size_t r = 0;
+        int32_t r = 0;
         for (r = 0; r < row; r++)
         {
             rowIterator++;

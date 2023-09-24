@@ -1531,7 +1531,7 @@ bool ZChessPGN::AddMove(const std::string& sAction)
     }
     else if (nCurrentHalfMove % 2 == 1)    // first move or black last moved
     {
-        mMoves.push_back(ZPGNSANEntry(GetMoveCount(), sAction)); // Add a new entry
+        mMoves.push_back(ZPGNSANEntry((uint32_t)GetMoveCount(), sAction)); // Add a new entry
     }
     else
     {
@@ -1648,7 +1648,7 @@ bool ZChessPGN::ParsePGN(const string& sPGN)
             }
 
             mMoves.push_back(entry);
-            ZASSERT(mMoves[nMoveNumber].movenumber = nMoveNumber);  // just a verification
+            ZASSERT(mMoves[nMoveNumber].movenumber = (uint32_t)nMoveNumber);  // just a verification
 
             nParsingIndex = nMoveEndIndex;
             nMoveNumber++;
@@ -1894,7 +1894,7 @@ bool ZPGNSANEntry::ParseLine(std::string sSANLine)
         return false;
     }
 
-    movenumber = SH::ToInt(sSANLine.substr(0, nMoveEndIndex));
+    movenumber = (uint32_t)SH::ToInt(sSANLine.substr(0, nMoveEndIndex));
 
     nMoveEndIndex++;
 
@@ -2065,7 +2065,7 @@ string ZPGNSANEntry::ActionFromMove(const sMove& move, ChessBoard board)
     {
         if (bCapture)
         {
-            scratch[0] = move.mSrc.x + 'a';
+            scratch[0] = (char)move.mSrc.x + 'a';
             sAction = string(scratch);
             scratch[0] = 0;
         }
@@ -2101,17 +2101,17 @@ string ZPGNSANEntry::ActionFromMove(const sMove& move, ChessBoard board)
         {
             if (board.CountPieceOnFile(c, move.mSrc.x) == 1)    // if this is the only piece on this file
             {
-                scratch[0] = move.mSrc.x + 'a';
+                scratch[0] = (char)move.mSrc.x + 'a';
             }
             else if (board.CountPieceOnRank(c, move.mSrc.y) == 1)   // if this is the only piece on this rank
             {
-                scratch[0] = 7 - move.mSrc.y + '1';
+                scratch[0] = 7 - (char) move.mSrc.y + '1';
             }
             else
             {
                 // both file and rank
-                scratch[0] = move.mSrc.x + 'a';
-                scratch[1] = 7 - move.mSrc.y + '1';
+                scratch[0] = (char)move.mSrc.x + 'a';
+                scratch[1] = 7 - (char)move.mSrc.y + '1';
             }
         }
         sAction += string(scratch);
@@ -2120,8 +2120,8 @@ string ZPGNSANEntry::ActionFromMove(const sMove& move, ChessBoard board)
             sAction += "x";
 
         // both file and rank
-        scratch[0] = move.mDest.x + 'a';
-        scratch[1] = 7 - move.mDest.y + '1';
+        scratch[0] = (char)move.mDest.x + 'a';
+        scratch[1] = 7 - (char)move.mDest.y + '1';
 
         sAction += string(scratch);
     }
@@ -2140,8 +2140,8 @@ string ZPGNSANEntry::ActionFromPromotion(const sMove& move, char promotedPiece, 
     string sAction = "P";
     char scratch[3] = { 0 };
 
-    scratch[0] = move.mDest.x + 'a';
-    scratch[1] = 7 - move.mDest.y + '1';
+    scratch[0] = (char)move.mDest.x + 'a';
+    scratch[1] = 7 - (char)move.mDest.y + '1';
 
     if (move.mSrc.x != move.mDest.x)        // if different file then it's a capture
         sAction += "x";

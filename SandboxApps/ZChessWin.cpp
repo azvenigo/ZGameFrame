@@ -477,7 +477,7 @@ void ZPGNWin::UpdateView()
 
 bool ZPGNWin::SetHalfMove(int64_t nHalfMove)
 {
-    if (nHalfMove >= 0 && nHalfMove < mPGN.GetHalfMoveCount())
+    if (nHalfMove >= 0 && nHalfMove < (int64_t)mPGN.GetHalfMoveCount())
     {
         mCurrentHalfMoveNumber = nHalfMove;
 //        string sMessage;
@@ -654,7 +654,7 @@ bool ZChessWin::Init()
 
 
         mpPGNWin = new ZPGNWin();
-        ZRect rPGNPanel(0, 0, rControlPanel.Width() * 1.5, rControlPanel.Height());
+        ZRect rPGNPanel((int64_t)(rControlPanel.Width() * 1.5), (int64_t)(rControlPanel.Height()));
         rPGNPanel.OffsetRect(rControlPanel.left - rPGNPanel.Width() - gSpacer, rControlPanel.top);
         mpPGNWin->SetArea(rPGNPanel);
         ChildAdd(mpPGNWin);
@@ -665,8 +665,8 @@ bool ZChessWin::Init()
         mpStatusWin = new ZWinTextEdit(&msStatus);
         //mpStatusWin->msText = "Welcome to ZChess";
         msStatus = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, gSpacer, gSpacer, gDefaultTextAreaFill, false);
-        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gSpacer, gSpacer));
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, false);
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, (int32_t)gSpacer, (int32_t)gSpacer));
         ChildAdd(mpStatusWin);
     }
 
@@ -730,8 +730,8 @@ void ZChessWin::UpdateSize()
     if (mpStatusWin)
     {
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
-        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, gSpacer, gSpacer));
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, gSpacer, gSpacer, gDefaultTextAreaFill, true);
+        mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, (int32_t)gSpacer, (int32_t)gSpacer));
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, true);
     }
 
 
@@ -1162,7 +1162,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     else if (sType == "statusmessage")
     {
         if (message.HasParam("col"))
-            UpdateStatus(message.GetParam("message"), SH::ToInt(message.GetParam("col")));
+            UpdateStatus(message.GetParam("message"), (uint32_t)SH::ToInt(message.GetParam("col")));
         else
             UpdateStatus(message.GetParam("message"));
         Invalidate();
@@ -1321,8 +1321,8 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
         const std::lock_guard<std::recursive_mutex> lock(mHistoryMutex);
         if (nHalfMove >= 0)
         {
-            if (nHalfMove >= mHistory.size())
-                nHalfMove = mHistory.size() - 1;
+            if (nHalfMove >= (int64_t)mHistory.size())
+                nHalfMove = (int64_t)mHistory.size() - 1;
 
 
             // remember previous board for animation purposes
@@ -1333,7 +1333,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
 
             if (mBoard.ValidCoord(move.mSrc) && mBoard.ValidCoord(move.mDest) && (kAutoplayMaxMSBetweenMoves - mAutoplayMSBetweenMoves) > 250)
             {
-                int nTransformTime = (kAutoplayMaxMSBetweenMoves-mAutoplayMSBetweenMoves) / 2;
+                int64_t nTransformTime = (kAutoplayMaxMSBetweenMoves-mAutoplayMSBetweenMoves) / 2;
                 if (nTransformTime > 500)
                     nTransformTime = 500;
 
@@ -1412,7 +1412,7 @@ bool ZChessWin::LoadPGN(string sFilename)
             int64_t panelH = grFullArea.Height() / 2;
             ZRect rControlPanel(grFullArea.right - panelW, grFullArea.bottom - panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
 
-            ZRect rChoosePGNWin(0, 0, rControlPanel.Width() * 1.5, rControlPanel.Height());
+            ZRect rChoosePGNWin((int64_t)(rControlPanel.Width() * 1.5), rControlPanel.Height());
             rChoosePGNWin.OffsetRect(rControlPanel.left - rChoosePGNWin.Width() - gSpacer, rControlPanel.top);
             mpChoosePGNWin->SetArea(rChoosePGNWin);
             ChildAdd(mpChoosePGNWin);

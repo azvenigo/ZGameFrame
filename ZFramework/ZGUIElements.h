@@ -99,9 +99,9 @@ namespace ZGUI
 
             // Check if the row being added has more columns than any row before.
             // If so, resize all existing rows to match
-            if (columns.size() > mColumns)
+            if ((int32_t)columns.size() > mColumns)
             {
-                mColumns = columns.size();
+                mColumns = (int32_t)columns.size();
                 for (auto& row : mRows)
                     row.resize(mColumns);
             }
@@ -115,10 +115,10 @@ namespace ZGUI
         void AddMultilineRow(std::string& sMultiLine);
 
 
-        ZCell* ElementAt(size_t row, size_t col);
+        ZCell* ElementAt(int32_t row, int32_t col);
 
-        void SetRowStyle(size_t row, const ZGUI::Style& style);
-        void SetColStyle(size_t col, const ZGUI::Style& style);
+        void SetRowStyle(int32_t row, const ZGUI::Style& style);
+        void SetColStyle(int32_t col, const ZGUI::Style& style);
 
 
 
@@ -146,13 +146,13 @@ namespace ZGUI
 
     private:
         std::list<tCellArray> mRows;
-        size_t mColumns;
+        int32_t mColumns;
 
         bool mbAreaNeedsComputing;      // if true, table has changed and area needs to be recomputed
         void ComputeAreas(const ZRect& rTarget);
 
-        std::vector<size_t> mColumnWidths;
-        std::vector<size_t> mRowHeights;
+        std::vector<int32_t> mColumnWidths;
+        std::vector<int32_t> mRowHeights;
     };
 };
 

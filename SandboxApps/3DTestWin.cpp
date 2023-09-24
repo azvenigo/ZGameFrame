@@ -28,27 +28,27 @@ using namespace Z3D;
 
 
 inline
-float clamp(const float& lo, const float& hi, const float& v)
+double clamp(const double& lo, const double& hi, const double& v)
 {
-    return std::max<float>(lo, std::min<float>(hi, v));
+    return std::max<double>(lo, std::min<double>(hi, v));
 }
 
 
 #ifdef RENDER_TEAPOT
 
-static const float kInfinity = FLT_MAX;
-static const float kEpsilon = 1e-8;
-static const Vec3f kDefaultBackgroundColor = Vec3f(0.235294, 0.67451, 0.843137);
-template <> const Matrix44f Matrix44f::kIdentity = Matrix44f();
+static const double kInfinity = FLT_MAX;
+static const double kEpsilon = 1e-8;
+static const Vec3d kDefaultBackgroundColor = Vec3d(0.235294, 0.67451, 0.843137);
+template <> const Matrix44d Matrix44d::kIdentity = Matrix44d();
 
 inline
-float deg2rad(const float& deg)
+double deg2rad(const double& deg)
 {
     return deg * M_PI / 180;
 }
 
 inline
-Vec3f mix(const Vec3f& a, const Vec3f& b, const float& mixValue)
+Vec3d mix(const Vec3d& a, const Vec3d& b, const double& mixValue)
 {
     return a * (1 - mixValue) + b * mixValue;
 }
@@ -57,10 +57,10 @@ struct Options
 {
     uint32_t width = 640;
     uint32_t height = 480;
-    float fov = 90;
-    Vec3f backgroundColor = kDefaultBackgroundColor;
-    Matrix44f cameraToWorld;
-    float bias = 0.0001;
+    double fov = 90;
+    Vec3d backgroundColor = kDefaultBackgroundColor;
+    Matrix44d cameraToWorld;
+    double bias = 0.0001;
     uint32_t maxDepth = 2;
 };
 
@@ -72,40 +72,40 @@ public:
     // [comment]
     // Setting up the object-to-world and world-to-object matrix
     // [/comment]
-    Object(const Matrix44f& o2w) : objectToWorld(o2w), worldToObject(o2w.inverse()) {}
+    Object(const Matrix44d& o2w) : objectToWorld(o2w), worldToObject(o2w.inverse()) {}
     virtual ~Object() {}
-    virtual bool intersect(const Vec3f&, const Vec3f&, float&, uint32_t&, Vec2f&) const = 0;
-    virtual void getSurfaceProperties(const Vec3f&, const Vec3f&, const uint32_t&, const Vec2f&, Vec3f&, Vec2f&) const = 0;
+    virtual bool intersect(const Vec3d&, const Vec3d&, double&, uint32_t&, Vec2f&) const = 0;
+    virtual void getSurfaceProperties(const Vec3d&, const Vec3d&, const uint32_t&, const Vec2f&, Vec3d&, Vec2f&) const = 0;
     virtual void displayInfo() const = 0;
-    Matrix44f objectToWorld, worldToObject;
+    Matrix44d objectToWorld, worldToObject;
     MaterialType type = kDiffuse;
-    Vec3f albedo = 0.18;
-    float Kd = 0.8; // phong model diffuse weight
-    float Ks = 0.2; // phong model specular weight
-    float n = 10;   // phong specular exponent
-    Vec3f BBox[2] = { kInfinity, -kInfinity };
+    Vec3d albedo = 0.18;
+    double Kd = 0.8; // phong model diffuse weight
+    double Ks = 0.2; // phong model specular weight
+    double n = 10;   // phong specular exponent
+    Vec3d BBox[2] = { kInfinity, -kInfinity };
 };
 
 bool rayTriangleIntersect(
-    const Vec3f& orig, const Vec3f& dir,
-    const Vec3f& v0, const Vec3f& v1, const Vec3f& v2,
-    float& t, float& u, float& v)
+    const Vec3d& orig, const Vec3d& dir,
+    const Vec3d& v0, const Vec3d& v1, const Vec3d& v2,
+    double& t, double& u, double& v)
 {
-    Vec3f v0v1 = v1 - v0;
-    Vec3f v0v2 = v2 - v0;
-    Vec3f pvec = dir.crossProduct(v0v2);
-    float det = v0v1.dotProduct(pvec);
+    Vec3d v0v1 = v1 - v0;
+    Vec3d v0v2 = v2 - v0;
+    Vec3d pvec = dir.crossProduct(v0v2);
+    double det = v0v1.dotProduct(pvec);
 
     // ray and triangle are parallel if det is close to 0
     if (fabs(det) < kEpsilon) return false;
 
-    float invDet = 1 / det;
+    double invDet = 1 / det;
 
-    Vec3f tvec = orig - v0;
+    Vec3d tvec = orig - v0;
     u = tvec.dotProduct(pvec) * invDet;
     if (u < 0 || u > 1) return false;
 
-    Vec3f qvec = tvec.crossProduct(v0v1);
+    Vec3d qvec = tvec.crossProduct(v0v1);
     v = dir.dotProduct(qvec) * invDet;
     if (v < 0 || u + v > 1) return false;
 
@@ -119,12 +119,12 @@ class TriangleMesh : public Object
 public:
     // Build a triangle mesh from a face index array and a vertex index array
     TriangleMesh(
-        const Matrix44f& o2w,
+        const Matrix44d& o2w,
         uint32_t nfaces,
         std::vector<uint32_t>& faceIndex,
         std::vector<uint32_t>& vertsIndex,
-        std::vector<Vec3f>& verts,
-        std::vector<Vec3f>& normals,
+        std::vector<Vec3d>& verts,
+        std::vector<Vec3d>& normals,
         std::vector<Vec2f>& st,
         bool singleVertAttr = true) :
         Object(o2w),
@@ -150,7 +150,7 @@ public:
 
         // allocate memory to store triangle indices
         trisIndex.resize(numTris * 3);
-        Matrix44f transformNormals = worldToObject.transpose();
+        Matrix44d transformNormals = worldToObject.transpose();
         // [comment]
         // Sometimes we have 1 vertex attribute per vertex per face. So for example of you have 2
         // quads this would be defefined by 6 vertices but 2 * 4 vertex attribute values for
@@ -197,15 +197,15 @@ public:
         }
     }
     // Test if the ray interesests this triangle mesh
-    bool intersect(const Vec3f& orig, const Vec3f& dir, float& tNear, uint32_t& triIndex, Vec2f& uv) const
+    bool intersect(const Vec3d& orig, const Vec3d& dir, double& tNear, uint32_t& triIndex, Vec2f& uv) const
     {
         uint32_t j = 0;
         bool isect = false;
         for (uint32_t i = 0; i < numTris; ++i) {
-            const Vec3f& v0 = P[trisIndex[j]];
-            const Vec3f& v1 = P[trisIndex[j + 1]];
-            const Vec3f& v2 = P[trisIndex[j + 2]];
-            float t = kInfinity, u, v;
+            const Vec3d& v0 = P[trisIndex[j]];
+            const Vec3d& v1 = P[trisIndex[j + 1]];
+            const Vec3d& v2 = P[trisIndex[j + 2]];
+            double t = kInfinity, u, v;
             if (rayTriangleIntersect(orig, dir, v0, v1, v2, t, u, v) && t < tNear) {
                 tNear = t;
                 uv.x = u;
@@ -219,11 +219,11 @@ public:
         return isect;
     }
     void getSurfaceProperties(
-        const Vec3f& hitPoint,
-        const Vec3f& viewDirection,
+        const Vec3d& hitPoint,
+        const Vec3d& viewDirection,
         const uint32_t& triIndex,
         const Vec2f& uv,
-        Vec3f& hitNormal,
+        Vec3d& hitNormal,
         Vec2f& hitTextureCoordinates) const
     {
         uint32_t vai[3]; // vertex attr index
@@ -239,16 +239,16 @@ public:
         }
         if (smoothShading) {
             // vertex normal
-            const Vec3f& n0 = N[vai[0]];
-            const Vec3f& n1 = N[vai[1]];
-            const Vec3f& n2 = N[vai[2]];
+            const Vec3d& n0 = N[vai[0]];
+            const Vec3d& n1 = N[vai[1]];
+            const Vec3d& n2 = N[vai[2]];
             hitNormal = (1 - uv.x - uv.y) * n0 + uv.x * n1 + uv.y * n2;
         }
         else {
             // face normal
-            const Vec3f& v0 = P[trisIndex[triIndex * 3]];
-            const Vec3f& v1 = P[trisIndex[triIndex * 3 + 1]];
-            const Vec3f& v2 = P[trisIndex[triIndex * 3 + 2]];
+            const Vec3d& v0 = P[trisIndex[triIndex * 3]];
+            const Vec3d& v1 = P[trisIndex[triIndex * 3 + 1]];
+            const Vec3d& v2 = P[trisIndex[triIndex * 3 + 2]];
             hitNormal = (v1 - v0).crossProduct(v2 - v0);
         }
 
@@ -268,9 +268,9 @@ public:
     }
     // member variables
     uint32_t numTris;                         // number of triangles
-    std::vector<Vec3f> P;              // triangles vertex position
+    std::vector<Vec3d> P;              // triangles vertex position
     std::vector<uint32_t> trisIndex;   // vertex index array
-    std::vector<Vec3f> N;              // triangles vertex normals
+    std::vector<Vec3d> N;              // triangles vertex normals
     std::vector<Vec2f> texCoordinates; // triangles texture coordinates
     bool smoothShading = true;                // smooth shading by default
     bool isSingleVertAttr = true;
@@ -279,39 +279,39 @@ public:
 class Light
 {
 public:
-    Light(const Matrix44f& l2w, const Vec3f& c = 1, const float& i = 1) : lightToWorld(l2w), color(c), intensity(i) {}
+    Light(const Matrix44d& l2w, const Vec3d& c = 1, const double& i = 1) : lightToWorld(l2w), color(c), intensity(i) {}
     virtual ~Light() {}
-    virtual void illuminate(const Vec3f& P, Vec3f&, Vec3f&, float&) const {};
-    Vec3f color;
-    float intensity;
-    Matrix44f lightToWorld;
+    virtual void illuminate(const Vec3d& P, Vec3d&, Vec3d&, double&) const {};
+    Vec3d color;
+    double intensity;
+    Matrix44d lightToWorld;
 };
 
 struct IsectInfo
 {
     const Object* hitObject = nullptr;
-    float tNear = kInfinity;
+    double tNear = kInfinity;
     Vec2f uv;
     uint32_t index = 0;
 };
 
-Vec3f castRay(
-    Vec3f& orig, const Vec3f& dir,
+Vec3d castRay(
+    Vec3d& orig, const Vec3d& dir,
     std::vector<Object*>& objects,
     std::vector<Light>& lights,
     Options& options,
     uint32_t depth = 0)
 {
     if (depth > options.maxDepth) return 0;
-    Vec3f hitColor = 0;
+    Vec3d hitColor = 0;
     IsectInfo isect;
     if (trace(orig, dir, objects, isect)) {
-        Vec3f hitPoint = orig + dir * isect.tNear;
-        Vec3f hitNormal;
+        Vec3d hitPoint = orig + dir * isect.tNear;
+        Vec3d hitNormal;
         Vec2f hitTexCoordinates;
         isect.hitObject->getSurfaceProperties(hitPoint, dir, isect.index, isect.uv, hitNormal, hitTexCoordinates);
 
-        hitColor = std::max<float>(0.f, -hitNormal.dotProduct(dir));//* Vec3f(hitTexCoordinates.x, hitTexCoordinates.y, 1);
+        hitColor = std::max<double>(0.f, -hitNormal.dotProduct(dir));//* Vec3d(hitTexCoordinates.x, hitTexCoordinates.y, 1);
     }
     else {
         hitColor = 0.3;
@@ -325,39 +325,39 @@ void render(
     std::vector<Object*>& objects,
     std::vector<Light>& lights, tZBufferPtr pDestination)
 {
-    float scale = tan(deg2rad(options.fov * 0.5));
-    float imageAspectRatio = options.width / (float)options.height;
-    Vec3f orig;
-    options.cameraToWorld.multVecMatrix(Vec3f(0), orig);
+    double scale = tan(deg2rad(options.fov * 0.5));
+    double imageAspectRatio = options.width / (double)options.height;
+    Vec3d orig;
+    options.cameraToWorld.multVecMatrix(Vec3d(0), orig);
     auto timeStart = std::chrono::high_resolution_clock::now();
-    float gamma = 1;
+    double gamma = 1;
 
     ThreadPool pool(std::thread::hardware_concurrency());
 
-    vector<shared_future<Vec3f> > pixelResults;
+    vector<shared_future<Vec3d> > pixelResults;
 
 
 
     for (uint32_t j = 0; j < options.height; ++j) {
         for (uint32_t i = 0; i < options.width; ++i) {
             // generate primary ray direction
-            float x = (2 * (i + 0.5) / (float)options.width - 1) * imageAspectRatio * scale;
-            float y = (1 - 2 * (j + 0.5) / (float)options.height) * scale;
-            Vec3f dir;
-            options.cameraToWorld.multDirMatrix(Vec3f(x, y, -1), dir);
+            double x = (2 * (i + 0.5) / (double)options.width - 1) * imageAspectRatio * scale;
+            double y = (1 - 2 * (j + 0.5) / (double)options.height) * scale;
+            Vec3d dir;
+            options.cameraToWorld.multDirMatrix(Vec3d(x, y, -1), dir);
             dir.normalize();
 
-//            Vec3f pixel = castRay(orig, dir, objects, lights, options);
+//            Vec3d pixel = castRay(orig, dir, objects, lights, options);
 
             pixelResults.emplace_back(pool.enqueue(&castRay, orig, dir, objects, lights, options, 0));
         }
     }
 
-    vector<shared_future<Vec3f> >::iterator it = pixelResults.begin();
+    vector<shared_future<Vec3d> >::iterator it = pixelResults.begin();
     for (uint32_t j = 0; j < options.height; ++j) {
         for (uint32_t i = 0; i < options.width; ++i) {
 
-            Vec3f pixel = (*it).get();
+            Vec3d pixel = (*it).get();
 
             char r = (char)(255 * clamp(0, 1, powf(pixel.x, 1 / gamma)));
             char g = (char)(255 * clamp(0, 1, powf(pixel.y, 1 / gamma)));
@@ -376,26 +376,26 @@ void render(
 // [comment]
 // Compute the position of a point along a Bezier curve at t [0:1]
 // [/comment]
-Vec3f evalBezierCurve(const Vec3f* P, const float& t)
+Vec3d evalBezierCurve(const Vec3d* P, const double& t)
 {
-    float b0 = (1 - t) * (1 - t) * (1 - t);
-    float b1 = 3 * t * (1 - t) * (1 - t);
-    float b2 = 3 * t * t * (1 - t);
-    float b3 = t * t * t;
+    double b0 = (1 - t) * (1 - t) * (1 - t);
+    double b1 = 3 * t * (1 - t) * (1 - t);
+    double b2 = 3 * t * t * (1 - t);
+    double b3 = t * t * t;
 
     return P[0] * b0 + P[1] * b1 + P[2] * b2 + P[3] * b3;
 }
 
-Vec3f evalBezierPatch(const Vec3f* controlPoints, const float& u, const float& v)
+Vec3d evalBezierPatch(const Vec3d* controlPoints, const double& u, const double& v)
 {
-    Vec3f uCurve[4];
+    Vec3d uCurve[4];
     for (int i = 0; i < 4; ++i)
         uCurve[i] = evalBezierCurve(controlPoints + 4 * i, u);
 
     return evalBezierCurve(uCurve, v);
 }
 
-Vec3f derivBezier(const Vec3f* P, const float& t)
+Vec3d derivBezier(const Vec3d* P, const double& t)
 {
     return -3 * (1 - t) * (1 - t) * P[0] +
         (3 * (1 - t) * (1 - t) - 6 * t * (1 - t)) * P[1] +
@@ -406,10 +406,10 @@ Vec3f derivBezier(const Vec3f* P, const float& t)
 // [comment]
 // Compute the derivative of a point on Bezier patch along the u parametric direction
 // [/comment]
-Vec3f dUBezier(const Vec3f* controlPoints, const float& u, const float& v)
+Vec3d dUBezier(const Vec3d* controlPoints, const double& u, const double& v)
 {
-    Vec3f P[4];
-    Vec3f vCurve[4];
+    Vec3d P[4];
+    Vec3d vCurve[4];
     for (int i = 0; i < 4; ++i) {
         P[0] = controlPoints[i];
         P[1] = controlPoints[4 + i];
@@ -424,9 +424,9 @@ Vec3f dUBezier(const Vec3f* controlPoints, const float& u, const float& v)
 // [comment]
 // Compute the derivative of a point on Bezier patch along the v parametric direction
 // [/comment]
-Vec3f dVBezier(const Vec3f* controlPoints, const float& u, const float& v)
+Vec3d dVBezier(const Vec3d* controlPoints, const double& u, const double& v)
 {
-    Vec3f uCurve[4];
+    Vec3d uCurve[4];
     for (int i = 0; i < 4; ++i) {
         uCurve[i] = evalBezierCurve(controlPoints + 4 * i, u);
     }
@@ -437,13 +437,13 @@ Vec3f dVBezier(const Vec3f* controlPoints, const float& u, const float& v)
 // [comment]
 // Generate a poly-mesh Utah teapot out of Bezier patches
 // [/comment]
-void createPolyTeapot(Matrix44f& o2w, std::vector<Object*>& objects)
+void createPolyTeapot(Matrix44d& o2w, std::vector<Object*>& objects)
 {
     uint32_t divs = 8;
-    std::vector<Vec3f> P; P.resize((divs + 1) * (divs + 1));
+    std::vector<Vec3d> P; P.resize((divs + 1) * (divs + 1));
     std::vector<uint32_t> nvertices; nvertices.resize(divs * divs);
     std::vector<uint32_t> vertices;vertices.resize(divs * divs * 4);
-    std::vector<Vec3f> N; N.resize((divs + 1) * (divs + 1));
+    std::vector<Vec3d> N; N.resize((divs + 1) * (divs + 1));
     std::vector<Vec2f> st; st.resize((divs + 1) * (divs + 1));
 
     // face connectivity - all patches are subdivided the same way so there
@@ -458,7 +458,7 @@ void createPolyTeapot(Matrix44f& o2w, std::vector<Object*>& objects)
         }
     }
 
-    Vec3f controlPoints[16];
+    Vec3d controlPoints[16];
     for (int np = 0; np < kTeapotNumPatches; ++np) { // kTeapotNumPatches
         // set the control points for the current patch
         for (uint32_t i = 0; i < 16; ++i)
@@ -468,12 +468,12 @@ void createPolyTeapot(Matrix44f& o2w, std::vector<Object*>& objects)
 
         // generate grid
         for (uint16_t j = 0, k = 0; j <= divs; ++j) {
-            float v = j / (float)divs;
+            double v = j / (double)divs;
             for (uint16_t i = 0; i <= divs; ++i, ++k) {
-                float u = i / (float)divs;
+                double u = i / (double)divs;
                 P[k] = evalBezierPatch(controlPoints, u, v);
-                Vec3f dU = dUBezier(controlPoints, u, v);
-                Vec3f dV = dVBezier(controlPoints, u, v);
+                Vec3d dU = dUBezier(controlPoints, u, v);
+                Vec3d dV = dVBezier(controlPoints, u, v);
                 N[k] = dU.crossProduct(dV).normalize();
                 st[k].x = u;
                 st[k].y = v;
@@ -488,7 +488,7 @@ void createPolyTeapot(Matrix44f& o2w, std::vector<Object*>& objects)
 // Bezier curve control points
 // [/comment]
 constexpr uint32_t curveNumPts = 22;
-Vec3f curveData[curveNumPts] = {
+Vec3d curveData[curveNumPts] = {
     {-0.0029370324, 0.0297554422, 0},
     {-0.1556627219, 0.3293327560, 0},
     {-0.2613958914, 0.9578577085, 0},
@@ -520,9 +520,9 @@ void createCurveGeometry(std::vector<Object*>& objects)
 {
     uint32_t ndivs = 16;
     uint32_t ncurves = 1 + (curveNumPts - 4) / 3;
-    Vec3f pts[4];
-    std::vector<Vec3f> P; P.resize((ndivs + 1) * ndivs * ncurves + 1);
-    std::vector<Vec3f> N; N.resize((ndivs + 1) * ndivs * ncurves + 1);
+    Vec3d pts[4];
+    std::vector<Vec3d> P; P.resize((ndivs + 1) * ndivs * ncurves + 1);
+    std::vector<Vec3d> N; N.resize((ndivs + 1) * ndivs * ncurves + 1);
     std::vector<Vec2f> st; st.resize((ndivs + 1) * ndivs * ncurves + 1);
     for (uint32_t i = 0; i < ncurves; ++i) {
         for (uint32_t j = 0; j < ndivs; ++j) {
@@ -530,9 +530,9 @@ void createCurveGeometry(std::vector<Object*>& objects)
             pts[1] = curveData[i * 3 + 1];
             pts[2] = curveData[i * 3 + 2];
             pts[3] = curveData[i * 3 + 3];
-            float s = j / (float)ndivs;
-            Vec3f pt = evalBezierCurve(pts, s);
-            Vec3f tangent = derivBezier(pts, s).normalize();
+            double s = j / (double)ndivs;
+            Vec3d pt = evalBezierCurve(pts, s);
+            Vec3d tangent = derivBezier(pts, s).normalize();
             bool swap = false;
 
             uint8_t maxAxis;
@@ -546,19 +546,19 @@ void createCurveGeometry(std::vector<Object*>& objects)
             else
                 maxAxis = 2;
 
-            Vec3f up, forward, right;
+            Vec3d up, forward, right;
 
             switch (maxAxis) {
             case 0:
             case 1:
                 up = tangent;
-                forward = Vec3f(0, 0, 1);
+                forward = Vec3d(0, 0, 1);
                 right = up.crossProduct(forward);
                 forward = right.crossProduct(up);
                 break;
             case 2:
                 up = tangent;
-                right = Vec3f(0, 0, 1);
+                right = Vec3d(0, 0, 1);
                 forward = right.crossProduct(up);
                 right = up.crossProduct(forward);
                 break;
@@ -566,17 +566,17 @@ void createCurveGeometry(std::vector<Object*>& objects)
                 break;
             };
 
-            float sNormalized = (i * ndivs + j) / float(ndivs * ncurves);
-            float rad = 0.1 * (1 - sNormalized);
+            double sNormalized = (i * ndivs + j) / double(ndivs * ncurves);
+            double rad = 0.1 * (1 - sNormalized);
             for (uint32_t k = 0; k <= ndivs; ++k) {
-                float t = k / (float)ndivs;
-                float theta = t * 2 * M_PI;
-                Vec3f pc(cos(theta) * rad, 0, sin(theta) * rad);
-                float x = pc.x * right.x + pc.y * up.x + pc.z * forward.x;
-                float y = pc.x * right.y + pc.y * up.y + pc.z * forward.y;
-                float z = pc.x * right.z + pc.y * up.z + pc.z * forward.z;
-                P[i * (ndivs + 1) * ndivs + j * (ndivs + 1) + k] = Vec3f(pt.x + x, pt.y + y, pt.z + z);
-                N[i * (ndivs + 1) * ndivs + j * (ndivs + 1) + k] = Vec3f(x, y, z).normalize();
+                double t = k / (double)ndivs;
+                double theta = t * 2 * M_PI;
+                Vec3d pc(cos(theta) * rad, 0, sin(theta) * rad);
+                double x = pc.x * right.x + pc.y * up.x + pc.z * forward.x;
+                double y = pc.x * right.y + pc.y * up.y + pc.z * forward.y;
+                double z = pc.x * right.z + pc.y * up.z + pc.z * forward.z;
+                P[i * (ndivs + 1) * ndivs + j * (ndivs + 1) + k] = Vec3d(pt.x + x, pt.y + y, pt.z + z);
+                N[i * (ndivs + 1) * ndivs + j * (ndivs + 1) + k] = Vec3d(x, y, z).normalize();
                 st[i * (ndivs + 1) * ndivs + j * (ndivs + 1) + k] = Vec2f(sNormalized, t);
             }
         }
@@ -613,7 +613,7 @@ void createCurveGeometry(std::vector<Object*>& objects)
         nf++;
     }
 
-    objects.emplace_back(new TriangleMesh(Matrix44f::kIdentity, numFaces, verts, vertIndices, P, N, st));
+    objects.emplace_back(new TriangleMesh(Matrix44d::kIdentity, numFaces, verts, vertIndices, P, N, st));
 }
 
 
@@ -622,9 +622,9 @@ void Z3DTestWin::RenderTeapot()
     // loading gemetry
     std::vector<Object*> objects;
 
-    Matrix44f teapotO2W;
-    //    Z3D::LookAt(Vec3f(4, 5, -10), Vec3f(0, 0, 0), Vec3f(0, 10, 0), teapotO2W);
-    setOrientationMatrix((float)gTimer.GetElapsedTime() / 1000.0, (float)gTimer.GetElapsedTime() / 2500.0, 0.0, teapotO2W);
+    Matrix44d teapotO2W;
+    //    Z3D::LookAt(Vec3d(4, 5, -10), Vec3d(0, 0, 0), Vec3d(0, 10, 0), teapotO2W);
+    setOrientationMatrix((double)gTimer.GetElapsedTime() / 1000.0, (double)gTimer.GetElapsedTime() / 2500.0, 0.0, teapotO2W);
     createPolyTeapot(teapotO2W, objects);
     //createCurveGeometry(objects);
 
@@ -642,12 +642,12 @@ void Z3DTestWin::RenderTeapot()
     mpTeapotRender.get()->Init(options.width, options.height);
 
     // to render the teapot
-    //options.cameraToWorld = Matrix44f(0.897258, 0, -0.441506, 0, -0.288129, 0.757698, -0.585556, 0, 0.334528, 0.652606, 0.679851, 0, 5.439442, 11.080794, 10.381341, 1);
-    Z3D::LookAt(Vec3f(4, 5, -10), Vec3f(0, 0, 0), Vec3f(0, 10, 0), options.cameraToWorld);
+    //options.cameraToWorld = Matrix44d(0.897258, 0, -0.441506, 0, -0.288129, 0.757698, -0.585556, 0, 0.334528, 0.652606, 0.679851, 0, 5.439442, 11.080794, 10.381341, 1);
+    Z3D::LookAt(Vec3d(4, 5, -10), Vec3d(0, 0, 0), Vec3d(0, 10, 0), options.cameraToWorld);
 
 
     // to render the curve as geometry
-    //options.cameraToWorld = Matrix44f(0.707107, 0, -0.707107, 0, -0.369866, 0.85229, -0.369866, 0, 0.60266, 0.523069, 0.60266, 0, 2.634, 3.178036, 2.262122, 1);
+    //options.cameraToWorld = Matrix44d(0.707107, 0, -0.707107, 0, -0.369866, 0.85229, -0.369866, 0, 0.60266, 0.523069, 0.60266, 0, 2.634, 3.178036, 2.262122, 1);
 
     // finally, render
     render(options, objects, lights, mpTeapotRender);
@@ -657,13 +657,13 @@ void Z3DTestWin::RenderTeapot()
 
 
 bool trace(
-    Vec3f& orig, const Vec3f& dir,
+    Vec3d& orig, const Vec3d& dir,
     std::vector<Object*>& objects,
     IsectInfo& isect)
 {
     isect.hitObject = nullptr;
     for (uint32_t k = 0; k < objects.size(); ++k) {
-        float tNearTriangle = kInfinity;
+        double tNearTriangle = kInfinity;
         uint32_t indexTriangle;
         Vec2f uvTriangle;
         if (objects[k]->intersect(orig, dir, tNearTriangle, indexTriangle, uvTriangle) && tNearTriangle < isect.tNear)
@@ -689,12 +689,12 @@ public:
     Sphere() : mRadius(0), mRadius2(0), mTransparency(0), mReflection(0) {}
 
     Sphere(
-        const Vec3f& center,
-        const float& radius,
-        const Vec3f& surfaceColor,
-        const float& reflection = 0,
-        const float& transparency = 0,
-        const Vec3f& emmisionColor = 0) :
+        const Vec3d& center,
+        const double& radius,
+        const Vec3d& surfaceColor,
+        const double& reflection = 0,
+        const double& transparency = 0,
+        const Vec3d& emmisionColor = 0) :
         mCenter(center), mRadius(radius), mRadius2(radius* radius), mSurfaceColor(surfaceColor), mEmissionColor(emmisionColor),
         mTransparency(transparency), mReflection(reflection)
     {
@@ -703,14 +703,14 @@ public:
     //[comment]
     // Compute a ray-sphere intersection using the geometric solution
     //[/comment]
-    bool intersect(const Vec3f& rayorig, const Vec3f& raydir, float& t0, float& t1) const
+    bool intersect(const Vec3d& rayorig, const Vec3d& raydir, double& t0, double& t1) const
     {
-        Vec3f l = mCenter - rayorig;
-        float tca = l.dotProduct(raydir);
+        Vec3d l = mCenter - rayorig;
+        double tca = l.dotProduct(raydir);
         if (tca < 0) return false;
-        float d2 = l.dotProduct(l) - tca * tca;
+        double d2 = l.dotProduct(l) - tca * tca;
         if (d2 > mRadius2) return false;
-        float thc = sqrt(mRadius2 - d2);
+        double thc = sqrt(mRadius2 - d2);
         t0 = tca - thc;
         t1 = tca + thc;
 
@@ -718,31 +718,31 @@ public:
     }
 
 
-    Vec3f mCenter;                           /// position of the sphere
-    float mRadius, mRadius2;                  /// sphere radius and radius^2
-    Vec3f mSurfaceColor, mEmissionColor;      /// surface color and emission (light)
-    float mTransparency, mReflection;         /// surface transparency and reflectivity
+    Vec3d mCenter;                           /// position of the sphere
+    double mRadius, mRadius2;                  /// sphere radius and radius^2
+    Vec3d mSurfaceColor, mEmissionColor;      /// surface color and emission (light)
+    double mTransparency, mReflection;         /// surface transparency and reflectivity
 
 };
 
 //#define MAX_RAY_DEPTH 5
 
-float mix(const float& a, const float& b, const float& mix)
+double mix(const double& a, const double& b, const double& mix)
 {
     return b * mix + a * (1 - mix);
 }
 
-Vec3f TraceSpheres(
-    const Vec3f& rayorig,
-    const Vec3f& raydir,
+Vec3d TraceSpheres(
+    const Vec3d& rayorig,
+    const Vec3d& raydir,
     const int& depthRemaining, const std::vector<class Sphere>& spheres)
 {
     //if (raydir.length() != 1) std::cerr << "Error " << raydir << std::endl;
-    float tnear = INFINITY;
+    double tnear = INFINITY;
     const Sphere* sphere = NULL;
     // find intersection of this ray with the sphere in the scene
     for (unsigned i = 0; i < spheres.size(); ++i) {
-        float t0 = INFINITY, t1 = INFINITY;
+        double t0 = INFINITY, t1 = INFINITY;
         if (spheres[i].intersect(rayorig, raydir, t0, t1)) {
             if (t0 < 0) t0 = t1;
             if (t0 < tnear) {
@@ -752,34 +752,34 @@ Vec3f TraceSpheres(
         }
     }
     // if there's no intersection return black or background color
-    if (!sphere) return Vec3f(2);
-    Vec3f surfaceColor = 0; // color of the ray/surfaceof the object intersected by the ray
-    Vec3f phit = rayorig + raydir * tnear; // point of intersection
-    Vec3f nhit = phit - sphere->mCenter; // normal at the intersection point
+    if (!sphere) return Vec3d(2);
+    Vec3d surfaceColor = 0; // color of the ray/surfaceof the object intersected by the ray
+    Vec3d phit = rayorig + raydir * tnear; // point of intersection
+    Vec3d nhit = phit - sphere->mCenter; // normal at the intersection point
     nhit.normalize(); // normalize normal direction
     // If the normal and the view direction are not opposite to each other
     // reverse the normal direction. That also means we are inside the sphere so set
     // the inside bool to true. Finally reverse the sign of IdotN which we want
     // positive.
-    float bias = (float)1e-4; // add some bias to the point from which we will be tracing
+    double bias = (double)1e-4; // add some bias to the point from which we will be tracing
     bool inside = false;
     if (raydir.dotProduct(nhit) > 0) nhit = -nhit, inside = true;
     if ((sphere->mTransparency > 0 || sphere->mReflection > 0) && depthRemaining > 0) {
-        float facingratio = -raydir.dotProduct(nhit);
+        double facingratio = -raydir.dotProduct(nhit);
         // change the mix value to tweak the effect
-        float fresneleffect = mix(pow(1 - facingratio, 3), 1, 0.1f);
+        double fresneleffect = mix((const double) pow(1 - facingratio, 3), 1, 0.1f);
         // compute reflection direction (not need to normalize because all vectors
         // are already normalized)
-        Vec3f refldir = raydir - nhit * 2 * raydir.dotProduct(nhit);
+        Vec3d refldir = raydir - nhit * 2 * raydir.dotProduct(nhit);
         refldir.normalize();
-        Vec3f reflection = TraceSpheres(phit + nhit * bias, refldir, depthRemaining-1, spheres);
-        Vec3f refraction = 0;
+        Vec3d reflection = TraceSpheres(phit + nhit * bias, refldir, depthRemaining-1, spheres);
+        Vec3d refraction = 0;
         // if the sphere is also transparent compute refraction ray (transmission)
         if (sphere->mTransparency) {
-            float ior = 1.1, eta = (inside) ? ior : 1 / ior; // are we inside or outside the surface?
-            float cosi = -nhit.dotProduct(raydir);
-            float k = 1 - eta * eta * (1 - cosi * cosi);
-            Vec3f refrdir = raydir * eta + nhit * (eta * cosi - sqrt(k));
+            double ior = 1.1f, eta = (inside) ? ior : 1 / ior; // are we inside or outside the surface?
+            double cosi = -nhit.dotProduct(raydir);
+            double k = 1 - eta * eta * (1 - cosi * cosi);
+            Vec3d refrdir = raydir * eta + nhit * (eta * cosi - sqrt(k));
             refrdir.normalize();
             refraction = TraceSpheres(phit - nhit * bias, refrdir, depthRemaining - 1, spheres);
         }
@@ -793,12 +793,12 @@ Vec3f TraceSpheres(
         for (unsigned i = 0; i < spheres.size(); ++i) {
             if (spheres[i].mEmissionColor.x > 0) {
                 // this is a light
-                Vec3f transmission = 1;
-                Vec3f lightDirection = spheres[i].mCenter - phit;
+                Vec3d transmission = 1;
+                Vec3d lightDirection = spheres[i].mCenter - phit;
                 lightDirection.normalize();
                 for (unsigned j = 0; j < spheres.size(); ++j) {
                     if (i != j) {
-                        float t0, t1;
+                        double t0, t1;
                         if (spheres[j].intersect(phit + nhit * bias, lightDirection, t0, t1)) {
                             transmission = 0;
                             break;
@@ -806,7 +806,7 @@ Vec3f TraceSpheres(
                     }
                 }
                 surfaceColor += sphere->mSurfaceColor * transmission *
-                    std::max<float>(float(0), nhit.dotProduct(lightDirection)) * spheres[i].mEmissionColor;
+                    std::max<double>(0.0, nhit.dotProduct(lightDirection)) * spheres[i].mEmissionColor;
             }
         }
     }
@@ -819,21 +819,21 @@ Vec3f TraceSpheres(
 void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest, int64_t nDepth)
 {
     ZRect rFullArea(pDest->GetArea());
-    float invWidth = 1 / float(rFullArea.Width()), invHeight = 1 / float(rFullArea.Height());
-    float fov = 30, aspectratio = rFullArea.Width() / float(rFullArea.Height());
-    float angle = tan( M_PI * 0.5 * fov / 180.);
+    double invWidth = 1 / double(rFullArea.Width()), invHeight = 1 / double(rFullArea.Height());
+    double fov = 30, aspectratio = rFullArea.Width() / double(rFullArea.Height());
+    double angle = (double)tan( M_PI * 0.5 * fov / 180.);
 
-    for (unsigned y = rArea.top; y < rArea.bottom; ++y) {
-        for (unsigned x = rArea.left; x < rArea.right; ++x) {
-            float xx = ( 2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
-            float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
-            Vec3f raydir(xx, yy, -1);
+    for (int64_t y = rArea.top; y < rArea.bottom; ++y) {
+        for (int64_t x = rArea.left; x < rArea.right; ++x) {
+            double xx = ( 2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
+            double yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
+            Vec3d raydir(xx, yy, -1);
             raydir.normalize();
-            Vec3f pixel = TraceSpheres(Vec3f(0), raydir, nDepth, spheres);
+            Vec3d pixel = TraceSpheres(Vec3d(0), raydir, (const int)nDepth, spheres);
 
-            char r = (char)(255 * clamp(0, 1, pixel.x));
-            char g = (char)(255 * clamp(0, 1, pixel.y));
-            char b = (char)(255 * clamp(0, 1, pixel.z));
+            char r = (char)(255 * clamp(0, 1, (const double)pixel.x));
+            char g = (char)(255 * clamp(0, 1, (const double)pixel.y));
+            char b = (char)(255 * clamp(0, 1, (const double)pixel.z));
             pDest->SetPixel(x, y, ARGB(0xff, r, g, b));
         }
     }
@@ -846,8 +846,8 @@ void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest
 //[/comment]
 void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface)
 {
-    uint32_t width = mnRenderSize;
-    uint32_t height = mnRenderSize;
+    int64_t width = mnRenderSize;
+    int64_t height = mnRenderSize;
     mpSurface->Init(width, height);
 
 
@@ -884,9 +884,9 @@ void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface)
         for (unsigned x = 0; x < width; ++x) {
             float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
             float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
-            Vec3f raydir(xx, yy, -1);
+            Vec3d raydir(xx, yy, -1);
             raydir.normalize();
-            Vec3f pixel = TraceSpheres(Vec3f(0), raydir, 0);
+            Vec3d pixel = TraceSpheres(Vec3d(0), raydir, 0);
 
             char r = (char)(255 * clamp(0, 1, pixel.x));
             char g = (char)(255 * clamp(0, 1, pixel.y));
@@ -944,15 +944,15 @@ bool Z3DTestWin::Init()
 
     const float f = 1.0;
 
-    mCubeVertices[0] = Vec3f(-f,  f, -f);
-    mCubeVertices[1] = Vec3f( f,  f, -f);
-    mCubeVertices[2] = Vec3f( f, -f, -f);
-    mCubeVertices[3] = Vec3f(-f, -f, -f);
+    mCubeVertices[0] = Vec3d(-f,  f, -f);
+    mCubeVertices[1] = Vec3d( f,  f, -f);
+    mCubeVertices[2] = Vec3d( f, -f, -f);
+    mCubeVertices[3] = Vec3d(-f, -f, -f);
 
-    mCubeVertices[4] = Vec3f(-f,  f,  f);
-    mCubeVertices[5] = Vec3f( f,  f,  f);
-    mCubeVertices[6] = Vec3f( f, -f,  f);
-    mCubeVertices[7] = Vec3f(-f, -f,  f);
+    mCubeVertices[4] = Vec3d(-f,  f,  f);
+    mCubeVertices[5] = Vec3d( f,  f,  f);
+    mCubeVertices[6] = Vec3d( f, -f,  f);
+    mCubeVertices[7] = Vec3d(-f, -f,  f);
 
     mSides.resize(6);
 
@@ -1097,32 +1097,32 @@ void Z3DTestWin::UpdateSphereCount()
     int i = 0;
     if (mbOuterSphere)
     {
-        mSpheres[i] = Sphere(Vec3f(0, 0, -50), 500, Vec3f(0, 0, 0), 0.0, 0.0, Vec3f(0,0,0));   
+        mSpheres[i] = Sphere(Vec3d(0, 0, -50), 500, Vec3d(0, 0, 0), 0.0, 0.0, Vec3d(0,0,0));
         i++;
     }
 
     if (mbCenterSphere)
     {
-        mSpheres[i] = Sphere(Vec3f(0, 0, -50), 5, Vec3f(0.5, 0.5, 0.5), 0.5, 0.5, Vec3f(0, 0, 0)); 
+        mSpheres[i] = Sphere(Vec3d(0, 0, -50), 5, Vec3d(0.5, 0.5, 0.5), 0.5, 0.5, Vec3d(0, 0, 0));
         i++;
     }
 
     for (;i < mnTargetSphereCount; i++)
     {
-        float fMaxDist = 100.0;
-        float fRadius = RANDDOUBLE( (mnMinSphereSizeTimes100 / 100.0), (mnMaxSphereSizeTimes100 / 100.0));
+        double fMaxDist = 100.0;
+        double fRadius = RANDDOUBLE( (mnMinSphereSizeTimes100 / 100.0), (mnMaxSphereSizeTimes100 / 100.0));
 
-        Vec3f center(fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))),
+        Vec3d center(fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))),
                      fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))), 
                      fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))));
 
-        Vec3f color(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
-        float fReflective(RANDDOUBLE(0.0, 1.0));
-        float fTransparent(RANDDOUBLE(0.0, 1.0));
-        Vec3f emmisionColor(0);
+        Vec3d color(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
+        double fReflective(RANDDOUBLE(0.0, 1.0));
+        double fTransparent(RANDDOUBLE(0.0, 1.0));
+        Vec3d emmisionColor(0);
 
         if (RANDPERCENT(10))    // 10% of spheres will be emitters
-            emmisionColor = Vec3f(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
+            emmisionColor = Vec3d(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
 
         mSpheres[i] = Sphere(center, fRadius, color, fReflective, fTransparent, emmisionColor);
     }
@@ -1145,13 +1145,13 @@ bool Z3DTestWin::OnChar(char key)
 
 
 
-void multPointMatrix(const Vec3f& in, Vec3f& out, const Matrix44f& M)
+void multPointMatrix(const Vec3d& in, Vec3d& out, const Matrix44d& M)
 {
     //out = in * M;
     out.x = in.x * M[0][0] + in.y * M[1][0] + in.z * M[2][0] + /* in.z = 1 */ M[3][0];
     out.y = in.x * M[0][1] + in.y * M[1][1] + in.z * M[2][1] + /* in.z = 1 */ M[3][1];
     out.z = in.x * M[0][2] + in.y * M[1][2] + in.z * M[2][2] + /* in.z = 1 */ M[3][2];
-    float w = in.x * M[0][3] + in.y * M[1][3] + in.z * M[2][3] + /* in.z = 1 */ M[3][3];
+    double w = in.x * M[0][3] + in.y * M[1][3] + in.z * M[2][3] + /* in.z = 1 */ M[3][3];
 
     // normalize if w is different than 1 (convert from homogeneous to Cartesian coordinates)
     if (w != 1) {
@@ -1169,39 +1169,21 @@ bool Z3DTestWin::Process()
     return true;
 }
 
-void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection, Matrix44f& mtxWorldToCamera, uint32_t nCol)
+void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection, Matrix44d& mtxWorldToCamera, uint32_t nCol)
 {
     tColorVertexArray screenVerts;
     screenVerts.resize(worldVerts.size());
 
 
-/*    Vec3f faceX(worldVerts[0].x - worldVerts[1].x, worldVerts[0].y - worldVerts[1].y, 1);
-    Vec3f faceY(worldVerts[0].x - worldVerts[3].x, worldVerts[0].y - worldVerts[3].y, 1);
-    Vec3f faceNormal = faceX.cross(faceY);
-    faceNormal.normalize();
-    Vec3f lightDirection(5, 5, 1);
-    lightDirection.normalize();
 
-    double fScale = lightDirection.dot(-faceNormal);
-    if (fScale < 0)
-        fScale = 0;
-    if (fScale > 1.0)
-        fScale = 1.0;
-
-    double fR = ARGB_R(nCol) * fScale;
-    double fG = ARGB_G(nCol) * fScale;
-    double fB = ARGB_B(nCol) * fScale;
-
-    nCol = ARGB(0xff, (uint8_t)fR, (uint8_t)fG, (uint8_t)fB);
-    */
 
 
     for (int i = 0; i < worldVerts.size(); i++)
     {
-        Vec3f v = worldVerts[i];
+        Vec3d v = worldVerts[i];
 
-        Vec3f vertCamera;
-        Vec3f vertProjected;
+        Vec3d vertCamera;
+        Vec3d vertProjected;
 
         multPointMatrix(v, vertCamera, mtxWorldToCamera);
         multPointMatrix(vertCamera, vertProjected, mtxProjection);
@@ -1209,32 +1191,32 @@ void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection,
 /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
             continue;*/
 
-        screenVerts[i].x = mAreaToDrawTo.Width()/2 + (int64_t)(vertProjected.x * mnRenderSize *10);
-        screenVerts[i].y = mAreaToDrawTo.Height()/2 + (int64_t)(vertProjected.y * mnRenderSize *10);
+        screenVerts[i].x = (double)(mAreaToDrawTo.Width()/2 + (int64_t)(vertProjected.x * mnRenderSize *10));
+        screenVerts[i].y = (double)(mAreaToDrawTo.Height()/2 + (int64_t)(vertProjected.y * mnRenderSize *10));
 
         screenVerts[i].mColor = nCol;
     }
 
-    Vec3f planeX(screenVerts[1].x- screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
-    Vec3f planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
-    Vec3f normal = planeX.crossProduct(planeY);
+    Vec3d planeX(screenVerts[1].x- screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
+    Vec3d planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
+    Vec3d normal = planeX.crossProduct(planeY);
     if (normal.z > 0)
         return;
 
     gRasterizer.Rasterize(mpTransformTexture.get(), screenVerts);
 }
 
-void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection, Matrix44f& mtxWorldToCamera, tZBufferPtr pTexture)
+void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection, Matrix44d& mtxWorldToCamera, tZBufferPtr pTexture)
 {
     tUVVertexArray screenVerts;
     screenVerts.resize(worldVerts.size());
 
     for (int i = 0; i < worldVerts.size(); i++)
     {
-        Vec3f v = worldVerts[i];
+        Vec3d v = worldVerts[i];
 
-        Vec3f vertCamera;
-        Vec3f vertProjected;
+        Vec3d vertCamera;
+        Vec3d vertProjected;
 
         multPointMatrix(v, vertCamera, mtxWorldToCamera);
         multPointMatrix(vertCamera, vertProjected, mtxProjection);
@@ -1242,13 +1224,13 @@ void Z3DTestWin::RenderPoly(vector<Vec3f>& worldVerts, Matrix44f& mtxProjection,
         /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
                     continue;*/
 
-        screenVerts[i].x = mAreaToDrawTo.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10);
-        screenVerts[i].y = mAreaToDrawTo.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10);
+        screenVerts[i].x = (double)(mAreaToDrawTo.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10));
+        screenVerts[i].y = (double)(mAreaToDrawTo.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10));
     }
 
-    Vec3f planeX(screenVerts[1].x - screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
-    Vec3f planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
-    Vec3f normal = planeX.crossProduct(planeY);
+    Vec3d planeX(screenVerts[1].x - screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
+    Vec3d planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
+    Vec3d normal = planeX.crossProduct(planeY);
     if (normal.z > 0)
         return;
 
@@ -1287,7 +1269,7 @@ bool Z3DTestWin::Paint()
 
     if (mbRenderSpheres)
     {
-        float fAngle = mfBaseAngle;
+        double fAngle = mfBaseAngle;
 
         int nStartSphere = 0;
         if (mbCenterSphere)
@@ -1296,7 +1278,7 @@ bool Z3DTestWin::Paint()
             nStartSphere++;
         for (int i = nStartSphere; i < mSpheres.size(); i++)
         {
-            mSpheres[i].mCenter = Vec3f(5 * cos(fAngle * mSpheres[i].mSurfaceColor.length()), 5.0 * sin(fAngle * mSpheres[i].mTransparency), -50+10.0 * sin(fAngle * mSpheres[i].mReflection));
+            mSpheres[i].mCenter = Vec3d(5 * cos(fAngle * mSpheres[i].mSurfaceColor.length()), 5.0 * sin(fAngle * mSpheres[i].mTransparency), -50+10.0 * sin(fAngle * mSpheres[i].mReflection));
             fAngle += 1.2;
         }
 
@@ -1312,12 +1294,12 @@ bool Z3DTestWin::Paint()
 
     if (mbRenderCube)
     {
-        Matrix44f mtxProjection;
-        Matrix44f mtxWorldToCamera;
+        Matrix44d mtxProjection;
+        Matrix44d mtxWorldToCamera;
 
-        //    Z3D::LookAt(Vec3f(10*sin(gTimer.GetMSSinceEpoch() / 1000.0), 0, -10-10*cos(gTimer.GetMSSinceEpoch()/1000.0)), Vec3f(0, 0, 0), Vec3f(0, 1, 0), mtxWorldToCamera);
-        //    Z3D::LookAt(Vec3f(0, 1, -20 - 10 * cos(gTimer.GetMSSinceEpoch() / 1000.0)), Vec3f(0, 0, 0), Vec3f(0, 10, 0), mtxWorldToCamera);
-        Z3D::LookAt(Vec3f(0, 1, -20), Vec3f(0, 0, 0), Vec3f(0, 10, 0), mtxWorldToCamera);
+        //    Z3D::LookAt(Vec3d(10*sin(gTimer.GetMSSinceEpoch() / 1000.0), 0, -10-10*cos(gTimer.GetMSSinceEpoch()/1000.0)), Vec3d(0, 0, 0), Vec3d(0, 1, 0), mtxWorldToCamera);
+        //    Z3D::LookAt(Vec3d(0, 1, -20 - 10 * cos(gTimer.GetMSSinceEpoch() / 1000.0)), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
+        Z3D::LookAt(Vec3d(0, 1, -20), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
 
         double fFoV = 90;
         double fNear = 0.1;
@@ -1326,7 +1308,7 @@ bool Z3DTestWin::Paint()
         setProjectionMatrix(fFoV, fNear, fFar, mtxProjection);
 
 
-        vector<Vec3f> worldVerts;
+        vector<Vec3d> worldVerts;
         worldVerts.resize(4);
 
         int i = 1;
@@ -1335,7 +1317,7 @@ bool Z3DTestWin::Paint()
             //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
             setOrientationMatrix(4.0, 0.0, mfBaseAngle, mObjectToWorld);
 
-            std::vector<Vec3f> cubeWorldVerts;
+            std::vector<Vec3d> cubeWorldVerts;
             cubeWorldVerts.resize(8);
             for (int i = 0; i < 8; i++)
                 multPointMatrix(mCubeVertices[i], cubeWorldVerts[i], mObjectToWorld);

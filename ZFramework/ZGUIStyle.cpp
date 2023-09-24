@@ -21,10 +21,10 @@ ZGUI::Style gStyleButton(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::
 ZGUI::Style gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, 0, 0, gDefaultDialogFill);
 ZGUI::Style gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, 0, 0, gDefaultDialogFill);
 ZGUI::Style gStyleGeneralText(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, 0, 0, 0, true);
-ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gSpacer, gSpacer, gDefaultDialogFill, true);
-ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, gSpacer, gSpacer, gDefaultTextAreaFill);
+ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultDialogFill, true);
+ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill);
 ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 16, -2);
-ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, gSpacer, gSpacer, 0, false);
+ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, (int32_t)gSpacer, (int32_t)gSpacer, 0, false);
 
 ZGUI::Palette gAppPalette{
 {
@@ -41,28 +41,28 @@ namespace ZGUI
     {
 //        gDefaultSpacer = (uint32_t)(grFullArea.Height() / 125);
 //        gnDefaultGroupInlaySize = 9;
-        gM = sqrt(grFullArea.Width() * grFullArea.Width() + grFullArea.Height() * grFullArea.Height()) / 100;  // default measure
+        gM = (int64_t) (sqrt(grFullArea.Width() * grFullArea.Width() + grFullArea.Height() * grFullArea.Height()) / 100.0);  // default measure
         gSpacer = gM / 5;
 
-        gStyleButton.fp.nHeight = std::max<int64_t>(gM/1.5, 14);
-        gStyleButton.paddingH = gSpacer;
-        gStyleButton.paddingV = gSpacer;
+        gStyleButton.fp.nHeight = std::max<int64_t>((int64_t)(gM/1.5), 14);
+        gStyleButton.paddingH = (int32_t)gSpacer;
+        gStyleButton.paddingV = (int32_t)gSpacer;
 
         gStyleToggleChecked.fp.nHeight = std::max<int64_t>(gM, 14);
         gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(gM, 14);
         gStyleTooltip.fp.nHeight = std::max<int64_t>(gM/3, 14);
         gStyleCaption.fp.nHeight = std::max<int64_t>(gM, 14);
         gStyleGeneralText.fp.nHeight = std::max<int64_t>(gM/2, 14);
-        gDefaultGroupingStyle.fp.nHeight = gM*2/5;
-        gDefaultGroupingStyle.paddingH = gM*2/7;
-        gDefaultGroupingStyle.paddingV = std::min<int64_t>(-2, -gM / 5);
+        gDefaultGroupingStyle.fp.nHeight = (int32_t)(gM*2/5);
+        gDefaultGroupingStyle.paddingH = (int32_t)(gM*2/7);
+        gDefaultGroupingStyle.paddingV = (int32_t)std::min<int64_t>(-2, (int64_t)(-gM / 5));
 
         gDefaultTitleFont.nHeight = std::max<int64_t>(gM, 14);
         //    gDefaultCaptionFont.nHeight = grFullArea.Height() / 60;
         gDefaultTextFont.nHeight = std::max<int64_t>(gM/4, 10);
 
-        gDefaultFormattedDocStyle.paddingH = gSpacer;
-        gDefaultFormattedDocStyle.paddingV = gSpacer;
+        gDefaultFormattedDocStyle.paddingH = (int32_t)gSpacer;
+        gDefaultFormattedDocStyle.paddingV = (int32_t)gSpacer;
 
     }
 
@@ -220,7 +220,7 @@ namespace ZGUI
     {
         nlohmann::json j;
         j["count"] = SH::FromInt(mColorMap.size());
-        for (int i = 0; i < mColorMap.size(); i++)
+        for (size_t i = 0; i < mColorMap.size(); i++)
         {
             j[SH::FromInt(i)] = (string)mColorMap[i];
         }
@@ -233,11 +233,11 @@ namespace ZGUI
         mColorMap.clear();
         nlohmann::json j = nlohmann::json::parse(_encoded_string);
 
-        int count = SH::ToInt(j["count"]);
+        int64_t count = SH::ToInt(j["count"]);
 
         mColorMap.resize(count);
 
-        for (int i = 0; i < count; i++)
+        for (int64_t i = 0; i < count; i++)
         {
             mColorMap[i] = EditableColor(j[SH::FromInt(i)]);
         }

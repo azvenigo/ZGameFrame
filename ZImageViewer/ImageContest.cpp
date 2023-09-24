@@ -446,8 +446,8 @@ void ImageContest::UpdateControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
     pBtn->SetTooltip("Go to Folder");
-    pBtn->mSVGImage.style.paddingH = nButtonPadding;
-    pBtn->mSVGImage.style.paddingV = nButtonPadding;
+    pBtn->mSVGImage.style.paddingH = (int32_t)nButtonPadding;
+    pBtn->mSVGImage.style.paddingV = (int32_t)nButtonPadding;
 
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("selectfolder", this));
@@ -704,8 +704,8 @@ bool ImageContest::SelectWinner(int leftOrRight)
         assert(mImageMeta[kRight]->elo > 0);
 
 
-        mImageMeta[kLeft]->elo += fWeight * (fActualLeft - fExpectedLeft);
-        mImageMeta[kRight]->elo += fWeight * (fActualRight - fExpectedRight);
+        mImageMeta[kLeft]->elo += (int32_t)(fWeight * (fActualLeft - fExpectedLeft));
+        mImageMeta[kRight]->elo += (int32_t)(fWeight * (fActualRight - fExpectedRight));
 
         ZOUT("Image:", mImageMeta[leftOrRight]->filename, " wins/contests:", mImageMeta[leftOrRight]->wins, "/", mImageMeta[leftOrRight]->contests, " ELO:", mImageMeta[leftOrRight]->elo);
 

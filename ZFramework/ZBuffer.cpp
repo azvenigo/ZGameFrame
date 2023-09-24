@@ -285,7 +285,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 bool ZBuffer::LoadFromSVG(const std::string& sName)
 {
     auto doc = lunasvg::Document::loadFromFile(sName);
-    auto svgbitmap = doc->renderToBitmap(mSurfaceArea.Width(), mSurfaceArea.Height()); // if the buffer is already initialized, this will render at the same dimensions. If not these will be 0x0 & it will render at the SVG embedded dimensions
+    auto svgbitmap = doc->renderToBitmap((uint32_t)mSurfaceArea.Width(), (uint32_t)mSurfaceArea.Height()); // if the buffer is already initialized, this will render at the same dimensions. If not these will be 0x0 & it will render at the SVG embedded dimensions
 
     int64_t w = (int64_t)svgbitmap.width();
     int64_t h = (int64_t)svgbitmap.height();
@@ -1649,11 +1649,11 @@ bool ZBuffer::BltScaled(ZBuffer* pSrc)
 {
     //const uint32_t* srcBuffer, int srcWidth, int srcHeight, uint32_t* destBuffer, int destWidth, int destHeight
     uint32_t* srcBuffer = pSrc->mpPixels;
-    int srcWidth = pSrc->GetArea().Width();
-    int srcHeight = pSrc->GetArea().Height();
+    int64_t srcWidth = pSrc->GetArea().Width();
+    int64_t srcHeight = pSrc->GetArea().Height();
     uint32_t* destBuffer = mpPixels;
-    int destWidth = mSurfaceArea.Width();
-    int destHeight = mSurfaceArea.Height();
+    int64_t destWidth = mSurfaceArea.Width();
+    int64_t destHeight = mSurfaceArea.Height();
 
     double xScale = static_cast<double>(srcWidth) / destWidth;
     double yScale = static_cast<double>(srcHeight) / destHeight;
@@ -1678,14 +1678,17 @@ bool ZBuffer::BltScaled(ZBuffer* pSrc)
             double r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
             double weightSum = 0.0f;
 
-            for (int j = srcYInt - yScale/2; j <= srcYInt + yScale/2; ++j) {
-                for (int i = srcXInt - xScale/2; i <= srcXInt + xScale/2; ++i) {
+            for (int32_t j = (int32_t)(srcYInt - yScale/2); j <= (int32_t)(srcYInt + yScale/2); j++)
+            {
+                for (int32_t i = (int32_t)(srcXInt - xScale/2); i <= (int32_t)(srcXInt + xScale/2); i++)
+                {
 
                     double xDiff = std::abs(srcX - i);
                     double yDiff = std::abs(srcY - j);
                     double fDist = (sqrt(xDiff * xDiff + yDiff * yDiff));
 
-                    if (i >= 0 && i < srcWidth && j >= 0 && j < srcHeight && fDist <= fMaxRadius) {
+                    if (i >= 0 && i < srcWidth && j >= 0 && j < srcHeight && fDist <= fMaxRadius) 
+                    {
                         double weight = (fMaxRadius - fDist)/ fMaxRadius;
 
                         uint32_t pixel = srcBuffer[j * srcWidth + i];
@@ -1704,7 +1707,8 @@ bool ZBuffer::BltScaled(ZBuffer* pSrc)
                 }
             }
 
-            if (weightSum > 0.0f) {
+            if (weightSum > 0.0f) 
+            {
                 a /= weightSum;
                 r /= weightSum;
                 g /= weightSum;

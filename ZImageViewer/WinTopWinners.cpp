@@ -80,13 +80,13 @@ void WinTopWinners::UpdateUI()
 
         if (fScaleFactor > 1.0)
         {
-            int64_t nMouseVertDist = abs((double)((double)rThumb.top + (double)rThumb.Height() / 2.0 - (double)gInput.lastMouseMove.y) / (double)rThumb.Height());
+            int64_t nMouseVertDist = (int64_t)(abs((double)((double)rThumb.top + (double)rThumb.Height() / 2.0 - (double)gInput.lastMouseMove.y) / (double)rThumb.Height()));
 
 
             double fScale = 1 + fScaleFactor * exp(-(nMouseVertDist / 2.0) * (nMouseVertDist / 2.0));
 
-            rScaled.right = rScaled.left + rScaled.Width() * fScale;
-            rScaled.bottom = rScaled.top + rScaled.Height() * fScale;
+            rScaled.right = rScaled.left + (int64_t)(rScaled.Width() * fScale);
+            rScaled.bottom = rScaled.top + (int64_t)(rScaled.Height() * fScale);
         }
 
         if (rScaled.Height() <= nThumbSide)

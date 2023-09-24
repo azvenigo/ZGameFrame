@@ -287,6 +287,8 @@ bool ZWinImage::OnKeyDown(uint32_t c)
             mpParentWin->InvalidateChildren();
         return mpParentWin->OnKeyDown(c);
     }
+
+    return ZWin::OnKeyDown(c);
 }
 
 bool ZWinImage::OnKeyUp(uint32_t c)
@@ -404,7 +406,7 @@ void ZWinImage::SetZoom(double fZoom)
     {
         ZRect rImageArea(mpImage->GetArea());
         double fRatio = (double)rImageArea.Width() / (double)rImageArea.Height();
-        int64_t nImageWidth = rImageArea.Width() * mfZoom;
+        int64_t nImageWidth = (int64_t)(rImageArea.Width() * mfZoom);
         int64_t nImageHeight = (int64_t)(nImageWidth / fRatio);
 
         ZPoint tl(((mImageArea.left + mImageArea.right) - nImageWidth) / 2, ((mImageArea.top + mImageArea.bottom) - nImageHeight) / 2);
@@ -564,11 +566,11 @@ void ZWinImage::ToImageCoords(ZRect& r)
     int64_t nW = r.Width();
     int64_t nH = r.Height();
 
-    r.left /= mfZoom;
-    r.top /= mfZoom;
+    r.left = (int64_t)(r.left /mfZoom);
+    r.top = (int64_t)(r.top/mfZoom);
 
-    r.right = r.left + (nW / mfZoom);
-    r.bottom = r.top + (nH / mfZoom);
+    r.right = r.left + (int64_t)(nW / mfZoom);
+    r.bottom = r.top + (int64_t)(nH / mfZoom);
 }
 
 

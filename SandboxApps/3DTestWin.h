@@ -52,17 +52,17 @@ public:
 
     void    SetControlPanelEnabled(bool bEnabled = true) { mbControlPanelEnabled = bEnabled; }
 
-    void    RenderPoly(std::vector<Z3D::Vec3f>& worldVerts, Z3D::Matrix44f& mtxProjection, Z3D::Matrix44f& mtxWorldToCamera, uint32_t nCol);
-    void    RenderPoly(std::vector<Z3D::Vec3f>& worldVerts, Z3D::Matrix44f& mtxProjection, Z3D::Matrix44f& mtxWorldToCamera, tZBufferPtr pTexture);
+    void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, uint32_t nCol);
+    void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, tZBufferPtr pTexture);
     bool	HandleMessage(const ZMessage& message);
 
 private:
 
-    std::vector<Z3D::Vec3f> mCubeVertices;
+    std::vector<Z3D::Vec3d> mCubeVertices;
     std::vector< CubeSide> mSides;
 
-    Z3D::Matrix44f mObjectToWorld;
-    Z3D::Matrix44f mWorldToObject;
+    Z3D::Matrix44d mObjectToWorld;
+    Z3D::Matrix44d mWorldToObject;
 
     tZBufferPtr mpTexture;
     bool mbControlPanelEnabled;
@@ -76,7 +76,7 @@ private:
     tZBufferPtr mpSpheresRender;
     void UpdateSphereCount();
     void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface);
-//    static Z3D::Vec3f   TraceSpheres(const Z3D::Vec3f& rayorig, const Z3D::Vec3f& raydir, const int& depth, const std::vector<class Sphere>& spheres);
+//    static Z3D::Vec3d   TraceSpheres(const Z3D::Vec3d& rayorig, const Z3D::Vec3d& raydir, const int& depth, const std::vector<class Sphere>& spheres);
 
     std::vector<class Sphere> mSpheres;
     int64_t     mnTargetSphereCount;

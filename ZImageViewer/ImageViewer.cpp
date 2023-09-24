@@ -499,8 +499,8 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                 }
                 else
                 {
-                    mpRotationMenu->mStyle.paddingH = gSpacer;
-                    mpRotationMenu->mStyle.paddingV = gSpacer;
+                    mpRotationMenu->mStyle.paddingH = (int32_t)gSpacer;
+                    mpRotationMenu->mStyle.paddingV = (int32_t)gSpacer;
 
                     ZRect r = StringToRect(message.GetParam("r"));
                     r.InflateRect(gSpacer *2, gSpacer *2);
@@ -957,7 +957,7 @@ bool ImageViewer::FindImageMatchingCurFilter(ViewingIndex& vi, int64_t offset)
     {
         int64_t nCurRank = GetRank(mImageArray[vi.absoluteIndex]->filename.string());
         int64_t nNewRank = nCurRank + offset;
-        if (nNewRank < 1 || nNewRank > mRankedArray.size())
+        if (nNewRank < 1 || nNewRank > (int64_t)mRankedArray.size())
             return false;
 
         vi = IndexFromPath( GetRankedFilename(nNewRank));
@@ -1266,7 +1266,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width() + gSpacer*2, 0);
     
 
-    int64_t nButtonPadding = rButton.Width() / 8;
+    int32_t nButtonPadding = (int32_t)(rButton.Width() / 8);
     
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/openfile.svg");
@@ -1319,7 +1319,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "undo";  // undo glyph
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 1.5;
+    pBtn->mCaption.style.fp.nHeight = (int64_t) (nGroupSide / 1.5);
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Manage";
@@ -1331,7 +1331,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "move";
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 1.5;
+    pBtn->mCaption.style.fp.nHeight = (int64_t) (nGroupSide / 1.5);
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Manage";
@@ -1343,7 +1343,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "copy";
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 1.5;
+    pBtn->mCaption.style.fp.nHeight = (int64_t)(nGroupSide / 1.5);
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Manage";
@@ -1889,7 +1889,7 @@ bool ImageViewer::KickCaching()
         mpImageLoaderPool->enqueue(&ImageViewer::LoadImageProc, entry->filename, entry);
     }
 
-    if (GetLoadsInProgress() > mpImageLoaderPool->size())
+    if (GetLoadsInProgress() > (int64_t) mpImageLoaderPool->size())
         return false;
 
     if (CurMemoryUsage() < mMaxMemoryUsage)
@@ -2190,7 +2190,7 @@ int64_t ImageViewer::GetRank(const std::string& sFilename)
 
 std::string ImageViewer::GetRankedFilename(int64_t nRank)
 {
-    if (nRank > mRankedImageMetadata.size())
+    if (nRank > (int64_t)mRankedImageMetadata.size())
         return "";
 
     tImageMetaList::iterator it = mRankedImageMetadata.begin();
@@ -2392,8 +2392,8 @@ void ImageViewer::UpdateCaptions()
         ZGUI::Style folderStyle(gStyleButton);
         folderStyle.pos = ZGUI::LT;
         folderStyle.look = ZGUI::ZTextLook::kShadowed;
-        folderStyle.paddingH = gSpacer / 2;
-        folderStyle.paddingV = gSpacer / 2;
+        folderStyle.paddingH = (int32_t) (gSpacer / 2);
+        folderStyle.paddingV = (int32_t)(gSpacer / 2);
 
 
         if (CountImagesMatchingFilter(mFilterState) == 0)
@@ -2409,13 +2409,13 @@ void ImageViewer::UpdateCaptions()
             {
                 mpWinImage->mpTable->mCellStyle = gStyleCaption;
                 mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
-                mpWinImage->mpTable->mCellStyle.paddingH = gSpacer / 2;
-                mpWinImage->mpTable->mCellStyle.paddingV = gSpacer / 2;
+                mpWinImage->mpTable->mCellStyle.paddingH = (int32_t)(gSpacer / 2);
+                mpWinImage->mpTable->mCellStyle.paddingV = (int32_t)(gSpacer / 2);
 
                 mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
                 mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
-                mpWinImage->mpTable->mTableStyle.paddingH = gSpacer;
-                mpWinImage->mpTable->mTableStyle.paddingV = gSpacer;
+                mpWinImage->mpTable->mTableStyle.paddingH = (int32_t)gSpacer;
+                mpWinImage->mpTable->mTableStyle.paddingV = (int32_t)gSpacer;
 
                 string sImageCount = "[" + SH::FromInt(IndexInCurMode() + 1) + "/" + SH::FromInt(CountInCurMode()) + "]";
                 mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
@@ -2445,7 +2445,7 @@ void ImageViewer::UpdateCaptions()
                     if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
                     {
                         mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, gSpacer / 2, 100, 0x88000000, true);
+                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, (int32_t)(gSpacer / 2), 100, 0x88000000, true);
                         mpWinImage->mCaptionMap["for_delete"].visible = true;
                         bShow = true;
                     }
@@ -2484,7 +2484,7 @@ void ImageViewer::UpdateCaptions()
         if (!mMoveToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> move to:\n%s", mMoveToFolder.string().c_str());
-            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, gSpacer / 2, (int32_t)gSpacer / 2 + folderStyle.fp.nHeight*8, 0x88000000, true);
+            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nHeight*8), 0x88000000, true);
             mpWinImage->mCaptionMap["move_to_folder"].visible = bShow;
         }
         else
@@ -2495,7 +2495,7 @@ void ImageViewer::UpdateCaptions()
         if (!mCopyToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["copy_to_folder"].sText, "'C' -> copy to:\n%s", mCopyToFolder.string().c_str());
-            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, gSpacer / 2, (int32_t)gSpacer / 2 + folderStyle.fp.nHeight * 12, 0x88000000, true);
+            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nHeight * 12), 0x88000000, true);
             mpWinImage->mCaptionMap["copy_to_folder"].visible = bShow;
         }
         else

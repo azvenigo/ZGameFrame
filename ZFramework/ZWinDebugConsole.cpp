@@ -105,7 +105,7 @@ void ZWinDebugConsole::UpdateScrollbar()
 
     size_t nVisible = GetVisibleLines();
 
-	if (mbScrollable && mFont && nFullTextHeight > nVisible)
+	if (mbScrollable && mFont && nFullTextHeight > (int64_t)nVisible)
 	{
         if (!mpWinSlider)
         {
@@ -184,7 +184,7 @@ bool ZWinDebugConsole::Paint()
         int64_t nLines = (msg.sLine.length() + nCharsPerLine - 1) / nCharsPerLine;
 
         int64_t nOffset = 0;
-        while (nOffset < msg.sLine.length())
+        while (nOffset < (int64_t) msg.sLine.length())
         {
             ZRect rLine(mrDocumentArea.left, nCurLineBottom - nLines * mFont->Height(), mrDocumentArea.right, nCurLineBottom);
             string sPartial(msg.sLine.substr(nOffset, nCharsPerLine));

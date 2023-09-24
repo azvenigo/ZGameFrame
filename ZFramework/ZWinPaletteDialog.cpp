@@ -85,8 +85,8 @@ void ZWinPaletteDialog::SelectSV(int64_t x, int64_t y)
 
     double fScalar = 1023.0 / (double)mrSVArea.Height();
 
-    mCurS = x * fScalar;
-    mCurV = y * fScalar;
+    mCurS = (uint32_t)(x * fScalar);
+    mCurV = (uint32_t)(y * fScalar);
     UpdatePalette();
 }
 
@@ -99,7 +99,7 @@ void ZWinPaletteDialog::SelectH(int64_t y)
 
     double fScalar = 1023.0 / (double)mrSVArea.Height();
 
-    mCurH = y * fScalar;
+    mCurH = (uint32_t)(y * fScalar);
     UpdatePalette();
 }
 
@@ -252,13 +252,13 @@ bool ZWinPaletteDialog::Paint()
     }
 
 
-    ZPoint svCur(mrSVArea.left + mCurS / fScalar, mrSVArea.top +mCurV / fScalar);
+    ZPoint svCur((int64_t) (mrSVArea.left + mCurS / fScalar), (int64_t)(mrSVArea.top +mCurV / fScalar));
     ZRect rsvCur(svCur.x - 5, svCur.y - 5, svCur.x + 5, svCur.y + 5);
 
     mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rsvCur, ZBuffer::kEdgeBltMiddle_None);
 
 
-    ZPoint hCur(mrHArea.left, mrHArea.top +mCurH / fScalar);
+    ZPoint hCur(mrHArea.left, (int64_t)(mrHArea.top +mCurH / fScalar));
 
     ZRect rhCur(mrHArea.left - 5, hCur.y - 5, mrHArea.right + 5, hCur.y + 5);
     mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rhCur, ZBuffer::kEdgeBltMiddle_None);
@@ -321,7 +321,7 @@ ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, tC
 
     ZRect rMain(gpMainWin->GetArea());
 
-    ZRect r(0, 0, rMain.Width() / 6, rMain.Height() / 2.5);
+    ZRect r(rMain.Width() / 6, (int64_t)(rMain.Height() / 2.5));
     r = ZGUI::Arrange(r, rMain, ZGUI::C);
 
     pDialog->mBehavior |= ZWinDialog::eBehavior::Draggable | ZWinDialog::eBehavior::OKButton | ZWinDialog::eBehavior::CancelButton;

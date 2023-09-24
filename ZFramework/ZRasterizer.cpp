@@ -455,7 +455,7 @@ uint32_t SampleTexture(ZBuffer* pTexture, double fTexturePixelU, double fTexture
     }
 
     uint32_t nSamples = nSampleSubdivisions * nSampleSubdivisions;
-    uint32_t nFinalCol = ARGB(nFinalA / nSamples, nFinalR / nSamples, nFinalG / nSamples, nFinalB / nSamples);
+    uint32_t nFinalCol = ARGB((uint32_t)(nFinalA / nSamples), (uint32_t)(nFinalR / nSamples), (uint32_t)(nFinalG / nSamples), (uint32_t)(nFinalB / nSamples));
 
     return nFinalCol;
 }
