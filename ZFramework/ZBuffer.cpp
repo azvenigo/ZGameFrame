@@ -815,8 +815,13 @@ bool ZBuffer::Blt(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip, eAlphaB
 	else
 		rClip.SetRect(mSurfaceArea);
 
-	if (Clip(rClip, rSrcClipped, rDstClipped))
-		return BltNoClip(pSrc, rSrcClipped, rDstClipped, type);
+    if (Clip(pSrc, this, rSrcClipped, rDstClipped))
+    {
+        if (rSrcClipped.Height() > pSrc->GetArea().Height() || rSrcClipped.Width() > pSrc->GetArea().Width())
+            int stophere = 56;
+        return BltNoClip(pSrc, rSrcClipped, rDstClipped, type);
+    }
+
 	return false;
 }
 
@@ -953,12 +958,14 @@ bool ZBuffer::Colorize(uint32_t nH, uint32_t nS, ZRect* pRect)
 }
 
 
-void  ZBuffer::DrawRectAlpha(ZRect& rRect, uint32_t nCol)
+void  ZBuffer::DrawRectAlpha(ZRect rRect, uint32_t nCol)
 {
-    ZRect rSrcArea(mSurfaceArea);
+    // Bottom and right are inclusive, so -1
+    rRect.right--;
+    rRect.bottom--;
 
-    ZRect rClipped(rRect);
-    if (Clip(rSrcArea, rSrcArea, rClipped))
+    ZRect rClipped(rRect.left, rRect.top, rRect.right, rRect.bottom);  
+    if (Clip(rClipped))
     {
         int64_t nDstStride = mSurfaceArea.Width();
         int64_t nFillWidth = rClipped.Width();
@@ -968,7 +975,7 @@ void  ZBuffer::DrawRectAlpha(ZRect& rRect, uint32_t nCol)
         uint32_t* pDstBits;
 
         // draw top 
-        if (rRect.top > mSurfaceArea.top)   // if unclipped top is visible
+        if (rRect.top >= mSurfaceArea.top)   // if unclipped top is visible
         {
             pDstBits = (uint32_t*)(mpPixels + (rClipped.top * nDstStride) + rClipped.left);
             for (int64_t x = 0; x < nFillWidth; x++)
@@ -978,7 +985,7 @@ void  ZBuffer::DrawRectAlpha(ZRect& rRect, uint32_t nCol)
         }
 
         // draw left
-        if (rRect.left > mSurfaceArea.left) // if unclipped left is visible
+        if (rRect.left >= mSurfaceArea.left) // if unclipped left is visible
         {
             pDstBits = (uint32_t*)(mpPixels + (rClipped.top * nDstStride) + rClipped.left);
             for (int64_t y = 0; y < nFillHeight; y++)
@@ -1052,7 +1059,7 @@ bool ZBuffer::Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect)
 	int64_t   nOverhangDistance;  
 	ZRect	rBufferArea(fullDstRect);
 
-	//Clipping:
+	//Clip Dst
 	if((nOverhangDistance = dstRect.right - rBufferArea.right) > 0)
 	{
 		dstRect.right -= nOverhangDistance;
@@ -1085,16 +1092,84 @@ bool ZBuffer::Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect)
 	return true;
 }
 
+bool ZBuffer::Clip(const ZBuffer* pSrc, const ZBuffer* pDst, ZRect& rSrc, ZRect& rDst)
+{
+    int64_t   nOverhangDistance;
+    ZRect rSrcSurface(pSrc->mSurfaceArea);
+    ZRect rDstSurface(pDst->mSurfaceArea);
+
+
+    // rDst against rDstSurface 
+    // RIGHT 
+    if ((nOverhangDistance = rDst.right - rDstSurface.right) > 0)
+    {
+        rDst.right -= nOverhangDistance;
+        rSrc.right -= nOverhangDistance;
+    }
+
+    // LEFT  
+    if ((nOverhangDistance = rDstSurface.left - rDst.left) > 0)
+    {
+        rDst.left += nOverhangDistance;
+        rSrc.left += nOverhangDistance;
+    }
+
+    // BOTTOM  
+    if ((nOverhangDistance = rDst.bottom - rDstSurface.bottom) > 0)
+    {
+        rDst.bottom -= nOverhangDistance;
+        rSrc.bottom -= nOverhangDistance;
+    }
+
+    // TOP  
+    if ((nOverhangDistance = rDstSurface.top - rDst.top) > 0)
+    {
+        rDst.top += nOverhangDistance;
+        rSrc.top += nOverhangDistance;
+    }
+
+    // rSrc against rSrcSurface
+    if ((nOverhangDistance = rSrc.right - rSrcSurface.right) > 0)
+    {
+        rDst.right -= nOverhangDistance;
+        rSrc.right -= nOverhangDistance;
+    }
+
+    // LEFT  
+    if ((nOverhangDistance = rSrcSurface.left - rSrc.left) > 0)
+    {
+        rDst.left += nOverhangDistance;
+        rSrc.left += nOverhangDistance;
+    }
+
+    // BOTTOM  
+    if ((nOverhangDistance = rSrc.bottom - rSrcSurface.bottom) > 0)
+    {
+        rDst.bottom -= nOverhangDistance;
+        rSrc.bottom -= nOverhangDistance;
+    }
+
+    // TOP  
+    if ((nOverhangDistance = rSrcSurface.top - rSrc.top) > 0)
+    {
+        rDst.top += nOverhangDistance;
+        rSrc.top += nOverhangDistance;
+    }
+
+    return rSrc.Width() > 0 && rSrc.Height() > 0;
+}
+
+
 inline
 uint32_t ZBuffer::GetPixel(int64_t x, int64_t y)
 {
-	return *(mpPixels + y * (mSurfaceArea.Width()) + x);
+	return *(mpPixels + y * mSurfaceArea.right + x);
 }
 
 inline
 void ZBuffer::SetPixel(int64_t x, int64_t y, uint32_t nCol)
 {
-	*(mpPixels + y * mSurfaceArea.Width() + x) = nCol;
+	*(mpPixels + y * mSurfaceArea.right + x) = nCol;
 }
 
 bool ZBuffer::BltTiled(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, int64_t nStartX, int64_t nStartY, ZRect* pClip, eAlphaBlendType type)
@@ -1378,7 +1453,7 @@ void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRec
 	rLineRect.IntersectRect(/*&rLineRect, */&rDest);
 
 	uint32_t* pSurface = GetPixels();
-	int64_t nStride = mSurfaceArea.Width();
+	int64_t nStride = mSurfaceArea.right;
 
 	double fScanLine = (double) rLineRect.top;
 	double fIntersection;
@@ -1603,7 +1678,7 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 
 	TransformPoint(dTex, origin, -fAngle, fScale);     // This is the texture walking vector
 
-	int64_t      strideDiv2    = mSurfaceArea.Width();
+	int64_t      strideDiv2    = mSurfaceArea.right;
 	int64_t      strideSrcDiv2 = pSrc->GetArea().Width();
 	uint32_t*     pDestBits     = (uint32_t*)mpPixels+rDstActual.top*strideDiv2; //Points to left side of destination buffer at the current row.
 	uint32_t*     pSrcBits      = (uint32_t*)pSrc->GetPixels();
@@ -1652,8 +1727,8 @@ bool ZBuffer::BltScaled(ZBuffer* pSrc)
     int64_t srcWidth = pSrc->GetArea().Width();
     int64_t srcHeight = pSrc->GetArea().Height();
     uint32_t* destBuffer = mpPixels;
-    int64_t destWidth = mSurfaceArea.Width();
-    int64_t destHeight = mSurfaceArea.Height();
+    int64_t destWidth = mSurfaceArea.right;
+    int64_t destHeight = mSurfaceArea.right;
 
     double xScale = static_cast<double>(srcWidth) / destWidth;
     double yScale = static_cast<double>(srcHeight) / destHeight;
@@ -1725,4 +1800,109 @@ bool ZBuffer::BltScaled(ZBuffer* pSrc)
     }
 
     return true;
+}
+
+
+void ZBuffer::Blur(float sigma, ZRect* pRect)
+{
+    ZBuffer temp(this);
+
+    ZRect rArea(mSurfaceArea);
+    if (pRect)
+        rArea = *pRect;
+
+    int64_t w = rArea.Width();
+    int64_t h = rArea.Height();
+
+    // Calculate the size of the kernel based on sigma (standard deviation)
+    int64_t kernelSize = int64_t(6 * sigma) + 1;
+    if (kernelSize % 2 == 0) 
+    {
+        kernelSize++; // Ensure an odd-sized kernel for symmetry
+    }
+
+    // Calculate the radius of the kernel
+    int64_t kernelRadius = kernelSize / 2;
+
+    // Create a 1D Gaussian kernel
+    std::vector<float> kernel(kernelSize);
+    float sum = 0.0f;
+    for (int64_t i = 0; i < kernelSize; i++)
+    {
+        int64_t x = i - kernelRadius;
+        kernel[i] = expf(-(x * x) / (2 * sigma * sigma));
+        sum += kernel[i];
+    }
+
+    // Normalize the kernel
+    for (int64_t i = 0; i < kernelSize; i++)
+    {
+        kernel[i] /= sum;
+    }
+
+    // Perform horizontal convolution
+    for (int64_t y = rArea.top; y < rArea.bottom; y++)
+    {
+        for (int64_t x = rArea.left; x < rArea.right; x++)
+        {
+            float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
+
+            for (int64_t i = -kernelRadius; i <= kernelRadius; i++)
+            {
+                int64_t newX = x + i;
+                if (newX < 0) 
+                {
+                    newX = 0;
+                }
+                else if (newX >= w) 
+                {
+                    newX = w - 1;
+                }
+
+                uint32_t pixel = mpPixels[y * w + newX];
+                float weight = kernel[i + kernelRadius];
+
+                r += ((pixel >> 16) & 0xFF) * weight;
+                g += ((pixel >> 8) & 0xFF) * weight;
+                b += (pixel & 0xFF) * weight;
+                a += ((pixel >> 24) & 0xFF) * weight;
+            }
+
+            temp.mpPixels[y * w + x] = ((uint32_t(a) & 0xFF) << 24) |
+                ((uint32_t(r) & 0xFF) << 16) |
+                ((uint32_t(g) & 0xFF) << 8) |
+                (uint32_t(b) & 0xFF);
+        }
+    }
+
+    // Perform vertical convolution and store the result in the output buffer
+    for (int64_t x = 0; x < w; x++)
+    {
+        for (int64_t y = 0; y < h; y++)
+        {
+            float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
+
+            for (int64_t i = -kernelRadius; i <= kernelRadius; i++)
+            {
+                int64_t newY = y + i;
+                if (newY < 0)
+                    newY = 0;
+                else if (newY >= h) 
+                    newY = h - 1;
+
+                uint32_t pixel = temp.mpPixels[newY * w + x];
+                float weight = kernel[i + kernelRadius];
+
+                r += ((pixel >> 16) & 0xFF) * weight;
+                g += ((pixel >> 8) & 0xFF) * weight;
+                b += (pixel & 0xFF) * weight;
+                a += ((pixel >> 24) & 0xFF) * weight;
+            }
+
+            mpPixels[y * w + x] = ((uint32_t(a) & 0xFF) << 24) |
+                ((uint32_t(r) & 0xFF) << 16) |
+                ((uint32_t(g) & 0xFF) << 8) |
+                (uint32_t(b) & 0xFF);
+        }
+    }
 }

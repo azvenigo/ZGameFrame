@@ -1119,6 +1119,8 @@ bool ImageViewer::Init()
 
         mToggleUIHotkey = VK_TAB;
 
+        Clear();
+
         string sPersistedViewPath;
         if (gRegistry.Get("ZImageViewer", "image", sPersistedViewPath))
         {
@@ -1444,6 +1446,7 @@ void ImageViewer::UpdateControlPanel()
     filterButtonStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
     filterButtonStyle.fp.nHeight = nGroupSide / 3;
     filterButtonStyle.pos = ZGUI::C;
+    filterButtonStyle.wrap = true;
     filterButtonStyle.look.colTop = 0xff888888;
     filterButtonStyle.look.colBottom = 0xff888888;
 
@@ -1535,28 +1538,6 @@ void ImageViewer::UpdateControlPanel()
 
 
 
-    // Contest Button
-
-
-    rButton.right = rButton.left + rButton.Width() * 2;
-    rButton.OffsetRect(rButton.Width(), 0);
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "Contest";
-    pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetArea(rButton);
-    Sprintf(sMessage, "show_contest;target=%s", GetTargetName().c_str());
-    pBtn->SetMessage(sMessage);
-    mpPanel->ChildAdd(pBtn);
-
-
-
-
-    
-
-
-
-
 
 
 
@@ -1569,8 +1550,8 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mSVGImage.Load(sAppPath + "/res/fullscreen.svg");
     pBtn->msWinGroup = "View";
     pBtn->SetArea(rButton);
-    Sprintf(sMessage, "toggle_fullscreen");
-    pBtn->SetMessage(sMessage);
+    pBtn->SetTooltip("Toggle Fullscreen");
+    pBtn->SetMessage("toggle_fullscreen");
     pBtn->msWinGroup = "View";
     mpPanel->ChildAdd(pBtn);
 
@@ -1580,7 +1561,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->SetMessages(ZMessage("invalidate", this), ZMessage("invalidate", this));
     pCheck->mSVGImage.Load(sAppPath + "/res/subpixel.svg");
     pCheck->SetArea(rButton);
-    pCheck->SetTooltip("Sub-pixel sampling");
+    pCheck->SetTooltip("Quality Render");
     pCheck->msWinGroup = "View";
     mpPanel->ChildAdd(pCheck);
 
@@ -1594,6 +1575,24 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetMessage(ZMessage("show_help", this));
     pBtn->msWinGroup = "View";
     mpPanel->ChildAdd(pBtn);
+
+
+    // Contest Button
+
+
+    rButton.right = rButton.left + rButton.Width() * 4;
+    rButton.OffsetRect(-rButton.Width()-gSpacer*2, 0);
+    pBtn = new ZWinSizablePushBtn();
+    pBtn->mCaption.sText = "Contest";
+    pBtn->mCaption.style = gStyleButton;
+    pBtn->mCaption.style.pos = ZGUI::C;
+    pBtn->SetTooltip("Rank images in pairs");
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "show_contest;target=%s", GetTargetName().c_str());
+    pBtn->SetMessage(sMessage);
+    mpPanel->ChildAdd(pBtn);
+
+
 }
 
 bool ImageViewer::OnParentAreaChange()
@@ -1941,6 +1940,8 @@ void ImageViewer::Clear()
     mImageArray.clear();
     mCurrentFolder.clear();
     mRankedArray.clear();
+    mToBeDeletedImageArray.clear();
+    mFavImageArray.clear();
     mRankedImageMetadata.clear();
     mViewingIndex = {};
     mLastAction = kNone;
@@ -2049,7 +2050,7 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
     if (!ValidIndex(mViewingIndex))
         SetFirstImage();
 
-    UpdateCaptions();
+    UpdateUI();
 
     return true;
 }
@@ -2342,7 +2343,7 @@ void ImageViewer::UpdateCaptions()
     mpWinImage->mCaptionMap["rank"].Clear();
 
     string sCaption;
-    Sprintf(sCaption, "%d favs", mFavImageArray.size());
+    Sprintf(sCaption, "Favorites\n(%d)", mFavImageArray.size());
 
     // need to make sure panel isn't being reset while updating these
     mPanelMutex.lock();
@@ -2352,7 +2353,7 @@ void ImageViewer::UpdateCaptions()
         mpFavsFilterButton->mbEnabled = !mFavImageArray.empty();
     }
 
-    Sprintf(sCaption, "%d del", mToBeDeletedImageArray.size());
+    Sprintf(sCaption, "To Be Del\n(%d)", mToBeDeletedImageArray.size());
     if (mpDelFilterButton)
     {
         mpDelFilterButton->mCaption.sText = sCaption;
@@ -2360,7 +2361,7 @@ void ImageViewer::UpdateCaptions()
     }
 
  
-    Sprintf(sCaption, "%d all", mImageArray.size());
+    Sprintf(sCaption, "All\n(%d)", mImageArray.size());
     if (mpAllFilterButton)
         mpAllFilterButton->mCaption.sText = sCaption;
 

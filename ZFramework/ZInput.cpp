@@ -171,7 +171,7 @@ void ZInput::CheckForMouseOverNewWindow()
     }
 }
 
-uint32_t    kMouseHoverInitialTime = 333;
+uint32_t    kMouseHoverInitialTime = 200;
 
 void ZInput::CheckMouseForHover()
 {

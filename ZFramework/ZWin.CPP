@@ -640,6 +640,31 @@ bool  ZWin::Paint()
 }               
 
 
+void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrcAbs, ZRect rDst, ZWin* pThis)
+{
+    if (!mbInitted || !rSrcAbs.Overlaps(mAreaAbsolute) || pThis == this)
+        return;
+
+    ZRect rSrc(rSrcAbs);
+    rSrc.OffsetRect(-mAreaAbsolute.left, -mAreaAbsolute.top);
+    if (!ZBuffer::Clip(mpTransformTexture.get(), pDest.get(), rSrc, rDst))
+        return;
+
+    if (mbVisible)
+    {
+        mpTransformTexture.get()->GetMutex().lock();
+        pDest->Blt(mpTransformTexture.get(), rSrc, rDst);
+        mpTransformTexture.get()->GetMutex().unlock();
+    }
+
+    for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
+    {
+        ZWin* pChild = *it;
+        pChild->RenderToBuffer(pDest, rSrc, rDst, pThis);
+    }
+}
+
+
 bool ZWin::ComputeVisibility()
 {
 	if (!mbVisible)
@@ -1065,7 +1090,6 @@ bool ZWinDialog::Shutdown()
 bool ZWinDialog::Paint()
 {
     mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch);
-
     return false;
 }
 

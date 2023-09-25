@@ -80,9 +80,20 @@ bool ZWinLabel::Paint()
     if (!mbInvalid)
         return false;
 
-    if (ARGB_A(mStyle.bgCol) > 5)
+    if (ARGB_A(mStyle.bgCol) > 0xf0)
     {
         mpTransformTexture->Fill(mStyle.bgCol);
+    }
+    else if (ARGB_A(mStyle.bgCol) > 0x0f)
+    {
+        // Translucent fill.... (expensive render but should not be frequent or large)
+        if (mpParentWin)
+        {
+            mpParentWin->RenderToBuffer(mpTransformTexture, mAreaAbsolute, mAreaToDrawTo, this);
+            mpTransformTexture->Blur(4);
+        }
+        mpTransformTexture->FillAlpha(mStyle.bgCol);
+        mpTransformTexture->DrawRectAlpha(mpTransformTexture->GetArea(), 0xff000000 | mStyle.bgCol);
     }
     else
     {
@@ -110,25 +121,36 @@ bool ZWinLabel::Paint()
 
 ZWinLabel* ZWinLabel::ShowTooltip(ZWin* pMainWin, const std::string& sTooltip, const ZGUI::Style& style)
 {
-    ZWinLabel* pWin = new ZWinLabel(ZWinLabel::CloseOnMouseOut);
+    bool bToolTipAlreadyExists = true;
+    ZWinLabel* pWin = (ZWinLabel*)pMainWin->GetChildWindowByWinName("winlabel_tooltip");
+
+    if (!pWin)
+    {
+        bToolTipAlreadyExists = false;
+        pWin = new ZWinLabel(ZWinLabel::CloseOnMouseOut);
+    }
+
+    pWin->msWinName = "winlabel_tooltip";
     pWin->msText = sTooltip;
     pWin->mStyle = style;
+    pWin->mIdleSleepMS = 100;
+
 
     ZRect rTextArea;
     tZFontPtr pTooltipFont = gpFontSystem->GetFont(pWin->mStyle.fp);
     rTextArea = pTooltipFont->StringRect(sTooltip);
-    rTextArea.InflateRect(pTooltipFont->Height() / 4, pTooltipFont->Height() / 4);
+    rTextArea.InflateRect(style.paddingH, style.paddingV);
 
 
-    // ensure the tooltip is entirely visible on the window
+    // ensure the tooltip is entirely visible on the window + a little padding
     ZPoint pt(gInput.lastMouseMove.x - rTextArea.Width() + pTooltipFont->Height() / 4, gInput.lastMouseMove.y - rTextArea.Height() + pTooltipFont->Height() / 4);
-    limit<int64_t>(pt.x, grFullArea.left, grFullArea.right - rTextArea.Width());
-    limit<int64_t>(pt.y, grFullArea.top, grFullArea.bottom - rTextArea.Height());
+    limit<int64_t>(pt.x, grFullArea.left+gSpacer, grFullArea.right - rTextArea.Width()- gSpacer);
+    limit<int64_t>(pt.y, grFullArea.top+ gSpacer, grFullArea.bottom - rTextArea.Height()- gSpacer);
 
     rTextArea.MoveRect(pt);
     pWin->SetArea(rTextArea);
 
-    if (pMainWin->ChildAdd(pWin))
+    if (bToolTipAlreadyExists || pMainWin->ChildAdd(pWin))
         return pWin;
 
     delete pWin;

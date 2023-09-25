@@ -46,8 +46,6 @@ public:
 
     void    BeginRender();
 
-	void	Render(tZBufferPtr pTexture, ZRect& rAreaToDrawTo);
-
     void    EndRender();
 
 

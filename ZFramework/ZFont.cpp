@@ -706,6 +706,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
     int64_t nLines = 1;
     if (pStyle->wrap)
         nLines = CalculateNumberOfLines(rTextLine.Width(), (uint8_t*)sText.data(), sText.length());
+
     ZGUI::ePosition lineStyle = ZGUI::LB;
 
 	// Calculate the top line 
@@ -803,7 +804,7 @@ int64_t ZFont::CalculateLettersThatFitOnLine(int64_t nLineWidth, const uint8_t* 
         if(c >= 0)
 		    nWidthSoFar += (int64_t) mCharDescriptors[c].nCharWidth + 1 + GetSpaceBetweenChars(*pChars, *(pChars+1));
 
-        if (nWidthSoFar > nLineWidth)
+        if (nWidthSoFar > nLineWidth || c == '\n')
         {
             if (nChars == 0)    // needs to be a minimum of one, even clipped
                 return 1;

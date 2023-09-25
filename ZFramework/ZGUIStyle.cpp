@@ -15,7 +15,7 @@ int64_t         gSpacer;
 ZFontParams     gDefaultTitleFont("Gadugi", 40);
 ZFontParams     gDefaultTextFont("Gadugi", 20);
 
-ZGUI::Style gStyleTooltip(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::C, 0, 0, gDefaultTextAreaFill);
+ZGUI::Style gStyleTooltip(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, 8, 8, 0xaa000088);
 ZGUI::Style gStyleCaption(ZFontParams("Gadugi", 36, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, 0, 0, gDefaultDialogFill);
 ZGUI::Style gStyleButton(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, 0, 0, gDefaultDialogFill);
 ZGUI::Style gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, 0, 0, gDefaultDialogFill);
@@ -50,8 +50,14 @@ namespace ZGUI
 
         gStyleToggleChecked.fp.nHeight = std::max<int64_t>(gM, 14);
         gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(gM, 14);
-        gStyleTooltip.fp.nHeight = std::max<int64_t>(gM/3, 14);
+        gStyleTooltip.fp.nHeight = std::max<int64_t>((int32_t)(gM/1.5), 14);
+        gStyleTooltip.paddingH = (int32_t)gSpacer;
+        gStyleTooltip.paddingV = (int32_t)gSpacer;
+
+
         gStyleCaption.fp.nHeight = std::max<int64_t>(gM, 14);
+
+
         gStyleGeneralText.fp.nHeight = std::max<int64_t>(gM/2, 14);
         gDefaultGroupingStyle.fp.nHeight = (int32_t)(gM*2/5);
         gDefaultGroupingStyle.paddingH = (int32_t)(gM*2/7);
