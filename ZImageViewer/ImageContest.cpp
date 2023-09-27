@@ -32,6 +32,11 @@ ImageContest::ImageContest()
     mpWinImage[kRight] = nullptr;
     mImageMeta[kLeft] = nullptr;
     mImageMeta[kRight] = nullptr;
+    mpChooseBtn[kLeft] = nullptr;
+    mpChooseBtn[kRight] = nullptr;
+
+
+
     mpRatedImagesStrip = nullptr;
     mToggleUIHotkey = 0;
     mbShowUI = true;
@@ -87,6 +92,9 @@ void ImageContest::UpdateUI()
     {
         mpWinImage[kLeft]->SetArea(rImageArea);
         mpWinImage[kRight]->SetVisible(false);
+
+        mpChooseBtn[kLeft]->SetVisible(false);
+        mpChooseBtn[kRight]->SetVisible(false);
     }
     else
     {
@@ -95,6 +103,16 @@ void ImageContest::UpdateUI()
         rImageArea.OffsetRect(rImageArea.Width(), 0);
         mpWinImage[kRight]->SetArea(rImageArea);
         mpWinImage[kRight]->SetVisible();
+
+        ZRect rChooseBtn(gM * 4, gM * 4);
+        rChooseBtn = ZGUI::Arrange(rChooseBtn, mpWinImage[kLeft]->GetArea(), ZGUI::RB);
+
+        mpChooseBtn[kLeft]->SetArea(rChooseBtn);
+        mpChooseBtn[kLeft]->SetVisible();
+
+        rChooseBtn = ZGUI::Arrange(rChooseBtn, mpWinImage[kRight]->GetArea(), ZGUI::LB);
+        mpChooseBtn[kRight]->SetArea(rChooseBtn);
+        mpChooseBtn[kRight]->SetVisible();
     }
 
     mCurrentFolderImageMeta.sort([](const ImageMetaEntry& a, const ImageMetaEntry& b) -> bool { return a.elo > b.elo; });
@@ -113,7 +131,13 @@ void ImageContest::UpdateUI()
 
 bool ImageContest::OnMouseDownL(int64_t x, int64_t y)
 {
-    if (mpWinImage[kLeft]->GetArea().PtInRect(x, y))
+    if (mState == kShowingSingle)
+    {
+        PickRandomPair();
+        UpdateUI();
+    }
+
+/*    if (mpWinImage[kLeft]->GetArea().PtInRect(x, y))
     {
         if (mState == kSelectingFromPair)
         {
@@ -128,7 +152,7 @@ bool ImageContest::OnMouseDownL(int64_t x, int64_t y)
     else if (mpWinImage[kRight]->GetArea().PtInRect(x, y))
     {
         return SelectWinner(kRight);
-    }
+    }*/
 
     return ZWin::OnMouseDownL(x, y);
 }
@@ -214,6 +238,14 @@ bool ImageContest::HandleMessage(const ZMessage& message)
     else if (sType == "reset_contest")
     {
         ResetContest();
+        return true;
+    }
+    else if (sType == "select_winner")
+    {
+        if (message.GetParam("side") == "left")
+            SelectWinner(kLeft);
+        else
+            SelectWinner(kRight);
         return true;
     }
     else if (sType == "select")
@@ -332,7 +364,7 @@ bool ImageContest::Init()
         mpWinImage[kLeft]->SetArea(rImageArea);
         mpWinImage[kLeft]->mFillColor = 0xff000000;
         mpWinImage[kLeft]->mZoomHotkey = VK_MENU;
-        mpWinImage[kLeft]->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kNotifyOnClick;
+        mpWinImage[kLeft]->mBehavior |= ZWinImage::kHotkeyZoom | ZWinImage::kScrollable | ZWinImage::kNotifyOnClick;
         mpWinImage[kLeft]->mpTable = new ZGUI::ZTable();
         ChildAdd(mpWinImage[kLeft]);
 
@@ -341,10 +373,24 @@ bool ImageContest::Init()
         mpWinImage[kRight]->SetArea(rImageArea);
         mpWinImage[kRight]->mFillColor = 0xff000000;
         mpWinImage[kRight]->mZoomHotkey = VK_MENU;
-        mpWinImage[kRight]->mBehavior |= ZWinImage::kHotkeyZoom | ZWinImage::kNotifyOnClick;
+        mpWinImage[kRight]->mBehavior |= ZWinImage::kHotkeyZoom | ZWinImage::kScrollable;
         mpWinImage[kRight]->mpTable = new ZGUI::ZTable();
         ChildAdd(mpWinImage[kRight]);
 
+
+        string sAppPath = gRegistry["apppath"];
+
+        mpChooseBtn[kLeft] = new ZWinSizablePushBtn();
+        mpChooseBtn[kLeft]->mSVGImage.Load(sAppPath + "/res/left.svg");
+        mpChooseBtn[kLeft]->SetTooltip("Choose Left");
+        mpChooseBtn[kLeft]->SetMessage(ZMessage("select_winner;side=left", this));
+        ChildAdd(mpChooseBtn[kLeft]);
+
+        mpChooseBtn[kRight] = new ZWinSizablePushBtn();
+        mpChooseBtn[kRight]->mSVGImage.Load(sAppPath + "/res/right.svg");
+        mpChooseBtn[kRight]->SetTooltip("Choose Right");
+        mpChooseBtn[kRight]->SetMessage(ZMessage("select_winner;side=right", this));
+        ChildAdd(mpChooseBtn[kRight]);
 
         ZGUI::Style style = gStyleCaption;
         style.fp.nHeight = gM * 3;

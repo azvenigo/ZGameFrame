@@ -26,6 +26,9 @@ WinTopWinners::WinTopWinners()
 
 bool WinTopWinners::Init()
 {
+    if (mbInitted)
+        return true;
+
     UpdateUI();
     return ZWin::Init();
 }

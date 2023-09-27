@@ -1728,7 +1728,7 @@ bool ZBuffer::BltScaled(ZBuffer* pSrc)
     int64_t srcHeight = pSrc->GetArea().Height();
     uint32_t* destBuffer = mpPixels;
     int64_t destWidth = mSurfaceArea.right;
-    int64_t destHeight = mSurfaceArea.right;
+    int64_t destHeight = mSurfaceArea.bottom;
 
     double xScale = static_cast<double>(srcWidth) / destWidth;
     double yScale = static_cast<double>(srcHeight) / destHeight;

@@ -51,7 +51,7 @@ mnTransformOutTime(kDefaultTransformTime),
 mbShutdownFlag(false),
 mIdleSleepMS(kDefaultIdleTime)
 {
-    Sprintf(msWinName, "win_%x", this); // default to unique window name
+//    Sprintf(msWinName, "win_%x", this); // default to unique window name
 
 //    cout << "ZWin::ZWin() : msWinName:" << msWinName << "\n" << std::flush;
 

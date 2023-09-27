@@ -1609,6 +1609,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
         {
             const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
             mFontMap[pLoaded->GetFontParams()] = pLoaded;
+            assert(pLoaded);
             return pLoaded;
         }
 
@@ -1656,7 +1657,10 @@ tZFontPtr ZFontSystem::GetFont(const std::string& sFontName, int32_t nFontSize)
 tZFontPtr ZFontSystem::GetFont(const ZFontParams& params)
 {
     if (params.sFacename.empty() || params.nHeight == 0)
+    {
+        ZDEBUG_OUT("Error with font params\n");
         return nullptr;
+    }
 
     const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
     auto findIt = mFontMap.find(params);

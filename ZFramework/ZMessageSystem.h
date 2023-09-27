@@ -168,7 +168,7 @@ private:
 	tNameToMessageTargetMap			mNameToMessageTargetMap;
 
 	bool    						mbProccessing;
-	int64_t							mnUniqueTargetNameCount;
+	std::atomic<int64_t>            mnUniqueTargetNameCount;
 };
 
 extern ZMessageSystem				gMessageSystem;
