@@ -58,7 +58,7 @@ public:
 private:
 
     int64_t mnBorderWidth;
-    int64_t mnControlHeight;
+//    int64_t mnControlHeight;
     ZRect   mrNextControl;       // area for next control to be added
 };
 

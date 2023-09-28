@@ -15,7 +15,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 using namespace std;
-
+/*
 
 ///////////////////////////////////////////////////////////////////////////////
 ZWinBtn::ZWinBtn() :
@@ -188,7 +188,7 @@ bool	ZWinPushBtn::SetImage(tZBufferPtr pImage )
 	return true;
 }
 
-bool  ZWinPushBtn::OnMouseDownL(int64_t /*x*/, int64_t /*y*/)
+bool  ZWinPushBtn::OnMouseDownL(int64_t , int64_t)
 {
 	SetCapture();
 	mDrawState = kDown;
@@ -241,7 +241,7 @@ bool ZWinPushBtn::OnMouseMove(int64_t x, int64_t y)
 
 	return true;
 }
-
+*/
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -395,7 +395,7 @@ ZWinSizablePushBtn::ZWinSizablePushBtn()
     mrEdge = grStandardButtonEdge;
 
 
-	mbTransformable     = false;
+//	mbTransformable     = false;
 }
 
 ZWinSizablePushBtn::~ZWinSizablePushBtn()
@@ -445,13 +445,7 @@ bool ZWinSizablePushBtn::Paint()
     if (!mpTransformTexture.get())
         return false;
 
-    // experimentally blt parent's buffer to test transparency
-    if (mpParentWin && mpParentWin->IsVisible())
-    {
-//        cout << "mpParentWin:" << (uint64_t)mpParentWin << "\n" << std::flush;
-        tZBufferPtr parentBuffer = mpParentWin->GetTransformTexture();
-        mpTransformTexture.get()->Blt(parentBuffer.get(), mAreaToDrawTo, mpTransformTexture.get()->GetArea());
-    }
+    PaintFromParent();
    
 	// Draw the button image
     tZBufferPtr pBufferToUse;
@@ -464,7 +458,7 @@ bool ZWinSizablePushBtn::Paint()
     
 	ZASSERT(pBufferToUse);
 
-    mpTransformTexture.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch);
+    mpTransformTexture.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch/*|ZBuffer::kEdgeBltSides_Stretch*/);
 
     int64_t nOffset = max((int)mCaption.style.fp.nHeight / 16, (int)1);
     ZRect rCaption = mAreaToDrawTo;

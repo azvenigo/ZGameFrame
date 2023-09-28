@@ -24,11 +24,12 @@ public:
         kRenderFlag_ReadyToRender   = 1 
     };
 
-    enum eBltEdgeMiddleType
+    enum eBltEdgeFlags
     {
         kEdgeBltMiddle_None         = 0,
         kEdgeBltMiddle_Tile         = 1,
-        kEdgeBltMiddle_Stretch      = 2
+        kEdgeBltMiddle_Stretch      = 2,
+        kEdgeBltSides_Stretch       = 4,
     };
 
 
@@ -76,6 +77,7 @@ public:
     // Drawing
     virtual bool            Fill(uint32_t nCol, ZRect* pRect = nullptr);			// fills a rect with nCol, forcing alpha to ARGB_A(nCol)
 	virtual bool            FillAlpha(uint32_t nCol, ZRect* pRect = nullptr);	// fills a rect with nCol, blending based on ARGB_A(nCol)
+    virtual bool            FillGradient(uint32_t nCol[4], ZRect* pRect = nullptr);     // fills gradient...color order is TL->TR->BR->BL
 
     virtual bool            Colorize(uint32_t nH, uint32_t nS, ZRect* pRect = nullptr);        // changes hue to color
     virtual void            Blur(float sigma, ZRect* pRect = nullptr);
@@ -88,7 +90,7 @@ public:
 	virtual bool            BltAlpha(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, uint32_t nAlpha, ZRect* pClip = NULL, eAlphaBlendType type = kAlphaDest);
 
 	virtual bool            BltTiled(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, int64_t nStartX, int64_t nStartY, ZRect* pClip = NULL, eAlphaBlendType type = kAlphaDest);
-	virtual bool            BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, eBltEdgeMiddleType middleType = kEdgeBltMiddle_Tile, ZRect* pClip = NULL, eAlphaBlendType type = kAlphaDest);
+	virtual bool            BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, uint32_t flags = kEdgeBltMiddle_Tile, ZRect* pClip = NULL, eAlphaBlendType type = kAlphaDest);
 
 	virtual bool            BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle, double fScale, ZRect* pClip = NULL);
 

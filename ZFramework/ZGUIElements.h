@@ -14,6 +14,7 @@ namespace ZGUI
     class TextBox
     {
     public:
+        TextBox() { Clear(); }
         bool        Paint(ZBuffer* pDst);
         static void Paint(ZBuffer* pDst, tTextboxMap& textBoxMap);
         void        Clear()
@@ -35,6 +36,7 @@ namespace ZGUI
     class SVGImageBox
     {
     public:
+        SVGImageBox() { Clear(); }
         bool    Load(const std::string& sFilename);
 
         bool    Paint(ZBuffer* pDst);

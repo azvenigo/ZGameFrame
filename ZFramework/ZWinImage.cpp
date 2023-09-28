@@ -26,6 +26,7 @@ ZWinImage::ZWinImage()
     mZoomHotkey = 0;
     nSubsampling = 0;
     mpTable = nullptr;
+    mFillColor = 0;
 
     mBehavior = eBehavior::kNone;
 }

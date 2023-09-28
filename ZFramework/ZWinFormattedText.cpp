@@ -348,10 +348,12 @@ bool ZWinFormattedDoc::Paint()
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
 
-	if (ARGB_A(mDialogStyle.bgCol) > 5)
+    if (ARGB_A(mDialogStyle.bgCol) > 5)
         mpTransformTexture.get()->Fill(mDialogStyle.bgCol, &rLocalDocBorderArea);
     else if (mbDrawBorder)
         mpTransformTexture.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalDocBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mArea);
+    else
+        PaintFromParent();
 
 	ZRect rClip(rLocalDocArea);
 

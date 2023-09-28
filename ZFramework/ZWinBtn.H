@@ -14,7 +14,7 @@
 class ZBuffer;
 class ZFont;
 
-class ZWinBtn : public ZWin
+/*class ZWinBtn : public ZWin
 {
 public:
 	ZWinBtn();
@@ -90,7 +90,7 @@ protected:
     tPushBtnState	mDrawState;
 };
 
-
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Sizable push button

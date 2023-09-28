@@ -664,6 +664,15 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrcAbs, ZRect rDst, ZWin* pT
     }
 }
 
+void ZWin::PaintFromParent()
+{
+    if (mpParentWin && mpParentWin->IsVisible())
+    {
+        tZBufferPtr parentBuffer = mpParentWin->GetTransformTexture();
+        mpTransformTexture.get()->Blt(parentBuffer.get(), mArea, mpTransformTexture.get()->GetArea());
+    }
+}
+
 
 bool ZWin::ComputeVisibility()
 {
@@ -840,7 +849,7 @@ bool ZWin::ReceiveMessage(const ZMessage& message)
 {
 	const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
 
-	mMessages.push_back(std::move(message));
+	mMessages.push_back(message);
 
     mWorkToDoCV.notify_one();
 
@@ -1089,7 +1098,15 @@ bool ZWinDialog::Shutdown()
 
 bool ZWinDialog::Paint()
 {
-    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch);
+    uint32_t cols[4];
+    cols[0] = 0xff444444;
+    cols[1] = 0xff888888;
+    cols[2] = 0xff444444;
+    cols[3] = 0xff888888;
+
+
+    mpTransformTexture.get()->FillGradient(cols);
+    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_None);
     return false;
 }
 

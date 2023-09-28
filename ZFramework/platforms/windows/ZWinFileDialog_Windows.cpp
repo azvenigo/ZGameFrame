@@ -67,11 +67,13 @@ namespace ZWinFileDialog
                     hr = pFileOpen->GetResult(&pItem);
                     if (SUCCEEDED(hr))
                     {
-                        PWSTR pszFilePath;
+                        PWSTR pszFilePath = nullptr;
                         hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-
-                        wstring wideFilename(pszFilePath);
-                        sFilenameResult = SH::wstring2string(wideFilename);
+                        if (SUCCEEDED(hr) && pszFilePath)
+                        {
+                            wstring wideFilename(pszFilePath);
+                            sFilenameResult = SH::wstring2string(wideFilename);
+                        }
 
                         pItem->Release();
                         bSuccess = true;
@@ -153,8 +155,11 @@ namespace ZWinFileDialog
                             PWSTR pszFilePath;
                             pItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath);
 
-                            wstring wideFilename(pszFilePath);
-                            resultFilenames.push_back(SH::wstring2string(wideFilename));
+                            if (SUCCEEDED(hr) && pszFilePath)
+                            {
+                                wstring wideFilename(pszFilePath);
+                                resultFilenames.push_back(SH::wstring2string(wideFilename));
+                            }
                             pItem->Release();
                             bSuccess = true;
                         }
@@ -219,8 +224,11 @@ namespace ZWinFileDialog
                         PWSTR pszFilePath;
                         hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
 
-                        wstring wideFilename(pszFilePath);
-                        sFilenameResult = SH::wstring2string(wideFilename);
+                        if (SUCCEEDED(hr) && pszFilePath)
+                        {
+                            wstring wideFilename(pszFilePath);
+                            sFilenameResult = SH::wstring2string(wideFilename);
+                        }
 
                         pItem->Release();
                         bSuccess = true;
@@ -290,8 +298,11 @@ namespace ZWinFileDialog
                         PWSTR pszFilePath;
                         hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
 
-                        wstring wideFilename(pszFilePath);
-                        sFilenameResult = SH::wstring2string(wideFilename);
+                        if (SUCCEEDED(hr) && pszFilePath)
+                        {
+                            wstring wideFilename(pszFilePath);
+                            sFilenameResult = SH::wstring2string(wideFilename);
+                        }
 
                         pItem->Release();
                         bSuccess = true;

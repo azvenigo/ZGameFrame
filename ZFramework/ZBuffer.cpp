@@ -817,8 +817,6 @@ bool ZBuffer::Blt(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip, eAlphaB
 
     if (Clip(pSrc, this, rSrcClipped, rDstClipped))
     {
-        if (rSrcClipped.Height() > pSrc->GetArea().Height() || rSrcClipped.Width() > pSrc->GetArea().Width())
-            int stophere = 56;
         return BltNoClip(pSrc, rSrcClipped, rDstClipped, type);
     }
 
@@ -917,6 +915,30 @@ bool ZBuffer::FillAlpha(uint32_t nCol, ZRect* pRect)
 
 	return true;
 }
+
+bool ZBuffer::FillGradient(uint32_t nCol[4], ZRect* pRect)
+{
+    ZRect rDst;
+    if (pRect)
+    {
+        rDst.SetRect(*pRect);
+        if (!Clip(rDst))
+            return false;
+    }
+    else
+        rDst.SetRect(mSurfaceArea);
+
+    tColorVertexArray array;
+    gRasterizer.RectToVerts(rDst, array);
+
+    array[0].mColor = nCol[0];
+    array[1].mColor = nCol[1];
+    array[2].mColor = nCol[2];
+    array[3].mColor = nCol[3];
+
+    return gRasterizer.Rasterize(this, array);
+}
+
 
 bool ZBuffer::Colorize(uint32_t nH, uint32_t nS, ZRect* pRect)
 {
@@ -1243,7 +1265,7 @@ bool ZBuffer::BltTiled(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, int64_t nStartX,
 //   dBL   |  dB   |  dBR   |              
 //         |       |        |               
 //                                        
-bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, eBltEdgeMiddleType middleType, ZRect* pClip, eAlphaBlendType type)
+bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, uint32_t flags, ZRect* pClip, eAlphaBlendType type)
 {
 	ZASSERT(pSrc);
 
@@ -1307,44 +1329,64 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, eBltEdgeMidd
 
 	ZRect rdM(dl, dt, dr, db);
 
-	bool bBlitTop		= rdTL.Height()>0;
-	bool bBlitLeft		= rdTL.Width()>0;
-	bool bBlitBottom	= rdBR.Height()>0;
-	bool bBlitRight		= rdBR.Width()>0;
+	bool bDrawTop		= rdTL.Height()>0;
+	bool bDrawLeft		= rdTL.Width()>0;
+	bool bDrawBottom	= rdBR.Height()>0;
+	bool bDrawRight		= rdBR.Width()>0;
 
-	if (bBlitTop && bBlitLeft)
+	if (bDrawTop && bDrawLeft)
 		Blt(pSrc, rTL, rdTL, &rClip, type);
 
-	if (bBlitTop && bBlitRight)
+	if (bDrawTop && bDrawRight)
 		Blt(pSrc, rTR, rdTR, &rClip, type);
 
-	if (bBlitBottom && bBlitLeft)
+	if (bDrawBottom && bDrawLeft)
 		Blt(pSrc, rBL, rdBL, &rClip, type);
 
-	if (bBlitBottom && bBlitRight)
+	if (bDrawBottom && bDrawRight)
 		Blt(pSrc, rBR, rdBR, &rClip, type);
 
-	if (bBlitTop)
-		BltTiled(pSrc, rT, rdT, 0, 0, &rClip, type);
 
-	if (bBlitLeft)
-		BltTiled(pSrc, rL, rdL, 0, 0, &rClip, type);
+    if ((flags & kEdgeBltSides_Stretch) != 0)
+    {
+        if (bDrawTop)
+            gRasterizer.RasterizeSimple(this, pSrc, rdT, rT, &rClip);
 
-	if (bBlitRight)
-		BltTiled(pSrc, rR, rdR, 0, 0, &rClip, type);
+        if (bDrawLeft)
+            gRasterizer.RasterizeSimple(this, pSrc, rdL, rL, &rClip);
 
-	if (bBlitBottom)
-		BltTiled(pSrc, rB, rdB, 0, 0, &rClip, type);
+        if (bDrawRight)
+            gRasterizer.RasterizeSimple(this, pSrc, rdR, rR, &rClip);
+
+        if (bDrawBottom)
+            gRasterizer.RasterizeSimple(this, pSrc, rdB, rB, &rClip);
+    }
+    else
+    {
+        if (bDrawTop)
+            BltTiled(pSrc, rT, rdT, 0, 0, &rClip, type);
+
+        if (bDrawLeft)
+            BltTiled(pSrc, rL, rdL, 0, 0, &rClip, type);
+
+        if (bDrawRight)
+            BltTiled(pSrc, rR, rdR, 0, 0, &rClip, type);
+
+        if (bDrawBottom)
+            BltTiled(pSrc, rB, rdB, 0, 0, &rClip, type);
+    }
 
     if (rdM.Width() > 0 && rdM.Height() > 0)
     {
-        if (middleType == kEdgeBltMiddle_Tile)
+        if ((flags&kEdgeBltMiddle_Tile) != 0)
         {
             BltTiled(pSrc, rM, rdM, 0, 0, &rClip, type);
         }
-        else if (middleType == kEdgeBltMiddle_Stretch)
+        else if ((flags&kEdgeBltMiddle_Stretch) != 0)
         {
-            tUVVertexArray middleVerts;
+            gRasterizer.RasterizeSimple(this, pSrc, rdM, rEdgeRect, &rClip);
+
+/*            tUVVertexArray middleVerts;
             gRasterizer.RectToVerts(rdM, middleVerts);
 
             middleVerts[0].u = (double)rEdgeRect.left / (double) w;
@@ -1359,7 +1401,7 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, eBltEdgeMidd
             middleVerts[3].u = (double)rEdgeRect.left / (double)w;
             middleVerts[3].v = (double)rEdgeRect.bottom / (double)h;
 
-            gRasterizer.Rasterize(this, pSrc, middleVerts, &rClip);
+            gRasterizer.Rasterize(this, pSrc, middleVerts, &rClip);*/
         }
     }
 

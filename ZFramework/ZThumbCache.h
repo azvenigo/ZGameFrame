@@ -21,7 +21,7 @@ typedef std::map<size_t, ZThumbEntry> tFilenameToThumbEntry;
 class ZThumbCache
 {
 public:
-    ZThumbCache() : mMaxThumbs(kMaxThumbs)
+    ZThumbCache() : mMaxThumbs(kMaxThumbs), mbInitted(false)
     {
     }
 

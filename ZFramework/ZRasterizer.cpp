@@ -626,6 +626,29 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, tColorVertexArray& vertexArra
     return true;
 }
 
+bool ZRasterizer::RasterizeSimple(ZBuffer* pDestination, ZBuffer* pTexture, ZRect rDest, ZRect rSrc, ZRect* pClip)
+{
+    tUVVertexArray verts;
+    gRasterizer.RectToVerts(rDest, verts);
+
+    double w = (double)pTexture->GetArea().Width();
+    double h = (double)pTexture->GetArea().Height();
+
+    verts[0].u = (double)rSrc.left / w;
+    verts[0].v = (double)rSrc.top / h;
+
+    verts[1].u = (double)rSrc.right / w;
+    verts[1].v = (double)rSrc.top /h;
+
+    verts[2].u = (double)rSrc.right / w;
+    verts[2].v = (double)rSrc.bottom / h;
+
+    verts[3].u = (double)rSrc.left / w;
+    verts[3].v = (double)rSrc.bottom / h;
+
+    return gRasterizer.Rasterize(pDestination, pTexture, verts, pClip);
+}
+
 
 ZRect ZRasterizer::GetBoundingRect(tUVVertexArray& vertexArray)
 {

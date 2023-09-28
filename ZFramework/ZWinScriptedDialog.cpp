@@ -58,9 +58,10 @@ static char THIS_FILE[] = __FILE__;
 
 ZWinScriptedDialog::ZWinScriptedDialog()
 {
-	mbTransformable = true;
+	//mbTransformable = true;
 	mbDrawDefaultBackground = true;
 	mbFillBackground = false;
+    mnBackgroundColor = 0;
 }
 
 ZWinScriptedDialog::~ZWinScriptedDialog()
@@ -203,8 +204,8 @@ bool ZWinScriptedDialog::ExecuteScript(string sDialogScript)
 
 	// Window Attributes
 	msWinName = pDialogNode->GetAttribute(ksElementWinName);
-	if (pDialogNode->HasAttribute(ksTransformable))
-		mbTransformable	= SH::ToBool(pDialogNode->GetAttribute(ksTransformable));
+//	if (pDialogNode->HasAttribute(ksTransformable))
+//		mbTransformable	= SH::ToBool(pDialogNode->GetAttribute(ksTransformable));
 
 	if (pDialogNode->HasAttribute(ksTransformIn))
 	{
