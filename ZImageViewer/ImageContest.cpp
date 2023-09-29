@@ -424,7 +424,7 @@ bool ImageContest::Init()
 
 void ImageContest::UpdateControlPanel()
 {
-    int64_t nControlPanelSide = gM * 2.5;
+    int64_t nControlPanelSide = (int64_t)(gM * 2.5);
     limit<int64_t>(nControlPanelSide, 40, 88);
 
 

@@ -669,7 +669,8 @@ void ZWin::PaintFromParent()
     if (mpParentWin && mpParentWin->IsVisible())
     {
         tZBufferPtr parentBuffer = mpParentWin->GetTransformTexture();
-        mpTransformTexture.get()->Blt(parentBuffer.get(), mArea, mpTransformTexture.get()->GetArea());
+        const std::lock_guard<std::recursive_mutex> surfaceLock(parentBuffer->GetMutex());
+        mpTransformTexture.get()->Blt(parentBuffer.get(), mArea, mpTransformTexture.get()->GetArea(), nullptr, ZBuffer::kAlphaSource);
     }
 }
 

@@ -445,6 +445,9 @@ bool ZWinSizablePushBtn::Paint()
     if (!mpTransformTexture.get())
         return false;
 
+    if (mpParentWin && !mpParentWin->mbVisible)
+        return true;
+
     PaintFromParent();
    
 	// Draw the button image
@@ -458,7 +461,7 @@ bool ZWinSizablePushBtn::Paint()
     
 	ZASSERT(pBufferToUse);
 
-    mpTransformTexture.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch/*|ZBuffer::kEdgeBltSides_Stretch*/);
+    mpTransformTexture.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch|ZBuffer::kEdgeBltSides_Stretch);
 
     int64_t nOffset = max((int)mCaption.style.fp.nHeight / 16, (int)1);
     ZRect rCaption = mAreaToDrawTo;

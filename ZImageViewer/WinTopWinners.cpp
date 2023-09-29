@@ -106,7 +106,7 @@ void WinTopWinners::UpdateUI()
 
 bool WinTopWinners::OnMouseDownL(int64_t x, int64_t y)
 {
-    int64_t i = 0;
+    size_t i = 0;
     tImageMetaList::iterator it = pMetaList->begin();
     for (auto& r : mThumbRects)
     {

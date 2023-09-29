@@ -1350,16 +1350,16 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, uint32_t fla
     if ((flags & kEdgeBltSides_Stretch) != 0)
     {
         if (bDrawTop)
-            gRasterizer.RasterizeSimple(this, pSrc, rdT, rT, &rClip);
+            gRasterizer.RasterizeWithAlphaSimple(this, pSrc, rdT, rT, &rClip);
 
         if (bDrawLeft)
-            gRasterizer.RasterizeSimple(this, pSrc, rdL, rL, &rClip);
+            gRasterizer.RasterizeWithAlphaSimple(this, pSrc, rdL, rL, &rClip);
 
         if (bDrawRight)
-            gRasterizer.RasterizeSimple(this, pSrc, rdR, rR, &rClip);
+            gRasterizer.RasterizeWithAlphaSimple(this, pSrc, rdR, rR, &rClip);
 
         if (bDrawBottom)
-            gRasterizer.RasterizeSimple(this, pSrc, rdB, rB, &rClip);
+            gRasterizer.RasterizeWithAlphaSimple(this, pSrc, rdB, rB, &rClip);
     }
     else
     {

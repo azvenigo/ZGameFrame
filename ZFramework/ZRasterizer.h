@@ -17,7 +17,8 @@ public:
 
     // helper functions
     bool    RasterizeSimple(ZBuffer* pDestination, ZBuffer* pTexture, ZRect rDest, ZRect rSrc, ZRect* pClip = NULL);
-	ZRect   GetBoundingRect(tUVVertexArray& vertexArray);
+    bool    RasterizeWithAlphaSimple(ZBuffer* pDestination, ZBuffer* pTexture, ZRect rDest, ZRect rSrc, ZRect* pClip = NULL, uint8_t nAlpha = 255);
+    ZRect   GetBoundingRect(tUVVertexArray& vertexArray);
     void    RectToVerts(const ZRect& r, tUVVertexArray& vertexArray);     // returns the default vertex array with LTRB and UVs at 0.0-1.0
     void    RectToVerts(const ZRect& r, tColorVertexArray& vertexArray);     // returns the default vertex array with LTRB
 

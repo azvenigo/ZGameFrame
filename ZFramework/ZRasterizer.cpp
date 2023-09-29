@@ -564,7 +564,7 @@ bool ZRasterizer::Rasterize(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexA
 			int64_t nTextureX = (int64_t) (fTextureU * fTextureW);
 			int64_t nTextureY = (int64_t) (fTextureV * fTextureH);
 			uint32_t nSourceCol = *(pSourcePixels + nTextureY*nTextureStride + nTextureX);
-			*pDestPixels = nSourceCol;
+			*pDestPixels = (*pDestPixels&0xff000000)|(nSourceCol&0x00ffffff);
 			pDestPixels++;
 
 			fTextureU += fTextureDU;
@@ -648,6 +648,30 @@ bool ZRasterizer::RasterizeSimple(ZBuffer* pDestination, ZBuffer* pTexture, ZRec
 
     return gRasterizer.Rasterize(pDestination, pTexture, verts, pClip);
 }
+
+bool ZRasterizer::RasterizeWithAlphaSimple(ZBuffer* pDestination, ZBuffer* pTexture, ZRect rDest, ZRect rSrc, ZRect* pClip, uint8_t nAlpha)
+{
+    tUVVertexArray verts;
+    gRasterizer.RectToVerts(rDest, verts);
+
+    double w = (double)pTexture->GetArea().Width();
+    double h = (double)pTexture->GetArea().Height();
+
+    verts[0].u = (double)rSrc.left / w;
+    verts[0].v = (double)rSrc.top / h;
+
+    verts[1].u = (double)rSrc.right / w;
+    verts[1].v = (double)rSrc.top / h;
+
+    verts[2].u = (double)rSrc.right / w;
+    verts[2].v = (double)rSrc.bottom / h;
+
+    verts[3].u = (double)rSrc.left / w;
+    verts[3].v = (double)rSrc.bottom / h;
+
+    return gRasterizer.RasterizeWithAlpha(pDestination, pTexture, verts, pClip, nAlpha);
+}
+
 
 
 ZRect ZRasterizer::GetBoundingRect(tUVVertexArray& vertexArray)
