@@ -17,6 +17,7 @@
 #include "ZTimer.h"
 #include "ImageMeta.h"
 #include "WinTopWinners.h"
+#include "ZGraphicSystem.h"
 
 
 using namespace std;
@@ -1182,8 +1183,8 @@ void ImageViewer::LimitIndex()
 
 void ImageViewer::UpdateControlPanel()
 {
-    int64_t nControlPanelSide = gM * 2;
-    limit<int64_t>(nControlPanelSide, 64, 128);
+    int64_t nControlPanelSide = gM * 2.5;
+    limit<int64_t>(nControlPanelSide, 40, 88);
 
 
     const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
@@ -1258,15 +1259,6 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
 
     string sAppPath = gRegistry["apppath"];
-
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mSVGImage.Load(sAppPath+"/res/exit.svg");
-    pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("quit", this));
-    mpPanel->ChildAdd(pBtn);
-
-    rButton.OffsetRect(rButton.Width() + gSpacer*2, 0);
-    
 
     int32_t nButtonPadding = (int32_t)(rButton.Width() / 8);
     
@@ -1542,9 +1534,26 @@ void ImageViewer::UpdateControlPanel()
 
 
 
+
+
+    if (gGraphicSystem.mbFullScreen)
+    {
+        ZRect rExit(nControlPanelSide, nControlPanelSide);
+        rExit = ZGUI::Arrange(rExit, mAreaToDrawTo, ZGUI::RT);
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->mSVGImage.Load(sAppPath + "/res/exit.svg");
+        pBtn->SetTooltip("Exit");
+        pBtn->SetArea(rExit);
+        pBtn->SetMessage(ZMessage("quit", this));
+        mpPanel->ChildAdd(pBtn);
+
+    }
+
     rButton.SetRect(0, 0, nGroupSide, nGroupSide);
-    rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gSpacer/2);
-    rButton.OffsetRect(-gSpacer/2, 0);
+    rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gSpacer / 2);
+    rButton.OffsetRect(-gSpacer * 2, 0);
+    rButton.OffsetRect(-nControlPanelSide, 0);
+
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/fullscreen.svg");

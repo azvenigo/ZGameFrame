@@ -27,13 +27,8 @@ void InterpretError(HRESULT hr)
 ZGraphicSystem::ZGraphicSystem()
 {
 	mbInitted				= false;
-#ifdef USE_D3D 
-	mpD3D					= NULL;
-	mpD3DDevice				= NULL;
-	ZeroMemory(&mPresentParams, sizeof(mPresentParams));
-#endif
 	mpScreenBuffer			= NULL;
-  
+    mbFullScreen             = true;  
 }
 
 ZGraphicSystem::~ZGraphicSystem()
@@ -49,41 +44,6 @@ bool ZGraphicSystem::Init()
 	// GDI+ Init
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	Gdiplus::GdiplusStartup(&mpGDIPlusToken, &gdiplusStartupInput, NULL);
-#endif
-
-
-#ifdef USE_D3D 
-	HRESULT hr;
-	mpD3D = Direct3DCreate9( D3D_SDK_VERSION );
-	if (!mpD3D)
-		return false;
-
-	// Set up the structure used to create the D3DDevice
-
-	mPresentParams.Windowed						= !mbInitSettingFullScreen;
-	mPresentParams.BackBufferCount				= 1;
-	mPresentParams.BackBufferFormat				= D3DFMT_X8R8G8B8;
-	mPresentParams.BackBufferWidth				= mrSurfaceArea.Width();
-	mPresentParams.BackBufferHeight				= mrSurfaceArea.Height();
-	mPresentParams.hDeviceWindow				= mhWnd;
-	mPresentParams.SwapEffect					= D3DSWAPEFFECT_COPY;
-	mPresentParams.FullScreen_RefreshRateInHz	= D3DPRESENT_RATE_DEFAULT;
-	mPresentParams.PresentationInterval			= D3DPRESENT_INTERVAL_IMMEDIATE;
-	mPresentParams.Flags						= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-
-	hr = mpD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, mhWnd,	D3DCREATE_HARDWARE_VERTEXPROCESSING, &mPresentParams, &mpD3DDevice);
-
-	if (!mpD3DDevice)
-	{
-		hr = mpD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_REF, mhWnd,	D3DCREATE_SOFTWARE_VERTEXPROCESSING, &mPresentParams, &mpD3DDevice);
-	}
-
-	if (!mpD3DDevice)
-	{
-		InterpretError(hr);
-		CEASSERT(false);
-		return false;
-	}
 #endif
 
 	mpScreenBuffer = new ZScreenBuffer();
@@ -135,40 +95,6 @@ bool ZGraphicSystem::HandleModeChanges()
 		delete mpScreenBuffer;
 		mpScreenBuffer = NULL;
 	}
-
-#ifdef USE_D3D 
-	if (mpD3DDevice)
-	{
-		mpD3DDevice->Release();
-		mpD3DDevice = NULL;
-	}
-
-	// Set up the structure used to create the D3DDevice
-	mPresentParams.Windowed						= !mbInitSettingFullScreen;
-	mPresentParams.BackBufferCount				= 1;
-	mPresentParams.BackBufferFormat				= D3DFMT_X8R8G8B8;
-	mPresentParams.BackBufferWidth				= mrSurfaceArea.Width();
-	mPresentParams.BackBufferHeight				= mrSurfaceArea.Height();
-	mPresentParams.hDeviceWindow				= mhWnd;
-	mPresentParams.SwapEffect					= D3DSWAPEFFECT_COPY;
-	mPresentParams.FullScreen_RefreshRateInHz	= D3DPRESENT_RATE_DEFAULT;
-	mPresentParams.PresentationInterval			= D3DPRESENT_INTERVAL_IMMEDIATE;
-	mPresentParams.Flags						= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-
-	HRESULT hr = mpD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, mhWnd,	D3DCREATE_HARDWARE_VERTEXPROCESSING, &mPresentParams, &mpD3DDevice);
-
-	if (!mpD3DDevice)
-	{
-		hr = mpD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_REF, mhWnd,	D3DCREATE_SOFTWARE_VERTEXPROCESSING, &mPresentParams, &mpD3DDevice);
-	}
-
-	if (!mpD3DDevice)
-	{
-		InterpretError(hr);
-		CEASSERT(false);
-		return false;
-	}
-#endif
 
 	mpScreenBuffer = new ZScreenBuffer();
 	mpScreenBuffer->Init(mrSurfaceArea.Width(), mrSurfaceArea.Height(), this);

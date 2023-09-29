@@ -110,6 +110,9 @@ bool WinTopWinners::OnMouseDownL(int64_t x, int64_t y)
     tImageMetaList::iterator it = pMetaList->begin();
     for (auto& r : mThumbRects)
     {
+        if (i >= pMetaList->size())
+            break;
+
         if (r.PtInRect(x, y))
         {
             // post

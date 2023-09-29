@@ -33,13 +33,9 @@ using namespace std;
 
 ATOM					MyRegisterClass(HINSTANCE, LPTSTR);
 BOOL					WinInitInstance(int argc, char* argv[]);
-bool                    gbFullScreen = true;
 extern bool             gbGraphicSystemResetNeeded; 
 extern bool             gbApplicationExiting = false;
 ZRect                   grFullArea;
-//ZPoint                  gInitWindowSize;
-//ZPoint                  gWindowedModeOffset;    // for switching between full/windowed
-
 ZRect                   grWindowedArea;
 ZRect                   grFullScreenArea;
 
@@ -74,7 +70,7 @@ public:
     {
         if (message.GetType() == "toggle_fullscreen")
         {
-            SwitchFullscreen(!gbFullScreen);
+            SwitchFullscreen(!gGraphicSystem.mbFullScreen);
         }
         return true;
     }
@@ -109,7 +105,6 @@ int main(int argc, char* argv[])
 
     if (!ZFrameworkApp::Initialize(argc, argv, userDataPath))
         return FALSE;
-    //cout << "***AFTER SandboxInitialize. \n";
 
 
     uint64_t nTimeStamp = 0;
@@ -358,8 +353,8 @@ BOOL WinInitInstance(int argc, char* argv[])
     if (!gRegistry.Get("appwin", "full_b", grFullScreenArea.bottom))
         gRegistry.SetDefault("appwin", "full_b", grFullScreenArea.bottom);
 
-    if (!gRegistry.Get("appwin", "fullscreen", gbFullScreen))
-        gRegistry.SetDefault("appwin", "fullscreen", gbFullScreen);
+    if (!gRegistry.Get("appwin", "fullscreen", gGraphicSystem.mbFullScreen))
+        gRegistry.SetDefault("appwin", "fullscreen", gGraphicSystem.mbFullScreen);
 
 
     // Finally if any command line overrides
@@ -368,7 +363,7 @@ BOOL WinInitInstance(int argc, char* argv[])
     int64_t height = 0;
     parser.RegisterParam(CLP::ParamDesc("width", &width, CLP::kNamed));
     parser.RegisterParam(CLP::ParamDesc("height", &height, CLP::kNamed));
-    parser.RegisterParam(CLP::ParamDesc("fullscreen", &gbFullScreen, CLP::kNamed));
+    parser.RegisterParam(CLP::ParamDesc("fullscreen", &gGraphicSystem.mbFullScreen, CLP::kNamed));
     parser.Parse(argc, argv);
     if (parser.GetParamWasFound("width"))
         grWindowedArea.right = grWindowedArea.left + width;
@@ -379,7 +374,7 @@ BOOL WinInitInstance(int argc, char* argv[])
 
 
 
-    if (gbFullScreen)
+    if (gGraphicSystem.mbFullScreen)
     {
         ghWnd = CreateWindow(szAppClass, szAppClass, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
         grFullArea.SetRect(0, 0, grFullScreenArea.Width(), grFullScreenArea.Height());
@@ -413,14 +408,14 @@ BOOL WinInitInstance(int argc, char* argv[])
 
 void SwitchFullscreen(bool bFullscreen)
 {
-    if (gbFullScreen == bFullscreen)
+    if (gGraphicSystem.mbFullScreen == bFullscreen)
         return;
 
-    gbFullScreen = bFullscreen;
+    gGraphicSystem.mbFullScreen = bFullscreen;
 
 //    PAINTSTRUCT ps;
 //    HDC hdc = BeginPaint(ghWnd, &ps);
-    if (gbFullScreen)
+    if (gGraphicSystem.mbFullScreen)
     {
         MONITORINFO mi;
         mi.cbSize = sizeof(mi);
@@ -467,7 +462,7 @@ void HandleWindowSizeChanged()
 
     RECT rW;
     GetWindowRect(ghWnd, &rW);
-    if (gbFullScreen)
+    if (gGraphicSystem.mbFullScreen)
     {
         grFullScreenArea.left = rW.left;
         grFullScreenArea.top = rW.top;
@@ -506,7 +501,7 @@ void HandleWindowSizeChanged()
         grFullArea.SetRect(0, 0, rC.right, rC.bottom);
         ZGUI::ComputeSizes();
 
-        gRegistry.Set("appwin", "fullscreen", gbFullScreen);
+        gRegistry.Set("appwin", "fullscreen", gGraphicSystem.mbFullScreen);
 
 
         gpGraphicSystem->HandleModeChanges();
@@ -533,8 +528,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_GETMINMAXINFO:
     {
         LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-        lpMMI->ptMinTrackSize.x = 1200;
-        lpMMI->ptMinTrackSize.y = 768;
+        lpMMI->ptMinTrackSize.x = 1600;
+        lpMMI->ptMinTrackSize.y = 1024;
     }
     break;
     case WM_WINDOWPOSCHANGED:
@@ -597,7 +592,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             else if (wParam == 'f' || wParam == 'F')
             {
-                SwitchFullscreen(!gbFullScreen);
+                SwitchFullscreen(!gGraphicSystem.mbFullScreen);
             }
         }
         break;
@@ -606,7 +601,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         gInput.OnKeyDown((uint32_t)wParam);
         if (wParam == VK_RETURN && gInput.IsKeyDown(VK_MENU))  // alt-enter
         {
-            SwitchFullscreen(!gbFullScreen);
+            SwitchFullscreen(!gGraphicSystem.mbFullScreen);
         }
 #ifdef _WIN32
         else if (wParam == 'L' && gInput.IsKeyDown(VK_CONTROL))

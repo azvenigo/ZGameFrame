@@ -133,7 +133,8 @@ bool ImageMeta::Load(const std::filesystem::path& imagelist)
 
         cout << "Read ImageMetaEntry: filename:" << entry.filename << " size:" << entry.filesize << " wins/contests:" << entry.wins << "/" << entry.contests << " elo:" << entry.elo << "\n";
 
-        mSizeToMetaLists[(uint16_t)nImageSizes].emplace_back(std::move(entry));
+        if (entry.contests > 0)
+            mSizeToMetaLists[(uint16_t)nImageSizes].emplace_back(std::move(entry));
     }
     assert(mSizeToMetaLists[(uint16_t)nImageSizes].size() == entries);
     if (mSizeToMetaLists[(uint16_t)nImageSizes].size() != entries)
@@ -176,9 +177,9 @@ bool ImageMeta::SaveBucket(int64_t size)
 
     tImageMetaList& metaList = (*findIt).second;
     tImageMetaList filteredList;
-    for (auto& entry : metaList)    // remove entries for missing files
+    for (auto& entry : metaList)    // remove entries for missing files or that have had not had contests
     {
-        if (filesystem::exists(entry.filename))
+        if (filesystem::exists(entry.filename) && entry.contests > 0)
         {
             filteredList.push_back(entry);
         }

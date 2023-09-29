@@ -424,8 +424,8 @@ bool ImageContest::Init()
 
 void ImageContest::UpdateControlPanel()
 {
-    int64_t nControlPanelSide = gM * 2;
-//    limit<int64_t>(nControlPanelSide, 64, 128);
+    int64_t nControlPanelSide = gM * 2.5;
+    limit<int64_t>(nControlPanelSide, 40, 88);
 
 
     const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
@@ -646,7 +646,7 @@ bool ImageContest::ScanFolder(std::filesystem::path folder)
             //ZDEBUG_OUT("Found image:", filePath, "\n");
 
             ImageMetaEntry localEntry(gImageMeta.Entry(filePath.path().string(), filesystem::file_size(filePath)));
-            if (localEntry.elo > 0)
+            if (localEntry.contests > 0)
                 mCurrentFolderImageMeta.emplace_back(std::move(localEntry));
         }
     }
@@ -726,8 +726,17 @@ bool ImageContest::SelectWinner(int leftOrRight)
 
     if (leftOrRight == kLeft || leftOrRight == kRight)
     {
+        if (mImageMeta[kLeft]->contests++ == 0)
+            mImageMeta[kLeft]->elo = 1000;
+
+        if (mImageMeta[kRight]->contests++ == 0)
+            mImageMeta[kRight]->elo = 1000;
+
+
         mImageMeta[kLeft]->contests++;
         mImageMeta[kRight]->contests++;
+
+
 
         mImageMeta[leftOrRight]->wins++;
 
@@ -746,8 +755,6 @@ bool ImageContest::SelectWinner(int leftOrRight)
             fActualRight = 1;
         }
 
-        assert(mImageMeta[kLeft]->elo > 0);
-        assert(mImageMeta[kRight]->elo > 0);
 
 
         mImageMeta[kLeft]->elo += (int32_t)(fWeight * (fActualLeft - fExpectedLeft));

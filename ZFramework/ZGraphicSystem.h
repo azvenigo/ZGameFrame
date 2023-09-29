@@ -32,7 +32,6 @@ public:
 	void 					Shutdown();
 
 	// Init settings
-	void 					SetFullScreen(bool setting) 	{ mbInitSettingFullScreen = setting; }
 	void 					SetArea(ZRect& r)           	{ mrSurfaceArea = r; }
     double                  GetAspectRatio()                { return (double)mrSurfaceArea.Width() / (double)mrSurfaceArea.Height(); }
 	ZScreenBuffer*			GetScreenBuffer() 				{ return mpScreenBuffer; }
@@ -53,22 +52,13 @@ public:
 
 	bool					HandleModeChanges();
 
+    bool                    mbFullScreen;
+
 protected:
 	bool                    mbInitted;
-
 	ZScreenBuffer*			mpScreenBuffer;
-#ifdef USE_D3D 
-	IDirect3D9*				mpD3D;
-	IDirect3DDevice9*		mpD3DDevice;
-	D3DPRESENT_PARAMETERS	mPresentParams;
-#endif
-
 	ZRect                   mrSurfaceArea;
 
-//	tRectList				mDirtyRects;
-
-	// Init settings
-	bool                    mbInitSettingFullScreen;
 };
 
 extern ZGraphicSystem gGraphicSystem;
