@@ -91,6 +91,9 @@ bool ZGraphicSystem::HandleModeChanges()
 {
 	if (mpScreenBuffer)
 	{
+        if (mpScreenBuffer->GetArea() == mrSurfaceArea)
+            return true;
+
 		mpScreenBuffer->Shutdown();
 		delete mpScreenBuffer;
 		mpScreenBuffer = NULL;

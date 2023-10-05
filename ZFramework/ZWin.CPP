@@ -167,7 +167,7 @@ void ZWin::TransformIn()
 
 		switch (mTransformIn)
 		{
-		case kFade:			start.mnAlpha = 0;					                            break;
+		case kFade:			start.mnAlpha = 0;                                  break;
 		case kSlideLeft:	start.mPosition.x = rp.right;		                break;
 		case kSlideRight:	start.mPosition.x = rp.left - mAreaLocal.Width();    break;
 		case kSlideUp:		start.mPosition.y = rp.bottom;		                break;
@@ -198,7 +198,7 @@ void ZWin::TransformOut()
         RenderToBuffer(renderedBuf, mAreaLocal, mAreaLocal, nullptr);
 
 		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf);
-		ZTransformation trans(mCurTransform);
+		ZTransformation trans(ZPoint(mAreaInParent.left, mAreaInParent.top));
 
 		pImage->StartTransformation(trans);
 
@@ -217,7 +217,6 @@ void ZWin::TransformOut()
 		case kSlideDown:	trans.mPosition.y = rp.bottom;                       break;
 		}
 
-        Sprintf(trans.msCompletionMessage, "set_visible;visible=1;target=%s", GetTargetName().c_str());    // set visible on completion
         pImage->AddTransformation(trans,mnTransformOutTime);
 
 		gAnimator.AddObject(pImage);
@@ -312,6 +311,10 @@ bool ZWin::ChildAdd(ZWin* child, bool bAutoShow)
 		ZASSERT(false);
 		return false;
 	}
+
+    // If transforming in, let the animation end set visibility
+    if (child->mTransformIn != kNone)
+        bAutoShow = false;
 
     child->SetVisible(bAutoShow);
 
@@ -648,7 +651,7 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrc, ZRect rDst, ZWin* pThis
     if (!ZBuffer::Clip(mpSurface.get(), pDest.get(), rSrc, rDst))
         return;
 
-    if (mbVisible)
+//    if (mbVisible)
     {
         Paint();
         mpSurface.get()->GetMutex().lock();
@@ -723,7 +726,8 @@ void ZWin::ComputeAreas()
     for (auto child : mChildList)
         child->ComputeAreas();
 
-    gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
+    if (gpGraphicSystem && gpGraphicSystem->GetScreenBuffer())
+        gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
 }
 
 bool ZWin::SetCapture()

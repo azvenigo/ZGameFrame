@@ -133,8 +133,8 @@ void ImageViewer::UpdateUI()
 
     ZRect rImageArea(mAreaLocal);
 
-    if (mpPanel && mpPanel->IsVisible())
-        rImageArea.top = mpPanel->GetArea().bottom;
+    if (mpPanel && mbShowUI)
+        rImageArea.top = mpPanel->GetArea().Height();
 
     if (mpRatedImagesStrip)
     {
@@ -541,7 +541,14 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
 
 void ImageViewer::ShowHelpDialog()
 {
-    ZWinDialog* pHelp = new ZWinDialog();
+    ZWinDialog* pHelp = (ZWinDialog*)GetChildWindowByWinName("ImageViewerHelp");
+    if (pHelp)
+    {
+        pHelp->SetVisible();
+        return;
+    }
+
+    pHelp = new ZWinDialog();
     pHelp->msWinName = "ImageViewerHelp";
     pHelp->mbAcceptsCursorMessages = true;
     pHelp->mbAcceptsFocus = true;
@@ -582,7 +589,6 @@ void ImageViewer::ShowHelpDialog()
     pForm->mDialogStyle.bgCol = 0;
     pForm->mbAcceptsCursorMessages = false;
     pHelp->ChildAdd(pForm);
-    ChildAdd(pHelp);
     pHelp->Arrange(ZGUI::C, mAreaLocal);
 
     pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text);
@@ -627,6 +633,7 @@ void ImageViewer::ShowHelpDialog()
 
 
     pForm->Invalidate();
+    ChildAdd(pHelp);
 
 
 }
@@ -1198,7 +1205,18 @@ void ImageViewer::UpdateControlPanel()
             bShow = true;
 
         mpPanel->mbHideOnMouseExit = !bShow;
-        mpPanel->SetVisible(bShow);
+        
+        if (bShow && !mpPanel->mbVisible)
+        {
+            mpPanel->mTransformIn = kSlideDown;
+            mpPanel->TransformIn();
+        }
+        else if (!bShow && mpPanel->mbVisible)
+        {
+            mpPanel->mTransformOut = kSlideUp;
+            mpPanel->TransformOut();
+        }
+
         return;
     }
 
@@ -1611,7 +1629,7 @@ bool ImageViewer::OnParentAreaChange()
     if (!mpSurface)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
+//    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
     SetArea(mpParentWin->GetArea());
 
     ZWin::OnParentAreaChange();
