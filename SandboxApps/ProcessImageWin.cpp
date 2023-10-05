@@ -83,7 +83,7 @@ cProcessImageWin::~cProcessImageWin()
 
 bool cProcessImageWin::RemoveImage(const std::string& sFilename)
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
 
     for (auto pWin : mChildImageWins)
@@ -103,7 +103,7 @@ bool cProcessImageWin::RemoveImage(const std::string& sFilename)
 
 bool cProcessImageWin::ClearImages()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     for (auto pWin : mChildImageWins)
     {
@@ -125,7 +125,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
     pScreenBuffer->EnableRendering(false);
 
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 //    mImagesToProcess.clear();
 
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
@@ -1095,12 +1095,12 @@ void cProcessImageWin::ResetResultsBuffer()
 
     // Arrange all thumbnails
     double fImageAspect = (double)mrIntersectionWorkArea.Width() / (double)mrIntersectionWorkArea.Height();
-    int64_t nImageWidth = mAreaToDrawTo.Width() / mChildImageWins.size();
+    int64_t nImageWidth = mAreaLocal.Width() / mChildImageWins.size();
     int64_t nImageHeight = (int64_t)(nImageWidth / fImageAspect);
 
-    if (nImageHeight > mAreaToDrawTo.Height() / 4)  // max out at 25% of the window
+    if (nImageHeight > mAreaLocal.Height() / 4)  // max out at 25% of the window
     {
-        nImageHeight = mAreaToDrawTo.Height() / 4;
+        nImageHeight = mAreaLocal.Height() / 4;
         nImageWidth = (int64_t)(nImageHeight * fImageAspect);
     }
 
@@ -1353,9 +1353,9 @@ bool cProcessImageWin::Paint()
     if (!mbInvalid)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
-    mpTransformTexture.get()->Fill(0xff000000);
+    mpSurface.get()->Fill(0xff000000);
 
 	return ZWin::Paint();
 }

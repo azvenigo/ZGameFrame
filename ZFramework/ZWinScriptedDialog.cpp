@@ -96,7 +96,7 @@ bool ZWinScriptedDialog::Init()
 
 			string sCaption = pBtn->mCaption.sText;
 			int64_t nSize = pBtn->mCaption.style.Font()->StringWidth(sCaption);
-			ZASSERT(nSize < mAreaToDrawTo.Width());
+			ZASSERT(nSize < mAreaLocal.Width());
 
 			if (nSize > nLargestCaptionSize)
 				nLargestCaptionSize = nSize;
@@ -111,13 +111,13 @@ bool ZWinScriptedDialog::Init()
 
 		int64_t nButtonWidth = nLargestCaptionSize;
 
-		int64_t nButtonsPerRow = (mArea.Width()) / (nButtonWidth);
+		int64_t nButtonsPerRow = (mAreaInParent.Width()) / (nButtonWidth);
 
 		// If there are fewer buttons than can fit.... use this value
 		if (nButtonsPerRow > (int64_t) mArrangedMessageBoxButtonList.size())
 			nButtonsPerRow = (int64_t) mArrangedMessageBoxButtonList.size();
 
-		int64_t nActualPaddingRoom = mArea.Width() - (nButtonsPerRow * nButtonWidth);
+		int64_t nActualPaddingRoom = mAreaInParent.Width() - (nButtonsPerRow * nButtonWidth);
 
 		int64_t nPixelsBetweenButtons = nActualPaddingRoom / (nButtonsPerRow+1); // calculate the spaces.... nNumButtons+1
 
@@ -138,20 +138,20 @@ bool ZWinScriptedDialog::Init()
 			nXPos += rButtonArea.Width() + nPixelsBetweenButtons;     // next x offset
 
 			// If the button won't fit on this line
-			if (nXPos + rButtonArea.Width() > mArea.Width())
+			if (nXPos + rButtonArea.Width() > mAreaInParent.Width())
 			{
 				// Advance to the next row of buttons
 				nYPos += kButtonMeasure + nFontSize*kPadding;
 				nXPos = nPixelsBetweenButtons;
 
-				ZASSERT(nYPos < mArea.Height() - kButtonMeasure*2);    // assert that it will fit in the window
+				ZASSERT(nYPos < mAreaInParent.Height() - kButtonMeasure*2);    // assert that it will fit in the window
 			}
 		}
 
 		// Now move all of the buttons down to the bottom of the window
 		int64_t nButtonRows = (mArrangedMessageBoxButtonList.size() + nButtonsPerRow - 1) / nButtonsPerRow;
 
-		int64_t nYOffset = mArea.Height() - kPadding*2 - kButtonMeasure - (kButtonMeasure) * nButtonRows;
+		int64_t nYOffset = mAreaInParent.Height() - kPadding*2 - kButtonMeasure - (kButtonMeasure) * nButtonRows;
 		for (it = mArrangedMessageBoxButtonList.begin(); it != mArrangedMessageBoxButtonList.end(); it++)
 		{
 			ZWinSizablePushBtn* pBtn = *it;
@@ -164,7 +164,7 @@ bool ZWinScriptedDialog::Init()
 	mbAcceptsCursorMessages = true;
 
 	if (mbFillBackground)
-		mpTransformTexture->Fill(mnBackgroundColor);
+		mpSurface->Fill(mnBackgroundColor);
 
 	return ZWin::Init();
 }
@@ -178,14 +178,14 @@ bool ZWinScriptedDialog::Paint()
 {
 	if (!mbInvalid)
 		return false;
-    if (!mpTransformTexture)
+    if (!mpSurface)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface->GetMutex());
    
     // Draw the dialog edge
 	if (mbDrawDefaultBackground)
-		mpTransformTexture->Fill(gDefaultDialogFill);
+		mpSurface->Fill(gDefaultDialogFill);
 	return ZWin::Paint();
 }
 

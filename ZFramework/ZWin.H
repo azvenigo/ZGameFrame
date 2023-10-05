@@ -65,7 +65,7 @@ public:
 public:
 
     virtual void		SetArea(const ZRect& newArea);
-    const ZRect&        GetArea() const { return mArea; }
+    const ZRect&        GetArea() const { return mAreaInParent; }
 	
 //	virtual void		SetSize(int64_t width, int64_t height);
 //	virtual void		SetArea(int64_t l,int64_t t,int64_t r,int64_t b);
@@ -84,8 +84,6 @@ public:
 	
 	virtual void		SetMouseDownPos(int64_t mouseX,  int64_t mouseY);
 	virtual void		GetMouseDownPos(int64_t& mouseX, int64_t& mouseY);
-	
-	virtual void		CalcAbsoluteArea();
 	
 	// IMessageTarget
 	virtual bool		ReceiveMessage(const ZMessage& message);
@@ -137,8 +135,7 @@ public:
 	virtual void		Invalidate();		// sets invalid flag used for windows that may not require redrawing every frame
     virtual void        InvalidateChildren();
 
-	virtual void		SetAreaToDrawTo();
-	virtual void		SetAreaToDrawToRecursive();
+	virtual void		ComputeAreas();
 	
 	virtual bool		ComputeVisibility();		// Add my own area to ZScreenBuffer's ScreenRect container, then call all children (that will be on top of me) recursively to do the same
 
@@ -168,15 +165,15 @@ protected:
 
 
 protected:
-	ZRect   						mAreaAbsolute;
-	ZRect   						mAreaToDrawTo;
+    tZBufferPtr				        mpSurface;
+    ZRect   						mAreaLocal;
+    ZRect							mAreaInParent;
+    ZRect   						mAreaAbsolute;
 	ZPoint  						mMouseDownOffset;
 	tWinList						mChildList;
 	ZWin*   						mpParentWin;
 	bool  							mbInvalid;
     bool                            mbInvalidateParentWhenInvalid;
-	ZRect							mArea;
-	ZRect							mAreaToBltTo;
 	bool							mbInitted;
 
 	tMessageList					mMessages;
@@ -266,7 +263,7 @@ void ZWin::ScreenToWindowCoordinates(int64_t& x, int64_t& y)
 inline
 bool ZWin::IsPointInWindowWindowCoordinates(int64_t x, int64_t y) 
 {
-	return mArea.PtInRect( x, y );
+	return mAreaInParent.PtInRect( x, y );
 }
 
 inline

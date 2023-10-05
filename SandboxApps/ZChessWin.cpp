@@ -36,7 +36,7 @@ bool ZChoosePGNWin::Init()
     size_t nButtonWidth = gM*3;
     size_t nButtonHeight = gM*2;
 
-    ZRect rControl(gSpacer, gSpacer, mAreaToDrawTo.Width() - gSpacer, gSpacer + nButtonHeight);
+    ZRect rControl(gSpacer, gSpacer, mAreaLocal.Width() - gSpacer, gSpacer + nButtonHeight);
 
     ZWinLabel* pLabel = new ZWinLabel();
     pLabel->msText = "Filter";
@@ -55,7 +55,7 @@ bool ZChoosePGNWin::Init()
     ZWinSizablePushBtn* pBtn;
 
     ZRect rButton(0, 0, nButtonWidth, nButtonHeight);
-    rButton.OffsetRect(gSpacer, mAreaToDrawTo.Height() - gSpacer - rButton.Height());
+    rButton.OffsetRect(gSpacer, mAreaLocal.Height() - gSpacer - rButton.Height());
 
 
 
@@ -79,7 +79,7 @@ bool ZChoosePGNWin::Init()
     pBtn->SetMessage(ZMessage("cancelpgnselect", mpParentWin));
     ChildAdd(pBtn);
 
-    ZRect rListbox(gSpacer, gSpacer + rControl.bottom, mAreaToDrawTo.Width() - gSpacer, rButton.top - gSpacer);
+    ZRect rListbox(gSpacer, gSpacer + rControl.bottom, mAreaLocal.Width() - gSpacer, rButton.top - gSpacer);
 
     mpGamesList = new ZWinFormattedDoc();
     mpGamesList->SetArea(rListbox);
@@ -92,15 +92,15 @@ bool ZChoosePGNWin::Init()
 
 bool ZChoosePGNWin::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
-    mpTransformTexture->Fill(mFillColor);
+    mpSurface->Fill(mFillColor);
 
-    ZRect rText(mAreaToDrawTo);
+    ZRect rText(mAreaLocal);
     rText.OffsetRect(gSpacer, gSpacer);
-    gpFontSystem->GetFont(mFont)->DrawTextParagraph(mpTransformTexture.get(), msCaption, rText);
+    gpFontSystem->GetFont(mFont)->DrawTextParagraph(mpSurface.get(), msCaption, rText);
     return ZWin::Paint();
 }
 
@@ -241,7 +241,7 @@ bool ZPGNWin::Init()
     mBoldFont.nWeight = 800;
 
 
-    ZRect rGameTags(gSpacer, gSpacer, mAreaToDrawTo.Width() - gSpacer, mAreaToDrawTo.Height() / 2 - gSpacer);
+    ZRect rGameTags(gSpacer, gSpacer, mAreaLocal.Width() - gSpacer, mAreaLocal.Height() / 2 - gSpacer);
 
     mpGameTagsWin = new ZWinFormattedDoc();
     mpGameTagsWin->SetArea(rGameTags);
@@ -259,10 +259,10 @@ bool ZPGNWin::Init()
 
 
     size_t nButtonSlots = 10;
-    size_t nButtonSize = (mAreaToDrawTo.Width() - gSpacer *2) / nButtonSlots;
+    size_t nButtonSize = (mAreaLocal.Width() - gSpacer *2) / nButtonSlots;
 
     ZRect rButton(0, 0, nButtonSize, nButtonSize);
-    rButton.OffsetRect(gSpacer, mAreaToDrawTo.Height() - gSpacer - rButton.Height());
+    rButton.OffsetRect(gSpacer, mAreaLocal.Height() - gSpacer - rButton.Height());
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = ")"; // wingdings 3 to the beggining
@@ -338,11 +338,11 @@ bool ZPGNWin::Init()
 
 bool ZPGNWin::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
-    mpTransformTexture->Fill(mFillColor);
+    mpSurface->Fill(mFillColor);
 
 
     return ZWin::Paint();
@@ -566,7 +566,7 @@ bool ZChessWin::Init()
 
     ClearHistory();
 
-    mnPieceHeight = mAreaToDrawTo.Height() / 12;
+    mnPieceHeight = mAreaLocal.Height() / 12;
 
     if (gRegistry.Contains("chess", "palette"))
     {
@@ -665,7 +665,7 @@ bool ZChessWin::Init()
         mpStatusWin = new ZWinTextEdit(&msStatus);
         //mpStatusWin->msText = "Welcome to ZChess";
         msStatus = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaToDrawTo.Height()/28, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, false);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaLocal.Height()/28, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, false);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, (int32_t)gSpacer, (int32_t)gSpacer));
         ChildAdd(mpStatusWin);
     }
@@ -720,7 +720,7 @@ void ZChessWin::UpdateSize()
     mPieceData['p'].GenerateImageFromSymbolicFont('p', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
 
     mrBoardArea.SetRect(0, 0, mnPieceHeight * 8, mnPieceHeight * 8);
-    mrBoardArea = mrBoardArea.CenterInRect(mAreaToDrawTo);
+    mrBoardArea = mrBoardArea.CenterInRect(mAreaLocal);
 
 
     mnPalettePieceHeight = mnPieceHeight * 8 / 12;      // 12 possible pieces drawn over 8 squares
@@ -782,7 +782,7 @@ bool ZChessWin::OnMouseDownL(int64_t x, int64_t y)
                 {
                     //            OutputDebugLockless("capture x:%d, y:%d\n", mZoomOffset.x, mZoomOffset.y);
                     SetMouseDownPos(squareOffset.x, squareOffset.x);
-                    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+                    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
                     mpDraggingPiece = pieceImage;
                     mrDraggingPiece.SetRect(pieceImage->GetArea());
                     mrDraggingPiece.OffsetRect(x - mrDraggingPiece.Width() / 2, y - mrDraggingPiece.Height() / 2);
@@ -804,7 +804,7 @@ bool ZChessWin::OnMouseDownL(int64_t x, int64_t y)
             {
                 mDraggingPiece = c;
                 mDraggingSourceGrid.Set(-1, -1);
-                const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+                const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
                 mpDraggingPiece = mPieceData[c].mpImage;
             }
         }
@@ -817,7 +817,7 @@ bool ZChessWin::OnMouseUpL(int64_t x, int64_t y)
 {
     if (AmCapturing())
     {
-        const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+        const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
         ZPoint dstGrid(ScreenToGrid(x, y));
         if (mbEditMode)
         {
@@ -929,11 +929,11 @@ bool ZChessWin::Process()
 
 bool ZChessWin::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
-    mpTransformTexture->Fill(0xff444444);
+    mpSurface->Fill(0xff444444);
     DrawBoard();
 
     // Draw labels if not in demo mode
@@ -957,8 +957,8 @@ bool ZChessWin::Paint()
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gSpacer, gSpacer);
 
-            mpTransformTexture->Fill(0xffffffff, &rMoveLabel);
-            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
+            mpSurface->Fill(0xffffffff, &rMoveLabel);
+            pLabelFont->DrawTextParagraph(mpSurface.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
         }
         else
         {
@@ -973,14 +973,14 @@ bool ZChessWin::Paint()
             rMoveLabel = pLabelFont->Arrange(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gSpacer, gSpacer);
-            mpTransformTexture->Fill(0xff000000, &rMoveLabel);
-            pLabelFont->DrawTextParagraph(mpTransformTexture.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
+            mpSurface->Fill(0xff000000, &rMoveLabel);
+            pLabelFont->DrawTextParagraph(mpSurface.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
         }
     }
 
 
     if (mpDraggingPiece)
-        mpTransformTexture->Blt(mpDraggingPiece.get(), mpDraggingPiece->GetArea(), mrDraggingPiece);
+        mpSurface->Blt(mpDraggingPiece.get(), mpDraggingPiece->GetArea(), mrDraggingPiece);
     else if (mbEditMode)
         DrawPalette();
 
@@ -1042,7 +1042,7 @@ char ZChessWin::ScreenToPalettePiece(int64_t x, int64_t y)
 
 void ZChessWin::DrawPalette()
 {
-    mpTransformTexture->Fill(gDefaultTextAreaFill, &mrPaletteArea);
+    mpSurface->Fill(gDefaultTextAreaFill, &mrPaletteArea);
 
     ZRect rPalettePiece(mrPaletteArea);
     rPalettePiece.bottom = mrPaletteArea.top + mnPalettePieceHeight;
@@ -1052,7 +1052,7 @@ void ZChessWin::DrawPalette()
         tUVVertexArray verts;
         gRasterizer.RectToVerts(rPalettePiece, verts);
 
-        gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mPieceData[mPalettePieces[i]].mpImage.get(), verts);
+        gRasterizer.RasterizeWithAlpha(mpSurface.get(), mPieceData[mPalettePieces[i]].mpImage.get(), verts);
         rPalettePiece.OffsetRect(0, mnPalettePieceHeight);
     }
 }
@@ -1082,7 +1082,7 @@ void ZChessWin::DrawBoard()
                 nSquareColor = COL::AlphaBlend_BlendAlpha(nSquareColor, 0xff0088ff, 128);
 
 
-            mpTransformTexture->Fill(nSquareColor, &SquareArea(grid));
+            mpSurface->Fill(nSquareColor, &SquareArea(grid));
 
             if (mbShowAttackCount)
             {
@@ -1090,12 +1090,12 @@ void ZChessWin::DrawBoard()
                 string sCount;
                 Sprintf(sCount, "%d", mBoard.UnderAttack(true, grid));
                 ZRect rText(SquareArea(grid));
-                defaultFont->DrawText(mpTransformTexture.get(), sCount, rText);
+                defaultFont->DrawText(mpSurface.get(), sCount, rText);
 
                 rText.OffsetRect(0, defaultFont->Height());
 
                 Sprintf(sCount, "%d",mBoard.UnderAttack(false, grid));
-                defaultFont->DrawText(mpTransformTexture.get(), sCount, rText);
+                defaultFont->DrawText(mpSurface.get(), sCount, rText);
             }
 
 
@@ -1107,9 +1107,9 @@ void ZChessWin::DrawBoard()
             if (c)
             {
                 if (mDraggingPiece && mDraggingSourceGrid == grid)
-                    mpTransformTexture->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), SquareArea(grid), 64);
+                    mpSurface->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), SquareArea(grid), 64);
                 else
-                    mpTransformTexture->Blt(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), SquareArea(grid));
+                    mpSurface->Blt(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), SquareArea(grid));
             }
         }
     }
@@ -1348,20 +1348,20 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
                     char prevPiece = prevBoard.Piece(move.mDest);
                     if (prevPiece)
                     {
-                        pImage = new ZAnimObject_TransformingImage(mPieceData[prevPiece].mpImage.get());
+                        pImage = new ZAnimObject_TransformingImage(mPieceData[prevPiece].mpImage);
                         pImage->StartTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)));
                         pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, ""), nTransformTime);
-                        pImage->SetDestination(mpTransformTexture);
+                        pImage->SetDestination(mpSurface);
                         mpAnimator->AddObject(pImage);
                     }
                 }
 
 
-                pImage = new ZAnimObject_TransformingImage(mPieceData[mBoard.Piece(move.mDest)].mpImage.get());
+                pImage = new ZAnimObject_TransformingImage(mPieceData[mBoard.Piece(move.mDest)].mpImage);
                 pImage->StartTransformation(ZTransformation(ZPoint(rSrcSquareArea.left, rSrcSquareArea.top)));
                 pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, ZMessage("hidesquare;x=-1;y=-1", this)), nTransformTime);
                 pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 33);    // 33ms to at least cover 30fps
-                pImage->SetDestination(mpTransformTexture);
+                pImage->SetDestination(mpSurface);
                 mHiddenSquare = move.mDest;
                 mpAnimator->AddObject(pImage);
             }
@@ -1672,7 +1672,7 @@ bool ZPiecePromotionWin::Init(ChessPiece* pPieceData, ZPoint grid)
 
 bool ZPiecePromotionWin::OnMouseDownL(int64_t x, int64_t y)
 {
-    int64_t nPieceWidth = mAreaToDrawTo.Width() / 4;
+    int64_t nPieceWidth = mAreaLocal.Width() / 4;
     int64_t nPiece = x/nPieceWidth;
     if (!mDest.y == 0) // promotion on 0 rank is by black
         nPiece += 4;
@@ -1683,15 +1683,15 @@ bool ZPiecePromotionWin::OnMouseDownL(int64_t x, int64_t y)
 
 bool ZPiecePromotionWin::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
 //    mpTransformTexture->Fill(mAreaToDrawTo, 0xff4444ff);
 
-    ZRect rPalettePiece(mAreaToDrawTo);
-    int32_t nPieceHeight = (int32_t)mAreaToDrawTo.Width() / 4;
-    rPalettePiece.right = mAreaToDrawTo.left + nPieceHeight;
+    ZRect rPalettePiece(mAreaLocal);
+    int32_t nPieceHeight = (int32_t)mAreaLocal.Width() / 4;
+    rPalettePiece.right = mAreaLocal.left + nPieceHeight;
 
     int nBasePieceIndex = 0;
     if (!mDest.y == 0)
@@ -1702,7 +1702,7 @@ bool ZPiecePromotionWin::Paint()
         tUVVertexArray verts;
         gRasterizer.RectToVerts(rPalettePiece, verts);
 
-        gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), mpPieceData[mPromotionPieces[i]].mpImage.get(), verts);
+        gRasterizer.RasterizeWithAlpha(mpSurface.get(), mpPieceData[mPromotionPieces[i]].mpImage.get(), verts);
         rPalettePiece.OffsetRect(nPieceHeight, 0);
     }
 

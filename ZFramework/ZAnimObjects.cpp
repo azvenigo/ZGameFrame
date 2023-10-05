@@ -23,6 +23,7 @@ using namespace std;
 ZAnimObject::ZAnimObject()
 {
 	mState = kNone;
+    mpDestination = nullptr;
 	mnTimeStamp = gTimer.GetElapsedTime();
 }
 
@@ -356,7 +357,7 @@ bool ZAnimObject_TextPulser::Paint()
 
 
     mStyle.Font()->DrawTextParagraph(mpDestination.get(), msText, mrArea, &useStyle);
-
+    mrLastDrawArea = mrArea;
 	return true;
 
 }
@@ -874,27 +875,25 @@ bool ZAnimObject_Transformer::Paint()
 			mState = kFinished;
 			mpTransformer = NULL;
 		}
-		else
-			mpTransformer->TransformDraw(mpDestination.get(), &mpDestination->GetArea());
+//		else
+//			mpTransformer->TransformDraw(mpDestination.get(), &mpDestination->GetArea());
 	}
 	return true;
 }
 
-ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(ZBuffer* pBuffer, ZRect* pArea)
+ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(tZBufferPtr pImage, ZRect* pArea)
 {
-	ZASSERT(pBuffer);
+	ZASSERT(pImage);
 
-	ZRect rArea;
 	if (pArea)
-		rArea = *pArea;
+		mrArea.SetRect(*pArea);
 	else
-		rArea = pBuffer->GetArea();
+		mrArea = pImage->GetArea();
 
-	ZRect rDest(0,0,rArea.Width(), rArea.Height());
-	ZTransformable::Init(rDest);
-    mpTransformTexture.get()->CopyPixels(pBuffer, rArea, rDest, NULL);
+	ZTransformable::Init(mrArea);
+    mpImage = pImage;
 #ifdef _DEBUG
-	Sprintf(msDebugName, "TransformingImage:%d x %d", pBuffer->GetArea().Width(), pBuffer->GetArea().Height());
+	Sprintf(msDebugName, "TransformingImage:%d x %d", mpImage->GetArea().Width(), mpImage->GetArea().Height());
 #endif
 }
 
@@ -910,10 +909,37 @@ bool ZAnimObject_TransformingImage::Paint()
 	}
     else
     {
-        TransformDraw(mpDestination.get(), &mpDestination->GetArea());
+        
+        // for now I'm drawing directly to screen buffer...... I may want to re-enable drawing to arbitrary destinations with either blt or rasterization
+        // maybe have a screenbuffer blt that does GDI and or rasterization to a temp buffer then transfer via mask?
+        bool bFirstDraw = false;
+        if (mrLastDrawArea.Width() == 0 || mrLastDrawArea.Height() == 0)
+            bFirstDraw = true;
+
+        mrLastDrawArea = mrArea;
+        mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
+
+        // if this is the first time drawing, re-set
+        if (bFirstDraw)
+            mrLastDrawArea = mrArea;
+
+        if (mpDestination)
+        {
+            if (mCurTransform.mRotation == 0 && mCurTransform.mScale == 1.0)
+            {
+                mpDestination->Blt(mpImage.get(), mpImage->GetArea(), mrArea);
+            }
+            else
+            {
+                gRasterizer.Rasterize(mpDestination.get(), mpImage.get(), mVerts);
+            }
+        }
+        else
+        {
+            gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpImage.get(), mpImage->GetArea(), mrArea);
+        }
     }
 
-    gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpDestination.get(), mrArea, mrArea);
 
 
 	return true;

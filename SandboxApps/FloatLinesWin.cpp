@@ -395,7 +395,7 @@ bool cFloatLinesWin::RandomizeSettings()
     //mfLineAlpha = ((double) mnProcessPerFrame) / (1.0f + ((double) (rand()%50)));
     mfLineAlpha = 1.0f + GetRandExponentialDist(55);
 
-    ZRect rBounds(mAreaToDrawTo);
+    ZRect rBounds(mAreaLocal);
     if (!mbYMirror && !mbXMirror)
     {
         int64_t nWidth = rBounds.Width();
@@ -428,8 +428,8 @@ bool cFloatLinesWin::Init()
     if (mpFloatBuffer)
         delete[] mpFloatBuffer;
 
-    int64_t nWidth = mAreaToDrawTo.Width();
-    int64_t nHeight = mAreaToDrawTo.Height();
+    int64_t nWidth = mAreaLocal.Width();
+    int64_t nHeight = mAreaLocal.Height();
     mnDecayScanLine = 0;
 
     int64_t nBufSize = nWidth * nHeight * 3;
@@ -456,8 +456,8 @@ bool cFloatLinesWin::Shutdown()
 void cFloatLinesWin::ClearBuffer(ZBuffer* pBufferToDrawTo)
 {
 
-    int64_t nWidth = mAreaToDrawTo.Width();
-    int64_t nHeight = mAreaToDrawTo.Height();
+    int64_t nWidth = mAreaLocal.Width();
+    int64_t nHeight = mAreaLocal.Height();
 
     int64_t nBufSize = nWidth * nHeight * 3;
     // Fill with blackness
@@ -501,7 +501,7 @@ bool cFloatLinesWin::Paint()
     {
         if (mbReset)
         {
-            ClearBuffer(mpTransformTexture.get());
+            ClearBuffer(mpSurface.get());
             RandomizeSettings();
         }
 
@@ -521,17 +521,17 @@ bool cFloatLinesWin::Paint()
         /* end test code*/
 
 
-        DrawAlphaLine(mpTransformTexture.get(), v2, v1, &mAreaToDrawTo);
+        DrawAlphaLine(mpSurface.get(), v2, v1, &mAreaLocal);
 
         if (mbXMirror)
         {
             ZFloatVertex vx1(v1);
             ZFloatVertex vx2(v2);
 
-            vx1.mx = mAreaToDrawTo.right - vx1.mx;
-            vx2.mx = mAreaToDrawTo.right - vx2.mx;
+            vx1.mx = mAreaLocal.right - vx1.mx;
+            vx2.mx = mAreaLocal.right - vx2.mx;
 
-            DrawAlphaLine(mpTransformTexture.get(), vx1, vx2, &mAreaToDrawTo);
+            DrawAlphaLine(mpSurface.get(), vx1, vx2, &mAreaLocal);
         }
 
         // Now Y mirror
@@ -540,10 +540,10 @@ bool cFloatLinesWin::Paint()
             ZFloatVertex vy1(v1);
             ZFloatVertex vy2(v2);
 
-            vy1.my = mAreaToDrawTo.bottom - vy1.my;
-            vy2.my = mAreaToDrawTo.bottom - vy2.my;
+            vy1.my = mAreaLocal.bottom - vy1.my;
+            vy2.my = mAreaLocal.bottom - vy2.my;
 
-            DrawAlphaLine(mpTransformTexture.get(), vy1, vy2, &mAreaToDrawTo);
+            DrawAlphaLine(mpSurface.get(), vy1, vy2, &mAreaLocal);
 
 
             if (mbXMirror)
@@ -551,10 +551,10 @@ bool cFloatLinesWin::Paint()
                 ZFloatVertex vxy1(vy1);
                 ZFloatVertex vxy2(vy2);
 
-                vxy1.mx = mAreaToDrawTo.right - vxy1.mx;
-                vxy2.mx = mAreaToDrawTo.right - vxy2.mx;
+                vxy1.mx = mAreaLocal.right - vxy1.mx;
+                vxy2.mx = mAreaLocal.right - vxy2.mx;
 
-                DrawAlphaLine(mpTransformTexture.get(), vxy1, vxy2, &mAreaToDrawTo);
+                DrawAlphaLine(mpSurface.get(), vxy1, vxy2, &mAreaLocal);
             }
         }
 
@@ -565,17 +565,17 @@ bool cFloatLinesWin::Paint()
             ZFloatVertex vs1(mTailLine.mfX1, mTailLine.mfY1, -mfLineAlpha, mTailLine.mfR, mTailLine.mfG, mTailLine.mfB);
             ZFloatVertex vs2(mTailLine.mfX2, mTailLine.mfY2, -mfLineAlpha, mTailLine.mfR, mTailLine.mfG, mTailLine.mfB);
 
-            DrawAlphaLine(mpTransformTexture.get(), vs2, vs1, &mAreaToDrawTo);
+            DrawAlphaLine(mpSurface.get(), vs2, vs1, &mAreaLocal);
 
             if (mbXMirror)
             {
                 ZFloatVertex vsx1(vs1);
                 ZFloatVertex vsx2(vs2);
 
-                vsx1.mx = mAreaToDrawTo.right - vsx1.mx;
-                vsx2.mx = mAreaToDrawTo.right - vsx2.mx;
+                vsx1.mx = mAreaLocal.right - vsx1.mx;
+                vsx2.mx = mAreaLocal.right - vsx2.mx;
 
-                DrawAlphaLine(mpTransformTexture.get(), vsx1, vsx2, &mAreaToDrawTo);
+                DrawAlphaLine(mpSurface.get(), vsx1, vsx2, &mAreaLocal);
             }
 
             // Now Y mirror
@@ -584,10 +584,10 @@ bool cFloatLinesWin::Paint()
                 ZFloatVertex vsy1(vs1);
                 ZFloatVertex vsy2(vs2);
 
-                vsy1.my = mAreaToDrawTo.bottom - vsy1.my;
-                vsy2.my = mAreaToDrawTo.bottom - vsy2.my;
+                vsy1.my = mAreaLocal.bottom - vsy1.my;
+                vsy2.my = mAreaLocal.bottom - vsy2.my;
 
-                DrawAlphaLine(mpTransformTexture.get(), vsy1, vsy2, &mAreaToDrawTo);
+                DrawAlphaLine(mpSurface.get(), vsy1, vsy2, &mAreaLocal);
 
 
                 if (mbXMirror)
@@ -595,10 +595,10 @@ bool cFloatLinesWin::Paint()
                     ZFloatVertex vsxy1(vsy1);
                     ZFloatVertex vsxy2(vsy2);
 
-                    vsxy1.mx = mAreaToDrawTo.right - vsxy1.mx;
-                    vsxy2.mx = mAreaToDrawTo.right - vsxy2.mx;
+                    vsxy1.mx = mAreaLocal.right - vsxy1.mx;
+                    vsxy2.mx = mAreaLocal.right - vsxy2.mx;
 
-                    DrawAlphaLine(mpTransformTexture.get(), vsxy1, vsxy2, &mAreaToDrawTo);
+                    DrawAlphaLine(mpSurface.get(), vsxy1, vsxy2, &mAreaLocal);
                 }
             }
 
@@ -619,14 +619,14 @@ bool cFloatLinesWin::Paint()
 
         if (mbLightDecay)
         {
-            ZRect rArea = mAreaToDrawTo;
+            ZRect rArea = mAreaLocal;
             for (int64_t i = 0; i < 20; i++)
             {
-                double* pDest = mpFloatBuffer + (mnDecayScanLine)*mArea.Width() * 3;
-                FillInSpan(mpTransformTexture.get(), pDest, rArea.Width(), 255, 255, 255, -mfDecayAmount, rArea.left, mnDecayScanLine);
+                double* pDest = mpFloatBuffer + (mnDecayScanLine)*mAreaInParent.Width() * 3;
+                FillInSpan(mpSurface.get(), pDest, rArea.Width(), 255, 255, 255, -mfDecayAmount, rArea.left, mnDecayScanLine);
 
                 mnDecayScanLine++;
-                if (mnDecayScanLine > mAreaToDrawTo.bottom - 1)
+                if (mnDecayScanLine > mAreaLocal.bottom - 1)
                     mnDecayScanLine = 0;
             }
         }
@@ -789,7 +789,7 @@ void cFloatLinesWin::DrawAlphaLine(ZBuffer* pBufferToDrawTo, ZFloatVertex& v1, Z
     rLineRect.IntersectRect(/*&rLineRect, */&rDest);
 
     double* pSurface = mpFloatBuffer;
-    int64_t nStride = mArea.Width() * 3;
+    int64_t nStride = mAreaInParent.Width() * 3;
 
     double fScanLine = (double)rLineRect.top;
     double fIntersection;

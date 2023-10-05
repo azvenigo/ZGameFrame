@@ -1070,7 +1070,7 @@ bool Z3DTestWin::Init()
     }
     else
     {
-        mnRenderSize = mAreaToDrawTo.Height() / 2;
+        mnRenderSize = mAreaLocal.Height() / 2;
         mnTargetSphereCount = 1 + rand() % 10;
         mbCenterSphere = RANDBOOL;
         mbOuterSphere = RANDBOOL;
@@ -1191,8 +1191,8 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
 /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
             continue;*/
 
-        screenVerts[i].x = (double)(mAreaToDrawTo.Width()/2 + (int64_t)(vertProjected.x * mnRenderSize *10));
-        screenVerts[i].y = (double)(mAreaToDrawTo.Height()/2 + (int64_t)(vertProjected.y * mnRenderSize *10));
+        screenVerts[i].x = (double)(mAreaLocal.Width()/2 + (int64_t)(vertProjected.x * mnRenderSize *10));
+        screenVerts[i].y = (double)(mAreaLocal.Height()/2 + (int64_t)(vertProjected.y * mnRenderSize *10));
 
         screenVerts[i].mColor = nCol;
     }
@@ -1203,7 +1203,7 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
     if (normal.z > 0)
         return;
 
-    gRasterizer.Rasterize(mpTransformTexture.get(), screenVerts);
+    gRasterizer.Rasterize(mpSurface.get(), screenVerts);
 }
 
 void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection, Matrix44d& mtxWorldToCamera, tZBufferPtr pTexture)
@@ -1224,8 +1224,8 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
         /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
                     continue;*/
 
-        screenVerts[i].x = (double)(mAreaToDrawTo.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10));
-        screenVerts[i].y = (double)(mAreaToDrawTo.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10));
+        screenVerts[i].x = (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10));
+        screenVerts[i].y = (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10));
     }
 
     Vec3d planeX(screenVerts[1].x - screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
@@ -1247,7 +1247,7 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
     screenVerts[3].u = 0.0;
     screenVerts[3].v = 1.0;
 
-    gRasterizer.Rasterize(mpTransformTexture.get(), pTexture.get(), screenVerts);
+    gRasterizer.Rasterize(mpSurface.get(), pTexture.get(), screenVerts);
 }
 
 
@@ -1262,8 +1262,8 @@ bool Z3DTestWin::Paint()
     RenderTeapot();
 #endif
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
-    mpTransformTexture->FillAlpha(0xff000000);
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
+    mpSurface->FillAlpha(0xff000000);
 
     mfBaseAngle += (mnRotateSpeed / 1000.0) * gTimer.GetElapsedTime() / 10000.0;
 
@@ -1289,7 +1289,7 @@ bool Z3DTestWin::Paint()
     uint64_t nTime = gTimer.GetMSSinceEpoch();
     string sTime;
     Sprintf(sTime, "fps: %f", 1000.0 / (nTime - mLastTimeStamp));
-    gpFontSystem->GetDefaultFont()->DrawText(mpTransformTexture.get(), sTime, mAreaToDrawTo);
+    gpFontSystem->GetDefaultFont()->DrawText(mpSurface.get(), sTime, mAreaLocal);
     mLastTimeStamp = nTime;
 
     if (mbRenderCube)
@@ -1355,9 +1355,9 @@ bool Z3DTestWin::Paint()
         {
             ZRect rArea(mpSpheresRender.get()->GetArea());
 
-            ZRect rDest(rArea.CenterInRect(mAreaToDrawTo));
+            ZRect rDest(rArea.CenterInRect(mAreaLocal));
 
-            mpTransformTexture->Blt(mpSpheresRender.get(), rArea, rDest);
+            mpSurface->Blt(mpSpheresRender.get(), rArea, rDest);
         }
     }
 

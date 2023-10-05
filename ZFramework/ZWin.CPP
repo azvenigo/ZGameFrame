@@ -31,10 +31,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 using namespace std;
 
-ZWin::ZWin() : mArea(0,0,0,0),
-mAreaToDrawTo(0,0,0,0),
-mAreaAbsolute(0,0,0,0),
-mAreaToBltTo(0,0,0,0),
+ZWin::ZWin() : 
 mMouseDownOffset(0,0),
 mpParentWin(0),
 mbInitted(false),
@@ -43,7 +40,7 @@ mbAcceptsCursorMessages(false),
 mbAcceptsFocus(false),
 mbInvalid(true),
 mbInvalidateParentWhenInvalid(false),
-//mbTransformable(false),
+mpSurface(nullptr),
 mTransformIn(kNone),
 mTransformOut(kNone),
 mnTransformInTime(kDefaultTransformTime),
@@ -79,19 +76,22 @@ bool ZWin::Init()
 		msDebugName = msWinName;
 #endif
 
-		if (mArea.Width() > 0 && mArea.Height() > 0)
-		{
-			ZTransformable::Init(mAreaAbsolute);
+		gMessageSystem.RegisterTarget(this);
+
+		mbShutdownFlag = false;
+
+        mbInvalid = true;
+        mbInitted = true;
+        if (mAreaInParent.Width() > 0 && mAreaInParent.Height() > 0)
+        {
+            ZTransformable::Init(mAreaAbsolute);
+            mpSurface.reset(new ZBuffer());
+            mpSurface->Init(mAreaAbsolute.Width(), mAreaAbsolute.Height());
             Paint();        // TBD this may be desired since our texture may be requested before the threadproc has a chance to call paint
             TransformIn();
         }
 
-		gMessageSystem.RegisterTarget(this);
-
-		mbShutdownFlag = false;
 		mThread = std::thread(&WindowThreadProc, (void*)this);
-		mbInvalid = true;
-		mbInitted = true;
 	}
 	return true;
 }  
@@ -100,13 +100,13 @@ bool ZWin::Shutdown()
 {
 	if (mbInitted)
 	{
+        TransformOut();
         SetVisible(false);
 
 		mbShutdownFlag = true;
 		mThread.join();
 
 		const std::lock_guard<std::mutex> lock(mShutdownMutex);	// prevent shutdown until this returns
-		TransformOut();
 
 		gMessageSystem.RemoveAllNotifications(this);
 
@@ -148,24 +148,44 @@ void ZWin::TransformIn()
 {
 	if (mTransformIn != kNone)
 	{
-        ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mpTransformTexture.get());
+        tZBufferPtr renderedBuf(new ZBuffer());
+        renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
+        RenderToBuffer(renderedBuf, mAreaLocal, mAreaLocal, nullptr);
+
+        ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf);
+
+
         ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
 		ZTransformation end(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
 
+        ZRect rp;
+        if (mpParentWin)
+            rp.SetRect(mpParentWin->GetArea());
+        else
+            rp.SetRect(grFullArea);
+
+
 		switch (mTransformIn)
 		{
-		case kFade:			start.mnAlpha = 0;					break;
-		case kSlideLeft:	start.mPosition.x += mArea.Width();		break;
-		case kSlideRight:	start.mPosition.x -= mArea.Width();		break;
-		case kSlideUp:		start.mPosition.y += mArea.Height();		break;
-		case kSlideDown:	start.mPosition.y -= mArea.Height();		break;
+		case kFade:			start.mnAlpha = 0;					                            break;
+		case kSlideLeft:	start.mPosition.x = rp.right;		                break;
+		case kSlideRight:	start.mPosition.x = rp.left - mAreaLocal.Width();    break;
+		case kSlideUp:		start.mPosition.y = rp.bottom;		                break;
+		case kSlideDown:	start.mPosition.y = rp.top - mAreaLocal.Height();    break;
 		}
 
-
         pImage->StartTransformation(start);
+
+//        mnTransformInTime = 1000;
+
+
+
+        Sprintf(end.msCompletionMessage, "set_visible;visible=1;target=%s", GetTargetName().c_str());    // set visible on completion
         pImage->AddTransformation(end, mnTransformInTime);
-        pImage->SetDestination(mpParentWin->mpTransformTexture);
+
         gAnimator.AddObject(pImage);
+        SetVisible(false);
+
 	}
 }
 
@@ -173,59 +193,41 @@ void ZWin::TransformOut()
 {
 	if (mTransformOut != kNone)
 	{
-		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(mpTransformTexture.get());
-		ZTransformation trans(GetTransform());
+        tZBufferPtr renderedBuf(new ZBuffer());
+        renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
+        RenderToBuffer(renderedBuf, mAreaLocal, mAreaLocal, nullptr);
+
+		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf);
+		ZTransformation trans(mCurTransform);
 
 		pImage->StartTransformation(trans);
 
+        ZRect rp;
+        if (mpParentWin)
+            rp.SetRect(mpParentWin->GetArea());
+        else
+            rp.SetRect(grFullArea);
+
 		switch (mTransformOut)
 		{
-		case kFade:			trans.mnAlpha = 0;					break;
-		case kSlideLeft:	trans.mPosition.x -= mArea.Width();		break;
-		case kSlideRight:	trans.mPosition.x += mArea.Width();		break;
-		case kSlideUp:		trans.mPosition.y -= mArea.Height();		break;
-		case kSlideDown:	trans.mPosition.y += mArea.Height();		break;
+		case kFade:			trans.mnAlpha = 0;                                              break;
+        case kSlideLeft:    trans.mPosition.x = rp.left - mAreaLocal.Width();    break;
+ 		case kSlideRight:	trans.mPosition.x = rp.right;                        break;
+		case kSlideUp:		trans.mPosition.y = rp.top - mAreaLocal.Height();    break;
+		case kSlideDown:	trans.mPosition.y = rp.bottom;                       break;
 		}
 
-		pImage->AddTransformation(trans,mnTransformOutTime);
+        Sprintf(trans.msCompletionMessage, "set_visible;visible=1;target=%s", GetTargetName().c_str());    // set visible on completion
+        pImage->AddTransformation(trans,mnTransformOutTime);
 
 		gAnimator.AddObject(pImage);
-	}
+        SetVisible(false);
+    }
 }
-
-
-void  ZWin::CalcAbsoluteArea() 
-{
-	ZRect tempArea( mArea );
-	ZWin* currParent = mpParentWin;
-
-	while (currParent) 
-	{
-		tempArea.OffsetRect( currParent->mArea.left, currParent->mArea.top ); 
-		currParent = currParent->GetParentWin();     
-	}
-
-	mAreaAbsolute = tempArea;
-
-    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
-    for (tWinList::iterator it = mChildList.begin(); it != mChildList.end(); it++)
-	{
-		(*it)->CalcAbsoluteArea();
-	}   
-
-	gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
-}
-
-/*void ZWin::CenterWindowInRect(const ZRect &outerRect) 
-{
-	const int64_t tempX = outerRect.left + ( (outerRect.Width() - mArea.Width() ) / 2 );
-	const int64_t tempY = outerRect.top  + ( (outerRect.Height()- mArea.Height() ) / 2 );
-	SetArea( ZRect(tempX, tempY, tempX + mArea.Width(), tempY + mArea.Height()));
-}*/
 
 void ZWin::Arrange(ZGUI::ePosition pos, const ZRect& outerRect, int64_t padding)
 {
-    SetArea(ZGUI::Arrange(mArea, outerRect, pos, padding, padding));
+    SetArea(ZGUI::Arrange(mAreaInParent, outerRect, pos, padding, padding));
 }
 
 void ZWin::ArrangeWindows(tWinList windows, ZRect rArea, ZGUI::Style& style, int64_t nCols, int64_t nRows)
@@ -303,9 +305,7 @@ bool ZWin::ChildAdd(ZWin* child, bool bAutoShow)
 
     mChildList.push_front(child);
 
-	child->CalcAbsoluteArea();
-	child->SetAreaToDrawTo();
-//	child->SetBufferToDrawTo();
+	child->ComputeAreas();
 
 	if (!child->Init())
 	{
@@ -503,10 +503,10 @@ ZRect ZWin::GetBounds(const tWinList& list)
         return {};
 
     tWinList::const_iterator it = list.begin();
-    ZRect rBounds((*it)->mArea);
+    ZRect rBounds((*it)->mAreaInParent);
     while (it != list.end())
     {
-        rBounds.UnionRect((*it++)->mArea);
+        rBounds.UnionRect((*it++)->mAreaInParent);
     }
 
     return rBounds;
@@ -634,33 +634,32 @@ bool  ZWin::Paint()
     if (!mbInitted || !mbInvalid)
         return false;
 
-    mpTransformTexture.get()->SetRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
+    mpSurface.get()->SetRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
 	mbInvalid = false;
 	return true;
 }               
 
 
-void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrcAbs, ZRect rDst, ZWin* pThis)
+void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrc, ZRect rDst, ZWin* pThis)
 {
-    if (!mbInitted || !rSrcAbs.Overlaps(mAreaAbsolute) || pThis == this)
+    if (!mbInitted || !rSrc.Overlaps(mAreaLocal) || pThis == this)
         return;
 
-    ZRect rSrc(rSrcAbs);
-    rSrc.OffsetRect(-mAreaAbsolute.left, -mAreaAbsolute.top);
-    if (!ZBuffer::Clip(mpTransformTexture.get(), pDest.get(), rSrc, rDst))
+    if (!ZBuffer::Clip(mpSurface.get(), pDest.get(), rSrc, rDst))
         return;
 
     if (mbVisible)
     {
-        mpTransformTexture.get()->GetMutex().lock();
-        pDest->Blt(mpTransformTexture.get(), rSrc, rDst);
-        mpTransformTexture.get()->GetMutex().unlock();
+        Paint();
+        mpSurface.get()->GetMutex().lock();
+        pDest->Blt(mpSurface.get(), rSrc, rDst);
+        mpSurface.get()->GetMutex().unlock();
     }
-
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
     {
         ZWin* pChild = *it;
-        pChild->RenderToBuffer(pDest, rSrc, rDst, pThis);
+
+        pChild->RenderToBuffer(pDest, pChild->mAreaLocal, pChild->mAreaInParent, pThis);
     }
 }
 
@@ -668,9 +667,9 @@ void ZWin::PaintFromParent()
 {
     if (mpParentWin && mpParentWin->IsVisible())
     {
-        tZBufferPtr parentBuffer = mpParentWin->GetTransformTexture();
+        tZBufferPtr parentBuffer = mpParentWin->mpSurface;
         const std::lock_guard<std::recursive_mutex> surfaceLock(parentBuffer->GetMutex());
-        mpTransformTexture.get()->Blt(parentBuffer.get(), mArea, mpTransformTexture.get()->GetArea(), nullptr, ZBuffer::kAlphaSource);
+        mpSurface.get()->Blt(parentBuffer.get(), mAreaInParent, mAreaLocal, nullptr, ZBuffer::kAlphaSource);
     }
 }
 
@@ -682,7 +681,7 @@ bool ZWin::ComputeVisibility()
 
 //	if (mbVisible)
 	{
-		ZScreenRect sr(mpTransformTexture, mAreaAbsolute, ZPoint(0, 0));
+		ZScreenRect sr(mpSurface, mAreaAbsolute, ZPoint(0, 0));
         gpGraphicSystem->GetScreenBuffer()->AddScreenRectAndComputeVisibility(sr);
 	}
 
@@ -693,7 +692,7 @@ bool ZWin::ComputeVisibility()
 
 		//ZDEBUG_OUT("ChildPaint:0x%x\n", uint32_t(pWin));
 
-        if ( pWin->mbVisible && pWin->mpTransformTexture)
+        if ( pWin->mbVisible && pWin->mpSurface)
 		    pWin->ComputeVisibility();
 	}
 
@@ -711,38 +710,22 @@ bool ZWin::OnParentAreaChange()
 
 
 
-void ZWin::SetAreaToDrawTo() 
+void ZWin::ComputeAreas() 
 {
-	mAreaToDrawTo.SetRect(0, 0, mArea.Width(), mArea.Height() );
-
-	if (mpTransformTexture.get())
+    mAreaAbsolute = mAreaLocal;
+    ZWin* pWin = this;
+	do
 	{
-		ZWin* pCurrParent = mpParentWin;
-		mAreaToBltTo = mArea;
-		while (pCurrParent) 
-		{
-			if (pCurrParent->mpTransformTexture.get())
-				break;
+		mAreaAbsolute.OffsetRect(pWin->mAreaInParent.left, pWin->mAreaInParent.top);
+        pWin = pWin->mpParentWin;
+    } while (pWin);
 
-			mAreaToBltTo.OffsetRect(pCurrParent->mArea.left, pCurrParent->mArea.top);
+    for (auto child : mChildList)
+        child->ComputeAreas();
 
-			pCurrParent = pCurrParent->GetParentWin();
-		}
-	} 
-    Invalidate();
+    gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
 }
 
-void ZWin::SetAreaToDrawToRecursive() 
-{
-	SetAreaToDrawTo();
-    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
-    tWinList::iterator it(mChildList.begin());
-	while(it != mChildList.end())
-	{
-		(*it)->SetAreaToDrawToRecursive();
-		it++;
-	}
-}
 bool ZWin::SetCapture()
 {
 	if (gInput.captureWin)
@@ -940,16 +923,25 @@ void ZWin::InvalidateChildren()
 
 void ZWin::SetArea( const ZRect& area ) 
 {
-    mArea.SetRect(area);
+    if (!mpSurface || area.Width() != mAreaLocal.Width() || area.Height() != mAreaLocal.Height())
+    {
+        if (area.Width() > 0 && area.Height() > 0)
+        {
+            mpSurface.reset(new ZBuffer());
+            mpSurface->Init(area.Width(), area.Height());
+        }// else no need to create a surface
+    }
 
-    ZTransformable::Init(mArea);
-    SetAreaToDrawToRecursive();
-    CalcAbsoluteArea();
+    mAreaInParent.SetRect(area);
+    mAreaLocal.SetRect(0, 0, area.Width(), area.Height());
+    ZTransformable::Init(mAreaLocal);
+
+    ComputeAreas();
 }
 
 void  ZWin::MoveTo(int64_t newX, int64_t newY) 
 {
-	SetArea(ZRect(newX, newY, newX+mArea.Width(), newY+mArea.Height()));
+	SetArea(ZRect(newX, newY, newX+mAreaInParent.Width(), newY+mAreaInParent.Height()));
 }
 
 /*void  ZWin::OffsetTo(int64_t deltaX, int64_t deltaY) 
@@ -1048,7 +1040,7 @@ ZWinDialog::ZWinDialog() : mStyle(gDefaultDialogStyle), mBehavior(eBehavior::Non
 bool ZWinDialog::Init()
 {
     //ZRect rButton(0, 0, gM * 4, gM * 2);
-    ZRect rButtonArea(mAreaToDrawTo);
+    ZRect rButtonArea(mAreaLocal);
     rButtonArea.top = rButtonArea.bottom - gM * 2;
 //    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
 
@@ -1086,8 +1078,13 @@ bool ZWinDialog::Init()
     if (!arrangeList.empty())
         ArrangeWindows(arrangeList, rButtonArea, gStyleButton, -1, 1);
 
+    mTransformIn = kSlideLeft;
+    mTransformOut = kSlideRight;
+
     ZWin::Init();
     SetFocus();
+
+
     return true;
 }
 
@@ -1106,8 +1103,8 @@ bool ZWinDialog::Paint()
     cols[3] = 0xff888888;
 
 
-    mpTransformTexture.get()->FillGradient(cols);
-    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_None);
+    mpSurface.get()->FillGradient(cols);
+    mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaLocal, ZBuffer::kEdgeBltMiddle_None);
     return false;
 }
 

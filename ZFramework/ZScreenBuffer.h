@@ -57,6 +57,7 @@ public:
 	size_t	GetVisibilityCount() { return mScreenRectList.size(); }
 
 	int32_t	RenderVisibleRects();   // returns number of rects that needed rendering
+    int32_t RenderVisibleRects(const ZRect& rClip);
     bool    RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst);
 
 protected:

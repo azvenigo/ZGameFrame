@@ -63,7 +63,7 @@ bool ZWinImage::OnParentAreaChange()
 
 void ZWinImage::Clear()
 {
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
     ZOUT("ZWinImage::Clear()\n");
 
     mpImage.reset();
@@ -311,22 +311,22 @@ bool ZWinImage::OnKeyUp(uint32_t c)
 void ZWinImage::ScrollTo(int64_t nX, int64_t nY)
 {
     const int32_t kSnapDistance = 10;
-    if (abs(nX - mAreaToDrawTo.left) < kSnapDistance)
+    if (abs(nX - mAreaLocal.left) < kSnapDistance)
     {
-        nX = mAreaToDrawTo.left;    // snap left
+        nX = mAreaLocal.left;    // snap left
     }
-    else if (abs(nX + mImageArea.Width() - mAreaToDrawTo.right) < kSnapDistance)
+    else if (abs(nX + mImageArea.Width() - mAreaLocal.right) < kSnapDistance)
     {
-        nX = mAreaToDrawTo.right - mImageArea.Width(); // snap right
+        nX = mAreaLocal.right - mImageArea.Width(); // snap right
     }
 
-    if (abs(nY - mAreaToDrawTo.top) < kSnapDistance)
+    if (abs(nY - mAreaLocal.top) < kSnapDistance)
     {
-        nY = mAreaToDrawTo.top;    // snap top
+        nY = mAreaLocal.top;    // snap top
     }
-    else if (abs(nY + mImageArea.Height() - mAreaToDrawTo.bottom) < kSnapDistance)
+    else if (abs(nY + mImageArea.Height() - mAreaLocal.bottom) < kSnapDistance)
     {
-        nY = mAreaToDrawTo.bottom - mImageArea.Height(); // snap right
+        nY = mAreaLocal.bottom - mImageArea.Height(); // snap right
     }
 
     mImageArea.MoveRect(nX, nY);
@@ -336,7 +336,7 @@ void ZWinImage::ScrollTo(int64_t nX, int64_t nY)
 bool ZWinImage::LoadImage(const string& sName)
 {
     mbVisible = false;
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
     // if there's an old image, acquire the lock before freeing it
 
@@ -378,7 +378,7 @@ void ZWinImage::FitImageToWindow()
     if (!mpImage)
         return;
 
-    mImageArea = ZGUI::ScaledFit(mpImage->GetArea(), mArea);
+    mImageArea = ZGUI::ScaledFit(mpImage->GetArea(), mAreaInParent);
     mfZoom = (double)mImageArea.Width() / (double)mpImage->GetArea().Width();
     mfPerfectFitZoom = mfZoom;
 
@@ -392,7 +392,7 @@ bool ZWinImage::IsSizedToWindow()
     if (!mpImage)
         return false;
 
-    return (mArea.Width() == mImageArea.Width() || mArea.Height() == mImageArea.Height());  // if either width or height matches window, then it's sized
+    return (mAreaInParent.Width() == mImageArea.Width() || mAreaInParent.Height() == mImageArea.Height());  // if either width or height matches window, then it's sized
 }
 
 
@@ -415,9 +415,9 @@ void ZWinImage::SetZoom(double fZoom)
 
         if (mfZoom == 1.0)
             mViewState = kZoom100;
-        else if (rImageArea.Height() < mArea.Height() && mfZoom > 1.0)
+        else if (rImageArea.Height() < mAreaInParent.Height() && mfZoom > 1.0)
             mViewState = kZoomedInToSmallImage;
-        else if (rImageArea.Height() > mArea.Height() && mfZoom < 1.0)
+        else if (rImageArea.Height() > mAreaInParent.Height() && mfZoom < 1.0)
             mViewState = kZoomedOutOfLargeImage;
     }
 
@@ -438,7 +438,7 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
 
     mpImage = pImage;
     const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
     if (mViewState == kFitToWindow || mViewState == kNoState)
     {
@@ -452,7 +452,7 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
     {
         SetZoom(1.0);
         mImageArea = pImage->GetArea();
-        mImageArea = mImageArea.CenterInRect(mAreaToDrawTo);
+        mImageArea = mImageArea.CenterInRect(mAreaLocal);
     }
 
     Invalidate();
@@ -460,10 +460,10 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
 
 bool ZWinImage::Paint()
 {
-    if (!mpTransformTexture)
+    if (!mpSurface)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
     if (!mbVisible)
         return false;
@@ -472,13 +472,13 @@ bool ZWinImage::Paint()
         return false;
 
 
-    ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
+    ZASSERT(mpSurface.get()->GetPixels() != nullptr);
 
-    ZRect rDest(mpTransformTexture.get()->GetArea());
+    ZRect rDest(mpSurface.get()->GetArea());
 
-    mpTransformTexture.get()->Fill(mFillColor);
+    mpSurface.get()->Fill(mFillColor);
 
-    ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
+    ZASSERT(mpSurface.get()->GetPixels() != nullptr);
 
     tZBufferPtr pRenderImage = mpImage;
     ZRect rRenderArea = mImageArea;
@@ -496,35 +496,35 @@ bool ZWinImage::Paint()
 
             if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
             {
-                mpTransformTexture.get()->Blt(pRenderImage.get(), rSource, rDest);
+                mpSurface.get()->Blt(pRenderImage.get(), rSource, rDest);
             }
             else
             {
                 tUVVertexArray verts;
                 gRasterizer.RectToVerts(rRenderArea, verts);
-                ZASSERT(mpTransformTexture.get()->GetPixels() != nullptr);
+                ZASSERT(mpSurface.get()->GetPixels() != nullptr);
 
                 if (nSubsampling == 0 || AmCapturing() || gInput.IsKeyDown(mZoomHotkey) || mfZoom == 1.00)
-                    gRasterizer.RasterizeWithAlpha(mpTransformTexture.get(), pRenderImage.get(), verts, &mAreaToDrawTo);
+                    gRasterizer.RasterizeWithAlpha(mpSurface.get(), pRenderImage.get(), verts, &mAreaLocal);
                 else
-                    gRasterizer.MultiSampleRasterizeWithAlpha(mpTransformTexture.get(), pRenderImage.get(), verts, &mAreaToDrawTo, nSubsampling);
+                    gRasterizer.MultiSampleRasterizeWithAlpha(mpSurface.get(), pRenderImage.get(), verts, &mAreaLocal, nSubsampling);
             }
         }
     }
 
     if (AmCapturing() && (mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
     {
-        mpTransformTexture->FillAlpha(0x88555588, &GetSelection());
+        mpSurface->FillAlpha(0x88555588, &GetSelection());
     }
 
 
 
     if ((mBehavior & kShowCaption) != 0)
     {
-        ZGUI::TextBox::Paint(mpTransformTexture.get(), mCaptionMap);
+        ZGUI::TextBox::Paint(mpSurface.get(), mCaptionMap);
 
         if (pRenderImage && mpTable)
-            mpTable->Paint(mpTransformTexture.get());
+            mpTable->Paint(mpSurface.get());
     }
 
     Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));

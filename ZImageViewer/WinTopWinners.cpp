@@ -47,7 +47,7 @@ void WinTopWinners::UpdateUI()
     else
     {*/
         mThumbRects.resize(mnTopNEntries);
-        nThumbSide = mAreaToDrawTo.Height() / mnTopNEntries;
+        nThumbSide = mAreaLocal.Height() / mnTopNEntries;
 //    }
 
     ZRect rThumb(nThumbSide, nThumbSide);
@@ -175,14 +175,14 @@ bool WinTopWinners::HandleMessage(const ZMessage& message)
 
 bool WinTopWinners::Paint()
 {
-    if (!mpTransformTexture)
+    if (!mpSurface)
         return false;
    
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
-    mpTransformTexture->Fill(mStyle.bgCol);
+    mpSurface->Fill(mStyle.bgCol);
 
     if (pMetaList && !pMetaList->empty())
     {
@@ -198,11 +198,11 @@ bool WinTopWinners::Paint()
             tUVVertexArray verts;
             rasterizer.RectToVerts(mThumbRects[rank - 1], verts);
 
-            rasterizer.Rasterize(mpTransformTexture.get(), pThumb.get(), verts);
+            rasterizer.Rasterize(mpSurface.get(), pThumb.get(), verts);
 
             string sRank;
             Sprintf(sRank, "#%d", rank);
-            mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), sRank, mThumbRects[rank-1], &mStyle);
+            mStyle.Font()->DrawTextParagraph(mpSurface.get(), sRank, mThumbRects[rank-1], &mStyle);
 
             if (rank++ >= mnTopNEntries)
                 break;

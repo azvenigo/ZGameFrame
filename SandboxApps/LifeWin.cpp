@@ -114,16 +114,16 @@ bool cLifeWin::Paint()
 	const std::lock_guard<std::mutex> lock(mShutdownMutex);
 
 	string sTemp;
-	ZASSERT(mpTransformTexture.get());
+	ZASSERT(mpSurface.get());
 
 
-	ZRect rGrid(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.bottom - 16);
-	ZRect rHandle(mAreaToDrawTo.left, mAreaToDrawTo.bottom-16, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
+	ZRect rGrid(mAreaLocal.left, mAreaLocal.top, mAreaLocal.right, mAreaLocal.bottom - 16);
+	ZRect rHandle(mAreaLocal.left, mAreaLocal.bottom-16, mAreaLocal.right, mAreaLocal.bottom);
 
 //	mpTransformTexture->Fill(rGrid, mpTransformTexture->ConvertRGB(255, 128,128,128));
 //	mpTransformTexture->Fill(rHandle, mpTransformTexture->ConvertRGB(255, 128,128,255));
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface->GetMutex());
     PaintGrid();
 
 	Sprintf(sTemp, "I: %ld  C: %ld", mnIterations, mnNumCells);
@@ -131,10 +131,10 @@ bool cLifeWin::Paint()
 	if (mbPaused)
 		sTemp += " PAUSED";
 
-	ZRect rText(0, 0, mAreaToDrawTo.right, mAreaToDrawTo.bottom);
+	ZRect rText(0, 0, mAreaLocal.right, mAreaLocal.bottom);
 
 //    TIME_SECTION_START(LifeWinDrawText);
-    mpFont->DrawText(mpTransformTexture.get(), sTemp, rText, &ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffff00, 0xffffff00));
+    mpFont->DrawText(mpSurface.get(), sTemp, rText, &ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffff00, 0xffffff00));
 //    TIME_SECTION_END(LifeWinDrawText);
     
 	ZWin::Paint();
@@ -147,15 +147,15 @@ void cLifeWin::PaintGrid()
 {
 	ZRasterizer rasterizer;
 	tUVVertexArray verts;
-    rasterizer.RectToVerts(mAreaToDrawTo, verts);
+    rasterizer.RectToVerts(mAreaLocal, verts);
 
-    rasterizer.Rasterize(mpTransformTexture.get(), mpCurGrid.get(), verts);
+    rasterizer.Rasterize(mpSurface.get(), mpCurGrid.get(), verts);
 }
 
 bool cLifeWin::OnMouseDownL(int64_t x, int64_t y)
 {
-	double kPixelsPerGridX = (double) mArea.Width()/mnWidth;
-	double kPixelsPerGridY = (double) mArea.Height()/mnHeight;
+	double kPixelsPerGridX = (double) mAreaInParent.Width()/mnWidth;
+	double kPixelsPerGridY = (double) mAreaInParent.Height()/mnHeight;
 
 
 	int64_t nClickedGridX = (int64_t) (x/ kPixelsPerGridX);
@@ -214,8 +214,8 @@ bool cLifeWin::OnMouseMove(int64_t x, int64_t y)
 {
 	if (AmCapturing() && mbPainting)
 	{
-		double kPixelsPerGridX = (double) mArea.Width() / (double) mnWidth;
-		double kPixelsPerGridY = (double) mArea.Height() / (double) mnHeight;
+		double kPixelsPerGridX = (double) mAreaInParent.Width() / (double) mnWidth;
+		double kPixelsPerGridY = (double) mAreaInParent.Height() / (double) mnHeight;
 
 
 		int64_t nClickedGridX = (int64_t) ((double) x / kPixelsPerGridX);

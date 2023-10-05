@@ -189,6 +189,81 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 	return (int32_t) nRenderedCount;
 }
 
+int32_t ZScreenBuffer::RenderVisibleRects(const ZRect& rClip)
+{
+    if (!mbRenderingEnabled)
+        return 0;
+
+    //    TIME_SECTION_START(RenderVisibleRects);
+
+    BITMAPINFO bmpInfo;
+    bmpInfo.bmiHeader.biBitCount = 32;
+    bmpInfo.bmiHeader.biCompression = BI_RGB;
+    bmpInfo.bmiHeader.biPlanes = 1;
+    bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
+
+
+    tZBufferPtr pCurBuffer;
+
+    int64_t nRenderedCount = 0;
+
+    for (auto sr : mScreenRectList)
+    {
+        // If no overlap, move on
+        if (!sr.mrDest.Overlaps(rClip))
+            continue;
+
+
+        // Since the mScreenRectList happens to be sorted so that referenced textures are together, we should lock, render all from that texture, then unlock
+        if (sr.mpSourceBuffer != pCurBuffer)
+        {
+            if (pCurBuffer)
+                pCurBuffer->GetMutex().unlock();
+
+            pCurBuffer = sr.mpSourceBuffer;
+            pCurBuffer->GetMutex().lock();
+        }
+
+        nRenderedCount++;
+        ZRect rTexture(sr.mpSourceBuffer->GetArea());
+
+        bmpInfo.bmiHeader.biWidth = (LONG)rTexture.Width();
+        bmpInfo.bmiHeader.biHeight = (LONG)-rTexture.Height();
+
+        ZRect rClippedSource(sr.mSourcePt.x, sr.mSourcePt.y, sr.mSourcePt.x + sr.mrDest.Width(), sr.mSourcePt.y + sr.mrDest.Height());
+        ZRect rClippedDest(sr.mrDest);
+
+        Clip(rClip, rClippedSource, rClippedDest);
+
+        DWORD nStartScanline = (DWORD)rClippedSource.top;
+        DWORD nScanLines = (DWORD)rClippedSource.Height();
+
+        void* pBits = sr.mpSourceBuffer->GetPixels() + rClippedSource.top * rTexture.Width();
+
+        ZDEBUG_OUT("dr: TL[", rClippedDest.left, ",", rClippedDest.top, "] lines:", nScanLines,"\n");
+
+        int nRet = SetDIBitsToDevice(mDC,       // HDC
+            (DWORD)rClippedDest.left,                 // Dest X
+            (DWORD)rClippedDest.top,                  // Dest Y
+            (DWORD)rClippedDest.Width(),            // Dest Width
+            (DWORD)rClippedDest.Height(),           // Dest Height
+            (DWORD)rClippedSource.left,               // Src X
+            (DWORD)rClippedSource.top,                // Src Y
+            nStartScanline,                                  // Start Scanline
+            nScanLines,           // Num Scanlines
+            pBits,       // * pixels
+            &bmpInfo,                          // BMPINFO
+            DIB_RGB_COLORS);                    // Usage
+  
+  }
+
+    if (pCurBuffer)
+        pCurBuffer->GetMutex().unlock();
+
+    return (int32_t)nRenderedCount;
+}
+
+
 bool ZScreenBuffer::RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst)
 {
     if (!mbRenderingEnabled || !pSrc)

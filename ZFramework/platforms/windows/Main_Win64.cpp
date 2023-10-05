@@ -169,9 +169,6 @@ int main(int argc, char* argv[])
                     static int64_t nTotalRenderTime = 0;
                     static int64_t nTotalFrames = 0;
 
-
-                    bool bAnimatorActive = gAnimator.Paint();
-
                     int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
                     int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
                     int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
@@ -179,9 +176,18 @@ int main(int argc, char* argv[])
                     int64_t nDelta = nEndRenderVisible - nStartRenderVisible;
                     nTotalRenderTime += nDelta;
                     nTotalFrames += 1;
-
                     //				    ZOUT("render took time:%lld us. Rects:%d/%d. Total Frames:%d, avg frame time:%lld us\n", nEndRenderVisible - nStartRenderVisible, nRenderedCount, pScreenBuffer->GetVisibilityCount(), nTotalFrames, (nTotalRenderTime/nTotalFrames));
 
+                    bool bAnimatorActive = gAnimator.Paint();
+
+                    tRectList rPostAnimDirtyList;
+                    if (gAnimator.GetDirtyRects(rPostAnimDirtyList))
+                    {
+                        for (auto& r : rPostAnimDirtyList)
+                        {
+                            pScreenBuffer->RenderVisibleRects(r);
+                        }
+                    }
 
                     pScreenBuffer->EndRender();
                     InvalidateRect(gpGraphicSystem->GetMainHWND(), NULL, false);
@@ -455,7 +461,7 @@ void SwitchFullscreen(bool bFullscreen)
 
 void HandleWindowSizeChanged()
 {
-    if (!gpGraphicSystem || !gpMainWin)
+    if (!gpGraphicSystem || !gpGraphicSystem->GetScreenBuffer() || !gpMainWin)
         return;
 
     gbWindowSizeChanged = false;

@@ -99,7 +99,7 @@ void ZWinDebugConsole::UpdateScrollbar()
 {
 	int64_t nFullTextHeight = gDebug.mHistory.size();
 
-    mrDocumentArea.SetRect(mAreaToDrawTo);
+    mrDocumentArea.SetRect(mAreaLocal);
     mrDocumentArea.DeflateRect(gSpacer, gSpacer);
     mrDocumentArea.right -= 16;
 
@@ -110,8 +110,7 @@ void ZWinDebugConsole::UpdateScrollbar()
         if (!mpWinSlider)
         {
             mpWinSlider = new ZWinSlider(&mnSliderVal);
-            mpWinSlider->Init();
-            mpWinSlider->SetArea(ZRect(mArea.Width() - 32, 0, mArea.Width(), mArea.Height()));
+            mpWinSlider->SetArea(ZRect(mAreaInParent.Width() - 32, 0, mAreaInParent.Width(), mAreaInParent.Height()));
             ChildAdd(mpWinSlider);
         }
 
@@ -144,13 +143,13 @@ bool ZWinDebugConsole::Paint()
 	if (!mbInvalid)
 		return false;
 
-    if (!mpTransformTexture.get())
+    if (!mpSurface.get())
         return false;
 
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
-    mpTransformTexture.get()->Fill(0xff000000, &mrDocumentArea);
+    mpSurface.get()->Fill(0xff000000, &mrDocumentArea);
 
 
     int64_t nHeight = mFont->Height();
@@ -188,7 +187,7 @@ bool ZWinDebugConsole::Paint()
         {
             ZRect rLine(mrDocumentArea.left, nCurLineBottom - nLines * mFont->Height(), mrDocumentArea.right, nCurLineBottom);
             string sPartial(msg.sLine.substr(nOffset, nCharsPerLine));
-            mFont->DrawTextA(mpTransformTexture.get(), sPartial, rLine, &ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, msg.nLevel, msg.nLevel));
+            mFont->DrawTextA(mpSurface.get(), sPartial, rLine, &ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, msg.nLevel, msg.nLevel));
             nOffset += sPartial.length();
             rLine.top += nHeight;
             nCurLineBottom -= nHeight;

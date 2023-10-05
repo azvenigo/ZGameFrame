@@ -206,14 +206,14 @@ bool ZWinPaletteDialog::Process()
 
 bool ZWinPaletteDialog::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
     ZWinDialog::Paint();
 
     tZFontPtr pTitleFont = gpFontSystem->GetFont(gDefaultTitleFont);
-    pTitleFont->DrawText(mpTransformTexture.get(), msCaption, ZGUI::Arrange(pTitleFont->StringRect(msCaption), mAreaToDrawTo, ZGUI::ICIT, gSpacer, gSpacer), &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffeeeeee, 0xffaaaaaa));
+    pTitleFont->DrawText(mpSurface.get(), msCaption, ZGUI::Arrange(pTitleFont->StringRect(msCaption), mAreaLocal, ZGUI::ICIT, gSpacer, gSpacer), &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffeeeeee, 0xffaaaaaa));
 
 
     double fScalar = 1023.0/(double)mrSVArea.Height();
@@ -221,7 +221,7 @@ bool ZWinPaletteDialog::Paint()
 
     ZRect rSVOutline(mrSVArea);
     rSVOutline.InflateRect(4, 4);
-    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rSVOutline, ZBuffer::kEdgeBltMiddle_None);
+    mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rSVOutline, ZBuffer::kEdgeBltMiddle_None);
 
 
     for (int y = 0; y < mrSVArea.Height(); y++)
@@ -232,14 +232,14 @@ bool ZWinPaletteDialog::Paint()
             uint32_t nV = (uint32_t)(y * fScalar);
 
 
-            mpTransformTexture->SetPixel(mrSVArea.left+x, mrSVArea.top+y, COL::AHSV_To_ARGB(0xff, mCurH, nS, nV));
+            mpSurface->SetPixel(mrSVArea.left+x, mrSVArea.top+y, COL::AHSV_To_ARGB(0xff, mCurH, nS, nV));
         }
     }
 
 
     ZRect rHOutline(mrHArea);
     rHOutline.InflateRect(4, 4);
-    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rHOutline, ZBuffer::kEdgeBltMiddle_None);
+    mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rHOutline, ZBuffer::kEdgeBltMiddle_None);
 
     for (int y = 0; y < mrHArea.Height(); y++)
     {
@@ -247,7 +247,7 @@ bool ZWinPaletteDialog::Paint()
         uint32_t nCol = COL::AHSV_To_ARGB(0xff, nH, 1024, 1024);
         for (int x = 0; x < mrHArea.Width(); x++)
         {
-            mpTransformTexture->SetPixel(mrHArea.left + x, mrHArea.top + y,nCol);
+            mpSurface->SetPixel(mrHArea.left + x, mrHArea.top + y,nCol);
         }
     }
 
@@ -255,13 +255,13 @@ bool ZWinPaletteDialog::Paint()
     ZPoint svCur((int64_t) (mrSVArea.left + mCurS / fScalar), (int64_t)(mrSVArea.top +mCurV / fScalar));
     ZRect rsvCur(svCur.x - 5, svCur.y - 5, svCur.x + 5, svCur.y + 5);
 
-    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rsvCur, ZBuffer::kEdgeBltMiddle_None);
+    mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rsvCur, ZBuffer::kEdgeBltMiddle_None);
 
 
     ZPoint hCur(mrHArea.left, (int64_t)(mrHArea.top +mCurH / fScalar));
 
     ZRect rhCur(mrHArea.left - 5, hCur.y - 5, mrHArea.right + 5, hCur.y + 5);
-    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rhCur, ZBuffer::kEdgeBltMiddle_None);
+    mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rhCur, ZBuffer::kEdgeBltMiddle_None);
 
 
     // Color area
@@ -278,11 +278,11 @@ bool ZWinPaletteDialog::Paint()
         ZRect rSwatchHalf(rSwatch);
         rSwatchHalf.bottom = rSwatch.top + rSwatch.Height() / 2;
 
-        mpTransformTexture->Fill(*watch.mpWatchColor, &rSwatchHalf);
-        mStyle.Font()->DrawText(mpTransformTexture.get(), watch.msWatchLabel, ZGUI::Arrange(mStyle.Font()->StringRect(watch.msWatchLabel), rSwatch, ZGUI::ICOT));
+        mpSurface->Fill(*watch.mpWatchColor, &rSwatchHalf);
+        mStyle.Font()->DrawText(mpSurface.get(), watch.msWatchLabel, ZGUI::Arrange(mStyle.Font()->StringRect(watch.msWatchLabel), rSwatch, ZGUI::ICOT));
 
         rSwatchHalf.OffsetRect(0, rSwatchHalf.Height());
-        mpTransformTexture->Fill(watch.mOriginalColor, &rSwatchHalf);
+        mpSurface->Fill(watch.mOriginalColor, &rSwatchHalf);
 
         rSwatch.OffsetRect(rSwatch.Width(), 0);
     }
@@ -290,12 +290,12 @@ bool ZWinPaletteDialog::Paint()
     ZRect rCaption(mrPaletteArea);
     rCaption.bottom = (mrPaletteArea.top + mrPaletteArea.bottom) / 2;
 
-    mStyle.Font()->DrawText(mpTransformTexture.get(), "new", ZGUI::Arrange(mStyle.Font()->StringRect("new"), rCaption, ZGUI::ORIC, gSpacer, gSpacer));
+    mStyle.Font()->DrawText(mpSurface.get(), "new", ZGUI::Arrange(mStyle.Font()->StringRect("new"), rCaption, ZGUI::ORIC, gSpacer, gSpacer));
     rCaption.OffsetRect(0, rCaption.Height());
-    mStyle.Font()->DrawText(mpTransformTexture.get(), "old", ZGUI::Arrange(mStyle.Font()->StringRect("old"), rCaption, ZGUI::ORIC, gSpacer, gSpacer));
+    mStyle.Font()->DrawText(mpSurface.get(), "old", ZGUI::Arrange(mStyle.Font()->StringRect("old"), rCaption, ZGUI::ORIC, gSpacer, gSpacer));
 
 
-    mpTransformTexture.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mrPaletteArea, ZBuffer::kEdgeBltMiddle_None);
+    mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mrPaletteArea, ZBuffer::kEdgeBltMiddle_None);
 
 
     return ZWin::Paint();
@@ -303,11 +303,11 @@ bool ZWinPaletteDialog::Paint()
 
 void ZWinPaletteDialog::ComputeAreas()
 {
-    size_t nMeasure = mAreaToDrawTo.Width() / 20;
+    size_t nMeasure = mAreaLocal.Width() / 20;
     size_t nHSSide = nMeasure * 15;
 
     mrSVArea.SetRect(nMeasure, nMeasure*2, nMeasure + nHSSide, nMeasure *2  + nHSSide);
-    mrHArea.SetRect(mrSVArea.right + nMeasure, mrSVArea.top, mAreaToDrawTo.Width() - nMeasure, mrSVArea.bottom);
+    mrHArea.SetRect(mrSVArea.right + nMeasure, mrSVArea.top, mAreaLocal.Width() - nMeasure, mrSVArea.bottom);
 
 //    mrSelectingColorArea.SetRect(mrSVArea.left, mrSVArea.bottom + nMeasure, mrSVArea.left + nMeasure * 4, mrSVArea.bottom + nMeasure * 3);
 

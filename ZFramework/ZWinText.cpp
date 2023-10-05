@@ -37,7 +37,7 @@ bool ZWinLabel::OnMouseHover(int64_t x, int64_t y)
         ZRect rTextArea;
         
         tZFontPtr pTooltipFont = gpFontSystem->GetFont(mStyleTooltip.fp);
-        rTextArea = pTooltipFont->Arrange(mAreaToDrawTo, (uint8_t*)msTooltipText.c_str(), msTooltipText.length(), mStyleTooltip.pos);
+        rTextArea = pTooltipFont->Arrange(mAreaLocal, (uint8_t*)msTooltipText.c_str(), msTooltipText.length(), mStyleTooltip.pos);
         rTextArea.InflateRect(pTooltipFont->Height()/4, pTooltipFont->Height()/4);
 
 
@@ -73,46 +73,41 @@ bool ZWinLabel::Process()
 
 bool ZWinLabel::Paint()
 {
-    if (!mpTransformTexture)
+    if (!mpSurface)
         return false;
 
-    const lock_guard<recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const lock_guard<recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
     if (ARGB_A(mStyle.bgCol) > 0xf0)
     {
-        mpTransformTexture->Fill(mStyle.bgCol);
+        mpSurface->Fill(mStyle.bgCol);
     }
     else if (ARGB_A(mStyle.bgCol) > 0x0f)
     {
         // Translucent fill.... (expensive render but should not be frequent or large)
         if (mpParentWin)
         {
-            mpParentWin->RenderToBuffer(mpTransformTexture, mAreaAbsolute, mAreaToDrawTo, this);
-            mpTransformTexture->Blur(4);
+            mpParentWin->RenderToBuffer(mpSurface, mAreaAbsolute, mAreaLocal, this);
+            mpSurface->Blur(4);
         }
-        mpTransformTexture->FillAlpha(mStyle.bgCol);
-        mpTransformTexture->DrawRectAlpha(mpTransformTexture->GetArea(), 0xff000000 | mStyle.bgCol);
+        mpSurface->FillAlpha(mStyle.bgCol);
+        mpSurface->DrawRectAlpha(mpSurface->GetArea(), 0xff000000 | mStyle.bgCol);
     }
     else
     {
-        // If transparent, copy the bits from underneath
-        if (mpParentWin && mpParentWin->IsVisible())
-        {
-            tZBufferPtr parentBuffer = mpParentWin->GetTransformTexture();
-            mpTransformTexture.get()->Blt(parentBuffer.get(), mAreaToBltTo, mpTransformTexture.get()->GetArea());
-        }
+        PaintFromParent();
     }
 
     if (mStyle.wrap)
     {
-        mStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), msText, mAreaToDrawTo, &mStyle);
+        mStyle.Font()->DrawTextParagraph(mpSurface.get(), msText, mAreaLocal, &mStyle);
     }
     else
     {
-        ZRect rOut = mStyle.Font()->Arrange(mAreaToDrawTo, (uint8_t*)msText.c_str(), msText.length(), mStyle.pos);
-        mStyle.Font()->DrawText(mpTransformTexture.get(), msText, rOut, &mStyle.look);
+        ZRect rOut = mStyle.Font()->Arrange(mAreaLocal, (uint8_t*)msText.c_str(), msText.length(), mStyle.pos);
+        mStyle.Font()->DrawText(mpSurface.get(), msText, rOut, &mStyle.look);
     }
 
     return ZWin::Paint();
@@ -252,9 +247,9 @@ bool ZWinTextEdit::Process()
 void ZWinTextEdit::SetArea(const ZRect& area)
 {
     ZWin::SetArea(area);
-    mrVisibleTextArea = mAreaToDrawTo;
+    mrVisibleTextArea = mAreaLocal;
     mrVisibleTextArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
-    mrVisibleTextArea = ZGUI::Arrange(mrVisibleTextArea, mAreaToDrawTo, mStyle.pos, mStyle.paddingH, mStyle.paddingV);
+    mrVisibleTextArea = ZGUI::Arrange(mrVisibleTextArea, mAreaLocal, mStyle.pos, mStyle.paddingH, mStyle.paddingV);
 
     mnLeftBoundary = mrVisibleTextArea.Width() / 4; // 25%
     mnRightBoundary = (mrVisibleTextArea.Width() * 3) / 4;  // 75%
@@ -262,7 +257,7 @@ void ZWinTextEdit::SetArea(const ZRect& area)
 
 bool ZWinTextEdit::Paint()
 {
-    const lock_guard<recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const lock_guard<recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
@@ -279,9 +274,9 @@ bool ZWinTextEdit::Paint()
 
     ZRect rString(mStyle.Font()->Arrange(rOut, (uint8_t*)mpText->c_str(), mpText->length(), posToUse, 0));
 
-    mpTransformTexture.get()->Fill(mStyle.bgCol);
+    mpSurface.get()->Fill(mStyle.bgCol);
 
-    mStyle.Font()->DrawText(mpTransformTexture.get(), *mpText, rString, &mStyle.look, &mAreaToDrawTo);
+    mStyle.Font()->DrawText(mpSurface.get(), *mpText, rString, &mStyle.look, &mAreaLocal);
 
     if (mnSelectionStart != mnSelectionEnd &&
         mnSelectionStart >= 0 && mnSelectionEnd >= 0 &&
@@ -295,12 +290,12 @@ bool ZWinTextEdit::Paint()
         ZRect rHighlight(0, mrVisibleTextArea.top, nWidthHighlighted, mrVisibleTextArea.bottom);
         rHighlight.OffsetRect(mrVisibleTextArea.left+nWidthBefore- mnViewOffset+StyleOffset(), 0);
         rHighlight.IntersectRect(mrVisibleTextArea);
-        mpTransformTexture.get()->FillAlpha(0x8800ffff, &rHighlight);
+        mpSurface.get()->FillAlpha(0x8800ffff, &rHighlight);
     }
 
 
     if (mbCursorVisible)
-        mpTransformTexture.get()->Fill(mStyle.look.colTop, &mrCursorArea);
+        mpSurface.get()->Fill(mStyle.look.colTop, &mrCursorArea);
 
     return ZWin::Paint();
 }

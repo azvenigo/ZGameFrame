@@ -29,7 +29,7 @@ bool ConfirmDeleteDialog::Init()
         ZWinLabel* pLabel = new ZWinLabel();
         pLabel->msText = msCaption;
 
-        ZRect rLabel = gStyleCaption.Font()->Arrange(mAreaToDrawTo, (uint8_t*)pLabel->msText.c_str(), pLabel->msText.length(), ZGUI::CT, gSpacer);
+        ZRect rLabel = gStyleCaption.Font()->Arrange(mAreaLocal, (uint8_t*)pLabel->msText.c_str(), pLabel->msText.length(), ZGUI::CT, gSpacer);
 
         pLabel->SetArea(rLabel);
         pLabel->mStyle = gStyleCaption;
@@ -89,13 +89,13 @@ bool ConfirmDeleteDialog::Init()
         ChildAdd(pBtn);
         arrangeList.push_back(pBtn);
 
-        ZRect rButtonArea(mAreaToDrawTo);
+        ZRect rButtonArea(mAreaLocal);
         rButtonArea.top = rButtonArea.bottom - gM * 2;
         ZWin::ArrangeWindows(arrangeList, rButtonArea, style, -1, 1);
 
 
 
-        ZRect rFileList(gSpacer, gSpacer + rLabel.bottom, mAreaToDrawTo.Width() - gSpacer, rButtonArea.top - gSpacer);
+        ZRect rFileList(gSpacer, gSpacer + rLabel.bottom, mAreaLocal.Width() - gSpacer, rButtonArea.top - gSpacer);
 
         mpFilesList = new ZWinFormattedDoc();
         mpFilesList->SetArea(rFileList);
@@ -190,7 +190,7 @@ void ConfirmDeleteDialog::OnCancel()
 
 bool ConfirmDeleteDialog::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
@@ -226,6 +226,6 @@ ConfirmDeleteDialog* ConfirmDeleteDialog::ShowDialog(const std::string& sCaption
     pDialog->msCaption = sCaption;
     pDialog->mFiles = fileList;
 
-    gpMainWin->ChildAdd(pDialog);
+    gpMainWin->ChildAdd(pDialog, false);
     return pDialog;
 }

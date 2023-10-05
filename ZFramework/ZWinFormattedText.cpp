@@ -251,7 +251,7 @@ bool ZWinFormattedDoc::OnMouseMove(int64_t x, int64_t y)
 		int64_t nDownY;
 		GetMouseDownPos(nDownX, nDownY);
 		int64_t nDelta = nDownY - y;
-		int64_t nScrollDelta = (nDelta)/ mAreaToDrawTo.Height()/5 + mnMouseDownSliderVal;
+		int64_t nScrollDelta = (nDelta)/ mAreaLocal.Height()/5 + mnMouseDownSliderVal;
         mpWinSlider->SetSliderValue(nScrollDelta);
         Invalidate();
         //ZDEBUG_OUT("DownY:%d, y:%d, nDelta: %d  \n", nDownY, y, mfScrollDelta);
@@ -272,7 +272,7 @@ void ZWinFormattedDoc::UpdateScrollbar()
 {
 	int64_t nFullTextHeight = GetFullDocumentHeight();
 
-    mrDocumentBorderArea.SetRect(mAreaToDrawTo);
+    mrDocumentBorderArea.SetRect(mAreaLocal);
 
     mrDocumentArea.SetRect(mrDocumentBorderArea);
     if (mbDrawBorder)
@@ -290,7 +290,7 @@ void ZWinFormattedDoc::UpdateScrollbar()
             mpWinSlider = new ZWinSlider(&mnSliderVal);
             mpWinSlider->mBehavior = ZWinSlider::kInvalidateOnMove;
             mpWinSlider->Init();
-            mpWinSlider->SetArea(ZRect(mArea.Width() - kSliderWidth, 0, mArea.Width(), mArea.Height()));
+            mpWinSlider->SetArea(ZRect(mAreaInParent.Width() - kSliderWidth, 0, mAreaInParent.Width(), mAreaInParent.Height()));
             ChildAdd(mpWinSlider);
         }
 
@@ -329,7 +329,7 @@ bool ZWinFormattedDoc::Paint()
 	if (!mbInvalid)
 		return false;
 
-    if (!mpTransformTexture.get())
+    if (!mpSurface.get())
         return false;
 
     if (mbEvenColumns && mColumnWidths.empty())
@@ -346,12 +346,12 @@ bool ZWinFormattedDoc::Paint()
 	ZRect rLocalDocArea(mrDocumentArea);
     rLocalDocArea.DeflateRect(mDialogStyle.paddingH, mDialogStyle.paddingV);
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     if (ARGB_A(mDialogStyle.bgCol) > 5)
-        mpTransformTexture.get()->Fill(mDialogStyle.bgCol, &rLocalDocBorderArea);
+        mpSurface.get()->Fill(mDialogStyle.bgCol, &rLocalDocBorderArea);
     else if (mbDrawBorder)
-        mpTransformTexture.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalDocBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mArea);
+        mpSurface.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalDocBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mAreaInParent);
     else
         PaintFromParent();
 
@@ -386,7 +386,7 @@ bool ZWinFormattedDoc::Paint()
                     ZRect rSrc(entry.Buffer()->GetArea());
                     ZRect rDst(rSrc);
                     rDst = ZGUI::Arrange(rDst, rLine, entry.style.pos);
-                    mpTransformTexture->Blt(entry.Buffer().get(), rSrc, rDst);
+                    mpSurface->Blt(entry.Buffer().get(), rSrc, rDst);
 
                     if (mbEvenColumns)
                         rLine.left += mColumnWidths[col];
@@ -400,20 +400,20 @@ bool ZWinFormattedDoc::Paint()
 
                     int64_t nShadowOffset = max((int)pFont->Height() / 16, (int)1);
 
-                    pFont->DrawText(mpTransformTexture.get(), entry.text, rText, &entry.style.look, &rClip);
+                    pFont->DrawText(mpSurface.get(), entry.text, rText, &entry.style.look, &rClip);
 
                     if (mbUnderlineLinks && !entry.link.empty())
                     {
                         ZRect rUnderline(rText);
                         rUnderline.top = rUnderline.bottom - nShadowOffset;
                         rUnderline.IntersectRect(&rClip);
-                        mpTransformTexture.get()->Fill(entry.style.look.colBottom, &rUnderline);
+                        mpSurface.get()->Fill(entry.style.look.colBottom, &rUnderline);
 
                         if (entry.style.look.decoration == ZGUI::ZTextLook::kShadowed)
                         {
                             rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
                             rUnderline.IntersectRect(&rClip);
-                            mpTransformTexture.get()->Fill(0xff000000, &rUnderline);
+                            mpSurface.get()->Fill(0xff000000, &rUnderline);
                         }
                     }
 

@@ -78,7 +78,7 @@ void ImageContest::UpdateUI()
     UpdateControlPanel();
     UpdateCaptions();
 
-    ZRect rImageArea(mAreaToDrawTo);
+    ZRect rImageArea(mAreaLocal);
     if (mpPanel && mpPanel->IsVisible())
         rImageArea.top = mpPanel->GetArea().bottom;
 
@@ -336,7 +336,7 @@ void ImageContest::ShowHelpDialog()
     pForm->mbAcceptsCursorMessages = false;
     pHelp->ChildAdd(pForm);
     ChildAdd(pHelp);
-    pHelp->Arrange(ZGUI::C, mAreaToDrawTo);
+    pHelp->Arrange(ZGUI::C, mAreaLocal);
 
     pForm->AddMultiLine("\nImage Contest", sectionText);
     pForm->AddMultiLine("Use this feature to randomly choose two images from a folder and snap-judge which is the best.", text);
@@ -359,7 +359,7 @@ bool ImageContest::Init()
 
         SetFocus();
         mpWinImage[kLeft] = new ZWinImage();
-        ZRect rImageArea(mAreaToDrawTo);
+        ZRect rImageArea(mAreaLocal);
         rImageArea.right = rImageArea.left + rImageArea.Width() / 2;
         mpWinImage[kLeft]->SetArea(rImageArea);
         mpWinImage[kLeft]->mFillColor = 0xff000000;
@@ -430,7 +430,7 @@ void ImageContest::UpdateControlPanel()
 
     const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
     
-    if (mpPanel && mpPanel->GetArea().Width() == mAreaToDrawTo.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
+    if (mpPanel && mpPanel->GetArea().Width() == mAreaLocal.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
     {
         bool bShow = mbShowUI;
         if (gInput.IsKeyDown(VK_MENU))
@@ -463,7 +463,7 @@ void ImageContest::UpdateControlPanel()
     pFont->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
 
 
-    ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
+    ZRect rPanelArea(mAreaLocal.left, mAreaLocal.top, mAreaLocal.right, mAreaLocal.top + nControlPanelSide);
     mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
     mpPanel->SetArea(rPanelArea);
     mpPanel->mrTrigger = rPanelArea;
@@ -586,10 +586,10 @@ void ImageContest::UpdateControlPanel()
 
 bool ImageContest::OnParentAreaChange()
 {
-    if (!mpTransformTexture)
+    if (!mpSurface)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
     SetArea(mpParentWin->GetArea());
 
 
@@ -822,10 +822,10 @@ void ImageContest::UpdateCaptions()
 
 bool ImageContest::Paint()
 {
-    if (!mpTransformTexture)
+    if (!mpSurface)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
     if (!mbVisible)
         return false;

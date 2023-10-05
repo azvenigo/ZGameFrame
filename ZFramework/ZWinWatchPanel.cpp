@@ -13,7 +13,7 @@ ZWinWatchPanel::ZWinWatchPanel()
 
 bool ZWinWatchPanel::Init()
 {
-    mrNextControl.SetRect(gnControlPanelEdge, gnControlPanelEdge, mArea.Width() - gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);
+    mrNextControl.SetRect(gnControlPanelEdge, gnControlPanelEdge, mAreaInParent.Width() - gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);
 
     return ZWin::Init();
 }
@@ -27,7 +27,7 @@ bool ZWinWatchPanel::AddItem(WatchType type, const string& sCaption, void* pWatc
     newWatch.pMem = pWatchAddress;
     newWatch.captionLook = captionLook;
     newWatch.mLook = watchLook;
-    newWatch.mArea = mrNextControl;
+    newWatch.mAreaInParent = mrNextControl;
     newWatch.mCaption = sCaption;
 
     mrNextControl.OffsetRect(0, mrNextControl.Height());
@@ -64,7 +64,7 @@ bool ZWinWatchPanel::Process()
     int32_t nWatchedDoubleIndex = 0;
     int32_t nWatchedBoolIndex = 0;
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());  // these are modified within paint
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());  // these are modified within paint
 
     for (auto ws : mWatchList)
     {
@@ -136,13 +136,13 @@ bool ZWinWatchPanel::Process()
 
 bool ZWinWatchPanel::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbVisible)
         return false;
     if (!mbInvalid)
         return false;
 
-    mpTransformTexture.get()->Fill(gDefaultDialogFill);
+    mpSurface.get()->Fill(gDefaultDialogFill);
 
     mWatchedStrings.clear();
     mWatchedInt64s.clear();
@@ -156,13 +156,13 @@ bool ZWinWatchPanel::Paint()
         ZGUI::Style captionStyle(pFont->GetFontParams(), ws.captionLook, ZGUI::LB);
         ZGUI::Style textStyle(pFont->GetFontParams(), ws.textLook, ZGUI::RB);
 
-        pFont->DrawTextParagraph(mpTransformTexture.get(), ws.mCaption, ws.mArea, &captionStyle);
+        pFont->DrawTextParagraph(mpSurface.get(), ws.mCaption, ws.mAreaInParent, &captionStyle);
 
         if (ws.mType == WatchType::kString)
         {
             string sValue = *((string*)ws.pMem);
             mWatchedStrings.push_back(sValue);
-            pFont->DrawTextParagraph(mpTransformTexture.get(), sValue, ws.mArea, &textStyle);
+            pFont->DrawTextParagraph(mpSurface.get(), sValue, ws.mAreaInParent, &textStyle);
         }
         else if (ws.mType == WatchType::kInt64)
         {
@@ -171,7 +171,7 @@ bool ZWinWatchPanel::Paint()
 
             string sValue;
             Sprintf(sValue, "%lld", nValue);
-            pFont->DrawTextParagraph(mpTransformTexture.get(), sValue, ws.mArea, &textStyle);
+            pFont->DrawTextParagraph(mpSurface.get(), sValue, ws.mAreaInParent, &textStyle);
         }
         else if (ws.mType == WatchType::kDouble)
         {
@@ -179,7 +179,7 @@ bool ZWinWatchPanel::Paint()
             mWatchedDoubles.push_back(fValue);
             string sValue;
             Sprintf(sValue, "%LF", fValue);
-            pFont->DrawTextParagraph(mpTransformTexture.get(), sValue, ws.mArea, &textStyle);
+            pFont->DrawTextParagraph(mpSurface.get(), sValue, ws.mAreaInParent, &textStyle);
         }
         else if (ws.mType == WatchType::kBool)
         {
@@ -190,7 +190,7 @@ bool ZWinWatchPanel::Paint()
                 sValue = "1";
             else 
                 sValue = "0";
-            pFont->DrawTextParagraph(mpTransformTexture.get(), sValue, ws.mArea, &textStyle);
+            pFont->DrawTextParagraph(mpSurface.get(), sValue, ws.mAreaInParent, &textStyle);
         }
     }
 

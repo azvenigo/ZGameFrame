@@ -48,7 +48,6 @@ public:
 	~ZTransformable();
 
 	virtual bool			Init(const ZRect& rArea);
-    virtual bool            Init(ZBuffer* pBuffer);
 	virtual bool			Shutdown();
 
 	virtual void			StartTransformation(const ZTransformation& start);
@@ -64,36 +63,32 @@ public:
 
 	void					SetTransform(const ZTransformation& newTransform);
 
-	const ZTransformation&	GetTransform() { return mCurTransform; }
+//	const ZTransformation&	GetTransform() { return mCurTransform; }
 
 	virtual bool			Tick();
-
-	virtual tZBufferPtr		GetTransformTexture() { return mpTransformTexture; }
-	virtual bool			TransformDraw(ZBuffer* pBufferToDrawTo, ZRect* pClip = NULL);
-
-	ZRect&					GetBounds()			{ return mBounds; }
 
 #ifdef _DEBUG
     std::string				msDebugName;
 #endif
+
+    ZTransformation			mCurTransform;
+
 protected:
 	void					UpdateVertsAndBounds();
-
-    tZBufferPtr				mpTransformTexture;
 
 	eTransformState			mTransformState;
 	ZTransformation			mStartTransform;
 	ZTransformation			mEndTransform;
 
-	tUVVertexArray			mVerts;
-	ZRect					mBounds;
+    ZRect					mrBaseArea; // untransformed rect
+    tUVVertexArray			mVerts;
+
 
 private:
 
 	ZTransformation&		GetLastTransform();
 
 	bool					mbFirstTransformation;
-	ZTransformation			mCurTransform;
 	ZTransformationList		mTransformationList;
     std::recursive_mutex    mTransformationListMutex;
 

@@ -47,7 +47,7 @@ public:
 	bool			OnMouseMove(int64_t x, int64_t y);
 	bool			OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
 
-    bool            IsVertical() { return mAreaToDrawTo.Height() > mAreaToDrawTo.Width(); }
+    bool            IsVertical() { return mAreaLocal.Height() > mAreaLocal.Width(); }
 
 protected:
 	virtual bool	Paint();

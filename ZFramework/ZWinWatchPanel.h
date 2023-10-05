@@ -30,7 +30,7 @@ public:
     ZGUI::ZTextLook captionLook;
     ZGUI::ZTextLook textLook;
 
-    ZRect           mArea;
+    ZRect           mAreaInParent;
     ZGUI::ZTextLook mLook;
 };
 

@@ -103,7 +103,6 @@ string ZTransformationList::ToString()
 
 ZTransformable::ZTransformable()
 {
-    mpTransformTexture = NULL;
 	mTransformState = kNone;
 	mbFirstTransformation = false;
 	mVerts.resize(4);
@@ -128,55 +127,20 @@ ZTransformable::~ZTransformable()
 
 bool ZTransformable::Init(const ZRect& rArea)
 {
-    if (rArea.Width() < 1 || rArea.Height() < 1)
-        return false;
-//	ZASSERT(rArea.Width() > 0 && rArea.Height() > 0);
-
 	gTickManager.AddObject(this);
-
-    if (!mpTransformTexture)
-    {
-        mpTransformTexture.reset(new ZBuffer());
-    }
-	else if (mpTransformTexture.get()->GetArea().Width() == rArea.Width() && mpTransformTexture.get()->GetArea().Height() == rArea.Height())
-	{
-		return true;
-	}
-
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
-    mpTransformTexture.get()->Init(rArea.Width(), rArea.Height());
+    mrBaseArea = rArea;
 
 	// Initialize the current transform
-	ZTransformation trans(ZPoint(rArea.left, rArea.top));
-	SetTransform(trans);
+	SetTransform(ZTransformation(ZPoint(rArea.left, rArea.top)));
 
 	return true;
 }
 
-bool ZTransformable::Init(ZBuffer* pBuffer)
-{
-    assert(pBuffer);
-
-    ZRect r(pBuffer->GetArea());
-
-    if (!ZTransformable::Init(r))
-        return false;
-
-    mpTransformTexture.get()->CopyPixels(pBuffer, r, r);
-
-    return true;
-}
-
-
 
 bool ZTransformable::Shutdown()
 {
-    mpTransformTexture.reset();
-
 	gTickManager.RemoveObject(this);
-
 	mTransformState = kNone;
-
 	return true;
 }
 
@@ -218,9 +182,6 @@ bool ZTransformable::Tick()
 				// Begin a transformation from the current to the next in the list
 
 				mStartTransform = mCurTransform;
-
-                if (!mEndTransform.msCompletionMessage.empty())
-                    gMessageSystem.Post(mEndTransform.msCompletionMessage);
 
                 mEndTransform = *(mTransformationList.begin());
 				mTransformationList.pop_front();
@@ -298,44 +259,30 @@ bool ZTransformable::Tick()
 
 void ZTransformable::UpdateVertsAndBounds()
 {
-	mBounds.left = MAXINT32;
-	mBounds.right = MININT32;
-	mBounds.top = MAXINT32;
-	mBounds.bottom = MININT32;
-
-	ZRect rArea = mpTransformTexture.get()->GetArea();
 	mVerts[0].x = (double) mCurTransform.mPosition.x;
-	mVerts[0].y = (double)mCurTransform.mPosition.y;
+	mVerts[0].y = (double) mCurTransform.mPosition.y;
 
-	mVerts[1].x = (double)mCurTransform.mPosition.x + rArea.Width();
-	mVerts[1].y = (double)mCurTransform.mPosition.y;
+	mVerts[1].x = (double) mCurTransform.mPosition.x + mrBaseArea.Width();
+	mVerts[1].y = (double) mCurTransform.mPosition.y;
 
-	mVerts[2].x = (double)mCurTransform.mPosition.x + rArea.Width();
-	mVerts[2].y = (double)mCurTransform.mPosition.y + rArea.Height();
+	mVerts[2].x = (double) mCurTransform.mPosition.x + mrBaseArea.Width();
+	mVerts[2].y = (double) mCurTransform.mPosition.y + mrBaseArea.Height();
 
-	mVerts[3].x = (double)mCurTransform.mPosition.x;
-	mVerts[3].y = (double)mCurTransform.mPosition.y + rArea.Height();
+	mVerts[3].x = (double) mCurTransform.mPosition.x;
+	mVerts[3].y = (double) mCurTransform.mPosition.y + mrBaseArea.Height();
 
-	double centerX = (double)mCurTransform.mPosition.x + rArea.Width()/2;
-	double centerY = (double)mCurTransform.mPosition.y + rArea.Height()/2;
+	double centerX = (double) mCurTransform.mPosition.x + mrBaseArea.Width()/2;
+	double centerY = (double) mCurTransform.mPosition.y + mrBaseArea.Height()/2;
 
 	for (int i = 0; i < 4; i++)
 	{
 		TransformPoint(mVerts[i].x, mVerts[i].y, centerX, centerY, mCurTransform.mRotation, mCurTransform.mScale);
 		int64_t nX = (int64_t) mVerts[i].x;
 		int64_t nY = (int64_t) mVerts[i].y;
-		if (mBounds.left > nX)
-			mBounds.left = nX;
-		if (mBounds.right < nX)
-			mBounds.right = nX;
-		if (mBounds.top > nY)
-			mBounds.top = nY;
-		if (mBounds.bottom < nY)
-			mBounds.bottom = nY;
 	}
 }
 
-bool ZTransformable::TransformDraw(ZBuffer* pBufferToDrawTo, ZRect* pClip)
+/*bool ZTransformable::TransformDraw(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 {
 //	ZDEBUG_OUT("Transform Draw: rect[%d,%d,%d,%d]\n", pClip->left, pClip->top, pClip->right, pClip->bottom);
 	ZASSERT(pBufferToDrawTo);
@@ -356,7 +303,7 @@ bool ZTransformable::TransformDraw(ZBuffer* pBufferToDrawTo, ZRect* pClip)
 	}
 
 	return true;
-}
+}*/
 
 void ZTransformable::StartTransformation(const ZTransformation& start)
 {
@@ -394,6 +341,9 @@ void ZTransformable::EndTransformation()
 	SetTransform(GetLastTransform());
 	mCurTransform.mnTimestamp = gTimer.GetElapsedTime();	// reset the current timestamp
 	mEndTransform = mCurTransform;
+
+    gMessageSystem.Post(mEndTransform.msCompletionMessage);
+
    
     const std::lock_guard<std::recursive_mutex> lock(mTransformationListMutex);
     mTransformationList.clear();

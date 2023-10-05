@@ -72,6 +72,8 @@ ImageViewer::ImageViewer()
     mOutstandingMetadataCount = 0;
     mpRatedImagesStrip = nullptr;
 
+
+    assert(gGraphicSystem.GetScreenBuffer());
 }
  
 ImageViewer::~ImageViewer()
@@ -129,7 +131,7 @@ void ImageViewer::UpdateUI()
         mpRatedImagesStrip->pMetaList = &mRankedImageMetadata;
     }
 
-    ZRect rImageArea(mAreaToDrawTo);
+    ZRect rImageArea(mAreaLocal);
 
     if (mpPanel && mpPanel->IsVisible())
         rImageArea.top = mpPanel->GetArea().bottom;
@@ -261,7 +263,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
 
 bool ImageViewer::RemoveImageArrayEntry(const ViewingIndex& vi)
 {
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
     if (!ValidIndex(vi))
         return false;
@@ -390,7 +392,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     else if (sType == "show_contest")
     {
         ImageContest* pWin = new ImageContest();
-        pWin->SetArea(mArea);
+        pWin->SetArea(mAreaInParent);
         GetTopWindow()->ChildAdd(pWin);
         if (mFilterState == kFavs)
             pWin->ScanFolder(FavoritesPath());
@@ -581,7 +583,7 @@ void ImageViewer::ShowHelpDialog()
     pForm->mbAcceptsCursorMessages = false;
     pHelp->ChildAdd(pForm);
     ChildAdd(pHelp);
-    pHelp->Arrange(ZGUI::C, mAreaToDrawTo);
+    pHelp->Arrange(ZGUI::C, mAreaLocal);
 
     pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text);
     pForm->AddMultiLine("Loading, quickly zooming and exiting are prioritized.", text);
@@ -1105,7 +1107,7 @@ bool ImageViewer::Init()
 
         SetFocus();
         mpWinImage = new ZWinImage();
-        ZRect rImageArea(mAreaToDrawTo);
+        ZRect rImageArea(mAreaLocal);
 //        rImageArea.left += 64;  // thumbs
         mpWinImage->SetArea(rImageArea);
         mpWinImage->mFillColor = 0xff000000;
@@ -1189,7 +1191,7 @@ void ImageViewer::UpdateControlPanel()
 
     const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
     
-    if (mpPanel && mpPanel->GetArea().Width() == mAreaToDrawTo.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
+    if (mpPanel && mpPanel->GetArea().Width() == mAreaLocal.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
     {
         bool bShow = mbShowUI;
         if (gInput.IsKeyDown(VK_MENU))
@@ -1245,7 +1247,7 @@ void ImageViewer::UpdateControlPanel()
 
 
 
-    ZRect rPanelArea(mAreaToDrawTo.left, mAreaToDrawTo.top, mAreaToDrawTo.right, mAreaToDrawTo.top + nControlPanelSide);
+    ZRect rPanelArea(mAreaLocal.left, mAreaLocal.top, mAreaLocal.right, mAreaLocal.top + nControlPanelSide);
     mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
     mpPanel->SetArea(rPanelArea);
     mpPanel->mrTrigger = rPanelArea;
@@ -1539,7 +1541,7 @@ void ImageViewer::UpdateControlPanel()
     if (gGraphicSystem.mbFullScreen)
     {
         ZRect rExit(nControlPanelSide, nControlPanelSide);
-        rExit = ZGUI::Arrange(rExit, mAreaToDrawTo, ZGUI::RT);
+        rExit = ZGUI::Arrange(rExit, mAreaLocal, ZGUI::RT);
         pBtn = new ZWinSizablePushBtn();
         pBtn->mSVGImage.Load(sAppPath + "/res/exit.svg");
         pBtn->SetTooltip("Exit");
@@ -1592,7 +1594,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.right = rButton.left + rButton.Width() * 4;
     rButton.OffsetRect(-rButton.Width()-gSpacer*2, 0);
     pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "Contest";
+    pBtn->mCaption.sText = "Rank Photos";
     pBtn->mCaption.style = gStyleButton;
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->SetTooltip("Rank images in pairs");
@@ -1606,10 +1608,10 @@ void ImageViewer::UpdateControlPanel()
 
 bool ImageViewer::OnParentAreaChange()
 {
-    if (!mpTransformTexture)
+    if (!mpSurface)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
     SetArea(mpParentWin->GetArea());
 
     ZWin::OnParentAreaChange();
@@ -2213,6 +2215,11 @@ std::string ImageViewer::GetRankedFilename(int64_t nRank)
 
 bool ImageViewer::Process()
 {
+    // temp check
+
+    assert(gGraphicSystem.GetScreenBuffer());
+
+
     if (mpWinImage && !mImageArray.empty())
     {
         if (mOutstandingMetadataCount == 0)
@@ -2629,10 +2636,10 @@ void ImageViewer::ToggleFavorite()
 
 bool ImageViewer::Paint()
 {
-    if (!mpTransformTexture)
+    if (!mpSurface)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
     if (!mbVisible)
         return false;
@@ -2643,7 +2650,7 @@ bool ImageViewer::Paint()
 
     if (mImageArray.empty())
     {
-        gStyleCaption.Font()->DrawTextParagraph(mpTransformTexture.get(), "No images", mAreaToDrawTo, &gStyleCaption);
+        gStyleCaption.Font()->DrawTextParagraph(mpSurface.get(), "No images", mAreaLocal, &gStyleCaption);
     }
 
 

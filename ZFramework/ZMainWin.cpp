@@ -58,7 +58,7 @@ bool ZMainWin::Paint()
 
 void ZMainWin::SetArea(const ZRect& newArea)
 {
-    if (mArea == newArea)
+    if (mAreaInParent == newArea)
         return;
 
     ZWin::SetArea(newArea);
@@ -82,7 +82,6 @@ bool ZMainWin::ComputeVisibility()
 
     return true;
 }
-
 
 bool ZMainWin::HandleMessage(const ZMessage& message)
 {
@@ -164,7 +163,7 @@ void ZMainWin::ShowMessageBox(std::string caption, std::string text, std::string
     pForm->mbAcceptsCursorMessages = false;
     pMsgBox->ChildAdd(pForm);
     ChildAdd(pMsgBox);
-    pMsgBox->Arrange(ZGUI::C, mAreaToDrawTo);
+    pMsgBox->Arrange(ZGUI::C, mAreaLocal);
 
     pForm->AddMultiLine(text, textStyle);
 

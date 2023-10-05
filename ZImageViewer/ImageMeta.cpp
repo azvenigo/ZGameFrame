@@ -122,7 +122,7 @@ bool ImageMeta::Load(const std::filesystem::path& imagelist)
     nBytesLeft -= sizeof(uint32_t) * 2;
 
 
-
+    int nEntriesProcessed = 0;
     while (nBytesLeft > 0)
     {
         ImageMetaEntry entry;
@@ -133,13 +133,14 @@ bool ImageMeta::Load(const std::filesystem::path& imagelist)
 
         cout << "Read ImageMetaEntry: filename:" << entry.filename << " size:" << entry.filesize << " wins/contests:" << entry.wins << "/" << entry.contests << " elo:" << entry.elo << "\n";
 
+        nEntriesProcessed++;
         if (entry.contests > 0)
             mSizeToMetaLists[(uint16_t)nImageSizes].emplace_back(std::move(entry));
     }
-    assert(mSizeToMetaLists[(uint16_t)nImageSizes].size() == entries);
-    if (mSizeToMetaLists[(uint16_t)nImageSizes].size() != entries)
+    assert(nEntriesProcessed == entries);
+    if (nEntriesProcessed != entries)
     {
-        ZERROR("Image file", imagelist, " was supposed to contain:", entries, " entries but only:", mSizeToMetaLists[(uint16_t)nImageSizes].size(), " parsed.");
+        ZERROR("Image file", imagelist, " was supposed to contain:", entries, " entries but only:", nEntriesProcessed, " parsed.");
     }
 
     delete[] pBuf;

@@ -18,8 +18,8 @@ bool ZWinControlPanel::Init()
     if (mbInitted)
         return true;
 
-    if (mArea.Width() > 0 && mArea.Height() > 0)
-        mrNextControl.SetRect(gnControlPanelEdge, gnControlPanelEdge, mArea.Width()- gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);  
+    if (mAreaInParent.Width() > 0 && mAreaInParent.Height() > 0)
+        mrNextControl.SetRect(gnControlPanelEdge, gnControlPanelEdge, mAreaInParent.Width()- gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);  
 
 
     mbAcceptsCursorMessages = true;
@@ -138,13 +138,13 @@ bool ZWinControlPanel::Paint()
     if (!mbInvalid)
         return false;
 
-    if (!mpTransformTexture.get())
+    if (!mpSurface.get())
         return false;
 
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
-    mpTransformTexture->Fill(mStyle.bgCol);
+    mpSurface->Fill(mStyle.bgCol);
 
     tGroupNameToWinList groups = GetChildGroups();
     for (auto& group : groups)
@@ -155,11 +155,11 @@ bool ZWinControlPanel::Paint()
         rBounds.right--;
         rBounds.bottom--;
 
-        mpTransformTexture->DrawRectAlpha(rBounds, 0x88000000);
+        mpSurface->DrawRectAlpha(rBounds, 0x88000000);
         rBounds.OffsetRect(1, 1);
-        mpTransformTexture->DrawRectAlpha(rBounds, 0x88ffffff);
+        mpSurface->DrawRectAlpha(rBounds, 0x88ffffff);
         
-        mGroupingStyle.Font()->DrawTextParagraph(mpTransformTexture.get(), group.first, rBounds, &mGroupingStyle);
+        mGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rBounds, &mGroupingStyle);
 
 
 

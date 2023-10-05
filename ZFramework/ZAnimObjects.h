@@ -7,13 +7,14 @@
 #include <list>
 #include <string>
 #include "ZGUIStyle.h"
+#include "ZTypes.h"
 
 class ZBuffer;
 
 class ZAnimObject
 {
 public:
-	enum eCEAnimObject_State
+	enum eState
 	{
 		kNone = 0,
 		kAnimating = 1,
@@ -25,19 +26,20 @@ public:
    virtual							~ZAnimObject();
 
    virtual bool                  	Paint() { return false; }
-   virtual eCEAnimObject_State   	GetState() { return mState; }
-   virtual void                  	SetState(eCEAnimObject_State state) { mState = state; }
-   virtual ZRect&                	GetArea() { return mrArea; }
-   virtual void						SetArea(const ZRect& rArea) { mrArea = rArea; }
+   virtual eState   	            GetState() { return mState; }
+   virtual void                  	SetState(eState state) { mState = state; }
 
    virtual void						SetContext(void* pContext) { mpContext = pContext; }
    virtual void*					GetContext() { return mpContext; }
 
    virtual void                     SetDestination(tZBufferPtr pDestination) { mpDestination = pDestination; }
 
-protected:
-   eCEAnimObject_State  			mState;
+
    ZRect                			mrArea;
+   ZRect                            mrLastDrawArea;
+
+protected:
+   eState  			                mState;
    int64_t               			mnTimeStamp;
    tZBufferPtr                      mpDestination;
    void*							mpContext;			// Contextual owner.
@@ -153,10 +155,12 @@ protected:
 class ZAnimObject_TransformingImage : public ZAnimObject, public ZTransformable
 {
 public:
-	ZAnimObject_TransformingImage(ZBuffer* pBuffer, ZRect* pArea = NULL);
+	ZAnimObject_TransformingImage(tZBufferPtr pImage, ZRect* pArea = nullptr);
 	virtual ~ZAnimObject_TransformingImage();
 
 	virtual bool  Paint();
+
+    tZBufferPtr mpImage;
 };
 
 

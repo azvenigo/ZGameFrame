@@ -288,10 +288,10 @@ bool ZWinCheck::Paint()
 	if (!mbInvalid)
 		return false;
 
-    if (!mpTransformTexture.get())
+    if (!mpSurface.get())
         return false;
 
-	ZASSERT( mAreaToDrawTo.Width() > 0 && mAreaToDrawTo.Height() > 0 );
+	ZASSERT( mAreaLocal.Width() > 0 && mAreaLocal.Height() > 0 );
 
     if (*mpbChecked)
     {
@@ -428,21 +428,21 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 
 	string sArea = pNode->GetAttribute("area");
 	if (!sArea.empty())
-		mArea = StringToRect(sArea);
+		mAreaInParent = StringToRect(sArea);
 
 	return true;
 }
 
 bool ZWinSizablePushBtn::Paint()
 {
-    if (!mpTransformTexture)
+    if (!mpSurface)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     if (!mbInvalid)
         return false;
 
-    if (!mpTransformTexture.get())
+    if (!mpSurface.get())
         return false;
 
     if (mpParentWin && !mpParentWin->mbVisible)
@@ -461,22 +461,22 @@ bool ZWinSizablePushBtn::Paint()
     
 	ZASSERT(pBufferToUse);
 
-    mpTransformTexture.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaToDrawTo, ZBuffer::kEdgeBltMiddle_Stretch|ZBuffer::kEdgeBltSides_Stretch);
+    mpSurface.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaLocal, ZBuffer::kEdgeBltMiddle_Stretch|ZBuffer::kEdgeBltSides_Stretch);
 
     int64_t nOffset = max((int)mCaption.style.fp.nHeight / 16, (int)1);
-    ZRect rCaption = mAreaToDrawTo;
+    ZRect rCaption = mAreaLocal;
     if (mDrawState == kDown)
         rCaption.OffsetRect(nOffset, nOffset);
 
     mSVGImage.area = rCaption;
-    if (!mSVGImage.Paint(mpTransformTexture.get()))
+    if (!mSVGImage.Paint(mpSurface.get()))
     {
 //        cout << "mSVGImage.Paint failed\n" << std::flush;
         return false;
     }
 
     mCaption.area = rCaption;
-    if (!mCaption.Paint(mpTransformTexture.get()))
+    if (!mCaption.Paint(mpSurface.get()))
     {
 //        cout << "mCaption.Paint failed\n" << std::flush;
         return false;
@@ -484,9 +484,9 @@ bool ZWinSizablePushBtn::Paint()
 
     if (!mbEnabled)
     {
-        mpTransformTexture->FillAlpha(0x88333333); 
-        mpTransformTexture->FillAlpha(0x88888888);     
-        mpTransformTexture->Colorize(0, 0);             // gray
+        mpSurface->FillAlpha(0x88333333); 
+        mpSurface->FillAlpha(0x88888888);     
+        mpSurface->Colorize(0, 0);             // gray
     }
 
 	return ZWin::Paint();
@@ -509,7 +509,7 @@ bool ZWinSizablePushBtn::OnMouseUpL(int64_t x, int64_t y)
 	if (AmCapturing())
 	{
 		ReleaseCapture();
-		if ( x > 0 && x < mArea.Width() && y > 0 && y < mArea.Height() )
+		if ( x > 0 && x < mAreaInParent.Width() && y > 0 && y < mAreaInParent.Height() )
 		{
 			gMessageSystem.Post(msButtonMessage);
 		}
@@ -528,7 +528,7 @@ bool ZWinSizablePushBtn::OnMouseMove(int64_t x, int64_t y)
 	if (AmCapturing())
 	{
 		// Mouse button is down
-		if ( x > 0 && x < mArea.Width() && y > 0 && y < mArea.Height() )
+		if ( x > 0 && x < mAreaInParent.Width() && y > 0 && y < mAreaInParent.Height() )
 		{
 			// Mouse button is down and cursor is within button
 			if (mDrawState != kDown)

@@ -74,9 +74,9 @@ bool TestWin::Paint()
     if (!mbInvalid)
         return false;
 
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
-    mpTransformTexture.get()->Fill(0xff003300);
+    mpSurface.get()->Fill(0xff003300);
 
     return ZWin::Paint();
 }
