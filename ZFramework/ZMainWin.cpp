@@ -54,7 +54,24 @@ bool ZMainWin::Shutdown()
 bool ZMainWin::Paint() 
 {
 	return ZWin::Paint();
-}             
+}           
+
+void ZMainWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrc, ZRect rDst, ZWin* pThis)
+{
+    if (!mbInitted || !rSrc.Overlaps(mAreaLocal) || pThis == this)
+        return;
+
+    if (!ZBuffer::Clip(mpSurface.get(), pDest.get(), rSrc, rDst))
+        return;
+
+    for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
+    {
+        ZWin* pChild = *it;
+
+        pChild->RenderToBuffer(pDest, pChild->mAreaLocal, pChild->mAreaInParent, pThis);
+    }
+}
+
 
 void ZMainWin::SetArea(const ZRect& newArea)
 {

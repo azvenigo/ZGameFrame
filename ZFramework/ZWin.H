@@ -18,11 +18,13 @@ class ZWin;
 class ZBuffer;
 class ZXMLNode;
 class ZScreenBuffer;
+class ZMainWin;
 
 typedef std::list<ZWin*> tWinList;
 
 typedef std::map< std::string, tWinList > tGroupNameToWinList;
 
+extern ZMainWin* gpMainWin;
 
 ////////////////////////////////////////////////////
 // class ZWin
@@ -48,7 +50,7 @@ public:
 	virtual void		SignalShutdown();
 	
 public:   
-    virtual ZWin*       GetTopWindow();
+    virtual ZWin*       GetTopWindow() { return (ZWin*)gpMainWin; }
 	virtual	ZWin*		GetParentWin() const { return mpParentWin; }
 	virtual	bool		SetParentWin(ZWin*);
 	
@@ -167,9 +169,6 @@ protected:
 
 protected:
     tZBufferPtr				        mpSurface;
-    ZRect   						mAreaLocal;
-    ZRect							mAreaInParent;
-    ZRect   						mAreaAbsolute;
 	ZPoint  						mMouseDownOffset;
 	tWinList						mChildList;
 	ZWin*   						mpParentWin;
@@ -182,6 +181,10 @@ protected:
 public:
     std::string						msWinName;
     std::string                     msWinGroup; // optional for organizational purposes
+
+    ZRect   						mAreaLocal;
+    ZRect							mAreaInParent;
+    ZRect   						mAreaAbsolute;
 
     
     // Flags

@@ -180,14 +180,14 @@ int main(int argc, char* argv[])
 
                     bool bAnimatorActive = gAnimator.Paint();
 
-                    tRectList rPostAnimDirtyList;
+/*                    tRectList rPostAnimDirtyList;
                     if (gAnimator.GetDirtyRects(rPostAnimDirtyList))
                     {
                         for (auto& r : rPostAnimDirtyList)
                         {
                             pScreenBuffer->RenderVisibleRects(r);
                         }
-                    }
+                    }*/
 
                     pScreenBuffer->EndRender();
                     InvalidateRect(gpGraphicSystem->GetMainHWND(), NULL, false);

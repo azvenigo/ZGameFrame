@@ -274,7 +274,27 @@ bool ZMessageSystem::IsRegistered(const std::string& sTargetName)
 void ZMessageSystem::Post(string sRaw, IMessageTarget* pTarget)
 {
     const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
-    mMessageQueue.push_back(std::move(ZMessage(sRaw, pTarget)));
+
+    if (sRaw[0] == '{')
+    {
+        // multiple messages to parse
+        size_t start = 0;
+        while (start != string::npos)
+        {
+            start++;    // skip the '{'
+            size_t end = sRaw.find('}', start);
+            if (end != string::npos)
+            {
+                string s(sRaw.substr(start, end - start));
+                mMessageQueue.push_back(std::move(ZMessage(s, pTarget)));
+                start = end;
+            }
+
+            start = sRaw.find('{', start+1);
+        }
+    }
+    else
+        mMessageQueue.push_back(std::move(ZMessage(sRaw, pTarget)));
 }
 
 

@@ -307,6 +307,50 @@ bool ZScreenBuffer::RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst)
 }
 
 
+int32_t ZScreenBuffer::RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rClip)
+{
+    if (!mbRenderingEnabled)
+        return 0;
+
+    tZBufferPtr pCurBuffer;
+
+    int64_t nRenderedCount = 0;
+
+    for (auto sr : mScreenRectList)
+    {
+        // If no overlap, move on
+        if (!sr.mrDest.Overlaps(rClip))
+            continue;
+
+
+        // Since the mScreenRectList happens to be sorted so that referenced textures are together, we should lock, render all from that texture, then unlock
+        if (sr.mpSourceBuffer != pCurBuffer)
+        {
+            if (pCurBuffer)
+                pCurBuffer->GetMutex().unlock();
+
+            pCurBuffer = sr.mpSourceBuffer;
+            pCurBuffer->GetMutex().lock();
+        }
+
+        nRenderedCount++;
+        ZRect rTexture(sr.mpSourceBuffer->GetArea());
+
+        ZRect rClippedSource(sr.mSourcePt.x, sr.mSourcePt.y, sr.mSourcePt.x + sr.mrDest.Width(), sr.mSourcePt.y + sr.mrDest.Height());
+        ZRect rClippedDest(sr.mrDest);
+
+        Clip(rClip, rClippedSource, rClippedDest);
+
+        pDst->Blt(sr.mpSourceBuffer.get(), rClippedSource, rClippedDest);
+    }
+
+    if (pCurBuffer)
+        pCurBuffer->GetMutex().unlock();
+
+    return (int32_t)nRenderedCount;
+}
+
+
 
 #endif // _WIN64
 

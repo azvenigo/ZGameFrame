@@ -31,6 +31,108 @@ ZAnimObject::~ZAnimObject()
 {
 }
 
+tRectList ZAnimObject::ComputeDirtyRects(const ZRect& rOldArea, const ZRect& rNewArea)
+{
+
+    tRectList dirtyList;
+
+    ZRect rOverlap(rNewArea);
+    rOverlap.IntersectRect(rOldArea);
+
+    ZRect rDest(rOldArea);
+
+
+
+    //                              rDest
+//     lw      mw      rw     /
+//  ---^-------^-------^---- /
+//         |       |        |             
+//    TL   |   T   |   TR   > th         
+//         |       |        |              
+//  -------+-------+--------|             
+//         |       |        |              
+//     L   |Overlap|   R    > mh             
+//         |       |        |              
+//  -------+-------+--------|             
+//         |       |        |              
+//    BL   |   B   |   BR   > bh 
+//         |       |        |          
+
+
+
+
+
+
+    int64_t lw = rOverlap.left - rDest.left;
+    int64_t mw = rOverlap.Width();
+    int64_t rw = rDest.right - rOverlap.right;
+
+    int64_t th = rOverlap.top - rDest.top;
+    int64_t mh = rOverlap.Height();
+    int64_t bh = rDest.bottom - rOverlap.bottom;
+
+
+    if (lw != 0)		// Consider left three?
+    {
+        if (th != 0)
+        {
+            // TL
+            dirtyList.emplace_back(ZRect(rDest.left, rDest.top, rDest.left + lw, rDest.top + th));
+        }
+
+        if (mh != 0)
+        {
+            // L
+            dirtyList.emplace_back(ZRect(rDest.left, rOverlap.top, rDest.left + lw, rOverlap.bottom));
+        }
+
+        if (bh != 0)
+        {
+            // BL
+            dirtyList.emplace_back(ZRect(rDest.left, rOverlap.bottom, rOverlap.left, rDest.bottom));
+        }
+    }
+
+    if (mw != 0)			// consider top and bottom two?
+    {
+        if (th != 0)
+        {
+            // T
+            dirtyList.emplace_back(ZRect(rOverlap.left, rDest.top, rOverlap.right, rDest.top + th));
+        }
+
+        if (bh != 0)
+        {
+            // B
+            dirtyList.emplace_back(ZRect(rOverlap.left, rOverlap.bottom, rOverlap.right, rDest.bottom));
+        }
+    }
+
+    if (rw != 0)		// consider right three?
+    {
+        if (th != 0)
+        {
+            // TR
+            dirtyList.emplace_back(ZRect(rOverlap.right, rDest.top, rDest.right, rOverlap.top));
+        }
+
+        if (mh != 0)
+        {
+            // R
+            dirtyList.emplace_back(ZRect(rOverlap.right, rOverlap.top, rDest.right, rOverlap.bottom));
+        }
+
+        if (bh != 0)
+        {
+            // BR
+            dirtyList.emplace_back(ZRect(rOverlap.right, rOverlap.bottom, rDest.right, rDest.bottom));
+        }
+    }
+
+    return dirtyList;
+}
+
+
 ZAnimObject_TextMover::ZAnimObject_TextMover(ZGUI::Style _style) : ZAnimObject()
 {
 	mfX  = 0;
@@ -881,7 +983,7 @@ bool ZAnimObject_Transformer::Paint()
 	return true;
 }
 
-ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(tZBufferPtr pImage, ZRect* pArea)
+ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(tZBufferPtr pImage, tZBufferPtr pBackground, ZRect* pArea)
 {
 	ZASSERT(pImage);
 
@@ -895,6 +997,8 @@ ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(tZBufferPtr pImage,
 #ifdef _DEBUG
 	Sprintf(msDebugName, "TransformingImage:%d x %d", mpImage->GetArea().Width(), mpImage->GetArea().Height());
 #endif
+
+    mpBackground = pBackground;
 }
 
 ZAnimObject_TransformingImage::~ZAnimObject_TransformingImage()
@@ -903,10 +1007,12 @@ ZAnimObject_TransformingImage::~ZAnimObject_TransformingImage()
 
 bool ZAnimObject_TransformingImage::Paint()
 {
-	if (mTransformState == ZTransformable::kFinished)
+    tRectList dirtyRects;
+    if (mTransformState == ZTransformable::kFinished)
 	{
 		mState = ZAnimObject::kFinished;
-	}
+        mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
+    }
     else
     {
         
@@ -940,7 +1046,13 @@ bool ZAnimObject_TransformingImage::Paint()
         }
     }
 
+    dirtyRects = ComputeDirtyRects(mrLastDrawArea, mrArea);
 
+    // render the area that's left
+    for (auto& r : dirtyRects)
+    {
+        gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpBackground.get(), r, r);
+    }
 
 	return true;
 }

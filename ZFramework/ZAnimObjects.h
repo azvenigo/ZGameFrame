@@ -34,6 +34,7 @@ public:
 
    virtual void                     SetDestination(tZBufferPtr pDestination) { mpDestination = pDestination; }
 
+   static tRectList                 ComputeDirtyRects(const ZRect& rOldArea, const ZRect& rNewArea);
 
    ZRect                			mrArea;
    ZRect                            mrLastDrawArea;
@@ -155,12 +156,13 @@ protected:
 class ZAnimObject_TransformingImage : public ZAnimObject, public ZTransformable
 {
 public:
-	ZAnimObject_TransformingImage(tZBufferPtr pImage, ZRect* pArea = nullptr);
+	ZAnimObject_TransformingImage(tZBufferPtr pImage, tZBufferPtr pBackground = nullptr, ZRect* pArea = nullptr);
 	virtual ~ZAnimObject_TransformingImage();
 
 	virtual bool  Paint();
 
     tZBufferPtr mpImage;
+    tZBufferPtr mpBackground;   // snapshot of the screen when animation object is instantiated for transparency, non-rectangular rasterization, etc.
 };
 
 

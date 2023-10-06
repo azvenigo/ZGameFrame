@@ -148,16 +148,6 @@ void ZWin::TransformIn()
 {
 	if (mTransformIn != kNone)
 	{
-        tZBufferPtr renderedBuf(new ZBuffer());
-        renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
-        RenderToBuffer(renderedBuf, mAreaLocal, mAreaLocal, nullptr);
-
-        ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf);
-
-
-        ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
-		ZTransformation end(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
-
         ZRect rp;
         if (mpParentWin)
             rp.SetRect(mpParentWin->GetArea());
@@ -165,14 +155,33 @@ void ZWin::TransformIn()
             rp.SetRect(grFullArea);
 
 
-		switch (mTransformIn)
-		{
-		case kFade:			start.mnAlpha = 0;                                  break;
-		case kSlideLeft:	start.mPosition.x = rp.right;		                break;
-		case kSlideRight:	start.mPosition.x = rp.left - mAreaLocal.Width();    break;
-		case kSlideUp:		start.mPosition.y = rp.bottom;		                break;
-		case kSlideDown:	start.mPosition.y = rp.top - mAreaLocal.Height();    break;
-		}
+        ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
+        ZTransformation end(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
+
+
+        switch (mTransformIn)
+        {
+        case kFade:			start.mnAlpha = 0;                                  break;
+        case kSlideLeft:	start.mPosition.x = rp.right;		                break;
+        case kSlideRight:	start.mPosition.x = rp.left - mAreaLocal.Width();    break;
+        case kSlideUp:		start.mPosition.y = rp.bottom;		                break;
+        case kSlideDown:	start.mPosition.y = rp.top - mAreaLocal.Height();    break;
+        }
+
+        MoveTo(start.mPosition.x, start.mPosition.y);
+
+        SetVisible();
+        tZBufferPtr renderedBuf(new ZBuffer());
+        renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
+        RenderToBuffer(renderedBuf, mAreaLocal, mAreaLocal, nullptr);
+
+        tZBufferPtr backgroundBuf(new ZBuffer());
+        backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
+        GetTopWindow()->RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
+
+        ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf, backgroundBuf);
+
+
 
         pImage->StartTransformation(start);
 
@@ -180,7 +189,7 @@ void ZWin::TransformIn()
 
 
 
-        Sprintf(end.msCompletionMessage, "set_visible;visible=1;target=%s", GetTargetName().c_str());    // set visible on completion
+        Sprintf(end.msCompletionMessage, "{set_visible;visible=1;target=%s},{move_to;x=%d;y=%d;target=%s}", GetTargetName().c_str(), end.mPosition.x, end.mPosition.y, GetTargetName().c_str());    // set visible on completion
         pImage->AddTransformation(end, mnTransformInTime);
 
         gAnimator.AddObject(pImage);
@@ -193,11 +202,18 @@ void ZWin::TransformOut()
 {
 	if (mTransformOut != kNone)
 	{
+        SetVisible();
+
         tZBufferPtr renderedBuf(new ZBuffer());
         renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
         RenderToBuffer(renderedBuf, mAreaLocal, mAreaLocal, nullptr);
 
-		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf);
+        tZBufferPtr backgroundBuf(new ZBuffer());
+        backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
+        GetTopWindow()->RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
+
+
+		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf, backgroundBuf);
 		ZTransformation trans(ZPoint(mAreaInParent.left, mAreaInParent.top));
 
 		pImage->StartTransformation(trans);
@@ -220,7 +236,8 @@ void ZWin::TransformOut()
         pImage->AddTransformation(trans,mnTransformOutTime);
 
 		gAnimator.AddObject(pImage);
-        SetVisible(false);
+        gMessageSystem.Post("set_visible", this, "visible", "0");   // posting a message instead of hiding immediately to delay until animation can render
+//        SetVisible(false);
     }
 }
 
@@ -271,16 +288,6 @@ void ZWin::ArrangeWindows(tWinList windows, ZRect rArea, ZGUI::Style& style, int
         }
     }
 }
-
-
-ZWin* ZWin::GetTopWindow()
-{
-    if (!mpParentWin)
-        return this;
-
-    return mpParentWin->GetTopWindow();
-}
-
 
 bool ZWin::SetParentWin(ZWin* pNewParent) 
 {
@@ -632,7 +639,7 @@ bool ZWin::Process()
     return false; 
 }
 
-bool  ZWin::Paint() 
+bool  ZWin::Paint()
 {
     if (!mbInitted || !mbInvalid)
         return false;
@@ -645,19 +652,17 @@ bool  ZWin::Paint()
 
 void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrc, ZRect rDst, ZWin* pThis)
 {
-    if (!mbInitted || !rSrc.Overlaps(mAreaLocal) || pThis == this)
+    if (!mbInitted || !mbVisible || !rSrc.Overlaps(mAreaLocal) || pThis == this)
         return;
 
     if (!ZBuffer::Clip(mpSurface.get(), pDest.get(), rSrc, rDst))
         return;
 
-//    if (mbVisible)
-    {
-        Paint();
-        mpSurface.get()->GetMutex().lock();
-        pDest->Blt(mpSurface.get(), rSrc, rDst);
-        mpSurface.get()->GetMutex().unlock();
-    }
+    Paint();
+    mpSurface.get()->GetMutex().lock();
+    pDest->Blt(mpSurface.get(), rSrc, rDst);
+    mpSurface.get()->GetMutex().unlock();
+
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
     {
         ZWin* pChild = *it;
@@ -884,6 +889,11 @@ bool ZWin::HandleMessage(const ZMessage& message)
     else if (sType == "set_visible")
     {
         SetVisible( SH::ToBool(message.GetParam("visible")) );
+        return true;
+    }
+    else if (sType == "move_to")
+    {
+        MoveTo(SH::ToInt(message.GetParam("x")), SH::ToInt(message.GetParam("y")));
         return true;
     }
 

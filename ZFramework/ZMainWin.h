@@ -18,6 +18,8 @@ public:
 	bool    Paint();
     bool    ComputeVisibility();
     void    SetArea(const ZRect& newArea);
+    void    RenderToBuffer(tZBufferPtr pTexture, ZRect rSrc, ZRect rDst, ZWin* pThis = nullptr); // override because this window is never visible
+
 
     void    ShowMessageBox(std::string title, std::string message, std::string onOKMessage);
 

@@ -57,115 +57,11 @@ bool ZAnimator::Paint()
             it = itNext;
             continue;
         }
-        else
-            AddDirtyRects(pObject->mrLastDrawArea, pObject->mrArea);   // compute the areas left behind after animation objects have left
 
         it++;
     }
 
    return mAnimObjectList.empty();  // true if there are still objects to animate
-}
-
-void ZAnimator::AddDirtyRects(const ZRect& rOldArea, const ZRect& rNewArea)
-{
-    ZRect rOverlap(rNewArea);
-    rOverlap.IntersectRect(rOldArea);
-
-    ZRect rDest(rOldArea);
-
-
-
-    	//                              rDest
-	//     lw      mw      rw     /
-	//  ---^-------^-------^---- /
-	//         |       |        |             
-	//    TL   |   T   |   TR   > th         
-	//         |       |        |              
-	//  -------+-------+--------|             
-	//         |       |        |              
-	//     L   |Overlap|   R    > mh             
-	//         |       |        |              
-	//  -------+-------+--------|             
-	//         |       |        |              
-	//    BL   |   B   |   BR   > bh 
-	//         |       |        |          
-
-
-
-
-
-
-    int64_t lw = rOverlap.left - rDest.left;
-    int64_t mw = rOverlap.Width();
-    int64_t rw = rDest.right - rOverlap.right;
-
-    int64_t th = rOverlap.top - rDest.top;
-    int64_t mh = rOverlap.Height();
-    int64_t bh = rDest.bottom - rOverlap.bottom;
-
-
-
-
-
-
-    const std::lock_guard<std::mutex> lock(mPostPaintDirtyListMutex);
-
-    if (lw != 0)		// Consider left three?
-    {
-        if (th != 0)
-        {
-            // TL
-            mPostPaintDirtyList.emplace_back(ZRect(rDest.left, rDest.top, rDest.left + lw, rDest.top + th));
-        }
-
-        if (mh != 0)
-        {
-            // L
-            mPostPaintDirtyList.emplace_back(ZRect(rDest.left, rOverlap.top, rDest.left + lw, rOverlap.bottom));
-        }
-
-        if (bh != 0)
-        {
-            // BL
-            mPostPaintDirtyList.emplace_back(ZRect(rDest.left, rOverlap.bottom, rOverlap.left, rDest.bottom));
-        }
-    }
-
-    if (mw != 0)			// consider top and bottom two?
-    {
-        if (th != 0)
-        {
-            // T
-            mPostPaintDirtyList.emplace_back(ZRect(rOverlap.left, rDest.top, rOverlap.right, rDest.top + th));
-        }
-
-        if (bh != 0)
-        {
-            // B
-            mPostPaintDirtyList.emplace_back(ZRect(rOverlap.left, rOverlap.bottom, rOverlap.right, rDest.bottom));
-        }
-    }
-
-    if (rw != 0)		// consider right three?
-    {
-        if (th != 0)
-        {
-            // TR
-            mPostPaintDirtyList.emplace_back(ZRect(rOverlap.right, rDest.top, rDest.right, rOverlap.top));
-        }
-
-        if (mh != 0)
-        {
-            // R
-            mPostPaintDirtyList.emplace_back(ZRect(rOverlap.right, rOverlap.top, rDest.right, rOverlap.bottom));
-        }
-
-        if (bh != 0)
-        {
-            // BR
-            mPostPaintDirtyList.emplace_back(ZRect(rOverlap.right, rOverlap.bottom, rDest.right, rDest.bottom));
-        }
-    }
 }
 
 
