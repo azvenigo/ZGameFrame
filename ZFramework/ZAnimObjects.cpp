@@ -994,11 +994,16 @@ ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(tZBufferPtr pImage,
 
 	ZTransformable::Init(mrArea);
     mpImage = pImage;
+
+
+    mpBackground = pBackground;
+
+    mpWorkingBuffer.reset(new ZBuffer());
+    mpWorkingBuffer->Init(mpBackground->GetArea().Width(), mpBackground->GetArea().Height());
+
 #ifdef _DEBUG
 	Sprintf(msDebugName, "TransformingImage:%d x %d", mpImage->GetArea().Width(), mpImage->GetArea().Height());
 #endif
-
-    mpBackground = pBackground;
 }
 
 ZAnimObject_TransformingImage::~ZAnimObject_TransformingImage()
@@ -1011,7 +1016,8 @@ bool ZAnimObject_TransformingImage::Paint()
     if (mTransformState == ZTransformable::kFinished)
 	{
 		mState = ZAnimObject::kFinished;
-        mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
+        //mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
+        mrArea = mBounds;
     }
     else
     {
@@ -1023,26 +1029,31 @@ bool ZAnimObject_TransformingImage::Paint()
             bFirstDraw = true;
 
         mrLastDrawArea = mrArea;
-        mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
+//        mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
+        mrArea = mBounds;
 
         // if this is the first time drawing, re-set
         if (bFirstDraw)
             mrLastDrawArea = mrArea;
 
-        if (mpDestination)
+        if (mCurTransform.mScale == 1.0 && mCurTransform.mRotation == 0 && mCurTransform.mnAlpha > 0xf0)
         {
-            if (mCurTransform.mRotation == 0 && mCurTransform.mScale == 1.0)
-            {
+            if (mpDestination)
                 mpDestination->Blt(mpImage.get(), mpImage->GetArea(), mrArea);
-            }
             else
-            {
-                gRasterizer.Rasterize(mpDestination.get(), mpImage.get(), mVerts);
-            }
+                gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpImage.get(), mpImage->GetArea(), mrArea);
         }
         else
         {
-            gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpImage.get(), mpImage->GetArea(), mrArea);
+            mpWorkingBuffer->CopyPixels(mpBackground.get());
+
+            if (mpDestination)
+                mpDestination->Blt(mpImage.get(), mpImage->GetArea(), mrArea);
+            else
+            {
+                gRasterizer.RasterizeWithAlpha(mpWorkingBuffer.get(), mpImage.get(), mVerts, nullptr, mCurTransform.mnAlpha);
+                gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpWorkingBuffer.get(), mBounds, mBounds);
+            }
         }
     }
 

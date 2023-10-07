@@ -178,16 +178,17 @@ int main(int argc, char* argv[])
                     nTotalFrames += 1;
                     //				    ZOUT("render took time:%lld us. Rects:%d/%d. Total Frames:%d, avg frame time:%lld us\n", nEndRenderVisible - nStartRenderVisible, nRenderedCount, pScreenBuffer->GetVisibilityCount(), nTotalFrames, (nTotalRenderTime/nTotalFrames));
 
-                    bool bAnimatorActive = gAnimator.Paint();
-
-/*                    tRectList rPostAnimDirtyList;
+                    tRectList rPostAnimDirtyList;
                     if (gAnimator.GetDirtyRects(rPostAnimDirtyList))
                     {
                         for (auto& r : rPostAnimDirtyList)
                         {
                             pScreenBuffer->RenderVisibleRects(r);
                         }
-                    }*/
+                    }
+
+                    bool bAnimatorActive = gAnimator.Paint();
+
 
                     pScreenBuffer->EndRender();
                     InvalidateRect(gpGraphicSystem->GetMainHWND(), NULL, false);

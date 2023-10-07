@@ -23,14 +23,14 @@ public:
     
     bool HasActiveObjects() { return !mAnimObjectList.empty(); }
 
-    bool GetDirtyRects(tRectList& outList);
+    bool GetDirtyRects(tRectList& outList); // std::moves the list out
 
 protected:
     tRectList mPostPaintDirtyList;        // rects that need to be redrawn after animation object has moved away
     std::mutex mPostPaintDirtyListMutex;
 
 
-    void AddDirtyRects(const ZRect& rOldArea, const ZRect& rNewArea);
+    void AddDirtyRect(const ZRect& rDirty);
     tAnimObjectList mAnimObjectList;
 };
 

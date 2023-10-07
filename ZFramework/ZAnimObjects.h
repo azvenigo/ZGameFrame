@@ -163,6 +163,7 @@ public:
 
     tZBufferPtr mpImage;
     tZBufferPtr mpBackground;   // snapshot of the screen when animation object is instantiated for transparency, non-rectangular rasterization, etc.
+    tZBufferPtr mpWorkingBuffer;
 };
 
 

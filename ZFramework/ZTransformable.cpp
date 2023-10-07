@@ -178,8 +178,12 @@ bool ZTransformable::Tick()
 			}
 			else
 			{
-				mbFirstTransformation = mStartTransform.mPosition == mEndTransform.mPosition;
+				mbFirstTransformation = mStartTransform == mEndTransform;
 				// Begin a transformation from the current to the next in the list
+
+                if (!mbFirstTransformation && !mEndTransform.msCompletionMessage.empty())
+                    gMessageSystem.Post(mEndTransform.msCompletionMessage);
+
 
 				mStartTransform = mCurTransform;
 
@@ -243,7 +247,11 @@ bool ZTransformable::Tick()
             mCurTransform.mPosition.y = (int64_t)((double)mStartTransform.mPosition.y + (double)(mEndTransform.mPosition.y - mStartTransform.mPosition.y) * fT);
             mCurTransform.mRotation = mStartTransform.mRotation + (mEndTransform.mRotation - mStartTransform.mRotation) * fT;
             mCurTransform.mScale = mStartTransform.mScale + (mEndTransform.mScale - mStartTransform.mScale) * fT;
-            mCurTransform.mnAlpha = (uint32_t)(mStartTransform.mnAlpha + (mEndTransform.mnAlpha - mStartTransform.mnAlpha) * fT);
+            mCurTransform.mnAlpha = (uint32_t)((int32_t)mStartTransform.mnAlpha + ((int32_t)mEndTransform.mnAlpha - (int32_t)mStartTransform.mnAlpha) * fT);
+            mCurTransform.msCompletionMessage = mEndTransform.msCompletionMessage;
+
+            ZDEBUG_OUT("alpha:", mCurTransform.mnAlpha, "\n");
+
         }
         else
             mCurTransform = mEndTransform;
@@ -274,11 +282,24 @@ void ZTransformable::UpdateVertsAndBounds()
 	double centerX = (double) mCurTransform.mPosition.x + mrBaseArea.Width()/2;
 	double centerY = (double) mCurTransform.mPosition.y + mrBaseArea.Height()/2;
 
+
+    mBounds.left = MAXINT32;
+    mBounds.right = MININT32;
+    mBounds.top = MAXINT32;
+    mBounds.bottom = MININT32;
 	for (int i = 0; i < 4; i++)
 	{
 		TransformPoint(mVerts[i].x, mVerts[i].y, centerX, centerY, mCurTransform.mRotation, mCurTransform.mScale);
 		int64_t nX = (int64_t) mVerts[i].x;
 		int64_t nY = (int64_t) mVerts[i].y;
+        if (mBounds.left > nX)
+            mBounds.left = nX;
+        if (mBounds.right < nX)
+            mBounds.right = nX;
+        if (mBounds.top > nY)
+            mBounds.top = nY;
+        if (mBounds.bottom < nY)
+            mBounds.bottom = nY;
 	}
 }
 

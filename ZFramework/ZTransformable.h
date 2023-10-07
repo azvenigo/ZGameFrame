@@ -82,6 +82,7 @@ protected:
 
     ZRect					mrBaseArea; // untransformed rect
     tUVVertexArray			mVerts;
+    ZRect                   mBounds;
 
 
 private:

@@ -27,6 +27,7 @@ ZWinImage::ZWinImage()
     nSubsampling = 0;
     mpTable = nullptr;
     mFillColor = 0;
+    mIdleSleepMS = 10000;
 
     mBehavior = eBehavior::kNone;
 }
@@ -40,7 +41,6 @@ bool ZWinImage::Init()
     if (mbInitted)
         return true;
 
-    mIdleSleepMS = 10000;
     mCaptionMap["zoom"].style = gStyleCaption;
     mCaptionMap["zoom"].style.pos = ZGUI::LB;
 //    Clear();
@@ -529,7 +529,6 @@ bool ZWinImage::Paint()
 
     Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
     mCaptionMap["zoom"].visible = gInput.IsKeyDown(mZoomHotkey);
-    mCaptionMap["filename"].visible = !mCaptionMap["zoom"].visible; // either zoom or filename should be visible
 
 
 	return ZWin::Paint();

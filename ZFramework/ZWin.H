@@ -38,7 +38,9 @@ public:
 		kSlideLeft	= 2,
 		kSlideRight = 3,
 		kSlideUp	= 4,
-		kSlideDown	= 5
+		kSlideDown	= 5,
+        kSpinCW     = 6,
+        kSpinCCW    = 7
 	};
 
 	ZWin();

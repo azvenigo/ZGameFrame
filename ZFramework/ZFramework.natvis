@@ -12,4 +12,14 @@
   </Expand>
 </Type>
 
+<Type Name="tUVVertex&lt;*&gt;">
+  <DisplayString>x={x} y={y} u={u} v={v}</DisplayString>
+  <Expand>
+	  <Item Name="x">x</Item>
+	  <Item Name="y">y</Item>
+	  <Item Name="u">u</Item>
+	  <Item Name="v">v</Item>
+  </Expand>
+</Type>
+
 </AutoVisualizer>

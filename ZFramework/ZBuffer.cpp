@@ -40,11 +40,11 @@ ZBuffer::ZBuffer()
 	mSurfaceArea.SetRect(0,0,0,0);
 }
 
-ZBuffer::ZBuffer(const ZBuffer* pSrc) : ZBuffer()
+ZBuffer::ZBuffer(ZBuffer* pSrc) : ZBuffer()
 {
     ZRect rArea(pSrc->mSurfaceArea);
     Init(rArea.Width(), rArea.Height());
-    Blt((ZBuffer*) pSrc, rArea, rArea);
+    CopyPixels(pSrc);
 }
 
 
@@ -758,8 +758,23 @@ CEASSERT(!"No implemented");
 return false;
 }*/
 
+bool ZBuffer::CopyPixels(ZBuffer* pSrc)
+{
+    if (pSrc->GetArea() != mSurfaceArea)
+        return false;
+
+    memcpy(mpPixels, pSrc->GetPixels(), mSurfaceArea.Width() * mSurfaceArea.Height() * 4);
+    return true;
+}
+
 bool ZBuffer::CopyPixels(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip)
 {
+    if (pSrc->GetArea() == mSurfaceArea && rSrc == mSurfaceArea && rDst == mSurfaceArea)
+    {
+        memcpy(mpPixels, pSrc->GetPixels(), mSurfaceArea.Width() * mSurfaceArea.Height() * 4);
+        return true;
+    }
+
 	ZRect rSrcClipped(rSrc);
 	ZRect rDstClipped(rDst);
 

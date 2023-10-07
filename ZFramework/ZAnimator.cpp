@@ -47,6 +47,7 @@ bool ZAnimator::Paint()
 
         if (pObject->GetState() == ZAnimObject::kFinished)
         {
+            AddDirtyRect(pObject->mrLastDrawArea);
             tAnimObjectList::iterator itNext = it;
             itNext++;
 
@@ -64,6 +65,12 @@ bool ZAnimator::Paint()
    return mAnimObjectList.empty();  // true if there are still objects to animate
 }
 
+
+void ZAnimator::AddDirtyRect(const ZRect& rDirty)
+{
+    const std::lock_guard<std::mutex> lock(mPostPaintDirtyListMutex);
+    mPostPaintDirtyList.push_back(rDirty);
+}
 
 bool ZAnimator::GetDirtyRects(tRectList& outList)
 {

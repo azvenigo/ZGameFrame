@@ -269,6 +269,9 @@ bool ZScreenBuffer::RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst)
     if (!mbRenderingEnabled || !pSrc)
         return false;
 
+    if (!mSurfaceArea.Overlaps(rDst))
+        return true;
+
     BITMAPINFO bmpInfo;
     bmpInfo.bmiHeader.biBitCount = 32;
     bmpInfo.bmiHeader.biCompression = BI_RGB;

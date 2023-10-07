@@ -163,9 +163,11 @@ void ZWin::TransformIn()
         {
         case kFade:			start.mnAlpha = 0;                                  break;
         case kSlideLeft:	start.mPosition.x = rp.right;		                break;
-        case kSlideRight:	start.mPosition.x = rp.left - mAreaLocal.Width();    break;
+        case kSlideRight:	start.mPosition.x = rp.left - mAreaLocal.Width();   break;
         case kSlideUp:		start.mPosition.y = rp.bottom;		                break;
-        case kSlideDown:	start.mPosition.y = rp.top - mAreaLocal.Height();    break;
+        case kSlideDown:	start.mPosition.y = rp.top - mAreaLocal.Height();   break;
+        case kSpinCW:       start.mRotation = -mnTransformInTime/100.0;          break;
+        case kSpinCCW:      start.mRotation = mnTransformInTime / 100.0;         break;
         }
 
         MoveTo(start.mPosition.x, start.mPosition.y);
@@ -188,9 +190,12 @@ void ZWin::TransformIn()
 //        mnTransformInTime = 1000;
 
 
+        ZTransformation lastTrans(end);
 
-        Sprintf(end.msCompletionMessage, "{set_visible;visible=1;target=%s},{move_to;x=%d;y=%d;target=%s}", GetTargetName().c_str(), end.mPosition.x, end.mPosition.y, GetTargetName().c_str());    // set visible on completion
+
+        Sprintf(end.msCompletionMessage, "{move_to;x=%d;y=%d;target=%s},{set_visible;visible=1;target=%s}", end.mPosition.x, end.mPosition.y, GetTargetName().c_str(), GetTargetName().c_str());    // set visible on completion
         pImage->AddTransformation(end, mnTransformInTime);
+        pImage->AddTransformation(lastTrans, 120);
 
         gAnimator.AddObject(pImage);
         SetVisible(false);
@@ -214,9 +219,13 @@ void ZWin::TransformOut()
 
 
 		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf, backgroundBuf);
-		ZTransformation trans(ZPoint(mAreaInParent.left, mAreaInParent.top));
+		ZTransformation start(ZPoint(mAreaInParent.left, mAreaInParent.top));
+        ZTransformation end(start);
 
-		pImage->StartTransformation(trans);
+
+        pImage->StartTransformation(start);
+        Sprintf(start.msCompletionMessage, "set_visible;visible=0;target=%s", GetTargetName().c_str());    // set visible after first rendered 
+        pImage->AddTransformation(start, 120);
 
         ZRect rp;
         if (mpParentWin)
@@ -226,17 +235,18 @@ void ZWin::TransformOut()
 
 		switch (mTransformOut)
 		{
-		case kFade:			trans.mnAlpha = 0;                                              break;
-        case kSlideLeft:    trans.mPosition.x = rp.left - mAreaLocal.Width();    break;
- 		case kSlideRight:	trans.mPosition.x = rp.right;                        break;
-		case kSlideUp:		trans.mPosition.y = rp.top - mAreaLocal.Height();    break;
-		case kSlideDown:	trans.mPosition.y = rp.bottom;                       break;
-		}
+		case kFade:			end.mnAlpha = 0;                                              break;
+        case kSlideLeft:    end.mPosition.x = rp.left - mAreaLocal.Width();    break;
+ 		case kSlideRight:	end.mPosition.x = rp.right;                        break;
+		case kSlideUp:		end.mPosition.y = rp.top - mAreaLocal.Height();    break;
+		case kSlideDown:	end.mPosition.y = rp.bottom;                       break;
+        case kSpinCW:       end.mRotation = mnTransformInTime / 100.0;          break;
+        case kSpinCCW:      end.mRotation = -mnTransformInTime / 100.0;         break;
+        }
 
-        pImage->AddTransformation(trans,mnTransformOutTime);
+        pImage->AddTransformation(end,mnTransformOutTime);
 
 		gAnimator.AddObject(pImage);
-        gMessageSystem.Post("set_visible", this, "visible", "0");   // posting a message instead of hiding immediately to delay until animation can render
 //        SetVisible(false);
     }
 }
@@ -1092,8 +1102,8 @@ bool ZWinDialog::Init()
     if (!arrangeList.empty())
         ArrangeWindows(arrangeList, rButtonArea, gStyleButton, -1, 1);
 
-    mTransformIn = kSlideLeft;
-    mTransformOut = kSlideRight;
+    mTransformIn = kFade;
+    mTransformOut = kFade;
 
     ZWin::Init();
     SetFocus();

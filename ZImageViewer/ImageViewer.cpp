@@ -122,7 +122,6 @@ void ImageViewer::UpdateUI()
 {
 
     ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
-    UpdateControlPanel();
 
     if (mOutstandingMetadataCount == -1 && !mpRatedImagesStrip && !mRankedImageMetadata.empty())
     {
@@ -151,10 +150,11 @@ void ImageViewer::UpdateUI()
             mpRatedImagesStrip->SetVisible(false);
     }
 
-    if (mpWinImage)
+    if (mpWinImage && mbInitted)
         mpWinImage->SetArea(rImageArea);
 
     UpdateCaptions();
+    UpdateControlPanel();
     InvalidateChildren();
 }
 
@@ -2370,6 +2370,8 @@ void ImageViewer::UpdateCaptions()
     if (gInput.IsKeyDown(VK_MENU))
         bShow = true;
 
+    mpWinImage->mCaptionMap["filename"].Clear();
+    mpWinImage->mCaptionMap["folder"].Clear();
     mpWinImage->mCaptionMap["favorite"].Clear();
     mpWinImage->mCaptionMap["for_delete"].Clear();
     mpWinImage->mCaptionMap["no_image"].Clear();
@@ -2509,11 +2511,12 @@ void ImageViewer::UpdateCaptions()
 
         }
 
-
-        mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
-        mpWinImage->mCaptionMap["folder"].style = folderStyle;
-        mpWinImage->mCaptionMap["folder"].visible = bShow;
-
+        if (bShow)
+        {
+            mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
+            mpWinImage->mCaptionMap["folder"].style = folderStyle;
+            mpWinImage->mCaptionMap["folder"].visible = true;
+        }
 
 
         if (!mMoveToFolder.empty())

@@ -48,13 +48,14 @@ public:
     };
 
 	ZBuffer();
-    ZBuffer(const ZBuffer* pSrc);
+    ZBuffer(ZBuffer* pSrc);
 	virtual ~ZBuffer();
 
 	virtual bool            Init(int64_t nWidth, int64_t nHeight);
 	virtual bool            Shutdown();
 
     // Accessors and Manipulation
+    virtual bool            CopyPixels(ZBuffer* pSrc);      // if dimensions are identical, copy everything wholesale
     virtual bool            CopyPixels(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip = NULL);		// like BLT but copies pixel values directly.... including alpha
     virtual uint32_t        GetPixel(int64_t x, int64_t y);
     virtual void            SetPixel(int64_t x, int64_t y, uint32_t nCol);
