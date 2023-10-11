@@ -2,6 +2,14 @@
 #include "helpers/StringHelpers.h"
 #include "ZTimer.h"
 #include "ZMainWin.h"
+#include "ZWinText.H"
+
+
+ZInput::ZInput() : captureWin(nullptr), mouseOverWin(nullptr), keyboardFocusWin(nullptr), lastMouseMove(-1, -1), lastMouseMoveTime(0), bMouseHoverPosted(false)
+{
+    mpTooltipWin = new ZWinLabel();
+}
+
 
 void ZInput::OnKeyDown(uint32_t key)
 {
@@ -124,6 +132,9 @@ void ZInput::OnMouseMove(int64_t x, int64_t y)
         gMessageSystem.Post(cursorMessage);
 
         CheckForMouseOverNewWindow();
+
+        if (mpTooltipWin->mbVisible)
+            UpdateTooltipLocation(lastMouseMove);
     }
 }
 
@@ -198,4 +209,56 @@ void ZInput::CheckMouseForHover()
         bMouseHoverPosted = true;
     }
 }
+
+bool ZInput::ShowTooltip(const std::string& tooltip, const ZGUI::Style& style)
+{
+    if (!mpTooltipWin->mbInitted)
+        gpMainWin->ChildAdd(mpTooltipWin);
+
+
+    if (mpTooltipWin->Init())
+    {
+        mpTooltipWin->mIdleSleepMS = 100;
+    }
+
+    mpTooltipWin->msText = tooltip;
+    mpTooltipWin->mStyle = style;
+
+    ZRect rTooltip;
+    tZFontPtr pTooltipFont = mpTooltipWin->mStyle.Font();
+    rTooltip = pTooltipFont->StringRect(tooltip);
+    rTooltip.InflateRect(style.paddingH, style.paddingV);
+    mpTooltipWin->SetArea(rTooltip);
+
+    mpTooltipWin->SetVisible();
+    toolTipAppear = lastMouseMove;
+    UpdateTooltipLocation(lastMouseMove);
+    return true;
+}
+
+bool ZInput::UpdateTooltipLocation(ZPoint pt)
+{
+    if (!mpTooltipWin->mbVisible)
+        return true;
+
+    ZRect rTooltip(mpTooltipWin->GetArea());
+
+    // ensure the tooltip is entirely visible on the window + a little padding
+    ZPoint adjustedPt(lastMouseMove.x - rTooltip.Width()/2, lastMouseMove.y + gM/2);
+
+    limit<int64_t>(adjustedPt.x, grFullArea.left + gSpacer, grFullArea.right - (rTooltip.Width() - gSpacer));
+    limit<int64_t>(adjustedPt.y, grFullArea.top + gSpacer, grFullArea.bottom - (rTooltip.Height() - gSpacer));
+
+    if ((toolTipAppear.x - pt.x) * (toolTipAppear.x - pt.x) + (toolTipAppear.y - pt.y) * (toolTipAppear.y - pt.y) > 2 * (gM * gM))
+        mpTooltipWin->SetVisible(false);
+    else
+    {
+        mpTooltipWin->MoveTo(adjustedPt.x, adjustedPt.y);
+        mpTooltipWin->Invalidate();
+    }
+
+    return true;
+}
+
+
 

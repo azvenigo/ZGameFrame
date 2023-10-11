@@ -74,12 +74,12 @@ void ImageContest::HandleQuitCommand()
 
 void ImageContest::UpdateUI()
 {
-    ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
+//    ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
     UpdateControlPanel();
     UpdateCaptions();
 
     ZRect rImageArea(mAreaLocal);
-    if (mpPanel && mpPanel->IsVisible())
+    if (mpPanel && mpPanel->mbVisible)
         rImageArea.top = mpPanel->GetArea().bottom;
 
 
@@ -382,13 +382,13 @@ bool ImageContest::Init()
 
         mpChooseBtn[kLeft] = new ZWinSizablePushBtn();
         mpChooseBtn[kLeft]->mSVGImage.Load(sAppPath + "/res/left.svg");
-        mpChooseBtn[kLeft]->SetTooltip("Choose Left");
+        mpChooseBtn[kLeft]->msTooltip = "Choose Left";
         mpChooseBtn[kLeft]->SetMessage(ZMessage("select_winner;side=left", this));
         ChildAdd(mpChooseBtn[kLeft]);
 
         mpChooseBtn[kRight] = new ZWinSizablePushBtn();
         mpChooseBtn[kRight]->mSVGImage.Load(sAppPath + "/res/right.svg");
-        mpChooseBtn[kRight]->SetTooltip("Choose Right");
+        mpChooseBtn[kRight]->msTooltip = "Choose Right";
         mpChooseBtn[kRight]->SetMessage(ZMessage("select_winner;side=right", this));
         ChildAdd(mpChooseBtn[kRight]);
 
@@ -444,7 +444,7 @@ void ImageContest::UpdateControlPanel()
     // panel needs to be created or is wrong dimensions
     if (mpPanel)
     {
-        ZDEBUG_OUT("Deleting Control Panel\n");
+        //ZDEBUG_OUT("Deleting Control Panel\n");
         ChildDelete(mpPanel);
         mpPanel = nullptr;
     }
@@ -480,6 +480,7 @@ void ImageContest::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath+"/res/exit.svg");
+    pBtn->msTooltip = "Back to viewer";
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("quit", this));
     mpPanel->ChildAdd(pBtn);
@@ -491,7 +492,7 @@ void ImageContest::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
-    pBtn->SetTooltip("Go to Folder");
+    pBtn->msTooltip = "Go to Folder";
     pBtn->mSVGImage.style.paddingH = (int32_t)nButtonPadding;
     pBtn->mSVGImage.style.paddingV = (int32_t)nButtonPadding;
 
@@ -525,6 +526,7 @@ void ImageContest::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "Reset";  // undo glyph
+    pBtn->msTooltip = "Resets all of the ratings for images in this folder";
     pBtn->mCaption.style = gDefaultGroupingStyle;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->mCaption.style.pos = ZGUI::C;

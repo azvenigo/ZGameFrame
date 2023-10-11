@@ -51,7 +51,7 @@ bool TestWin::Init()
 
         ZWinSizablePushBtn* pBtn = new ZWinSizablePushBtn();
         pBtn->mSVGImage.Load("C:/temp/svg/tivo.svg");
-        pBtn->SetTooltip("Test Tooltip");
+        pBtn->msTooltip = "Test Tooltip";
         pBtn->mSVGImage.style.paddingH = 30;
         pBtn->mSVGImage.style.paddingV = 30;
 

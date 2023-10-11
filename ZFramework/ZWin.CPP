@@ -46,7 +46,8 @@ mTransformOut(kNone),
 mnTransformInTime(kDefaultTransformTime),
 mnTransformOutTime(kDefaultTransformTime),
 mbShutdownFlag(false),
-mIdleSleepMS(kDefaultIdleTime)
+mIdleSleepMS(kDefaultIdleTime),
+mTooltipStyle(gStyleTooltip)
 {
 //    Sprintf(msWinName, "win_%x", this); // default to unique window name
 
@@ -175,7 +176,7 @@ void ZWin::TransformIn()
         SetVisible();
         tZBufferPtr renderedBuf(new ZBuffer());
         renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
-        RenderToBuffer(renderedBuf, mAreaLocal, mAreaLocal, nullptr);
+        RenderToBuffer(renderedBuf, mAreaAbsolute, mAreaLocal, nullptr);
 
         tZBufferPtr backgroundBuf(new ZBuffer());
         backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
@@ -207,16 +208,18 @@ void ZWin::TransformOut()
 {
 	if (mTransformOut != kNone)
 	{
-        SetVisible();
-
-        tZBufferPtr renderedBuf(new ZBuffer());
-        renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
-        RenderToBuffer(renderedBuf, mAreaLocal, mAreaLocal, nullptr);
-
         tZBufferPtr backgroundBuf(new ZBuffer());
         backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
         GetTopWindow()->RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
 
+
+
+        SetVisible();
+
+        tZBufferPtr renderedBuf(new ZBuffer());
+        renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
+        RenderToBuffer(renderedBuf, mAreaAbsolute, mAreaLocal, nullptr);
+        //SetVisible(false);
 
 		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf, backgroundBuf);
 		ZTransformation start(ZPoint(mAreaInParent.left, mAreaInParent.top));
@@ -224,8 +227,6 @@ void ZWin::TransformOut()
 
 
         pImage->StartTransformation(start);
-        Sprintf(start.msCompletionMessage, "set_visible;visible=0;target=%s", GetTargetName().c_str());    // set visible after first rendered 
-        pImage->AddTransformation(start, 120);
 
         ZRect rp;
         if (mpParentWin)
@@ -591,7 +592,7 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 		while( it != mChildList.end() ) 
 		{
 			currChild = (*it);
-			if ( currChild->IsVisible() && currChild->mbAcceptsCursorMessages ) 
+			if ( currChild->mbVisible && currChild->mbAcceptsCursorMessages ) 
 			{
 				if (currChild->IsPointInWindowScreenCoordinates(nX, nY) ) 
 				{
@@ -603,9 +604,9 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 		}
 	}
 
-	if ( IsVisible() )
+	if (mbVisible)
 	{
-		ScreenToWindowCoordinates(nX, nY);
+		AbsToLocal(nX, nY);
 
 		if (sSubType == "move")
 		{
@@ -660,7 +661,7 @@ bool  ZWin::Paint()
 }               
 
 
-void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrc, ZRect rDst, ZWin* pThis)
+/*void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrc, ZRect rDst, ZWin* pThis)
 {
     if (!mbInitted || !mbVisible || !rSrc.Overlaps(mAreaLocal) || pThis == this)
         return;
@@ -672,21 +673,45 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrc, ZRect rDst, ZWin* pThis
     mpSurface.get()->GetMutex().lock();
     pDest->Blt(mpSurface.get(), rSrc, rDst);
     mpSurface.get()->GetMutex().unlock();
+    for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
+    {
+        ZWin* pChild = *it;
+        pChild->RenderToBuffer(pDest, pChild->mAreaLocal, pChild->mAreaInParent, pThis);
+    }
+}*/
+
+void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& rDst, ZWin* pThis)
+{
+    if (!mbInitted || !mbVisible || pThis == this)
+        return;
+
+    ZRect rAbsIntersection(rAbsSrc);
+    if (!rAbsIntersection.IntersectRect(mAreaAbsolute))
+        return;// no intersection
+
+
+    ZRect rClippedSrc( AbsToLocal(rAbsSrc));
+    ZRect rClippedDst(rDst);
+
+    ZBuffer::Clip(mAreaLocal, pDest->GetArea(), rClippedSrc, rClippedDst);
+
+    Paint();
+    mpSurface.get()->GetMutex().lock();
+    pDest->Blt(mpSurface.get(), rClippedSrc, rClippedDst);
+    mpSurface.get()->GetMutex().unlock();
 
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
     {
         ZWin* pChild = *it;
-
-        pChild->RenderToBuffer(pDest, pChild->mAreaLocal, pChild->mAreaInParent, pThis);
+        pChild->RenderToBuffer(pDest, rAbsSrc, rClippedDst, pThis);
     }
 }
 
 void ZWin::PaintFromParent()
 {
-    if (mpParentWin && mpParentWin->IsVisible())
+    if (mpParentWin && mpParentWin->mpSurface && mpParentWin->mbVisible)
     {
         tZBufferPtr parentBuffer = mpParentWin->mpSurface;
-        const std::lock_guard<std::recursive_mutex> surfaceLock(parentBuffer->GetMutex());
         mpSurface.get()->Blt(parentBuffer.get(), mAreaInParent, mAreaLocal, nullptr, ZBuffer::kAlphaSource);
     }
 }
@@ -808,12 +833,17 @@ bool ZWin::OnMouseWheel(int64_t, int64_t, int64_t)
     return false;
 }
 
-bool ZWin::OnMouseHover(int64_t, int64_t)
+bool ZWin::OnMouseHover(int64_t x, int64_t y)
 {
-//    ZDEBUG_OUT("OnMouseHover: mWorkToDoCV\n");
+    if (msTooltip.empty())
+        return true;
+
+    gInput.ShowTooltip(msTooltip, mTooltipStyle);
     mWorkToDoCV.notify_one();
+
     return true;
 }
+
 
 bool ZWin::OnMouseOut()
 {
@@ -947,11 +977,13 @@ void ZWin::InvalidateChildren()
 
 void ZWin::SetArea( const ZRect& area ) 
 {
-    if (!mpSurface || area.Width() != mAreaLocal.Width() || area.Height() != mAreaLocal.Height())
+    if (!mpSurface)
+        mpSurface.reset(new ZBuffer());
+
+    if (area.Width() != mAreaLocal.Width() || area.Height() != mAreaLocal.Height())
     {
         if (area.Width() > 0 && area.Height() > 0)
         {
-            mpSurface.reset(new ZBuffer());
             mpSurface->Init(area.Width(), area.Height());
         }// else no need to create a surface
     }
@@ -1127,8 +1159,12 @@ bool ZWinDialog::Paint()
     cols[3] = 0xff888888;
 
 
+//    GetTopWindow()->RenderToBuffer(mpSurface, mAreaAbsolute, mAreaLocal, this);
+//    mpSurface.get()->FillAlpha(0xaa000000);
     mpSurface.get()->FillGradient(cols);
     mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaLocal, ZBuffer::kEdgeBltMiddle_None);
+
+
     return false;
 }
 
@@ -1151,7 +1187,7 @@ bool ZWinDialog::OnMouseMove(int64_t x, int64_t y)
 {
     if (AmCapturing())
     {
-        WindowToScreenCoordinates(x, y);
+        LocalToAbs(x, y);
 
         MoveTo(x - mMouseDownOffset.x, y - mMouseDownOffset.y);
     }

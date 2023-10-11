@@ -46,159 +46,166 @@ public:
 	ZWin();
 	virtual ~ZWin();
 	
-	virtual	bool		Init();
-	virtual	bool		InitFromXML(ZXMLNode* pNode);
-	virtual	bool		Shutdown();
-	virtual void		SignalShutdown();
+	virtual	bool        Init();
+	virtual	bool        InitFromXML(ZXMLNode* pNode);
+	virtual	bool        Shutdown();
+	virtual void        SignalShutdown();
 	
 public:   
     virtual ZWin*       GetTopWindow() { return (ZWin*)gpMainWin; }
-	virtual	ZWin*		GetParentWin() const { return mpParentWin; }
-	virtual	bool		SetParentWin(ZWin*);
+	virtual	ZWin*       GetParentWin() const { return mpParentWin; }
+	virtual	bool        SetParentWin(ZWin*);
 	
-	virtual	bool		ChildAdd(ZWin* child, bool bAutoShow = true);
-	virtual	bool		ChildRemove(ZWin* child);
-	virtual	bool		ChildDelete(ZWin*	child);
-	virtual	void		ChildDeleteAll();
+	virtual	bool        ChildAdd(ZWin* child, bool bAutoShow = true);
+	virtual	bool        ChildRemove(ZWin* child);
+	virtual	bool        ChildDelete(ZWin*	child);
+	virtual	void        ChildDeleteAll();
 	
-	virtual	bool		ChildExists(ZWin* child);
+	virtual	bool        ChildExists(ZWin* child);
 	
-	virtual	bool		ChildToFront(ZWin* child); 
-	virtual	bool		ChildToBack(ZWin* child);  
+	virtual	bool        ChildToFront(ZWin* child); 
+	virtual	bool        ChildToBack(ZWin* child);  
 	
 public:
 
-    virtual void		SetArea(const ZRect& newArea);
+    virtual void        SetArea(const ZRect& newArea);
     const ZRect&        GetArea() const { return mAreaInParent; }
 	
-//	virtual void		SetSize(int64_t width, int64_t height);
-//	virtual void		SetArea(int64_t l,int64_t t,int64_t r,int64_t b);
-	
-	virtual void		Arrange(ZGUI::ePosition pos, const ZRect &outerRect, int64_t padding = 0);
+	virtual void        Arrange(ZGUI::ePosition pos, const ZRect &outerRect, int64_t padding = 0);
     static  void        ArrangeWindows(tWinList windows, ZRect rArea, ZGUI::Style& style, int64_t nCols = -1, int64_t nRows = -1);    // -1 means unlocked
 
-	virtual void		MoveTo(int64_t newX, int64_t newY);
-//	virtual void		OffsetTo(int64_t deltaX, int64_t deltaY);
+	virtual void        MoveTo(int64_t newX, int64_t newY);
 	
-	virtual void		ScreenToWindowCoordinates(int64_t& x, int64_t& y);
-	virtual void		WindowToScreenCoordinates(int64_t& x, int64_t& y);
+    // Frame of reference helpers
+    virtual ZRect       AbsToLocal(const ZRect& rAbsolute);
+    virtual ZRect       LocalToAbs(const ZRect& rLocal);
+
+    virtual ZRect       ParentToLocal(const ZRect& rParent);
+    virtual ZRect       LocalToParent(const ZRect& rLocal);
+
+    virtual void        AbsToLocal(int64_t& x, int64_t& y);
+    virtual void        LocalToAbs(int64_t& x, int64_t& y);
+
 	
-	virtual bool		IsPointInWindowScreenCoordinates(int64_t screenX, int64_t screenY);
-	virtual bool		IsPointInWindowWindowCoordinates(int64_t x, int64_t y);
+	virtual bool        IsPointInWindowScreenCoordinates(int64_t screenX, int64_t screenY);
+	virtual bool        IsPointInWindowWindowCoordinates(int64_t x, int64_t y);
 	
-	virtual void		SetMouseDownPos(int64_t mouseX,  int64_t mouseY);
-	virtual void		GetMouseDownPos(int64_t& mouseX, int64_t& mouseY);
+	virtual void        SetMouseDownPos(int64_t mouseX,  int64_t mouseY);
+	virtual void        GetMouseDownPos(int64_t& mouseX, int64_t& mouseY);
 	
 	// IMessageTarget
-	virtual bool		ReceiveMessage(const ZMessage& message);
+	virtual bool        ReceiveMessage(const ZMessage& message);
 	virtual std::string GetTargetName() { return msWinName; }						// returns a unique target identifier
 
 public:
-	virtual void		SetVisible(bool bVisible = true);
-    virtual bool		IsVisible() { return mbVisible; }
+	virtual void        SetVisible(bool bVisible = true);
 	
     std::string         GetFullWinName();		// returns the fully qualified name all the way up the parental chain.  Example: A.B.C.D or main.quitdialog.ok
-	const ZPoint&		GetLastMouseMove();
+	const ZPoint&       GetLastMouseMove();
 
     tWinList            GetChildrenInGroup(const std::string& sGroup);
     tGroupNameToWinList GetChildGroups();        // returns a map of group name to child windows in those groups (does not return any children with no groups)
     ZRect               GetBounds(const tWinList& list);
 
 
-	ZWin*				GetChildWindowByWinName(const std::string& sWinName);
-	ZWin*				GetChildWindowByWinNameRecursive(const std::string& sWinName);
-	ZWin*				GetChildWindowByPoint( int64_t x, int64_t y );
-	
-public:   
-	virtual bool		ProcessCursorMessage(const ZMessage& message);
-	virtual bool		OnChar(char c);
-	virtual bool		OnKeyDown(uint32_t key);
-	virtual bool		OnKeyUp(uint32_t key);
-	
-	virtual bool		OnMouseDownL(int64_t x, int64_t y);
-	virtual bool		OnMouseUpL(int64_t x, int64_t y);
-	
-	virtual bool		OnMouseDownR(int64_t x, int64_t y);
-	virtual bool		OnMouseUpR(int64_t x, int64_t y);
-	
-	virtual bool		OnMouseMove(int64_t x, int64_t y);
+	ZWin*               GetChildWindowByWinName(const std::string& sWinName);
+	ZWin*               GetChildWindowByWinNameRecursive(const std::string& sWinName);
+	ZWin*               GetChildWindowByPoint( int64_t x, int64_t y );
 
-	virtual bool		OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
-	virtual bool		OnMouseHover(int64_t x, int64_t y);
+public:
+	virtual bool        ProcessCursorMessage(const ZMessage& message);
+	virtual bool        OnChar(char c);
+	virtual bool        OnKeyDown(uint32_t key);
+	virtual bool        OnKeyUp(uint32_t key);
 
-	virtual bool		OnMouseIn();
-	virtual bool		OnMouseOut();
-	
-	bool				SetFocus();
+	virtual bool        OnMouseDownL(int64_t x, int64_t y);
+	virtual bool        OnMouseUpL(int64_t x, int64_t y);
 
-	virtual bool		SetCapture();
-	virtual bool		ReleaseCapture();
-	virtual bool		AmCapturing();
+	virtual bool        OnMouseDownR(int64_t x, int64_t y);
+	virtual bool        OnMouseUpR(int64_t x, int64_t y);
+
+	virtual bool        OnMouseMove(int64_t x, int64_t y);
+
+	virtual bool        OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
+	virtual bool        OnMouseHover(int64_t x, int64_t y);
+
+	virtual bool        OnMouseIn();
+	virtual bool        OnMouseOut();
+
+	bool                SetFocus();
+
+	virtual bool        SetCapture();
+	virtual bool        ReleaseCapture();
+	virtual bool        AmCapturing();
 	
 public:
-	virtual void		Invalidate();		// sets invalid flag used for windows that may not require redrawing every frame
+	virtual void        Invalidate();		// sets invalid flag used for windows that may not require redrawing every frame
     virtual void        InvalidateChildren();
 
-	virtual void		ComputeAreas();
+	virtual void        ComputeAreas();
 	
-	virtual bool		ComputeVisibility();		// Add my own area to ZScreenBuffer's ScreenRect container, then call all children (that will be on top of me) recursively to do the same
+	virtual bool        ComputeVisibility();		// Add my own area to ZScreenBuffer's ScreenRect container, then call all children (that will be on top of me) recursively to do the same
 
     virtual bool        OnParentAreaChange();       // Called recursively for any window that needs to rearrange itself due to parent area changing
-    virtual void	    RenderToBuffer(tZBufferPtr pTexture, ZRect rSrc, ZRect rDst, ZWin* pThis = nullptr); // special function for drawing window and all children to a destination.... not part of normal rendering loop. pThis indicates window requesting paint which should be excluded if in child list
+    virtual void        RenderToBuffer(tZBufferPtr pTexture, const ZRect& rAbsSrc, const ZRect& rDst, ZWin* pThis = nullptr); // special function for drawing window and all children to a destination.... not part of normal rendering loop. pThis indicates window requesting paint which should be excluded if in child list
     virtual void        PaintFromParent();          // copies pixels from parent texture into this one's for transparency support
-    virtual void		TransformIn();
-    virtual void		TransformOut();
+    virtual void        TransformIn();
+    virtual void        TransformOut();
 
 protected:
     virtual bool        Process();              // for doing any computation/simulation/etc. Returns true if anything was done
-	virtual bool		Paint();
+	virtual bool        Paint();
 
 
 	// Window Threading
-	static bool			    WindowThreadProc(void* pContext);
-	std::thread			    mThread;
-	std::mutex			    mMessageQueueMutex;
-	std::mutex			    mShutdownMutex;		// when held, this window is not allowed to shut down
+	static bool             WindowThreadProc(void* pContext);
+	std::thread             mThread;
+	std::mutex              mMessageQueueMutex;
+	std::mutex              mShutdownMutex;		// when held, this window is not allowed to shut down
     std::recursive_mutex    mChildListMutex;
-	bool				    mbShutdownFlag;
-    int64_t                 mIdleSleepMS;
+	bool                    mbShutdownFlag;
     std::condition_variable mWorkToDoCV;
 
 
-	virtual bool		    HandleMessage(const ZMessage& message);
+	virtual bool            HandleMessage(const ZMessage& message);
 
 
 
 protected:
-    tZBufferPtr				        mpSurface;
-	ZPoint  						mMouseDownOffset;
-	tWinList						mChildList;
-	ZWin*   						mpParentWin;
-	bool  							mbInvalid;
-    bool                            mbInvalidateParentWhenInvalid;
-	bool							mbInitted;
+    tZBufferPtr             mpSurface;
+	ZPoint                  mMouseDownOffset;
+	tWinList                mChildList;
+	ZWin*                   mpParentWin;
+	bool                    mbInvalid;
+    bool                    mbInvalidateParentWhenInvalid;
 
-	tMessageList					mMessages;
+	tMessageList            mMessages;
 
 public:
-    std::string						msWinName;
-    std::string                     msWinGroup; // optional for organizational purposes
+    std::string             msWinName;
+    std::string             msWinGroup; // optional for organizational purposes
 
-    ZRect   						mAreaLocal;
-    ZRect							mAreaInParent;
-    ZRect   						mAreaAbsolute;
+    std::string             msTooltip;
+    ZGUI::Style             mTooltipStyle;
+
+    ZRect                   mAreaLocal;
+    ZRect                   mAreaInParent;
+    ZRect                   mAreaAbsolute;
 
     
-    // Flags
-	bool							mbVisible;
-	bool							mbAcceptsCursorMessages;
-//	bool							mbTransformable;
-	eTransformType					mTransformIn;
-	eTransformType					mTransformOut;
-	int64_t							mnTransformInTime;
-	int64_t							mnTransformOutTime;
-	bool							mbAcceptsFocus;
+    // Behavior
+    bool                    mbInitted;
+    bool                    mbVisible;
+	bool                    mbAcceptsCursorMessages;
+	eTransformType          mTransformIn;
+	eTransformType          mTransformOut;
+	int64_t                 mnTransformInTime;
+	int64_t                 mnTransformOutTime;
+    int64_t                 mIdleSleepMS;
+    bool                    mbAcceptsFocus;
 };
+
+typedef std::shared_ptr<ZWin> tZWinPtr;
 
 
 
@@ -216,21 +223,19 @@ public:
 
     ZWinDialog();
 
-    virtual	bool		Init();
-    virtual bool        Shutdown();
-    virtual bool		OnMouseDownL(int64_t x, int64_t y);
-    virtual bool		OnMouseUpL(int64_t x, int64_t y);
-    virtual bool		OnMouseMove(int64_t x, int64_t y);
-    virtual bool        HandleMessage(const ZMessage& message);
+    virtual	bool    Init();
+    virtual bool    Shutdown();
+    virtual bool    OnMouseDownL(int64_t x, int64_t y);
+    virtual bool    OnMouseUpL(int64_t x, int64_t y);
+    virtual bool    OnMouseMove(int64_t x, int64_t y);
+    virtual bool    HandleMessage(const ZMessage& message);
 
-    virtual bool		OnKeyDown(uint32_t key);
+    virtual bool    OnKeyDown(uint32_t key);
 
 protected:
-    virtual bool		Paint();
-    virtual void        OnOK();
-    virtual void        OnCancel();
-
-//    virtual bool        Process();
+    virtual bool    Paint();
+    virtual void    OnOK();
+    virtual void    OnCancel();
 
 
 public:
@@ -243,7 +248,7 @@ public:
 
 
 inline
-void ZWin::WindowToScreenCoordinates(int64_t& nXPosition, int64_t& nYPosition)
+void ZWin::LocalToAbs(int64_t& nXPosition, int64_t& nYPosition)
 {
     ZWin* pWin = this;
     while(pWin)
@@ -255,14 +260,47 @@ void ZWin::WindowToScreenCoordinates(int64_t& nXPosition, int64_t& nYPosition)
 }
 
 inline
-void ZWin::ScreenToWindowCoordinates(int64_t& x, int64_t& y)
+void ZWin::AbsToLocal(int64_t& x, int64_t& y)
 {
     int64_t nXFactor = 0;
     int64_t nYFactor = 0;
     
-    WindowToScreenCoordinates(nXFactor, nYFactor);
+    LocalToAbs(nXFactor, nYFactor);
     x -= nXFactor;
     y -= nYFactor;
+}
+
+inline
+ZRect ZWin::LocalToAbs(const ZRect& rLocal)
+{
+    ZRect rAbsolute(rLocal);
+    rAbsolute.OffsetRect(mAreaAbsolute.left, mAreaAbsolute.top);
+    return rAbsolute;
+}
+
+
+inline
+ZRect ZWin::AbsToLocal(const ZRect& rAbsolute)
+{
+    ZRect rLocal(rAbsolute);
+    rLocal.OffsetRect(-mAreaAbsolute.left, -mAreaAbsolute.top);
+    return rLocal;
+}
+
+inline
+ZRect ZWin::ParentToLocal(const ZRect& rParent)
+{
+    ZRect rLocal(rParent);
+    rLocal.OffsetRect(-mAreaInParent.left, -mAreaInParent.top);
+    return rLocal;
+}
+
+inline
+ZRect ZWin::LocalToParent(const ZRect& rLocal)
+{
+    ZRect rParent(rLocal);
+    rParent.OffsetRect(mAreaInParent.left, mAreaInParent.top);
+    return rParent;
 }
 
 

@@ -56,19 +56,19 @@ bool ZMainWin::Paint()
 	return ZWin::Paint();
 }           
 
-void ZMainWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrc, ZRect rDst, ZWin* pThis)
+void ZMainWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& rDst, ZWin* pThis)
 {
-    if (!mbInitted || !rSrc.Overlaps(mAreaLocal) || pThis == this)
+    if (!mbInitted || pThis == this)
         return;
 
-    if (!ZBuffer::Clip(mpSurface.get(), pDest.get(), rSrc, rDst))
-        return;
+    ZRect rAbsIntersection(rAbsSrc);
+    if (!rAbsIntersection.IntersectRect(mAreaAbsolute))
+        return;// no intersection
 
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
     {
         ZWin* pChild = *it;
-
-        pChild->RenderToBuffer(pDest, pChild->mAreaLocal, pChild->mAreaInParent, pThis);
+        pChild->RenderToBuffer(pDest, rAbsSrc, rDst, pThis);
     }
 }
 

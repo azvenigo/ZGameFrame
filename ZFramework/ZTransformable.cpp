@@ -170,7 +170,11 @@ bool ZTransformable::Tick()
        
         if (mEndTransform.mnTimestamp - mCurTransform.mnTimestamp <= 0)
 		{
-			if (mTransformationList.empty())
+            if (!mCurTransform.msCompletionMessage.empty())
+                gMessageSystem.Post(mCurTransform.msCompletionMessage);
+
+            
+            if (mTransformationList.empty())
 			{
 				// No more transformations
 				EndTransformation();
@@ -180,10 +184,6 @@ bool ZTransformable::Tick()
 			{
 				mbFirstTransformation = mStartTransform == mEndTransform;
 				// Begin a transformation from the current to the next in the list
-
-                if (!mbFirstTransformation && !mEndTransform.msCompletionMessage.empty())
-                    gMessageSystem.Post(mEndTransform.msCompletionMessage);
-
 
 				mStartTransform = mCurTransform;
 
@@ -250,11 +250,16 @@ bool ZTransformable::Tick()
             mCurTransform.mnAlpha = (uint32_t)((int32_t)mStartTransform.mnAlpha + ((int32_t)mEndTransform.mnAlpha - (int32_t)mStartTransform.mnAlpha) * fT);
             mCurTransform.msCompletionMessage = mEndTransform.msCompletionMessage;
 
-            ZDEBUG_OUT("alpha:", mCurTransform.mnAlpha, "\n");
+//            ZDEBUG_OUT("alpha:", mCurTransform.mnAlpha, "\n");
 
         }
         else
+        {
+            if (!mCurTransform.msCompletionMessage.empty())
+                gMessageSystem.Post(std::move(mCurTransform.msCompletionMessage));
+
             mCurTransform = mEndTransform;
+        }
 
 		UpdateVertsAndBounds();
 //		ZDEBUG_OUT("fT: %3.2f size: %3.2f\n", fT, mCurTransform.mScale);

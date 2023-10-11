@@ -67,6 +67,7 @@ protected:
 	ZGraphicSystem*		mpGraphicSystem;
 
 	tScreenRectList		mScreenRectList;
+    std::mutex          mScreenRectListMutex;
 	bool				mbVisibilityNeedsComputing;
     bool                mbRenderingEnabled; 
     bool                mbCurrentlyRendering;

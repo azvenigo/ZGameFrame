@@ -1129,12 +1129,10 @@ bool ZBuffer::Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect)
 	return true;
 }
 
-bool ZBuffer::Clip(const ZBuffer* pSrc, const ZBuffer* pDst, ZRect& rSrc, ZRect& rDst)
+
+bool ZBuffer::Clip(const ZRect& rSrcSurface, const ZRect& rDstSurface, ZRect& rSrc, ZRect& rDst)
 {
     int64_t   nOverhangDistance;
-    ZRect rSrcSurface(pSrc->mSurfaceArea);
-    ZRect rDstSurface(pDst->mSurfaceArea);
-
 
     // rDst against rDstSurface 
     // RIGHT 
@@ -1194,6 +1192,12 @@ bool ZBuffer::Clip(const ZBuffer* pSrc, const ZBuffer* pDst, ZRect& rSrc, ZRect&
     }
 
     return rSrc.Width() > 0 && rSrc.Height() > 0;
+}
+
+inline
+bool ZBuffer::Clip(const ZBuffer* pSrc, const ZBuffer* pDst, ZRect& rSrc, ZRect& rDst)
+{
+    return Clip(pSrc->mSurfaceArea, pDst->mSurfaceArea, rSrc, rDst);
 }
 
 

@@ -121,7 +121,7 @@ void ImageViewer::HandleQuitCommand()
 void ImageViewer::UpdateUI()
 {
 
-    ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
+    //ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
 
     if (mOutstandingMetadataCount == -1 && !mpRatedImagesStrip && !mRankedImageMetadata.empty())
     {
@@ -496,7 +496,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         {
             if (mpRotationMenu)
             {
-                if (mpRotationMenu->IsVisible())
+                if (mpRotationMenu->mbVisible)
                 {
                     mpRotationMenu->SetVisible(false);
                 }
@@ -634,8 +634,6 @@ void ImageViewer::ShowHelpDialog()
 
     pForm->Invalidate();
     ChildAdd(pHelp);
-
-
 }
 
 void ImageViewer::HandleNavigateToParentFolder()
@@ -1223,7 +1221,7 @@ void ImageViewer::UpdateControlPanel()
     // panel needs to be created or is wrong dimensions
     if (mpPanel)
     {
-        ZDEBUG_OUT("Deleting Control Panel\n");
+        //ZDEBUG_OUT("Deleting Control Panel\n");
         ChildDelete(mpPanel);
         mpPanel = nullptr;
     }
@@ -1284,7 +1282,7 @@ void ImageViewer::UpdateControlPanel()
     
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/openfile.svg");
-    pBtn->SetTooltip("Load Image");
+    pBtn->msTooltip = "Load Image";
     pBtn->msWinGroup = "File";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
@@ -1298,7 +1296,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/save.svg");
     pBtn->msWinGroup = "File";
-    pBtn->SetTooltip("Save Image");
+    pBtn->msTooltip = "Save Image";
 
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
@@ -1311,7 +1309,7 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
-    pBtn->SetTooltip("Go to Folder");
+    pBtn->msTooltip = "Go to Folder";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
 
@@ -1371,6 +1369,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
     mpDeleteMarkedButton = new ZWinSizablePushBtn();
     mpDeleteMarkedButton->mCaption.sText = "delete\nmarked";
+    mpDeleteMarkedButton->msTooltip = "Show confirmation of images to be deleted.";
     mpDeleteMarkedButton->mCaption.style = gDefaultGroupingStyle;
     mpDeleteMarkedButton->mCaption.style.look.colTop = 0xffff0000;
     mpDeleteMarkedButton->mCaption.style.look.colBottom = 0xffff0000;
@@ -1475,7 +1474,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->SetTooltip("All images");
+    pCheck->msTooltip = "All images";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
@@ -1493,7 +1492,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->SetTooltip("Images marked for deletion");
+    pCheck->msTooltip = "Images marked for deletion";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
@@ -1512,7 +1511,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->SetTooltip("Favorites");
+    pCheck->msTooltip = "Favorites";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
@@ -1531,7 +1530,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->SetTooltip("Ranked");
+    pCheck->msTooltip = "Ranked";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
@@ -1562,7 +1561,7 @@ void ImageViewer::UpdateControlPanel()
         rExit = ZGUI::Arrange(rExit, mAreaLocal, ZGUI::RT);
         pBtn = new ZWinSizablePushBtn();
         pBtn->mSVGImage.Load(sAppPath + "/res/exit.svg");
-        pBtn->SetTooltip("Exit");
+        pBtn->msTooltip = "Exit";
         pBtn->SetArea(rExit);
         pBtn->SetMessage(ZMessage("quit", this));
         mpPanel->ChildAdd(pBtn);
@@ -1579,7 +1578,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mSVGImage.Load(sAppPath + "/res/fullscreen.svg");
     pBtn->msWinGroup = "View";
     pBtn->SetArea(rButton);
-    pBtn->SetTooltip("Toggle Fullscreen");
+    pBtn->msTooltip = "Toggle Fullscreen";
     pBtn->SetMessage("toggle_fullscreen");
     pBtn->msWinGroup = "View";
     mpPanel->ChildAdd(pBtn);
@@ -1590,7 +1589,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->SetMessages(ZMessage("invalidate", this), ZMessage("invalidate", this));
     pCheck->mSVGImage.Load(sAppPath + "/res/subpixel.svg");
     pCheck->SetArea(rButton);
-    pCheck->SetTooltip("Quality Render");
+    pCheck->msTooltip = "Quality Render";
     pCheck->msWinGroup = "View";
     mpPanel->ChildAdd(pCheck);
 
@@ -1615,7 +1614,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mCaption.sText = "Rank Photos";
     pBtn->mCaption.style = gStyleButton;
     pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetTooltip("Rank images in pairs");
+    pBtn->msTooltip = "Rank images in pairs";
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "show_contest;target=%s", GetTargetName().c_str());
     pBtn->SetMessage(sMessage);

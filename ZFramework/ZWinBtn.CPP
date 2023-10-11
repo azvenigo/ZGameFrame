@@ -442,7 +442,7 @@ bool ZWinSizablePushBtn::Paint()
     if (!mbInvalid)
         return false;
 
-    if (!mpSurface.get())
+    if (mAreaLocal.right == 0 || mAreaLocal.bottom == 0)
         return false;
 
     if (mpParentWin && !mpParentWin->mbVisible)
@@ -552,16 +552,6 @@ bool ZWinSizablePushBtn::OnMouseMove(int64_t x, int64_t y)
 	}
 
 	return ZWin::OnMouseMove(x, y);
-}
-
-bool ZWinSizablePushBtn::OnMouseHover(int64_t x, int64_t y)
-{
-    if (msTooltip.empty())
-        return true;
-
-    ZWinLabel::ShowTooltip(GetTopWindow(), msTooltip, gStyleTooltip);
-
-    return true;
 }
 
 string ZWinSizablePushBtn::FitCaptionInWidth(int64_t nWidth, const string& sCaption, tZFontPtr pFont)

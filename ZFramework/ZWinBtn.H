@@ -117,16 +117,12 @@ public:
 	virtual bool            OnMouseDownL(int64_t x, int64_t y);
 	virtual bool            OnMouseUpL(int64_t x, int64_t y);
 	virtual bool            OnMouseMove(int64_t x, int64_t y);
-    virtual bool            OnMouseHover(int64_t x, int64_t y);
-
-    virtual void            SetTooltip(const std::string& sTooltip) { msTooltip = sTooltip; }
 
 	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
 	virtual std::string     GetMessage() { return msButtonMessage; }
 
     ZGUI::TextBox           mCaption;
     ZGUI::SVGImageBox       mSVGImage;
-    std::string		        msTooltip;
 
     ZGUI::Style             mBtnStyle;
     bool                    mbEnabled;

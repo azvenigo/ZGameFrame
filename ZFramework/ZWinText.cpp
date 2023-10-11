@@ -4,6 +4,8 @@
 #include "ZTimer.h"
 #include <cctype>
 #include "ZInput.h"
+//#include "ZGraphicSystem.h"
+//#include "ZScreenBuffer.h"
 
 
 using namespace std;
@@ -73,7 +75,7 @@ bool ZWinLabel::Process()
 
 bool ZWinLabel::Paint()
 {
-    if (!mpSurface)
+    if (!mpSurface /*|| !mbVisible*/)
         return false;
 
     const lock_guard<recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
@@ -87,16 +89,18 @@ bool ZWinLabel::Paint()
     else if (ARGB_A(mStyle.bgCol) > 0x0f)
     {
         // Translucent fill.... (expensive render but should not be frequent or large)
-        if (mpParentWin)
-        {
-            mpParentWin->RenderToBuffer(mpSurface, mAreaAbsolute, mAreaLocal, this);
-            mpSurface->Blur(4);
-        }
+        GetTopWindow()->RenderToBuffer(mpSurface, mAreaAbsolute, mAreaLocal, this);
+
+//        gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(mpSurface.get(), mAreaAbsolute);
+
+//        ZDEBUG_OUT("x:", mAreaAbsolute.left, "y:", mAreaAbsolute.top, "\n");
+        mpSurface->Blur(2);
         mpSurface->FillAlpha(mStyle.bgCol);
         mpSurface->DrawRectAlpha(mpSurface->GetArea(), 0xff000000 | mStyle.bgCol);
     }
     else
     {
+        // Transparent
         PaintFromParent();
     }
 
@@ -114,7 +118,7 @@ bool ZWinLabel::Paint()
 }
 
 
-ZWinLabel* ZWinLabel::ShowTooltip(ZWin* pMainWin, const std::string& sTooltip, const ZGUI::Style& style)
+/*ZWinLabel* ZWinLabel::ShowTooltip(ZWin* pMainWin, const std::string& sTooltip, const ZGUI::Style& style)
 {
     bool bToolTipAlreadyExists = true;
     ZWinLabel* pWin = (ZWinLabel*)pMainWin->GetChildWindowByWinName("winlabel_tooltip");
@@ -151,7 +155,7 @@ ZWinLabel* ZWinLabel::ShowTooltip(ZWin* pMainWin, const std::string& sTooltip, c
     delete pWin;
     return nullptr;
 }
-
+*/
 
 
 

@@ -125,7 +125,8 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 
     int64_t nRenderedCount = 0;
 
-	for (auto sr : mScreenRectList)
+    const std::lock_guard<std::mutex> surfaceLock(mScreenRectListMutex);
+    for (auto& sr : mScreenRectList)
 	{
         // Since the mScreenRectList happens to be sorted so that referenced textures are together, we should lock, render all from that texture, then unlock
         if (sr.mpSourceBuffer != pCurBuffer)
@@ -207,7 +208,8 @@ int32_t ZScreenBuffer::RenderVisibleRects(const ZRect& rClip)
 
     int64_t nRenderedCount = 0;
 
-    for (auto sr : mScreenRectList)
+    const std::lock_guard<std::mutex> surfaceLock(mScreenRectListMutex);
+    for (auto& sr : mScreenRectList)
     {
         // If no overlap, move on
         if (!sr.mrDest.Overlaps(rClip))
@@ -319,7 +321,8 @@ int32_t ZScreenBuffer::RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rC
 
     int64_t nRenderedCount = 0;
 
-    for (auto sr : mScreenRectList)
+    const std::lock_guard<std::mutex> surfaceLock(mScreenRectListMutex);
+    for (auto& sr : mScreenRectList)
     {
         // If no overlap, move on
         if (!sr.mrDest.Overlaps(rClip))
@@ -372,6 +375,8 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
         return false;
 
 	// The requirement here is that the newly added rect is on top of all previous rects (i.e. painters alg)
+
+    const std::lock_guard<std::mutex> surfaceLock(mScreenRectListMutex);
 
 	tScreenRectList oldList(std::move(mScreenRectList));		// move over the old list
 	tScreenRectList newList;

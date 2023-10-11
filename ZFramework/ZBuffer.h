@@ -116,6 +116,8 @@ public:
     bool                    Clip(ZRect& dstRect);       // clips dst into mSurfaceArea
     static bool             Clip(const ZRect& fullDstRect, ZRect& srcRect, ZRect& dstRect);
     static bool             Clip(const ZBuffer* pSrc, const ZBuffer* pDst, ZRect& rSrc, ZRect& rDst);
+    static bool             Clip(const ZRect& rSrcSurface, const ZRect& rDstSurface, ZRect& rSrc, ZRect& rDst);
+
 
 protected:
 	bool                    FloatScanLineIntersection(double fScanLine, const ZColorVertex& v1, const ZColorVertex& v2, double& fIntersection, double& fR, double& fG, double& fB, double& fA);

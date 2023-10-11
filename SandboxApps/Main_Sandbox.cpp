@@ -281,7 +281,7 @@ public:
 		}
         else if (sType == "toggleconsole")
         {
-            gpDebugConsole->SetVisible(!gpDebugConsole->IsVisible());
+            gpDebugConsole->SetVisible(!gpDebugConsole->mbVisible);
         }
 
 		return true;

@@ -101,8 +101,8 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
         if ((mBehavior & kNotifyOnClick) != 0 && mpParentWin)
         {
             // convert coordinates to parent's
-            WindowToScreenCoordinates(x, y);
-            mpParentWin->ScreenToWindowCoordinates(x, y);
+            LocalToAbs(x, y);
+            mpParentWin->AbsToLocal(x, y);
 
             mpParentWin->OnMouseDownL(x, y);
         }
