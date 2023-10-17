@@ -43,6 +43,7 @@ namespace ZGUI
 //        gnDefaultGroupInlaySize = 9;
         gM = (int64_t) (sqrt(grFullArea.Width() * grFullArea.Width() + grFullArea.Height() * grFullArea.Height()) / 100.0);  // default measure
         gSpacer = gM / 5;
+        gSpacer = std::max<int64_t>(gSpacer, 4);
 
         gStyleButton.fp.nHeight = std::max<int64_t>((int64_t)(gM/1.5), 14);
         gStyleButton.paddingH = (int32_t)gSpacer;

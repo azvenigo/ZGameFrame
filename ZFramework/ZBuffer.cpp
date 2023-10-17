@@ -37,6 +37,7 @@ ZBuffer::ZBuffer()
 {
 	mpPixels                = NULL;
     mRenderFlags            = kRenderFlag_None; // 0
+    mbHasAlphaPixels = false;
 	mSurfaceArea.SetRect(0,0,0,0);
 }
 
@@ -69,6 +70,7 @@ bool ZBuffer::Init(int64_t nWidth, int64_t nHeight)
 
 		mSurfaceArea.SetRect(0, 0, nWidth, nHeight);
         memset(mpPixels, 0, nWidth * nHeight * sizeof(uint32_t));
+        mbHasAlphaPixels = false;
 
 		return true;
 	}
@@ -149,6 +151,8 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 //    cout << "LoadBuffer() After init\n";
 
 
+    uint64_t nAlphaSum = 0;
+
     uint32_t* pDest = mpPixels;
     for (uint32_t* pSrc = (uint32_t*)pImage; pSrc < (uint32_t*)(pImage + width * height * 4); pSrc++)
     {
@@ -160,9 +164,15 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 
         uint32_t newCol = a | r | g | b;
 
+        nAlphaSum += (a >> 24); // add up all alpha values
+
         *pDest = newCol;
         pDest++;
     }
+
+    // if the sum of all pixel alphas is less than number of pixels * 0xff, then there are alpha pixels
+    if (nAlphaSum < width * height * 0xff)
+        mbHasAlphaPixels = true;
 
     stbi_image_free(pImage);
 
@@ -298,6 +308,8 @@ bool ZBuffer::LoadFromSVG(const std::string& sName)
     {
         memcpy(mpPixels + y * w, svgbitmap.data() + y * s, w * 4);
     }
+
+    mbHasAlphaPixels = true;
 
     return true;
 }
@@ -674,39 +686,55 @@ bool ZBuffer::Rotate(eOrientation rotation)
 
 bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType type)
 {
+    int64_t nSW = pSrc->GetArea().Width();
+    int64_t nDW = mSurfaceArea.Width();
+
 	int64_t nBltWidth = rDst.Width();
 	int64_t nBltHeight = rDst.Height();
 
-	uint32_t* pSrcBits = pSrc->GetPixels() + (rSrc.top * pSrc->GetArea().Width()) + rSrc.left;
-	uint32_t* pDstBits = mpPixels + (rDst.top * mSurfaceArea.Width()) + rDst.left;
-
-	for (int64_t y = 0; y < nBltHeight; y++)
-	{
-		for (int64_t x = 0; x < nBltWidth; x++)
-		{
+    if (pSrc->mbHasAlphaPixels)
+    {
+        uint32_t* pSrcBits = pSrc->GetPixels() + (rSrc.top * pSrc->GetArea().Width()) + rSrc.left;
+        uint32_t* pDstBits = mpPixels + (rDst.top * mSurfaceArea.Width()) + rDst.left;
+        
+        for (int64_t y = 0; y < nBltHeight; y++)
+        {
+            for (int64_t x = 0; x < nBltWidth; x++)
+            {
 #ifdef _DEBUG
-//			CEASSERT_MESSAGE( pSrcBits < pSrc->GetPixels() + pSrc->GetArea().Width() * pSrc->GetArea().Height(), "Source buffer pointer out of range." );
-//			CEASSERT_MESSAGE( pDstBits < mpPixels + mSurfaceArea.Width() * mSurfaceArea.Height(), "Dest buffer pointer out of range." );
+                //			CEASSERT_MESSAGE( pSrcBits < pSrc->GetPixels() + pSrc->GetArea().Width() * pSrc->GetArea().Height(), "Source buffer pointer out of range." );
+                //			CEASSERT_MESSAGE( pDstBits < mpPixels + mSurfaceArea.Width() * mSurfaceArea.Height(), "Dest buffer pointer out of range." );
 #endif
 
-			uint8_t nAlpha = ARGB_A(*pSrcBits);
-			if (nAlpha > 250)
-				*pDstBits = *pSrcBits;
-			else if (nAlpha >= 5)
-			{
-				if (type == kAlphaDest)
-					*pDstBits = COL::AlphaBlend_Col2Alpha(*pSrcBits, *pDstBits, nAlpha);
-				else
-					*pDstBits = COL::AlphaBlend_Col1Alpha(*pSrcBits, *pDstBits, nAlpha);
-			}
+                uint8_t nAlpha = ARGB_A(*pSrcBits);
+                if (nAlpha > 250)
+                    *pDstBits = *pSrcBits;
+                else if (nAlpha >= 5)
+                {
+                    if (type == kAlphaDest)
+                        *pDstBits = COL::AlphaBlend_Col2Alpha(*pSrcBits, *pDstBits, nAlpha);
+                    else
+                        *pDstBits = COL::AlphaBlend_Col1Alpha(*pSrcBits, *pDstBits, nAlpha);
+                }
 
-			pSrcBits++;
-			pDstBits++;
-		}
+                pSrcBits++;
+                pDstBits++;
+            }
 
-		pSrcBits += (pSrc->GetArea().Width() - nBltWidth);  // Next line in the source buffer
-		pDstBits += (mSurfaceArea.Width() - nBltWidth);        // Next line in the destination buffer
-	}
+            pSrcBits += (pSrc->GetArea().Width() - nBltWidth);  // Next line in the source buffer
+            pDstBits += (mSurfaceArea.Width() - nBltWidth);        // Next line in the destination buffer
+        }
+    }
+    else
+    {
+        // no alpha pixels..... copy over rows of pixels directly
+        for (int64_t y = 0; y < nBltHeight; y++)
+        {
+            uint32_t* pSrcBits = pSrc->mpPixels + ((y + rSrc.top) * nSW) + rSrc.left;
+            uint32_t* pDstBits = mpPixels + ((y + rDst.top) * mSurfaceArea.Width()) + rDst.left;
+            memcpy(pDstBits, pSrcBits, nBltWidth * 4);
+        }
+    }
 
     return true;
 }

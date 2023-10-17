@@ -5,7 +5,7 @@
 #include "ZWinText.H"
 
 
-ZInput::ZInput() : captureWin(nullptr), mouseOverWin(nullptr), keyboardFocusWin(nullptr), lastMouseMove(-1, -1), lastMouseMoveTime(0), bMouseHoverPosted(false)
+ZInput::ZInput() : captureWin(nullptr), mouseOverWin(nullptr), keyboardFocusWin(nullptr), lastMouseMove(-1, -1), lastMouseMoveTime(0), bMouseHoverPosted(false), lButtonDown(false), rButtonDown(false)
 {
     mpTooltipWin = new ZWinLabel();
 }
@@ -51,6 +51,7 @@ void ZInput::OnChar(uint32_t key)
 
 void ZInput::OnLButtonUp(int64_t x, int64_t y)
 {
+    lButtonDown = false;
     ZMessage cursorMessage;
     cursorMessage.SetType("cursor_msg");
     cursorMessage.SetParam("subtype", "l_up");
@@ -66,6 +67,7 @@ void ZInput::OnLButtonUp(int64_t x, int64_t y)
 
 void ZInput::OnLButtonDown(int64_t x, int64_t y)
 {
+    lButtonDown = true;
     ZMessage cursorMessage;
     cursorMessage.SetType("cursor_msg");
     cursorMessage.SetParam("subtype", "l_down");
@@ -81,6 +83,7 @@ void ZInput::OnLButtonDown(int64_t x, int64_t y)
 
 void ZInput::OnRButtonUp(int64_t x, int64_t y)
 {
+    rButtonDown = false;
     ZMessage cursorMessage;
     cursorMessage.SetType("cursor_msg");
     cursorMessage.SetParam("subtype", "r_up");
@@ -96,6 +99,7 @@ void ZInput::OnRButtonUp(int64_t x, int64_t y)
 
 void ZInput::OnRButtonDown(int64_t x, int64_t y)
 {
+    rButtonDown = true;
     mouseDown.Set(x, y);
 
     ZMessage cursorMessage;
@@ -186,6 +190,9 @@ uint32_t    kMouseHoverInitialTime = 200;
 
 void ZInput::CheckMouseForHover()
 {
+    if (lButtonDown || rButtonDown)
+        return;
+
     uint64_t nCurTime = gTimer.GetElapsedTime();
 
     if (!bMouseHoverPosted && nCurTime - lastMouseMoveTime > kMouseHoverInitialTime)
@@ -214,22 +221,17 @@ bool ZInput::ShowTooltip(const std::string& tooltip, const ZGUI::Style& style)
 {
     if (!mpTooltipWin->mbInitted)
         gpMainWin->ChildAdd(mpTooltipWin);
-
-
     if (mpTooltipWin->Init())
     {
         mpTooltipWin->mIdleSleepMS = 100;
     }
-
     mpTooltipWin->msText = tooltip;
     mpTooltipWin->mStyle = style;
-
     ZRect rTooltip;
     tZFontPtr pTooltipFont = mpTooltipWin->mStyle.Font();
     rTooltip = pTooltipFont->StringRect(tooltip);
     rTooltip.InflateRect(style.paddingH, style.paddingV);
     mpTooltipWin->SetArea(rTooltip);
-
     mpTooltipWin->SetVisible();
     toolTipAppear = lastMouseMove;
     UpdateTooltipLocation(lastMouseMove);
@@ -244,7 +246,7 @@ bool ZInput::UpdateTooltipLocation(ZPoint pt)
     ZRect rTooltip(mpTooltipWin->GetArea());
 
     // ensure the tooltip is entirely visible on the window + a little padding
-    ZPoint adjustedPt(lastMouseMove.x - rTooltip.Width()/2, lastMouseMove.y + gM/2);
+    ZPoint adjustedPt(lastMouseMove.x - rTooltip.Width()/16, lastMouseMove.y + gM);
 
     limit<int64_t>(adjustedPt.x, grFullArea.left + gSpacer, grFullArea.right - (rTooltip.Width() - gSpacer));
     limit<int64_t>(adjustedPt.y, grFullArea.top + gSpacer, grFullArea.bottom - (rTooltip.Height() - gSpacer));

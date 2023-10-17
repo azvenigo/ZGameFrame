@@ -997,10 +997,6 @@ ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(tZBufferPtr pImage,
 
 
     mpBackground = pBackground;
-
-    mpWorkingBuffer.reset(new ZBuffer());
-    mpWorkingBuffer->Init(mpBackground->GetArea().Width(), mpBackground->GetArea().Height());
-
 #ifdef _DEBUG
 	Sprintf(msDebugName, "TransformingImage:%d x %d", mpImage->GetArea().Width(), mpImage->GetArea().Height());
 #endif
@@ -1045,15 +1041,26 @@ bool ZAnimObject_TransformingImage::Paint()
         }
         else
         {
-            mpWorkingBuffer->CopyPixels(mpBackground.get());
+            // Ensure we have a working buffer since transform is not square
+            if (!mpWorkingBuffer)
+            {
+                mpWorkingBuffer.reset(new ZBuffer());
+
+                ZRect r(mpBackground ? mpBackground->GetArea() : grFullArea);
+                mpWorkingBuffer->Init(r.Width(), r.Height());
+            }
+
+            // copy over the background
+            if (mpBackground)
+                mpWorkingBuffer->CopyPixels(mpBackground.get());
+
+            gRasterizer.RasterizeWithAlpha(mpWorkingBuffer.get(), mpImage.get(), mVerts, nullptr, mCurTransform.mnAlpha);
+
 
             if (mpDestination)
-                mpDestination->Blt(mpImage.get(), mpImage->GetArea(), mrArea);
+                mpDestination->Blt(mpWorkingBuffer.get(), mBounds, mBounds);
             else
-            {
-                gRasterizer.RasterizeWithAlpha(mpWorkingBuffer.get(), mpImage.get(), mVerts, nullptr, mCurTransform.mnAlpha);
                 gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpWorkingBuffer.get(), mBounds, mBounds);
-            }
         }
     }
 

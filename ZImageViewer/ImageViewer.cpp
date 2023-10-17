@@ -1191,7 +1191,7 @@ void ImageViewer::LimitIndex()
 void ImageViewer::UpdateControlPanel()
 {
     int64_t nControlPanelSide = (int64_t)(gM * 2.5);
-    limit<int64_t>(nControlPanelSide, 40, 88);
+    limit<int64_t>(nControlPanelSide, 48, 88);
 
 
     const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
@@ -2267,16 +2267,20 @@ bool ImageViewer::Process()
 
         if (curImage && mpWinImage->mpImage.get() != curImage.get())
         {
-            mpWinImage->SetImage(curImage);
-            ZDEBUG_OUT("Setting image:", curImage->GetEXIF().DateTime, "\n");
+            if (mpWinImage->GetArea().Width() > 0 && mpWinImage->GetArea().Height() > 0)
+            {
+                mpWinImage->SetImage(curImage);
+                ZDEBUG_OUT("Setting image:", curImage->GetEXIF().DateTime, "\n");
 
-            mpWinImage->mCaptionMap["no_image"].Clear();
+                mpWinImage->mCaptionMap["no_image"].Clear();
 
-            const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
-            gRegistry["ZImageViewer"]["image"] = mImageArray[mViewingIndex.absoluteIndex]->filename.string();
+                mImageArrayMutex.lock();
+                gRegistry["ZImageViewer"]["image"] = mImageArray[mViewingIndex.absoluteIndex]->filename.string();
+                mImageArrayMutex.unlock();
 
-            UpdateCaptions();
-            InvalidateChildren();
+                UpdateCaptions();
+                InvalidateChildren();
+            }
         }
 
 /*        if (!curImage)

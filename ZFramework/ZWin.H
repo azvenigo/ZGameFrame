@@ -58,7 +58,7 @@ public:
 	
 	virtual	bool        ChildAdd(ZWin* child, bool bAutoShow = true);
 	virtual	bool        ChildRemove(ZWin* child);
-	virtual	bool        ChildDelete(ZWin*	child);
+	virtual	bool        ChildDelete(ZWin* child);
 	virtual	void        ChildDeleteAll();
 	
 	virtual	bool        ChildExists(ZWin* child);

@@ -440,20 +440,27 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
     const std::lock_guard<std::recursive_mutex> imageSurfaceLock(mpImage.get()->GetMutex());
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
-    if (mViewState == kFitToWindow || mViewState == kNoState)
+    if (mViewState == kNoState)
+    {
+        if (mpImage->GetArea().Width() > mAreaLocal.Width() || mpImage->GetArea().Height() > mAreaLocal.Height())
+            FitImageToWindow();
+        else
+        {
+            SetZoom(1.0);
+            mImageArea = pImage->GetArea();
+            mImageArea = mImageArea.CenterInRect(mAreaLocal);
+        }
+    }
+    else if (mViewState == kFitToWindow)
     {
         FitImageToWindow();
     }
-    else if (mpImage->GetArea() == rOldImage)
+    else
     {
-        // if image dimensions haven't changed and we have user set pan/zoom, leave it
+        SetZoom(mfZoom);
     }
-    else 
-    {
-        SetZoom(1.0);
-        mImageArea = pImage->GetArea();
-        mImageArea = mImageArea.CenterInRect(mAreaLocal);
-    }
+
+
 
     Invalidate();
 }

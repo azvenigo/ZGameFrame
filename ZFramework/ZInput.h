@@ -7,6 +7,8 @@
 
 class ZWin;
 class ZWinLabel;
+typedef std::shared_ptr<ZWin> tZWinPtr;
+
 
 class ZInput
 {
@@ -34,6 +36,8 @@ public:
     bool    ShowTooltip(const std::string& tooltip, const ZGUI::Style& style);
 
     uint8_t         keyState[256];
+    bool            lButtonDown;
+    bool            rButtonDown;
     ZPoint          lastMouseMove;
     uint64_t        lastMouseMoveTime;
 

@@ -71,6 +71,7 @@ namespace ZGUI
             {
                 memcpy(pPixels + y * w, svgbitmap.data() + y * s, w * 4);
             }
+            mRendered->mbHasAlphaPixels = true;
         }
 
         pDest->Blt(mRendered.get(), mRendered->GetArea(), rDest);

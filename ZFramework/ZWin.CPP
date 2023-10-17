@@ -64,6 +64,7 @@ ZWin::~ZWin()
 
     if (gInput.captureWin == this)
         gInput.captureWin = nullptr;
+    Shutdown();
 }
 
 bool ZWin::Init() 
@@ -83,11 +84,14 @@ bool ZWin::Init()
 
         mbInvalid = true;
         mbInitted = true;
-        if (mAreaInParent.Width() > 0 && mAreaInParent.Height() > 0)
+        if (mAreaLocal.Width() > 0 && mAreaLocal.Height() > 0)
         {
             ZTransformable::Init(mAreaAbsolute);
-            mpSurface.reset(new ZBuffer());
-            mpSurface->Init(mAreaAbsolute.Width(), mAreaAbsolute.Height());
+            if (mpSurface && (mpSurface->GetArea().Width() != mAreaLocal.Width() || mpSurface->GetArea().Height() != mAreaLocal.Height()))
+            {
+                mpSurface.reset(new ZBuffer());
+                    mpSurface->Init(mAreaAbsolute.Width(), mAreaAbsolute.Height());
+            }
             Paint();        // TBD this may be desired since our texture may be requested before the threadproc has a chance to call paint
             TransformIn();
         }
@@ -117,7 +121,7 @@ bool ZWin::Shutdown()
         ChildDeleteAll();
 
 		if (gInput.mouseOverWin == this)
-            gInput.mouseOverWin = NULL;
+            gInput.mouseOverWin = nullptr;
 
 
         //const std::lock_guard<std::recursive_mutex> surfaceLock(mpTransformTexture.get()->GetMutex());
@@ -300,7 +304,7 @@ void ZWin::ArrangeWindows(tWinList windows, ZRect rArea, ZGUI::Style& style, int
     }
 }
 
-bool ZWin::SetParentWin(ZWin* pNewParent) 
+bool ZWin::SetParentWin(ZWin* pNewParent)
 {
     ZASSERT(pNewParent != this);
 
@@ -339,74 +343,62 @@ bool ZWin::ChildAdd(ZWin* child, bool bAutoShow)
 	return true;
 }
 
-bool ZWin::ChildRemove(ZWin* child) 
+bool ZWin::ChildRemove(ZWin* child)
 {
-	ZASSERT(child);
-
+    ZASSERT(child);
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     for (tWinList::iterator it = mChildList.begin(); it != mChildList.end(); it++)
-	{
-		if ((*it) == child) 
-		{
-			mChildList.erase( it );
-//			ZDEBUG_OUT("ChildRemove:0x%x\n", uint32_t(child));
-
-//            const std::lock_guard<std::recursive_mutex> surfaceLock(child->mpTransformTexture.get()->GetMutex());
-			child->SetParentWin(NULL);
-
+    {
+        if ((*it) == child)
+        {
+            mChildList.erase(it);
+            //			ZDEBUG_OUT("ChildRemove:0x%x\n", uint32_t(child));
+            //            const std::lock_guard<std::recursive_mutex> surfaceLock(child->mpTransformTexture.get()->GetMutex());
+            child->SetParentWin(NULL);
             if (mChildList.empty())
                 gMessageSystem.RemoveNotification("kill_child", this);
-
-
-			return true;
-		}
-	}   
-	return false;
+            return true;
+        }
+    }
+    return false;
 }
 
-void ZWin::ChildDeleteAll() 
+void ZWin::ChildDeleteAll()
 {
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
-
     for (auto pChild : mChildList)		// signal all to shutdown first
     {
         pChild->SetVisible(false);
         pChild->SignalShutdown();
     }
-
-	while (!mChildList.empty())			// ChildDelete modifies the list so we can't use regular iteration
-		ChildDelete(*mChildList.begin());
-
-	mChildList.clear();
+    while (!mChildList.empty())			// ChildDelete modifies the list so we can't use regular iteration
+        ChildDelete(*mChildList.begin());
+    mChildList.clear();
 }
-
-bool ZWin::ChildDelete(ZWin* pChild) 
+bool ZWin::ChildDelete(ZWin* pChild)
 {
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     if (pChild)
-	{
-		if (ChildRemove(pChild)) 
-		{
-			pChild->Shutdown();
-			delete pChild;
-			return true;
-		}
-	}
-	return false;
+    {
+        if (ChildRemove(pChild))
+        {
+            pChild->Shutdown();
+            delete pChild;
+            return true;
+        }
+    }
+    return false;
 }
 
-bool ZWin::ChildToFront(ZWin *child) 
+bool ZWin::ChildToFront(ZWin* child) 
 {
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
-   
-    if(child && ChildExists(child))
-	{
-//		if (mpParentWin)
-//			mpParentWin->ChildToFront(this);
+    auto it = std::find(mChildList.begin(), mChildList.end(), child);
 
-		ZDEBUG_OUT("ChildToFront:0x%x\n", uint64_t(child));
-		mChildList.remove( child );
-		mChildList.push_front( child );
+    if(it != mChildList.end())
+	{
+		mChildList.remove( *it );
+		mChildList.push_front( *it );
         child->Invalidate();
         Invalidate();
         gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
@@ -416,15 +408,16 @@ bool ZWin::ChildToFront(ZWin *child)
 	return false;
 }
 
-bool ZWin::ChildToBack(ZWin* child) 
+bool ZWin::ChildToBack(ZWin* child)
 {
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
    
-    if(child && ChildExists(child))
-	{
-		ZDEBUG_OUT("ChildToBack:0x%x\n", uint64_t(child));
-		mChildList.remove( child );
-		mChildList.push_back( child );
+    auto it = std::find(mChildList.begin(), mChildList.end(), child);
+    if (it != mChildList.end())
+    {
+//		ZDEBUG_OUT("ChildToBack:0x%x\n", uint64_t(child.get()));
+		mChildList.remove( *it );
+		mChildList.push_back( *it );
         child->Invalidate();
         Invalidate();
         gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
@@ -433,10 +426,10 @@ bool ZWin::ChildToBack(ZWin* child)
 	return false;
 }
 
-bool ZWin::ChildExists(ZWin* testChild) 
+bool ZWin::ChildExists(ZWin* testChild)
 {
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
-    return find(mChildList.begin(), mChildList.end(), testChild) != mChildList.end();
+    return std::find(mChildList.begin(), mChildList.end(), testChild) != mChildList.end();
 }
 
 ZWin* ZWin::GetChildWindowByWinName(const string& sWinName)
@@ -458,11 +451,11 @@ ZWin* ZWin::GetChildWindowByWinNameRecursive(const string& /*sWinName*/)
 }
 
 
-ZWin* ZWin::GetChildWindowByPoint( int64_t x, int64_t y ) 
+ZWin* ZWin::GetChildWindowByPoint( int64_t x, int64_t y )
 {
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
    
-    ZWin* pWin = NULL;
+    ZWin* pWin = nullptr;
 
 	if (mChildList.size() > 0)
 	{
@@ -472,9 +465,7 @@ ZWin* ZWin::GetChildWindowByPoint( int64_t x, int64_t y )
 			{
 				pWin = (*it)->GetChildWindowByPoint(x, y);
 				if (pWin)
-				{
-					break;
-				}
+                    return pWin;
 			}
 		}
 	} 
@@ -483,11 +474,11 @@ ZWin* ZWin::GetChildWindowByPoint( int64_t x, int64_t y )
 	{
 		if ( IsPointInWindowScreenCoordinates( x, y ) ) 
 		{
-			pWin = this;
+            return this;
 		}
 	}
 
-	return pWin;   
+    return nullptr;
 }
 
 
@@ -585,7 +576,7 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 	// If this window doesn't have capture, then see if any child needs the cursor message
 	if( !AmCapturing() && mChildList.size() ) 
 	{
-		ZWin* currChild;
+        ZWin* currChild;
         const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
         tWinList::iterator it = mChildList.begin();
 
@@ -731,7 +722,7 @@ bool ZWin::ComputeVisibility()
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
 	{
-		ZWin* pWin = *it;
+        ZWin* pWin = *it;
 
 		//ZDEBUG_OUT("ChildPaint:0x%x\n", uint32_t(pWin));
 
@@ -782,7 +773,7 @@ bool ZWin::ReleaseCapture()
 {
 	if (gInput.captureWin != this)
 		return false;
-    gInput.captureWin = NULL;
+    gInput.captureWin = nullptr;
 	return true;
 }
 
@@ -864,7 +855,7 @@ string ZWin::GetFullWinName()
 	string sFullName(msWinName);
 
 	// Walk up all parents and prepend their name
-	ZWin* pParent = mpParentWin;
+    ZWin* pParent = mpParentWin;
 	while (pParent)
 	{
 		string sCur = sFullName;
@@ -914,12 +905,8 @@ bool ZWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "kill_child")
 	{
-        ZWin* pChild = GetChildWindowByWinName(message.GetParam("name"));
-        if (pChild)
-		{
-			ChildDelete(pChild);
-			return true;
-		}
+        ChildDelete(GetChildWindowByWinName(message.GetParam("name")));
+		return true;
 	}
     else if (sType == "set_focus")
     {
@@ -970,7 +957,8 @@ void ZWin::Invalidate()
 void ZWin::InvalidateChildren()
 {
     Invalidate();
-    for (auto pChild : mChildList)
+    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
+    for (auto& pChild : mChildList)
         pChild->InvalidateChildren();
 }
 
@@ -1104,9 +1092,7 @@ bool ZWinDialog::Init()
 
     if (mBehavior & eBehavior::CancelButton)
     {
-        ZWinSizablePushBtn* pBtn;
-
-        pBtn = new ZWinSizablePushBtn();
+        ZWinSizablePushBtn* pBtn(new ZWinSizablePushBtn());
         pBtn->mCaption.sText = "Cancel";
         pBtn->mCaption.style = gStyleButton;
         pBtn->SetMessage(ZMessage("dlg_cancel", this));
@@ -1119,9 +1105,7 @@ bool ZWinDialog::Init()
 
     if (mBehavior & eBehavior::OKButton)
     {
-        ZWinSizablePushBtn* pBtn;
-
-        pBtn = new ZWinSizablePushBtn();
+        ZWinSizablePushBtn* pBtn(new ZWinSizablePushBtn());
         pBtn->SetMessage(ZMessage("dlg_ok", this));
         pBtn->mCaption.sText = "OK";
         pBtn->mCaption.style = gStyleButton;

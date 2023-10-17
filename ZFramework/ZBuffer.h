@@ -127,10 +127,11 @@ protected:
     uint32_t                ComputePixelBlur(ZBuffer* pBuffer, int64_t nX, int64_t nY, int64_t nRadius);
 
 
-
+public:
 	uint32_t*               mpPixels;        // The color data
 	ZRect                   mSurfaceArea;
     easyexif::EXIFInfo      mEXIF;
     std::recursive_mutex    mMutex;
+    bool                    mbHasAlphaPixels;
     uint32_t                mRenderFlags;
 };
