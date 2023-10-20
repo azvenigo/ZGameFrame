@@ -59,8 +59,11 @@ bool ZWinDebugConsole::Process()
     if (mnDebugHistoryLastSeenCounter != gDebug.Counter())
     {
         mnDebugHistoryLastSeenCounter = gDebug.Counter();
-        UpdateScrollbar();
-        Invalidate();
+        if (mbVisible)
+        {
+            UpdateScrollbar();
+            Invalidate();
+        }
         return true;
     }
 
@@ -140,7 +143,7 @@ size_t ZWinDebugConsole::GetVisibleLines()
 
 bool ZWinDebugConsole::Paint()
 {
-	if (!mbInvalid)
+	if (!mbInvalid || !mbVisible)
 		return false;
 
     if (!mpSurface.get())

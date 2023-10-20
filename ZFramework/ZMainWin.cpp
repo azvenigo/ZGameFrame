@@ -80,6 +80,7 @@ void ZMainWin::SetArea(const ZRect& newArea)
 
     ZWin::SetArea(newArea);
     OnParentAreaChange();   // update all children
+    InvalidateChildren();
 }
 
 

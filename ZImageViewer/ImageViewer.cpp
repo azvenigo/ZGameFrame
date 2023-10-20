@@ -153,8 +153,8 @@ void ImageViewer::UpdateUI()
     if (mpWinImage && mbInitted)
         mpWinImage->SetArea(rImageArea);
 
-    UpdateCaptions();
     UpdateControlPanel();
+    UpdateCaptions();
     InvalidateChildren();
 }
 
@@ -1492,7 +1492,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->msTooltip = "Images marked for deletion";
+    pCheck->msTooltip = "Images marked for deletion (hit del to toggle current image)";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
@@ -1511,7 +1511,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->msTooltip = "Favorites";
+    pCheck->msTooltip = "Favorites (hit '1' to toggle current image";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
@@ -1530,7 +1530,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->msTooltip = "Ranked";
+    pCheck->msTooltip = "Images that have been ranked (button to the right)";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);

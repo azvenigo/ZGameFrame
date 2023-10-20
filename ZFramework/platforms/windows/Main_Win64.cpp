@@ -125,6 +125,8 @@ int main(int argc, char* argv[])
             GetMessage(&msg, NULL, 0, 0);
             TranslateMessage(&msg);
             DispatchMessage(&msg);
+
+            std::this_thread::sleep_for(std::chrono::microseconds(20000));
         }
         else
         {
@@ -208,27 +210,25 @@ int main(int argc, char* argv[])
 
             gDebug.Flush();
             //            FlushDebugOutQueue();
+        }
+        uint64_t nNewTime = gTimer.GetUSSinceEpoch();
+        uint64_t nTimeSinceLastLoop = nNewTime - nTimeStamp;
+        //            ZOUT("US since last loop:%lld\n", nTimeSinceLastLoop);
+        nTimeStamp = nNewTime;
 
-            uint64_t nNewTime = gTimer.GetUSSinceEpoch();
-            uint64_t nTimeSinceLastLoop = nNewTime - nTimeStamp;
-            //            ZOUT("US since last loop:%lld\n", nTimeSinceLastLoop);
-            nTimeStamp = nNewTime;
+        if (nTimeSinceLastLoop < kMinUSBetweenLoops)
+        {
+            uint64_t nUSToSleep = kMinUSBetweenLoops - nTimeSinceLastLoop;
+            //                ZOUT("Maintaining min frame time. Sleeping for %lldus.\n", nUSToSleep);
+            std::this_thread::sleep_for(std::chrono::microseconds(nUSToSleep));
+            //                nTimeStamp = gTimer.GetUSSinceEpoch();
+        }
 
-            if (nTimeSinceLastLoop < kMinUSBetweenLoops)
-            {
-                uint64_t nUSToSleep = kMinUSBetweenLoops - nTimeSinceLastLoop;
-                //                ZOUT("Maintaining min frame time. Sleeping for %lldus.\n", nUSToSleep);
-                std::this_thread::sleep_for(std::chrono::microseconds(nUSToSleep));
-                //                nTimeStamp = gTimer.GetUSSinceEpoch();
-            }
-
-            uint64_t nTimeSinceLastLogFlush = nLogFlushTimeStamp - nNewTime;
-            if (nTimeSinceLastLogFlush > 1000000)
-            {
-                nTimeSinceLastLogFlush = nNewTime;
-                gLogger.Flush();
-            }
-
+        uint64_t nTimeSinceLastLogFlush = nLogFlushTimeStamp - nNewTime;
+        if (nTimeSinceLastLogFlush > 1000000)
+        {
+            nTimeSinceLastLogFlush = nNewTime;
+            gLogger.Flush();
         }
     }
 
@@ -505,16 +505,17 @@ void HandleWindowSizeChanged()
 
     if (gbRenderingEnabled)
     {
-        grFullArea.SetRect(0, 0, rC.right, rC.bottom);
-        ZGUI::ComputeSizes();
+        if (grFullArea.right != rC.right || grFullArea.bottom != rC.bottom)
+        {
+            grFullArea.SetRect(0, 0, rC.right, rC.bottom);
+            ZGUI::ComputeSizes();
 
-        gRegistry.Set("appwin", "fullscreen", gGraphicSystem.mbFullScreen);
+            gRegistry.Set("appwin", "fullscreen", gGraphicSystem.mbFullScreen);
 
-
-        gpGraphicSystem->HandleModeChanges();
-        gpMainWin->SetArea(grFullArea);
-        gpMainWin->InvalidateChildren();
-        gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
+            gpGraphicSystem->HandleModeChanges();
+            gpMainWin->SetArea(grFullArea);
+            gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
+        }
     }
 
     static int count = 0;
@@ -663,8 +664,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (pSB)
             pSB->SetVisibilityComputingFlag(true);
 
-        if (gpMainWin)
-            gpMainWin->InvalidateChildren();
+//        if (gpMainWin)
+//            gpMainWin->InvalidateChildren();
         gbPaused = false;
         gTimer.Start();
         gMessageSystem.Post("pause;set=0");

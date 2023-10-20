@@ -437,11 +437,18 @@ void ZFont::DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t n
     uint8_t nDrawAlpha = nCol >> 24;
 
 	int64_t nScanlineOffset = 0;
-	for (tPixelDataList::iterator it = mCharDescriptors[c].pixelData.begin(); it != mCharDescriptors[c].pixelData.end(); it++)
+    uint8_t* pData = mCharDescriptors[c].pixelData.data();
+    uint8_t* pEnd = pData + mCharDescriptors[c].pixelData.size();
+//	for (tPixelDataList::iterator it = mCharDescriptors[c].pixelData.begin(); it != mCharDescriptors[c].pixelData.end(); it++)
+    while (pData < pEnd)
 	{
-		int64_t nBright = *it;
-		it++;
-		int64_t nNumPixels = *it;
+//		int64_t nBright = *it;
+        int64_t nBright = (int64_t) *pData;
+//		it++;
+        pData++;
+//		int64_t nNumPixels = *it;
+        int64_t nNumPixels = (int64_t) *pData;
+        pData++;
 
 		if (nBright < 5)
 		{

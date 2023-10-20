@@ -525,6 +525,8 @@ bool ZWinImage::Paint()
     }
 
 
+    Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
+    mCaptionMap["zoom"].visible = gInput.IsKeyDown(mZoomHotkey);
 
     if ((mBehavior & kShowCaption) != 0)
     {
@@ -533,10 +535,6 @@ bool ZWinImage::Paint()
         if (pRenderImage && mpTable)
             mpTable->Paint(mpSurface.get());
     }
-
-    Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
-    mCaptionMap["zoom"].visible = gInput.IsKeyDown(mZoomHotkey);
-
 
 	return ZWin::Paint();
 }

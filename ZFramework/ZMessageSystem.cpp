@@ -170,8 +170,10 @@ void ZMessageSystem::Process()
 {
 	// Messages can be posted from within a handler... 
 	// so we only process the messages that are here when this is first called
+    if (mMessageQueue.empty())
+        return;
+
     mMessageQueueMutex.lock();
-    int64_t nNumMessagesToProcess = mMessageQueue.size();
     tMessageList messages = std::move(mMessageQueue);
     mMessageQueueMutex.unlock();
 
