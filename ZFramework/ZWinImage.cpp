@@ -378,7 +378,7 @@ void ZWinImage::FitImageToWindow()
     if (!mpImage)
         return;
 
-    mImageArea = ZGUI::ScaledFit(mpImage->GetArea(), mAreaInParent);
+    mImageArea = ZGUI::ScaledFit(mpImage->GetArea(), mAreaLocal);
     mfZoom = (double)mImageArea.Width() / (double)mpImage->GetArea().Width();
     mfPerfectFitZoom = mfZoom;
 

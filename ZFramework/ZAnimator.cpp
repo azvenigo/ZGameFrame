@@ -82,6 +82,18 @@ bool ZAnimator::GetDirtyRects(tRectList& outList)
     return true;
 }
 
+bool ZAnimator::HasFullScreenDrawObjects()
+{
+    for (auto& o : mAnimObjectList)
+    {
+        if (o->mrDrawArea == grFullArea)
+            return true;
+    }
+
+    return false;
+}
+
+
 bool ZAnimator::AddObject(ZAnimObject* pObject, void* pContext)
 {
 //	ZDEBUG_OUT("cCEAnimator::AddObject\n");

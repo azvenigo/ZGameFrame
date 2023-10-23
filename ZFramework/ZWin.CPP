@@ -923,6 +923,14 @@ bool ZWin::HandleMessage(const ZMessage& message)
         MoveTo(SH::ToInt(message.GetParam("x")), SH::ToInt(message.GetParam("y")));
         return true;
     }
+    else if (sType == "invalidate")
+    {
+        if (message.HasParam("children"))
+            InvalidateChildren();
+        else
+            Invalidate();
+        return true;
+    }
 
 #ifdef _DEBUG
 	// If the message is targeted, this had better be the target window

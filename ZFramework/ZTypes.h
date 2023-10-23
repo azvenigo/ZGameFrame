@@ -305,6 +305,22 @@ public:
 			     (bottom <= pRect.top));
 	}
 
+    tPoint<T> TL() const
+    {
+        return tPoint<T>(left, top);
+    }
+
+    tPoint<T> BR() const
+    {
+        return tPoint<T>(right, bottom);
+    }
+
+    T Area() const
+    {
+        return (right - left) * (bottom - top);
+    }
+
+
     // Operations
     void SetRect(T l, T t, T r, T b)
 	{

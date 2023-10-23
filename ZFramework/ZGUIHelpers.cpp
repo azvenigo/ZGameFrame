@@ -251,8 +251,8 @@ namespace ZGUI
             nImageWidth = (int64_t)(nImageHeight / fRatio);
         }
 
-        int64_t nXOffset = (ref.Width() - nImageWidth) / 2;
-        int64_t nYOffset = (ref.Height() - nImageHeight) / 2;
+        int64_t nXOffset = ref.left + (ref.Width() - nImageWidth) / 2;
+        int64_t nYOffset = ref.top + (ref.Height() - nImageHeight) / 2;
 
 
         return ZRect(nXOffset, nYOffset, nXOffset + nImageWidth, nYOffset + nImageHeight);

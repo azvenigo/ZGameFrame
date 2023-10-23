@@ -1,5 +1,4 @@
-#ifndef CEANIMATOR_H
-#define CEANIMATOR_H
+#pragma once
 
 #include <list>
 #include "ZTypes.h"
@@ -22,6 +21,7 @@ public:
     bool KillAllObjects();
     
     bool HasActiveObjects() { return !mAnimObjectList.empty(); }
+    bool HasFullScreenDrawObjects();
 
     bool GetDirtyRects(tRectList& outList); // std::moves the list out
 
@@ -34,5 +34,4 @@ protected:
     tAnimObjectList mAnimObjectList;
 };
 
-
-#endif
+extern ZAnimator        gAnimator;

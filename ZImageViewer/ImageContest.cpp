@@ -17,6 +17,9 @@
 #include "ZRandom.h"
 #include "ZThumbCache.h"
 #include "ImageMeta.h"
+#include "ZAnimator.h"
+#include "ZGraphicSystem.h"
+#include "ZScreenBuffer.h"
 
 using namespace std;
 
@@ -258,9 +261,64 @@ bool ImageContest::HandleMessage(const ZMessage& message)
             return true;
         }
 
+        // add zoom animation
+
+        tZBufferPtr backgroundBuf(new ZBuffer());
+        backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
+        //GetTopWindow()->RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
+        gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(backgroundBuf.get(), grFullArea);
+
+
+        ZRect rImageArea(mAreaLocal);
+        if (mpPanel && mpPanel->mbVisible)
+            rImageArea.top = mpPanel->GetArea().bottom;
+        ZRect rRatedStrip(rImageArea);
+        rRatedStrip.left = rRatedStrip.right - gM * 4;
+        rImageArea.right = rRatedStrip.left;
+
+
+        ZRect rScaledFit(ZGUI::ScaledFit(p1->GetArea(), rImageArea));
+        ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(p1, backgroundBuf, &rScaledFit);
+        pImage->mbFullScreenDraw = true;
+
+
+
+
+        ZRect rThumb = StringToRect(message.GetParam("area"));
+
+
+        double scale = ((double)rThumb.Width() / (double)rScaledFit.Width());
+
+        ZTransformation start(rThumb.TL(), scale, 0, 255);
+        ZTransformation end(rScaledFit.TL(), 1.0, 0, 255);
+
+        pImage->StartTransformation(start);
+
+        ZTransformation lastTrans(end);
+
+
+        Sprintf(end.msCompletionMessage, "invalidate;children=1;target=%s", GetTopWindow()->GetTargetName().c_str());
+        pImage->AddTransformation(end, 1000);
+        pImage->AddTransformation(lastTrans, 120);
+
+        gAnimator.AddObject(pImage);
+
+
+
+
+
+
+
+
         mState = kShowingSingle;
-        mpWinImage[kLeft]->SetImage(p1);        
+        mpWinImage[kLeft]->SetImage(p1);
+        mpWinImage[kLeft]->FitImageToWindow();
         mImageMeta[kLeft] = &gImageMeta.Entry(sFile, std::filesystem::file_size(sFile));
+
+
+
+
+
         UpdateUI();
         return true;
     }

@@ -151,8 +151,8 @@ inline void TransformPoint(double& fX, double& fY, double fOriginX, double fOrig
 	const double cosAngle(::cos(angle));
 	const double sinAngle(::sin(angle));
 
-	fX = fOriginX + scale*(x*cosAngle - y*sinAngle);
-	fY = fOriginY + scale*(x*sinAngle + y*cosAngle);
+	fX = scale*fOriginX + scale*(x*cosAngle - y*sinAngle);
+	fY = scale*fOriginY + scale*(x*sinAngle + y*cosAngle);
 }
 
 bool ZTransformable::Tick()
@@ -272,20 +272,23 @@ bool ZTransformable::Tick()
 
 void ZTransformable::UpdateVertsAndBounds()
 {
+    double fW = (double)mrBaseArea.Width();
+    double fH = (double)mrBaseArea.Height();
+
 	mVerts[0].x = (double) mCurTransform.mPosition.x;
 	mVerts[0].y = (double) mCurTransform.mPosition.y;
 
-	mVerts[1].x = (double) mCurTransform.mPosition.x + mrBaseArea.Width();
+	mVerts[1].x = (double) mCurTransform.mPosition.x + fW;
 	mVerts[1].y = (double) mCurTransform.mPosition.y;
 
-	mVerts[2].x = (double) mCurTransform.mPosition.x + mrBaseArea.Width();
-	mVerts[2].y = (double) mCurTransform.mPosition.y + mrBaseArea.Height();
+	mVerts[2].x = (double) mCurTransform.mPosition.x + fW;
+	mVerts[2].y = (double) mCurTransform.mPosition.y + fH;
 
 	mVerts[3].x = (double) mCurTransform.mPosition.x;
-	mVerts[3].y = (double) mCurTransform.mPosition.y + mrBaseArea.Height();
+	mVerts[3].y = (double) mCurTransform.mPosition.y + fH;
 
-	double centerX = (double) mCurTransform.mPosition.x + mrBaseArea.Width()/2;
-	double centerY = (double) mCurTransform.mPosition.y + mrBaseArea.Height()/2;
+	double centerX = (double) (mCurTransform.mPosition.x + fW) /2.0;
+	double centerY = (double) (mCurTransform.mPosition.y + fH) /2.0;
 
 
     mBounds.left = MAXINT32;

@@ -26,7 +26,6 @@ namespace ZFrameworkApp
 };
 
 extern ZTickManager     gTickManager;
-extern ZAnimator        gAnimator;
 
 using namespace std;
 
@@ -168,28 +167,36 @@ int main(int argc, char* argv[])
                     }
 
 
-                    static int64_t nTotalRenderTime = 0;
-                    static int64_t nTotalFrames = 0;
-
-                    int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
-                    int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
-                    int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
-
-                    int64_t nDelta = nEndRenderVisible - nStartRenderVisible;
-                    nTotalRenderTime += nDelta;
-                    nTotalFrames += 1;
-                    //				    ZOUT("render took time:%lld us. Rects:%d/%d. Total Frames:%d, avg frame time:%lld us\n", nEndRenderVisible - nStartRenderVisible, nRenderedCount, pScreenBuffer->GetVisibilityCount(), nTotalFrames, (nTotalRenderTime/nTotalFrames));
-
-                    tRectList rPostAnimDirtyList;
-                    if (gAnimator.GetDirtyRects(rPostAnimDirtyList))
+                    if (gAnimator.HasFullScreenDrawObjects())
                     {
-                        for (auto& r : rPostAnimDirtyList)
-                        {
-                            pScreenBuffer->RenderVisibleRects(r);
-                        }
-                    }
+                        gAnimator.Paint();
 
-                    bool bAnimatorActive = gAnimator.Paint();
+                    }
+                    else
+                    {
+                        static int64_t nTotalRenderTime = 0;
+                        static int64_t nTotalFrames = 0;
+
+                        int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
+                        int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
+                        int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
+
+                        int64_t nDelta = nEndRenderVisible - nStartRenderVisible;
+                        nTotalRenderTime += nDelta;
+                        nTotalFrames += 1;
+                        //				    ZOUT("render took time:%lld us. Rects:%d/%d. Total Frames:%d, avg frame time:%lld us\n", nEndRenderVisible - nStartRenderVisible, nRenderedCount, pScreenBuffer->GetVisibilityCount(), nTotalFrames, (nTotalRenderTime/nTotalFrames));
+
+                        tRectList rPostAnimDirtyList;
+                        if (gAnimator.GetDirtyRects(rPostAnimDirtyList))
+                        {
+                            for (auto& r : rPostAnimDirtyList)
+                            {
+                                pScreenBuffer->RenderVisibleRects(r);
+                            }
+                        }
+
+                        gAnimator.Paint();
+                    }
 
 
                     pScreenBuffer->EndRender();

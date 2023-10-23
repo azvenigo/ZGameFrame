@@ -115,9 +115,13 @@ bool WinTopWinners::OnMouseDownL(int64_t x, int64_t y)
 
         if (r.PtInRect(x, y))
         {
+            ZRect rScreen(r);
+            rScreen.OffsetRect(mAreaAbsolute.TL());
+
             // post
-            string sLink("select;filename=" + SH::URL_Encode((*it).filename) + ";target=" + mpParentWin->GetTargetName());
+            string sLink("select;filename=" + SH::URL_Encode((*it).filename) + ";target=" + mpParentWin->GetTargetName() + ";area=" + RectToString(rScreen));
             gMessageSystem.Post(sLink);
+            ZDEBUG_OUT("Posted\n");
             break;
         }
 

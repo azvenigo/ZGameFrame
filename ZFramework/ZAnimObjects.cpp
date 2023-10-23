@@ -162,14 +162,14 @@ bool ZAnimObject_TextMover::Paint()
 	int64_t nX = (int64_t) mfX;
 	int64_t nY = (int64_t) mfY;
 
-	int64_t nWidth = mrArea.Width();
-	int64_t nHeight = mrArea.Height();
+	int64_t nWidth = mrDrawArea.Width();
+	int64_t nHeight = mrDrawArea.Height();
 
-	mrArea.SetRect(nX, nY, nX + nWidth, nY + nHeight);
+    mrDrawArea.SetRect(nX, nY, nX + nWidth, nY + nHeight);
 
 	ZRect rBufferArea(mpDestination->GetArea());
 
-	if (!rBufferArea.Overlaps(&mrArea))    // Have we moved off screen?
+	if (!rBufferArea.Overlaps(&mrDrawArea))    // Have we moved off screen?
 	{
 		mState = kFinished;
 		return true;
@@ -192,13 +192,13 @@ bool ZAnimObject_TextMover::Paint()
 
 		useStyle.look.colTop = ARGB((uint8_t) nAlpha, ARGB_R(useStyle.look.colTop), ARGB_G(useStyle.look.colTop), ARGB_B(useStyle.look.colTop));
         useStyle.look.colBottom = ARGB((uint8_t) nAlpha, ARGB_R(useStyle.look.colBottom), ARGB_G(useStyle.look.colBottom), ARGB_B(useStyle.look.colBottom));
-		useStyle.Font()->DrawText(mpDestination.get(), msText, mrArea, &useStyle.look);
+		useStyle.Font()->DrawText(mpDestination.get(), msText, mrDrawArea, &useStyle.look);
 
 		return true;
 	}
 
 	// Plain Draw
-    mStyle.Font()->DrawText(mpDestination.get(), msText, mrArea, &mStyle.look);
+    mStyle.Font()->DrawText(mpDestination.get(), msText, mrDrawArea, &mStyle.look);
 
 	return true;
 }
@@ -212,7 +212,7 @@ void ZAnimObject_TextMover::SetText(const string& sText)
 	int64_t nY = (int64_t) mfY;
 
 	// Now calculate (or recalculate) our area
-	mrArea.SetRect(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
+    mrDrawArea.SetRect(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
 }
 
 void ZAnimObject_TextMover::SetLocation(int64_t nX, int64_t nY)
@@ -220,7 +220,7 @@ void ZAnimObject_TextMover::SetLocation(int64_t nX, int64_t nY)
 	mfX = (double) nX;
 	mfY = (double) nY;
 
-	mrArea.SetRect(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
+    mrDrawArea.SetRect(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
 }
 
 void ZAnimObject_TextMover::SetPixelsPerSecond(double fDX, double fDY)
@@ -458,8 +458,8 @@ bool ZAnimObject_TextPulser::Paint()
     useStyle.pos = ZGUI::C;
 
 
-    mStyle.Font()->DrawTextParagraph(mpDestination.get(), msText, mrArea, &useStyle);
-    mrLastDrawArea = mrArea;
+    mStyle.Font()->DrawTextParagraph(mpDestination.get(), msText, mrDrawArea, &useStyle);
+    mrLastDrawArea = mrDrawArea;
 	return true;
 
 }
@@ -470,8 +470,8 @@ void ZAnimObject_TextPulser::SetText(const string& sText)
 	msText = sText;
 
 	// Now calculate (or recalculate) our area
-	mrArea.bottom = mrArea.top + mStyle.Font()->Height();
-	mrArea.left   = mrArea.left + mStyle.Font()->StringWidth(msText);
+    mrDrawArea.bottom = mrDrawArea.top + mStyle.Font()->Height();
+    mrDrawArea.left   = mrDrawArea.left + mStyle.Font()->StringWidth(msText);
 }
 
 void ZAnimObject_TextPulser::SetPulse(int64_t nMinAlpha, int64_t nMaxAlpha, double fPeriod)
@@ -495,7 +495,7 @@ ZAnimObject_BitmapShatterer::~ZAnimObject_BitmapShatterer()
 
 void ZAnimObject_BitmapShatterer::SetBitmapToShatter(ZBuffer* pBufferToShatter, ZRect& rSrc, ZRect& rStartingDst, int64_t nSubdivisions)
 {
-	mrArea = rStartingDst;
+    mrDrawArea = rStartingDst;
 	CreateShatterListFromBuffer(pBufferToShatter, rSrc, nSubdivisions);
 
 	ZRect rDst(0,0,rSrc.Width(),rSrc.Height());
@@ -614,8 +614,8 @@ void ZAnimObject_BitmapShatterer::CreateShatterListFromBuffer(ZBuffer* pBuffer, 
 	// Clear all pixels
 	mShatterQuadList.clear();
 
-	double fQuadWidth = (double) mrArea.Width() / (double) nSubdivisions;
-	double fQuadHeight = (double) mrArea.Height() / (double) nSubdivisions;
+	double fQuadWidth = (double)mrDrawArea.Width() / (double) nSubdivisions;
+	double fQuadHeight = (double)mrDrawArea.Height() / (double) nSubdivisions;
 
 	double fUQuad = 1.0f / nSubdivisions;
 
@@ -630,23 +630,23 @@ void ZAnimObject_BitmapShatterer::CreateShatterListFromBuffer(ZBuffer* pBuffer, 
 			double fURight = (x+1) * fUQuad;
 
 			cShatterQuad newPixel;
-			newPixel.mVertices[0].x = mrArea.left + x * fQuadWidth;
-			newPixel.mVertices[0].y = mrArea.top + y * fQuadHeight;
+			newPixel.mVertices[0].x = mrDrawArea.left + x * fQuadWidth;
+			newPixel.mVertices[0].y = mrDrawArea.top + y * fQuadHeight;
 			newPixel.mVertices[0].u = fULeft;
 			newPixel.mVertices[0].v = fVTop;
 
-			newPixel.mVertices[1].x = mrArea.left + (x+1) * fQuadWidth;
-			newPixel.mVertices[1].y = mrArea.top + y * fQuadHeight;
+			newPixel.mVertices[1].x = mrDrawArea.left + (x+1) * fQuadWidth;
+			newPixel.mVertices[1].y = mrDrawArea.top + y * fQuadHeight;
 			newPixel.mVertices[1].u = fURight;
 			newPixel.mVertices[1].v = fVTop;
 
-			newPixel.mVertices[2].x = mrArea.left + (x+1) * fQuadWidth;
-			newPixel.mVertices[2].y = mrArea.top + (y+1) * fQuadHeight;
+			newPixel.mVertices[2].x = mrDrawArea.left + (x+1) * fQuadWidth;
+			newPixel.mVertices[2].y = mrDrawArea.top + (y+1) * fQuadHeight;
 			newPixel.mVertices[2].u = fURight;
 			newPixel.mVertices[2].v = fVBottom;
 
-			newPixel.mVertices[3].x = mrArea.left + x * fQuadWidth;
-			newPixel.mVertices[3].y = mrArea.top + (y+1) * fQuadHeight;
+			newPixel.mVertices[3].x = mrDrawArea.left + x * fQuadWidth;
+			newPixel.mVertices[3].y = mrDrawArea.top + (y+1) * fQuadHeight;
 			newPixel.mVertices[3].u = fULeft;
 			newPixel.mVertices[3].v = fVBottom;
 
@@ -983,16 +983,18 @@ bool ZAnimObject_Transformer::Paint()
 	return true;
 }
 
-ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(tZBufferPtr pImage, tZBufferPtr pBackground, ZRect* pArea)
+ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(tZBufferPtr pImage, tZBufferPtr pBackground, ZRect* pDrawArea)
 {
 	ZASSERT(pImage);
 
-	if (pArea)
-		mrArea.SetRect(*pArea);
-	else
-		mrArea = pImage->GetArea();
+    mbFullScreenDraw = false;
 
-	ZTransformable::Init(mrArea);
+	if (pDrawArea)
+        mrDrawArea.SetRect(*pDrawArea);
+	else
+        mrDrawArea = pImage->GetArea();
+
+	ZTransformable::Init(mrDrawArea);
     mpImage = pImage;
 
 
@@ -1013,58 +1015,68 @@ bool ZAnimObject_TransformingImage::Paint()
 	{
 		mState = ZAnimObject::kFinished;
         //mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
-        mrArea = mBounds;
+        mrDrawArea = mBounds;
     }
     else
     {
-        
-        // for now I'm drawing directly to screen buffer...... I may want to re-enable drawing to arbitrary destinations with either blt or rasterization
-        // maybe have a screenbuffer blt that does GDI and or rasterization to a temp buffer then transfer via mask?
-        bool bFirstDraw = false;
-        if (mrLastDrawArea.Width() == 0 || mrLastDrawArea.Height() == 0)
-            bFirstDraw = true;
-
-        mrLastDrawArea = mrArea;
-//        mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
-        mrArea = mBounds;
-
-        // if this is the first time drawing, re-set
-        if (bFirstDraw)
-            mrLastDrawArea = mrArea;
-
-        if (mCurTransform.mScale == 1.0 && mCurTransform.mRotation == 0 && mCurTransform.mnAlpha > 0xf0)
+        // Ensure we have a working buffer since transform is not square
+        if (!mpWorkingBuffer)
         {
-            if (mpDestination)
-                mpDestination->Blt(mpImage.get(), mpImage->GetArea(), mrArea);
-            else
-                gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpImage.get(), mpImage->GetArea(), mrArea);
+            mpWorkingBuffer.reset(new ZBuffer());
+
+            ZRect r(mpBackground ? mpBackground->GetArea() : grFullArea);
+            mpWorkingBuffer->Init(r.Width(), r.Height());
+        }
+
+        if (mbFullScreenDraw)
+        {
+            assert(mpWorkingBuffer && mpBackground && mpWorkingBuffer->GetArea() == grFullArea && mpBackground->GetArea() == grFullArea);
+            mpWorkingBuffer->CopyPixels(mpBackground.get());
+            gRasterizer.RasterizeWithAlpha(mpWorkingBuffer.get(), mpImage.get(), mVerts, nullptr, mCurTransform.mnAlpha);
+            gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpWorkingBuffer.get(), grFullArea, grFullArea);
+            return true;
         }
         else
         {
-            // Ensure we have a working buffer since transform is not square
-            if (!mpWorkingBuffer)
+            // for now I'm drawing directly to screen buffer...... I may want to re-enable drawing to arbitrary destinations with either blt or rasterization
+            // maybe have a screenbuffer blt that does GDI and or rasterization to a temp buffer then transfer via mask?
+            bool bFirstDraw = false;
+            if (mrLastDrawArea.Area() == 0)
+                bFirstDraw = true;
+
+            mrLastDrawArea = mrDrawArea;
+            //        mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
+            mrDrawArea = mBounds;
+
+            // if this is the first time drawing, re-set
+            if (bFirstDraw)
+                mrLastDrawArea = mrDrawArea;
+
+            if (mCurTransform.mScale == 1.0 && mCurTransform.mRotation == 0 && mCurTransform.mnAlpha > 0xf0)
             {
-                mpWorkingBuffer.reset(new ZBuffer());
-
-                ZRect r(mpBackground ? mpBackground->GetArea() : grFullArea);
-                mpWorkingBuffer->Init(r.Width(), r.Height());
+                if (mpDestination)
+                    mpDestination->Blt(mpImage.get(), mpImage->GetArea(), mrDrawArea);
+                else
+                    gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpImage.get(), mpImage->GetArea(), mrDrawArea);
             }
-
-            // copy over the background
-            if (mpBackground)
-                mpWorkingBuffer->CopyPixels(mpBackground.get());
-
-            gRasterizer.RasterizeWithAlpha(mpWorkingBuffer.get(), mpImage.get(), mVerts, nullptr, mCurTransform.mnAlpha);
-
-
-            if (mpDestination)
-                mpDestination->Blt(mpWorkingBuffer.get(), mBounds, mBounds);
             else
-                gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpWorkingBuffer.get(), mBounds, mBounds);
+            {
+                // copy over the background
+                if (mpBackground)
+                    mpWorkingBuffer->CopyPixels(mpBackground.get());
+
+                gRasterizer.RasterizeWithAlpha(mpWorkingBuffer.get(), mpImage.get(), mVerts, nullptr, mCurTransform.mnAlpha);
+
+
+                if (mpDestination)
+                    mpDestination->Blt(mpWorkingBuffer.get(), mBounds, mBounds);
+                else
+                    gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpWorkingBuffer.get(), mBounds, mBounds);
+            }
         }
     }
 
-    dirtyRects = ComputeDirtyRects(mrLastDrawArea, mrArea);
+    dirtyRects = ComputeDirtyRects(mrLastDrawArea, mrDrawArea);
 
     // render the area that's left
     for (auto& r : dirtyRects)
