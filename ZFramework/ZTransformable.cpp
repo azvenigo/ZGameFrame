@@ -275,21 +275,17 @@ void ZTransformable::UpdateVertsAndBounds()
     double fW = (double)mrBaseArea.Width();
     double fH = (double)mrBaseArea.Height();
 
-	mVerts[0].x = (double) mCurTransform.mPosition.x;
-	mVerts[0].y = (double) mCurTransform.mPosition.y;
+	mVerts[0].x = 0;
+	mVerts[0].y = 0;
 
-	mVerts[1].x = (double) mCurTransform.mPosition.x + fW;
-	mVerts[1].y = (double) mCurTransform.mPosition.y;
+	mVerts[1].x = fW;
+	mVerts[1].y = 0;
 
-	mVerts[2].x = (double) mCurTransform.mPosition.x + fW;
-	mVerts[2].y = (double) mCurTransform.mPosition.y + fH;
+	mVerts[2].x = fW;
+	mVerts[2].y = fH;
 
-	mVerts[3].x = (double) mCurTransform.mPosition.x;
-	mVerts[3].y = (double) mCurTransform.mPosition.y + fH;
-
-	double centerX = (double) (mCurTransform.mPosition.x + fW) /2.0;
-	double centerY = (double) (mCurTransform.mPosition.y + fH) /2.0;
-
+	mVerts[3].x = 0;
+	mVerts[3].y = fH;
 
     mBounds.left = MAXINT32;
     mBounds.right = MININT32;
@@ -297,7 +293,8 @@ void ZTransformable::UpdateVertsAndBounds()
     mBounds.bottom = MININT32;
 	for (int i = 0; i < 4; i++)
 	{
-		TransformPoint(mVerts[i].x, mVerts[i].y, centerX, centerY, mCurTransform.mRotation, mCurTransform.mScale);
+		TransformPoint(mVerts[i].x, mVerts[i].y, fW / 2.0, fH / 2.0, mCurTransform.mRotation, mCurTransform.mScale);
+        mVerts[i].Offset(mCurTransform.mPosition.x, mCurTransform.mPosition.y);
 		int64_t nX = (int64_t) mVerts[i].x;
 		int64_t nY = (int64_t) mVerts[i].y;
         if (mBounds.left > nX)

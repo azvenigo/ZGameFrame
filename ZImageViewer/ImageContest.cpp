@@ -253,6 +253,14 @@ bool ImageContest::HandleMessage(const ZMessage& message)
     }
     else if (sType == "select")
     {
+        TIME_SECTION_START(select);
+
+        tZBufferPtr backgroundBuf(new ZBuffer());
+        backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
+       //RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
+       gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(backgroundBuf.get(), grFullArea);
+       backgroundBuf->FillAlpha(0xaa000000);
+
         tZBufferPtr p1(new ZBuffer());
         string sFile = message.GetParam("filename");
         if (!p1->LoadBuffer(sFile))
@@ -263,10 +271,6 @@ bool ImageContest::HandleMessage(const ZMessage& message)
 
         // add zoom animation
 
-        tZBufferPtr backgroundBuf(new ZBuffer());
-        backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
-        //GetTopWindow()->RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
-        gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(backgroundBuf.get(), grFullArea);
 
 
         ZRect rImageArea(mAreaLocal);
@@ -299,7 +303,7 @@ bool ImageContest::HandleMessage(const ZMessage& message)
 
         Sprintf(end.msCompletionMessage, "invalidate;children=1;target=%s", GetTopWindow()->GetTargetName().c_str());
         pImage->AddTransformation(end, 1000);
-        pImage->AddTransformation(lastTrans, 120);
+//        pImage->AddTransformation(lastTrans, 120);
 
         gAnimator.AddObject(pImage);
 
@@ -320,6 +324,9 @@ bool ImageContest::HandleMessage(const ZMessage& message)
 
 
         UpdateUI();
+
+        TIME_SECTION_END(select);
+
         return true;
     }
 
@@ -352,12 +359,19 @@ void ImageContest::ResetContest()
 
 void ImageContest::ShowHelpDialog()
 {
-    ZWinDialog* pHelp = new ZWinDialog();
+    ZWinDialog* pHelp = (ZWinDialog*)GetChildWindowByWinName("ZImageContestHelp");
+    if (pHelp)
+    {
+        pHelp->SetVisible();
+        return;
+    }
+
+    pHelp = new ZWinDialog();
     pHelp->msWinName = "ZImageContestHelp";
     pHelp->mbAcceptsCursorMessages = true;
     pHelp->mbAcceptsFocus = true;
 
-    ZRect r(1600, 1300);
+    ZRect r(800, 600);
     pHelp->SetArea(r);
     pHelp->mBehavior = ZWinDialog::Draggable | ZWinDialog::OKButton;
     pHelp->mStyle = gDefaultDialogStyle;
@@ -386,23 +400,25 @@ void ImageContest::ShowHelpDialog()
     sectionText.look.colTop = 0xffaaaaaa;
     sectionText.look.colBottom = 0xffaaaaaa;
 
-    ZRect rForm(1400, 1100);
+    ZRect rForm(r.Width()*4/5, r.Height()*4/5);
     rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
     pForm->SetArea(rForm);
     pForm->mbScrollable = true;
     pForm->mDialogStyle.bgCol = gDefaultDialogFill;
     pForm->mbAcceptsCursorMessages = false;
     pHelp->ChildAdd(pForm);
-    ChildAdd(pHelp);
     pHelp->Arrange(ZGUI::C, mAreaLocal);
 
     pForm->AddMultiLine("\nImage Contest", sectionText);
     pForm->AddMultiLine("Use this feature to randomly choose two images from a folder and snap-judge which is the best.", text);
-    pForm->AddMultiLine("Click on either image or use LEFT/RIGHT to select.", text);
+    pForm->AddMultiLine("Right-click or ALT+Wheel to zoom each image.", text);
+    pForm->AddMultiLine("Click the buttons below or or use LEFT/RIGHT keys to select.", text);
     pForm->AddMultiLine("Thumbnails along the right show top ranked images.", text);
+    pForm->AddMultiLine("ESC to go back to the Viewer.", text);
 
     pForm->Invalidate();
 
+    ChildAdd(pHelp);
 
 }
 
@@ -413,6 +429,7 @@ bool ImageContest::Init()
         mbShowUI = true;
 
         mpRatedImagesStrip = new WinTopWinners();
+        mpRatedImagesStrip->mStyle.bgCol = 0xff222244;
         ChildAdd(mpRatedImagesStrip);
 
         SetFocus();
@@ -420,7 +437,7 @@ bool ImageContest::Init()
         ZRect rImageArea(mAreaLocal);
         rImageArea.right = rImageArea.left + rImageArea.Width() / 2;
         mpWinImage[kLeft]->SetArea(rImageArea);
-        mpWinImage[kLeft]->mFillColor = 0xff000000;
+        mpWinImage[kLeft]->mFillColor = 0xff444455;
         mpWinImage[kLeft]->mZoomHotkey = VK_MENU;
         mpWinImage[kLeft]->mBehavior |= ZWinImage::kHotkeyZoom | ZWinImage::kScrollable | ZWinImage::kNotifyOnClick;
         mpWinImage[kLeft]->mpTable = new ZGUI::ZTable();
@@ -429,7 +446,7 @@ bool ImageContest::Init()
         mpWinImage[kRight] = new ZWinImage();
         rImageArea.OffsetRect(rImageArea.Width(), 0);
         mpWinImage[kRight]->SetArea(rImageArea);
-        mpWinImage[kRight]->mFillColor = 0xff000000;
+        mpWinImage[kRight]->mFillColor = 0xff444455;
         mpWinImage[kRight]->mZoomHotkey = VK_MENU;
         mpWinImage[kRight]->mBehavior |= ZWinImage::kHotkeyZoom | ZWinImage::kScrollable;
         mpWinImage[kRight]->mpTable = new ZGUI::ZTable();
@@ -509,6 +526,7 @@ void ImageContest::UpdateControlPanel()
 
 
     mpPanel = new ZWinControlPanel();
+    mpPanel->mStyle.bgCol = 0xff666688;
         
     int64_t nGroupSide = (gM * 2) - gSpacer * 4;
 
@@ -857,10 +875,13 @@ void ImageContest::UpdateCaptions()
         bShow = true;
 
     string sCap;
-    Sprintf(sCap, "Wins %d/%d ELO:%d", mImageMeta[kLeft]->wins, mImageMeta[kLeft]->contests, mImageMeta[kLeft]->elo);
+    if (mState == kShowingSingle)
+        Sprintf(sCap, "Viewing Wins %d/%d ELO:%d", mImageMeta[kLeft]->wins, mImageMeta[kLeft]->contests, mImageMeta[kLeft]->elo);
+    else
+        Sprintf(sCap, "Choose Left");
     mpWinImage[kLeft]->mCaptionMap["contests"].sText = sCap;
 
-    Sprintf(sCap, "Wins %d/%d ELO:%d", mImageMeta[kRight]->wins, mImageMeta[kRight]->contests, mImageMeta[kRight]->elo);
+    Sprintf(sCap, "Choose Right");
     mpWinImage[kRight]->mCaptionMap["contests"].sText = sCap;
 
     if (bShow)

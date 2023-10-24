@@ -226,7 +226,8 @@ void ZWin::TransformOut()
         //SetVisible(false);
 
 		ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf, backgroundBuf);
-		ZTransformation start(ZPoint(mAreaInParent.left, mAreaInParent.top));
+        //pImage->mbFullScreenDraw = true;
+		ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top));
         ZTransformation end(start);
 
 
@@ -1094,6 +1095,10 @@ bool ZWinDialog::Init()
     //ZRect rButton(0, 0, gM * 4, gM * 2);
     ZRect rButtonArea(mAreaLocal);
     rButtonArea.top = rButtonArea.bottom - gM * 2;
+    rButtonArea.left += gM * 2;
+    rButtonArea.right -= gM * 2;
+    rButtonArea.bottom -= gSpacer;
+
 //    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
 
     tWinList arrangeList;
@@ -1126,8 +1131,8 @@ bool ZWinDialog::Init()
     if (!arrangeList.empty())
         ArrangeWindows(arrangeList, rButtonArea, gStyleButton, -1, 1);
 
-    mTransformIn = kFade;
-    mTransformOut = kFade;
+    mTransformIn = kSlideUp;
+    mTransformOut = kNone;
 
     ZWin::Init();
     SetFocus();
