@@ -375,14 +375,14 @@ void ZWinImage::SetArea(const ZRect& newArea)
 
 void ZWinImage::FitImageToWindow()
 {
+    mViewState = kFitToWindow;
+
     if (!mpImage)
         return;
 
     mImageArea = ZGUI::ScaledFit(mpImage->GetArea(), mAreaLocal);
     mfZoom = (double)mImageArea.Width() / (double)mpImage->GetArea().Width();
     mfPerfectFitZoom = mfZoom;
-
-    mViewState = kFitToWindow;
 
     Invalidate();
 }

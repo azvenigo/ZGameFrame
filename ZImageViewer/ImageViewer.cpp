@@ -100,6 +100,7 @@ bool ImageViewer::ShowOpenImageDialog()
         filesystem::path imagePath(sFilename);
         ScanForImagesInFolder(imagePath.parent_path());
         mViewingIndex = IndexFromPath(imagePath);
+        mpWinImage->FitImageToWindow();
         KickCaching();
     }
     return true;

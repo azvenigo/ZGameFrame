@@ -713,28 +713,7 @@ bool ImageContest::ScanFolder(std::filesystem::path folder)
     mImagesInCurrentFolder.clear();
     mCurrentFolderImageMeta.clear();
 
-    bool bErrors = false;
-
-    for (auto filePath : std::filesystem::directory_iterator(mCurrentFolder))
-    {
-        if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
-        {
-            mImagesInCurrentFolder.emplace_back(filePath);
-//            mImageArray.emplace_back(new ImageEntry(filePath));
-            //ZDEBUG_OUT("Found image:", filePath, "\n");
-
-            ImageMetaEntry localEntry(gImageMeta.Entry(filePath.path().string(), filesystem::file_size(filePath)));
-            if (localEntry.contests > 0)
-                mCurrentFolderImageMeta.emplace_back(std::move(localEntry));
-        }
-    }
-
-    if (bErrors)
-    {
-        gMessageSystem.Post("toggleconsole");
-        return false;
-    }
-
+    ScanMetadata();
 
     PickRandomPair();
 
@@ -743,6 +722,24 @@ bool ImageContest::ScanFolder(std::filesystem::path folder)
     UpdateCaptions();
 
     return true;
+}
+
+void ImageContest::ScanMetadata()
+{
+    mCurrentFolderImageMeta.clear();
+    for (auto filePath : std::filesystem::directory_iterator(mCurrentFolder))
+    {
+        if (filePath.is_regular_file() && AcceptedExtension(filePath.path().extension().string()))
+        {
+            mImagesInCurrentFolder.emplace_back(filePath);
+            //            mImageArray.emplace_back(new ImageEntry(filePath));
+                        //ZDEBUG_OUT("Found image:", filePath, "\n");
+
+            ImageMetaEntry localEntry(gImageMeta.Entry(filePath.path().string(), filesystem::file_size(filePath)));
+            if (localEntry.contests > 0)
+                mCurrentFolderImageMeta.emplace_back(std::move(localEntry));
+        }
+    }
 }
 
 bool ImageContest::PickRandomPair()
@@ -843,7 +840,7 @@ bool ImageContest::SelectWinner(int leftOrRight)
         gImageMeta.SaveBucket(mImageMeta[kLeft]->filesize);
         gImageMeta.SaveBucket(mImageMeta[kRight]->filesize);
 
-
+        ScanMetadata();
 
         // Store thumbnails for winning images
         if (mImageMeta[leftOrRight]->elo > 1000)

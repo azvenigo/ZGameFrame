@@ -68,6 +68,8 @@ protected:
 
     void                    ShowHelpDialog();
 
+    void                    ScanMetadata();
+
     ZWinControlPanel*       mpPanel;
     std::recursive_mutex    mPanelMutex;
 
