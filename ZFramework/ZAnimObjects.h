@@ -38,11 +38,13 @@ public:
 
    ZRect                			mrDrawArea;
    ZRect                            mrLastDrawArea;
+   bool                             mbFullScreenDraw;
 
 protected:
    eState  			                mState;
    int64_t               			mnTimeStamp;
    tZBufferPtr                      mpDestination;
+
    void*							mpContext;			// Contextual owner.
 };
 
@@ -164,7 +166,6 @@ public:
     tZBufferPtr mpImage;
     tZBufferPtr mpBackground;   // snapshot of the screen when animation object is instantiated for transparency, non-rectangular rasterization, etc.
     tZBufferPtr mpWorkingBuffer;
-    bool mbFullScreenDraw;
 };
 
 

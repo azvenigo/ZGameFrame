@@ -86,7 +86,7 @@ bool ZAnimator::HasFullScreenDrawObjects()
 {
     for (auto& o : mAnimObjectList)
     {
-        if (o->mrDrawArea == grFullArea)
+        if (o->mbFullScreenDraw)
             return true;
     }
 

@@ -25,6 +25,7 @@ ZAnimObject::ZAnimObject()
 	mState = kNone;
     mpDestination = nullptr;
 	mnTimeStamp = gTimer.GetElapsedTime();
+    mbFullScreenDraw = false;
 }
 
 ZAnimObject::~ZAnimObject()
