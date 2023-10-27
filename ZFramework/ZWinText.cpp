@@ -265,38 +265,40 @@ bool ZWinTextEdit::Paint()
     if (!mbInvalid)
         return false;
 
-    int64_t nWidth = mStyle.Font()->StringWidth(*mpText);
-    ZRect rOut(mrVisibleTextArea.left-StyleOffset(), mrVisibleTextArea.top, mrVisibleTextArea.right+StyleOffset(), mrVisibleTextArea.bottom);
-
-    ZGUI::ePosition posToUse = mStyle.pos;
-    if (nWidth > mrVisibleTextArea.Width())
-    {
-        rOut.OffsetRect(-mnViewOffset, 0);
-        posToUse = (ZGUI::ePosition)((uint32_t)mStyle.pos & ~ZGUI::HC | ZGUI::L);  // remove horizontal center and left justify
-    }
-
-
-    ZRect rString(mStyle.Font()->Arrange(rOut, (uint8_t*)mpText->c_str(), mpText->length(), posToUse, 0));
-
     mpSurface.get()->Fill(mStyle.bgCol);
 
-    mStyle.Font()->DrawText(mpSurface.get(), *mpText, rString, &mStyle.look, &mAreaLocal);
-
-    if (mnSelectionStart != mnSelectionEnd &&
-        mnSelectionStart >= 0 && mnSelectionEnd >= 0 &&
-        mnSelectionStart <= (int64_t)mpText->length() && mnSelectionEnd <= (int64_t)mpText->length())
+    if (!mpText->empty())
     {
-        int64_t nMin = min<int64_t>(mnSelectionStart, mnSelectionEnd);
-        int64_t nMax = max<int64_t>(mnSelectionStart, mnSelectionEnd);
+        int64_t nWidth = mStyle.Font()->StringWidth(*mpText);
+        ZRect rOut(mrVisibleTextArea.left - StyleOffset(), mrVisibleTextArea.top, mrVisibleTextArea.right + StyleOffset(), mrVisibleTextArea.bottom);
 
-        int64_t nWidthBefore = mStyle.Font()->StringWidth(mpText->substr(0, nMin));
-        int64_t nWidthHighlighted = mStyle.Font()->StringWidth(mpText->substr(nMin, nMax - nMin));
-        ZRect rHighlight(0, mrVisibleTextArea.top, nWidthHighlighted, mrVisibleTextArea.bottom);
-        rHighlight.OffsetRect(mrVisibleTextArea.left+nWidthBefore- mnViewOffset+StyleOffset(), 0);
-        rHighlight.IntersectRect(mrVisibleTextArea);
-        mpSurface.get()->FillAlpha(0x8800ffff, &rHighlight);
+        ZGUI::ePosition posToUse = mStyle.pos;
+        if (nWidth > mrVisibleTextArea.Width())
+        {
+            rOut.OffsetRect(-mnViewOffset, 0);
+            posToUse = (ZGUI::ePosition)((uint32_t)mStyle.pos & ~ZGUI::HC | ZGUI::L);  // remove horizontal center and left justify
+        }
+
+
+        ZRect rString(mStyle.Font()->Arrange(rOut, (uint8_t*)mpText->c_str(), mpText->length(), posToUse, 0));
+
+        mStyle.Font()->DrawText(mpSurface.get(), *mpText, rString, &mStyle.look, &mAreaLocal);
+
+        if (mnSelectionStart != mnSelectionEnd &&
+            mnSelectionStart >= 0 && mnSelectionEnd >= 0 &&
+            mnSelectionStart <= (int64_t)mpText->length() && mnSelectionEnd <= (int64_t)mpText->length())
+        {
+            int64_t nMin = min<int64_t>(mnSelectionStart, mnSelectionEnd);
+            int64_t nMax = max<int64_t>(mnSelectionStart, mnSelectionEnd);
+
+            int64_t nWidthBefore = mStyle.Font()->StringWidth(mpText->substr(0, nMin));
+            int64_t nWidthHighlighted = mStyle.Font()->StringWidth(mpText->substr(nMin, nMax - nMin));
+            ZRect rHighlight(0, mrVisibleTextArea.top, nWidthHighlighted, mrVisibleTextArea.bottom);
+            rHighlight.OffsetRect(mrVisibleTextArea.left + nWidthBefore - mnViewOffset + StyleOffset(), 0);
+            rHighlight.IntersectRect(mrVisibleTextArea);
+            mpSurface.get()->FillAlpha(0x8800ffff, &rHighlight);
+        }
     }
-
 
     if (mbCursorVisible)
         mpSurface.get()->Fill(mStyle.look.colTop, &mrCursorArea);

@@ -59,9 +59,12 @@ bool ZChoosePGNWin::Init()
 
 
 
+    ZGUI::Style btnStyle(gStyleButton);
+
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "Random Game";
+    pBtn->mCaption.style = btnStyle;
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
     pBtn->SetMessage(ZMessage("randgame", this));
@@ -73,6 +76,7 @@ bool ZChoosePGNWin::Init()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mCaption.sText = "Cancel";
+    pBtn->mCaption.style = btnStyle;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
@@ -974,13 +978,13 @@ bool ZChessWin::Paint()
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gSpacer, gSpacer);
             mpSurface->Fill(0xff000000, &rMoveLabel);
-            pLabelFont->DrawTextParagraph(mpSurface.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
+            pLabelFont->DrawTextParagraph(mpSurface.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::Center));
         }
     }
 
 
     if (mpDraggingPiece)
-        mpSurface->Blt(mpDraggingPiece.get(), mpDraggingPiece->GetArea(), mrDraggingPiece);
+        mpSurface->BltAlpha(mpDraggingPiece.get(), mpDraggingPiece->GetArea(), mrDraggingPiece, 255);
     else if (mbEditMode)
         DrawPalette();
 
@@ -1109,7 +1113,7 @@ void ZChessWin::DrawBoard()
                 if (mDraggingPiece && mDraggingSourceGrid == grid)
                     mpSurface->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), SquareArea(grid), 64);
                 else
-                    mpSurface->Blt(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), SquareArea(grid));
+                    mpSurface->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), SquareArea(grid), 255);
             }
         }
     }

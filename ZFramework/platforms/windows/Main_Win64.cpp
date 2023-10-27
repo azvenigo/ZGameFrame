@@ -600,16 +600,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_CHAR:
         gInput.OnChar((uint32_t)wParam);
-        {
-            if (wParam == '`')
-            {
-                gMessageSystem.Post("toggleconsole");
-            }
-            else if (wParam == 'f' || wParam == 'F')
-            {
-                SwitchFullscreen(!gGraphicSystem.mbFullScreen);
-            }
-        }
         break;
     case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
@@ -617,6 +607,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (wParam == VK_RETURN && gInput.IsKeyDown(VK_MENU))  // alt-enter
         {
             SwitchFullscreen(!gGraphicSystem.mbFullScreen);
+        }
+        else if (wParam == '`')
+        {
+            gMessageSystem.Post("toggleconsole");
+        }
+        else if (wParam == 'f' || wParam == 'F')
+        {
+            if (gInput.IsKeyDown(VK_CONTROL))
+                SwitchFullscreen(!gGraphicSystem.mbFullScreen);
         }
 #ifdef _WIN32
         else if (wParam == 'L' && gInput.IsKeyDown(VK_CONTROL))
