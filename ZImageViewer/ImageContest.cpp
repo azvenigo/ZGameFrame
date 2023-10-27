@@ -403,7 +403,7 @@ void ImageContest::ShowHelpDialog()
     ZRect rForm(r.Width()*4/5, r.Height()*4/5);
     rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
     pForm->SetArea(rForm);
-    pForm->mbScrollable = true;
+    pForm->SetScrollable();
     pForm->mDialogStyle.bgCol = gDefaultDialogFill;
     pForm->mbAcceptsCursorMessages = false;
     pHelp->ChildAdd(pForm);

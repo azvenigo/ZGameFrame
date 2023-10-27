@@ -226,7 +226,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
 
         mpImageProps->AddLineNode(sPropLineXMLNode);
     }*/
-    mpImageProps->mbScrollable = true;
+    mpImageProps->SetScrollable();
 }
 
 void cProcessImageWin::Process_SelectImage(string sImageName)
@@ -1011,7 +1011,7 @@ bool cProcessImageWin::Init()
     mpImageProps = new ZWinFormattedDoc();
     mpImageProps->SetArea(rImageProps);
     mpImageProps->mDialogStyle.bgCol = gDefaultTextAreaFill;
-    mpImageProps->mbScrollable = true;
+    mpImageProps->SetScrollable();
 
     pWP->ChildAdd(mpImageProps);
 

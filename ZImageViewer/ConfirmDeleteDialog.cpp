@@ -118,7 +118,7 @@ bool ConfirmDeleteDialog::Init()
 
         mpFilesList->mDialogStyle.paddingH = (int32_t)gM;
         mpFilesList->mDialogStyle.paddingV = (int32_t)gSpacer;
-        mpFilesList->mbScrollable = true;
+        mpFilesList->SetScrollable();
         mpFilesList->mbUnderlineLinks = false;
 
         ChildAdd(mpFilesList);

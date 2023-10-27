@@ -602,7 +602,7 @@ bool ZWinFormattedDoc::ProcessLineNode(ZXMLNode* pTextNode)
 
 	for (auto& element : lineElements)
 	{
-        ZGUI::Style style;
+        ZGUI::Style style(gDefaultFormattedDocStyle);
         if (element->HasAttribute(ksFontParamsTag))
             style.fp = ZFontParams(SH::URL_Decode(element->GetAttribute(ksFontParamsTag)));
         if (element->HasAttribute(ksColorTag))

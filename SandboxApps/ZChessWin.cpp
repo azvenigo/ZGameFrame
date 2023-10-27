@@ -29,12 +29,8 @@ ZChoosePGNWin::ZChoosePGNWin()
 
 bool ZChoosePGNWin::Init()
 {
-    mFont.sFacename = "Verdana";
-    mFont.nHeight = 24;
-    mFont.nWeight = 200;
-
-    size_t nButtonWidth = gM*3;
-    size_t nButtonHeight = gM*2;
+    size_t nButtonWidth = gM*4;
+    size_t nButtonHeight = gM;
 
     ZRect rControl(gSpacer, gSpacer, mAreaLocal.Width() - gSpacer, gSpacer + nButtonHeight);
 
@@ -49,6 +45,9 @@ bool ZChoosePGNWin::Init()
 
     ZWinTextEdit* pEdit = new ZWinTextEdit(&msFilter);
     pEdit->SetArea(rControl);
+    pEdit->mStyle = gDefaultWinTextEditStyle;
+    pEdit->mStyle.fp.nHeight = gM;
+    pEdit->mStyle.pos = ZGUI::LC;
     ChildAdd(pEdit);
     pEdit->SetFocus();
 
@@ -60,6 +59,7 @@ bool ZChoosePGNWin::Init()
 
 
     ZGUI::Style btnStyle(gStyleButton);
+    btnStyle.fp.nHeight = gM / 2;
 
 
     pBtn = new ZWinSizablePushBtn();
@@ -104,7 +104,7 @@ bool ZChoosePGNWin::Paint()
 
     ZRect rText(mAreaLocal);
     rText.OffsetRect(gSpacer, gSpacer);
-    gpFontSystem->GetFont(mFont)->DrawTextParagraph(mpSurface.get(), msCaption, rText);
+    gStyleCaption.Font()->DrawTextParagraph(mpSurface.get(), msCaption, rText);
     return ZWin::Paint();
 }
 
@@ -206,10 +206,14 @@ void ZChoosePGNWin::RefreshList()
 {
     mpGamesList->Clear();
 
+    ZFontParams fp = gDefaultTextFont;
+    fp.nHeight = gM / 2;
+
     size_t nCount = 0;
     for (auto entry : mPGNEntries)
     {
-        string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(mFont) + " position=lb link=selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
+        //string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(gDefaultTextFont) + " position=lb link=selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
+        string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(fp) + " position=lb link=selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
         nCount++;
 
         if ( msFilter.empty() ||  SH::Contains(entry.first, msFilter, false) || SH::Contains(entry.second, msFilter, false)) // if empty filter or either caption or pgn contents include filter text (case insensitive)
@@ -218,7 +222,7 @@ void ZChoosePGNWin::RefreshList()
 
     msCaption = "Select from " + SH::FromInt(mPGNEntries.size()) + " games";
 
-    mpGamesList->mbScrollable = true;
+    mpGamesList->SetScrollable();
     InvalidateChildren();
 }
 
@@ -425,7 +429,7 @@ void ZPGNWin::UpdateView()
     }
 
 
-    mpGameTagsWin->mbScrollable = true;
+    mpGameTagsWin->SetScrollable();
 
     mpMovesWin->Clear();
 
@@ -471,7 +475,7 @@ void ZPGNWin::UpdateView()
         nHalfMove += 2;
     }
 //    mpMovesWin->InvalidateChildren();
-    mpMovesWin->mbScrollable = true;
+    mpMovesWin->SetScrollable();
     mpMovesWin->mbUnderlineLinks = false;
     mpMovesWin->ScrollTo(mMoveFont.nHeight * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
 
@@ -1522,6 +1526,7 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
 {
     mpImage.reset(new ZBuffer());
     mpImage->Init(nSize, nSize);
+    mpImage->mbHasAlphaPixels = true;
 
     std::string s(&c, 1);
 

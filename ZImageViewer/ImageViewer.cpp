@@ -586,7 +586,7 @@ void ImageViewer::ShowHelpDialog()
     ZRect rForm(1400, 1100);
     rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
     pForm->SetArea(rForm);
-    pForm->mbScrollable = true;
+    pForm->SetScrollable();
     pForm->mDialogStyle.bgCol = gDefaultDialogFill;
     pForm->mbAcceptsCursorMessages = false;
     pHelp->ChildAdd(pForm);
