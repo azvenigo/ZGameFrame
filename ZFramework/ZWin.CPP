@@ -200,7 +200,7 @@ void ZWin::TransformIn()
 
         Sprintf(end.msCompletionMessage, "{move_to;x=%d;y=%d;target=%s},{set_visible;visible=1;target=%s}", end.mPosition.x, end.mPosition.y, GetTargetName().c_str(), GetTargetName().c_str());    // set visible on completion
         pImage->AddTransformation(end, mnTransformInTime);
-        pImage->AddTransformation(lastTrans, 120);
+        pImage->AddTransformation(lastTrans, 250);
 
         gAnimator.AddObject(pImage);
         SetVisible(false);
@@ -586,7 +586,8 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 			currChild = (*it);
 			if ( currChild->mbVisible && currChild->mbAcceptsCursorMessages ) 
 			{
-				if (currChild->IsPointInWindowScreenCoordinates(nX, nY) ) 
+//                ZDEBUG_OUT("in x:", nX, " y:", nY, " rect:", RectToString(currChild->mAreaAbsolute), "\n");
+                if (currChild->IsPointInWindowScreenCoordinates(nX, nY) )
 				{
 					return currChild->ProcessCursorMessage(message); 
 				} 
@@ -652,26 +653,6 @@ bool  ZWin::Paint()
 	return true;
 }               
 
-
-/*void ZWin::RenderToBuffer(tZBufferPtr pDest, ZRect rSrc, ZRect rDst, ZWin* pThis)
-{
-    if (!mbInitted || !mbVisible || !rSrc.Overlaps(mAreaLocal) || pThis == this)
-        return;
-
-    if (!ZBuffer::Clip(mpSurface.get(), pDest.get(), rSrc, rDst))
-        return;
-
-    Paint();
-    mpSurface.get()->GetMutex().lock();
-    pDest->Blt(mpSurface.get(), rSrc, rDst);
-    mpSurface.get()->GetMutex().unlock();
-    for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
-    {
-        ZWin* pChild = *it;
-        pChild->RenderToBuffer(pDest, pChild->mAreaLocal, pChild->mAreaInParent, pThis);
-    }
-}*/
-
 void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& rDst, ZWin* pThis)
 {
     if (!mbInitted || !mbVisible || pThis == this)
@@ -685,7 +666,8 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& 
     ZRect rClippedSrc( AbsToLocal(rAbsSrc));
     ZRect rClippedDst(rDst);
 
-    ZBuffer::Clip(mAreaLocal, pDest->GetArea(), rClippedSrc, rClippedDst);
+    if (!ZBuffer::Clip(mAreaLocal, pDest->GetArea(), rClippedSrc, rClippedDst))
+        return;
 
     Paint();
     mpSurface.get()->GetMutex().lock();

@@ -260,17 +260,18 @@ int64_t ZWinSlider::ThumbSize()
         rThumbEdge = grSliderThumbEdge;
     }
 
+    ZRect rThumb(pThumb->GetArea());
 
 
     if (IsVertical())
     {
         nThumbSize = (int64_t)(mAreaLocal.Height() * mfThumbSizeRatio);
-        limit <int64_t>(nThumbSize, rThumbEdge.top + pThumb->GetArea().Height() - rThumbEdge.bottom, mAreaLocal.Height());
+        limit <int64_t>(nThumbSize, rThumbEdge.top + pThumb->GetArea().Height() - (rThumb.Height()-rThumbEdge.bottom), mAreaLocal.Height());
     }
     else
     {
         nThumbSize = (int64_t)(mAreaLocal.Width() * mfThumbSizeRatio);
-        limit <int64_t>(nThumbSize, rThumbEdge.left + pThumb->GetArea().Width() - rThumbEdge.right, mAreaLocal.Width());
+        limit <int64_t>(nThumbSize, rThumbEdge.left + pThumb->GetArea().Width() - (rThumb.Width()-rThumbEdge.right), mAreaLocal.Width());
     }
 
 

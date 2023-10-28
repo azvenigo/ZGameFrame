@@ -30,23 +30,24 @@ bool TestWin::OnKeyDown(uint32_t key)
 bool TestWin::Init()
 {
     SetFocus();
-/*    ZWinSlider* pWin = new ZWinSlider(&mnSliderVal);
+    ZWinSlider* pWin;
+/*    pWin = new ZWinSlider(&mnSliderVal);
     pWin->SetArea(ZRect(500, 1800, 1900, 1850));
-    pWin->SetSliderRange(0, 1000, 2, 0.5);
+    pWin->SetSliderRange(0, 10000, 2, 0.5);
     pWin->mBehavior = ZWinSlider::kDrawSliderValueOnMouseOver;
 
-    ChildAdd(pWin);
+    ChildAdd(pWin);*/
 
     pWin = new ZWinSlider(&mnSliderVal);
     pWin->SetArea(ZRect(2000, 100, 2060, 1150));
     pWin->SetSliderRange(10, 20000, 1, 0.2);
     pWin->mBehavior = ZWinSlider::kDrawSliderValueAlways;
-    ChildAdd(pWin);*/
+    ChildAdd(pWin);
 
 
     ZRect rBtn(1500, 500, 1800, 700);
 
-    for (int i = 0; i < 1; i++)
+/*    for (int i = 0; i < 1; i++)
     {
 
         ZWinSizablePushBtn* pBtn = new ZWinSizablePushBtn();
@@ -60,7 +61,7 @@ bool TestWin::Init()
         ChildAdd(pBtn);
 
         rBtn.OffsetRect(20, 20);
-    }
+    }*/
 
     return ZWin::Init();
 }

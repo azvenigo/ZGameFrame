@@ -235,7 +235,8 @@ int32_t ZScreenBuffer::RenderVisibleRects(const ZRect& rClip)
         ZRect rClippedSource(sr.mSourcePt.x, sr.mSourcePt.y, sr.mSourcePt.x + sr.mrDest.Width(), sr.mSourcePt.y + sr.mrDest.Height());
         ZRect rClippedDest(sr.mrDest);
 
-        Clip(rClip, rClippedSource, rClippedDest);
+        if (!Clip(rClip, rClippedSource, rClippedDest))
+            continue;
 
         DWORD nStartScanline = (DWORD)rClippedSource.top;
         DWORD nScanLines = (DWORD)rClippedSource.Height();
@@ -244,18 +245,18 @@ int32_t ZScreenBuffer::RenderVisibleRects(const ZRect& rClip)
 
         ZDEBUG_OUT("dr: TL[", rClippedDest.left, ",", rClippedDest.top, "] lines:", nScanLines,"\n");
 
-        int nRet = SetDIBitsToDevice(mDC,       // HDC
-            (DWORD)rClippedDest.left,                 // Dest X
-            (DWORD)rClippedDest.top,                  // Dest Y
-            (DWORD)rClippedDest.Width(),            // Dest Width
-            (DWORD)rClippedDest.Height(),           // Dest Height
-            (DWORD)rClippedSource.left,               // Src X
-            (DWORD)rClippedSource.top,                // Src Y
-            nStartScanline,                                  // Start Scanline
-            nScanLines,           // Num Scanlines
-            pBits,       // * pixels
-            &bmpInfo,                          // BMPINFO
-            DIB_RGB_COLORS);                    // Usage
+        int nRet = SetDIBitsToDevice(mDC,   // HDC
+            (DWORD)rClippedDest.left,       // Dest X
+            (DWORD)rClippedDest.top,        // Dest Y
+            (DWORD)rClippedDest.Width(),    // Dest Width
+            (DWORD)rClippedDest.Height(),   // Dest Height
+            (DWORD)rClippedSource.left,     // Src X
+            (DWORD)rClippedSource.top,      // Src Y
+            nStartScanline,                 // Start Scanline
+            nScanLines,                     // Num Scanlines
+            pBits,                          // * pixels
+            &bmpInfo,                       // BMPINFO
+            DIB_RGB_COLORS);                // Usage
   
   }
 
@@ -293,18 +294,18 @@ bool ZScreenBuffer::RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst)
 
     void* pBits = pSrc->GetPixels() + rSrc.top * rTexture.Width();
 
-    int nRet = SetDIBitsToDevice(mDC,       // HDC
-        (DWORD)rDst.left,                 // Dest X
-        (DWORD)rDst.top,                  // Dest Y
+    int nRet = SetDIBitsToDevice(mDC,   // HDC
+        (DWORD)rDst.left,               // Dest X
+        (DWORD)rDst.top,                // Dest Y
         (DWORD)rDst.Width(),            // Dest Width
         (DWORD)rDst.Height(),           // Dest Height
         (DWORD)rSrc.left,               // Src X
         (DWORD)rSrc.top,                // Src Y
-        nStartScanline,                                  // Start Scanline
-        nScanLines,           // Num Scanlines
-        pBits,       // * pixels
-        &bmpInfo,                          // BMPINFO
-        DIB_RGB_COLORS);                    // Usage
+        nStartScanline,                 // Start Scanline
+        nScanLines,                     // Num Scanlines
+        pBits,                          // * pixels
+        &bmpInfo,                       // BMPINFO
+        DIB_RGB_COLORS);                // Usage
 
     pSrc->GetMutex().unlock();
 

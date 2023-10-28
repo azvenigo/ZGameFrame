@@ -290,7 +290,7 @@ void ZWinFormattedDoc::UpdateScrollbar()
             mpWinSlider = new ZWinSlider(&mnSliderVal);
             mpWinSlider->mBehavior = ZWinSlider::kInvalidateOnMove;
             mpWinSlider->Init();
-            mpWinSlider->SetArea(ZRect(mAreaInParent.Width() - kSliderWidth, 0, mAreaInParent.Width(), mAreaInParent.Height()));
+            mpWinSlider->SetArea(ZRect(mAreaInParent.Width() - kSliderWidth, mrDocumentArea.top, mAreaInParent.Width(), mrDocumentArea.bottom));
             ChildAdd(mpWinSlider);
         }
 
@@ -321,7 +321,6 @@ void ZWinFormattedDoc::UpdateScrollbar()
             mpWinSlider = NULL;
 		}
 	}
-    Invalidate();
 }
 
 bool ZWinFormattedDoc::Paint()
@@ -335,8 +334,6 @@ bool ZWinFormattedDoc::Paint()
     if (mbEvenColumns && mColumnWidths.empty())
         ComputeColumnWidths();
 
-
-	ZRect rEdgeSrc(3,5,21,61);
 
 	// Get a local rect
 	ZRect rLocalDocBorderArea(mrDocumentArea);
@@ -553,6 +550,7 @@ void ZWinFormattedDoc::AddLineNode(string sLine)
     lineNode.Init(sLine);
     ProcessLineNode(lineNode.GetChild("line"));
     mnFullDocumentHeight = 0;
+    UpdateScrollbar();
 }
 
 
@@ -583,7 +581,7 @@ void ZWinFormattedDoc::AddMultiLine(string sLine, ZGUI::Style style, const strin
         sLine = sLine.substr((int)nChars);
     }
     mnFullDocumentHeight = 0;
-
+    UpdateScrollbar();
 }
 
 bool ZWinFormattedDoc::ProcessLineNode(ZXMLNode* pTextNode)

@@ -580,6 +580,7 @@ void ImageViewer::ShowHelpDialog()
     ZGUI::Style text(gStyleGeneralText);
     ZGUI::Style sectionText(gStyleGeneralText);
     sectionText.fp.nWeight = 800;
+    sectionText.fp.nHeight *= 1.2;
     sectionText.look.colTop = 0xffaaaaaa;
     sectionText.look.colBottom = 0xffaaaaaa;
 
@@ -588,10 +589,14 @@ void ImageViewer::ShowHelpDialog()
     pForm->SetArea(rForm);
     pForm->SetScrollable();
     pForm->mDialogStyle.bgCol = gDefaultDialogFill;
-    pForm->mbAcceptsCursorMessages = false;
     pHelp->ChildAdd(pForm);
     pHelp->Arrange(ZGUI::C, mAreaLocal);
 
+
+    pForm->AddMultiLine("\nAbout", sectionText);
+    pForm->AddMultiLine("Written by Alex Zvenigorodsky\nBuild:" __DATE__ __TIME__ "\n\n", text);
+
+    pForm->AddMultiLine("\nOverview", sectionText);
     pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text);
     pForm->AddMultiLine("Loading, quickly zooming and exiting are prioritized.", text);
     pForm->AddMultiLine("\nAnother key feature is to sort through which images are favorites, and which should be deleted.", text);
@@ -630,10 +635,7 @@ void ImageViewer::ShowHelpDialog()
 
     pForm->AddMultiLine("\nAI Training Images", sectionText);
     pForm->AddMultiLine("Hold SHIFT and left drag a selection rectangle to crop/resize to 256x256 and save the result. This is for quickly generating training data for Dreambooth....maybe others.", text);
-
-
-
-    pForm->Invalidate();
+    pForm->InvalidateChildren();
     ChildAdd(pHelp);
 }
 

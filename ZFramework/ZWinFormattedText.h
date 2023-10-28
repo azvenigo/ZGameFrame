@@ -56,7 +56,12 @@ public:
     virtual void		AddMultiLine(std::string sLine, ZGUI::Style style = {}, const std::string& sLink = "");
     int64_t   			GetFullDocumentHeight();
 
-    void                SetScrollable(bool enable = true) { mbScrollable = enable; UpdateScrollbar(); }
+    void                SetScrollable(bool enable = true) 
+    { 
+        mbScrollable = enable; 
+        mbAcceptsCursorMessages |= enable; 
+        UpdateScrollbar(); 
+    }
     void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
 	void				UpdateScrollbar();					// Creates a scrollbar if one is needed
 

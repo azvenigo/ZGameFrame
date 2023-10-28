@@ -858,10 +858,8 @@ bool ZBuffer::Blt(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip, eAlphaB
 	else
 		rClip.SetRect(mSurfaceArea);
 
-    if (Clip(pSrc, this, rSrcClipped, rDstClipped))
-    {
+    if (Clip(rSrc, rClip, rSrcClipped, rDstClipped))
         return BltNoClip(pSrc, rSrcClipped, rDstClipped, type);
-    }
 
 	return false;
 }
@@ -1219,7 +1217,7 @@ bool ZBuffer::Clip(const ZRect& rSrcSurface, const ZRect& rDstSurface, ZRect& rS
         rSrc.top += nOverhangDistance;
     }
 
-    return rSrc.Width() > 0 && rSrc.Height() > 0;
+    return rSrc.Width() > 0 && rSrc.Height() > 0 && rDst.Width() > 0 && rDst.Height() > 0;
 }
 
 inline
@@ -1333,7 +1331,7 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, uint32_t fla
 	int64_t b = rEdgeRect.bottom;
 
 	// Adjustments for destinations whos width or height are smaller than the source rect
-/*	if (rDst.Height() < t+b)
+	if (rDst.Height() < t+b)
 	{
 		t = rDst.Height()/2;
 		b = h - t;
@@ -1343,7 +1341,7 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, uint32_t fla
 	{
 		l = rDst.Width()/2;
 		r = w - l;
-	}*/
+	}
 
 	ZRect rTL(0, 0, l, t);
 	ZRect rTR(r, 0, w, t);
@@ -1368,7 +1366,7 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, uint32_t fla
 	ZRect rdTR(dr, rDst.top, rDst.right, dt);
 	ZRect rdBL(rDst.left, db, dl, rDst.bottom);
 	ZRect rdBR(dr,db, rDst.right, rDst.bottom);
-
+     
 	ZRect rdT(dl, rDst.top, dr, dt);
 	ZRect rdL(rDst.left, dt, dl, db);
 	ZRect rdR(dr, dt, rDst.right, db);
@@ -1390,8 +1388,8 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, uint32_t fla
 	if (bDrawBottom && bDrawLeft)
 		Blt(pSrc, rBL, rdBL, &rClip, type);
 
-	if (bDrawBottom && bDrawRight)
-		Blt(pSrc, rBR, rdBR, &rClip, type);
+    if (bDrawBottom && bDrawRight)
+        Blt(pSrc, rBR, rdBR, &rClip, type);
 
 
     if ((flags & kEdgeBltSides_Stretch) != 0)
@@ -1432,23 +1430,6 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, uint32_t fla
         else if ((flags&kEdgeBltMiddle_Stretch) != 0)
         {
             gRasterizer.RasterizeSimple(this, pSrc, rdM, rEdgeRect, &rClip);
-
-/*            tUVVertexArray middleVerts;
-            gRasterizer.RectToVerts(rdM, middleVerts);
-
-            middleVerts[0].u = (double)rEdgeRect.left / (double) w;
-            middleVerts[0].v = (double)rEdgeRect.top / (double)h;
-
-            middleVerts[1].u = (double)rEdgeRect.right / (double)w;
-            middleVerts[1].v = (double)rEdgeRect.top / (double)h;
-
-            middleVerts[2].u = (double)rEdgeRect.right / (double)w;
-            middleVerts[2].v = (double)rEdgeRect.bottom / (double)h;
-
-            middleVerts[3].u = (double)rEdgeRect.left / (double)w;
-            middleVerts[3].v = (double)rEdgeRect.bottom / (double)h;
-
-            gRasterizer.Rasterize(this, pSrc, middleVerts, &rClip);*/
         }
     }
 
