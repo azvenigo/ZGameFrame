@@ -171,13 +171,15 @@ void ZWin::TransformIn()
         case kSlideRight:	start.mPosition.x = rp.left - mAreaLocal.Width();   break;
         case kSlideUp:		start.mPosition.y = rp.bottom;		                break;
         case kSlideDown:	start.mPosition.y = rp.top - mAreaLocal.Height();   break;
-        case kSpinCW:       start.mRotation = -mnTransformInTime/100.0;          break;
-        case kSpinCCW:      start.mRotation = mnTransformInTime / 100.0;         break;
+        case kSpinCW:       start.mRotation = -mnTransformInTime/100.0;         break;
+        case kSpinCCW:      start.mRotation = mnTransformInTime / 100.0;        break;
+        case kToOrFrom:     start = mToOrFrom;                                  break;
         }
 
         MoveTo(start.mPosition.x, start.mPosition.y);
 
         SetVisible();
+        Paint();
         tZBufferPtr renderedBuf(new ZBuffer());
         renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
         RenderToBuffer(renderedBuf, mAreaAbsolute, mAreaLocal, nullptr);
@@ -187,6 +189,7 @@ void ZWin::TransformIn()
         GetTopWindow()->RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
 
         ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf, backgroundBuf);
+        //pImage->mbFullScreenDraw = true;
 
 
 
@@ -210,7 +213,7 @@ void ZWin::TransformIn()
 
 void ZWin::TransformOut()
 {
-	if (mTransformOut != kNone)
+	if (mTransformOut != kNone && mbVisible)
 	{
         tZBufferPtr backgroundBuf(new ZBuffer());
         backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
@@ -218,7 +221,8 @@ void ZWin::TransformOut()
 
 
 
-        SetVisible();
+//        SetVisible();
+//        Paint();
 
         tZBufferPtr renderedBuf(new ZBuffer());
         renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
@@ -246,16 +250,39 @@ void ZWin::TransformOut()
  		case kSlideRight:	end.mPosition.x = rp.right;                        break;
 		case kSlideUp:		end.mPosition.y = rp.top - mAreaLocal.Height();    break;
 		case kSlideDown:	end.mPosition.y = rp.bottom;                       break;
-        case kSpinCW:       end.mRotation = mnTransformInTime / 100.0;          break;
-        case kSpinCCW:      end.mRotation = -mnTransformInTime / 100.0;         break;
+        case kSpinCW:       end.mRotation = mnTransformInTime / 100.0;         break;
+        case kSpinCCW:      end.mRotation = -mnTransformInTime / 100.0;        break;
+        case kToOrFrom: end = mToOrFrom;                                       break;
         }
 
-        pImage->AddTransformation(end,mnTransformOutTime);
+        pImage->AddTransformation(end, mnTransformOutTime);
+//        pImage->AddTransformation(end, 100);
 
 		gAnimator.AddObject(pImage);
-//        SetVisible(false);
+        SetVisible(false);
     }
 }
+
+void ZWin::TransformTo(ZTransformation& to, int64_t nDuration)
+{
+    tZBufferPtr backgroundBuf(new ZBuffer());
+    backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
+    GetTopWindow()->RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
+
+    tZBufferPtr renderedBuf(new ZBuffer());
+    renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
+    RenderToBuffer(renderedBuf, mAreaAbsolute, mAreaLocal, nullptr);
+
+    ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf, backgroundBuf);
+    pImage->mbFullScreenDraw = true;
+    ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top));
+    pImage->StartTransformation(start);
+    pImage->AddTransformation(to, nDuration);
+    gAnimator.AddObject(pImage);
+
+    MoveTo(to.mPosition.x, to.mPosition.y);
+}
+
 
 void ZWin::Arrange(ZGUI::ePosition pos, const ZRect& outerRect, int64_t padding)
 {
@@ -369,7 +396,7 @@ void ZWin::ChildDeleteAll()
     const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     for (auto pChild : mChildList)		// signal all to shutdown first
     {
-        pChild->SetVisible(false);
+//        pChild->SetVisible(false);
         pChild->SignalShutdown();
     }
     while (!mChildList.empty())			// ChildDelete modifies the list so we can't use regular iteration
@@ -663,8 +690,13 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& 
         return;// no intersection
 
 
-    ZRect rClippedSrc( AbsToLocal(rAbsSrc));
+    ZRect rClippedSrc( AbsToLocal(rAbsIntersection));
     ZRect rClippedDst(rDst);
+
+    rClippedDst.left += (rAbsIntersection.left - rAbsSrc.left);
+    rClippedDst.top += (rAbsIntersection.top - rAbsSrc.top);
+    rClippedDst.right = rClippedDst.left + rAbsIntersection.Width();
+    rClippedDst.bottom = rClippedDst.top + rAbsIntersection.Height();
 
     if (!ZBuffer::Clip(mAreaLocal, pDest->GetArea(), rClippedSrc, rClippedDst))
         return;
@@ -677,7 +709,7 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& 
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
     {
         ZWin* pChild = *it;
-        pChild->RenderToBuffer(pDest, rAbsSrc, rClippedDst, pThis);
+        pChild->RenderToBuffer(pDest, rAbsIntersection, rClippedDst, pThis);
     }
 }
 
@@ -1047,7 +1079,8 @@ bool ZWin::WindowThreadProc(void* pContext)
 
             uint64_t nStartTime = gTimer.GetMSSinceEpoch();
 
-            pThis->mWorkToDoCV.wait_for(lk, std::chrono::milliseconds(pThis->mIdleSleepMS));
+            if (!pThis->mbShutdownFlag)
+                pThis->mWorkToDoCV.wait_for(lk, std::chrono::milliseconds(pThis->mIdleSleepMS));
 
             uint64_t nEndTime = gTimer.GetMSSinceEpoch();
             uint64_t nDelta = nEndTime-nStartTime;
@@ -1110,11 +1143,16 @@ bool ZWinDialog::Init()
         ChildAdd(pBtn);
     }
 
-    if (!arrangeList.empty())
-        ArrangeWindows(arrangeList, rButtonArea, gStyleButton, -1, 1);
 
-    mTransformIn = kSlideUp;
-    mTransformOut = kNone;
+    ZGUI::Style arrangeStyle(gStyleButton);
+    if (arrangeList.size() == 1)
+        arrangeStyle.paddingH = gM * 10;
+
+    if (!arrangeList.empty())
+        ArrangeWindows(arrangeList, rButtonArea, arrangeStyle, -1, 1);
+
+    //mTransformIn = kSlideUp;
+    //mTransformOut = kFade;
 
     ZWin::Init();
     SetFocus();

@@ -243,7 +243,7 @@ int32_t ZScreenBuffer::RenderVisibleRects(const ZRect& rClip)
 
         void* pBits = sr.mpSourceBuffer->GetPixels() + rClippedSource.top * rTexture.Width();
 
-        ZDEBUG_OUT("dr: TL[", rClippedDest.left, ",", rClippedDest.top, "] lines:", nScanLines,"\n");
+        //ZDEBUG_OUT("dr: TL[", rClippedDest.left, ",", rClippedDest.top, "] lines:", nScanLines,"\n");
 
         int nRet = SetDIBitsToDevice(mDC,   // HDC
             (DWORD)rClippedDest.left,       // Dest X

@@ -17,8 +17,8 @@ class WinTopWinners;
 
 
 
-const std::string ksToBeDeleted("ZZ_TO_BE_DELETED_ZZ");
-const std::string ksFavorites("favorites");
+const std::string ksToBeDeleted("_MARKED_TO_BE_DELETED_");
+const std::string ksFavorites("_FAVORITES_");
 
 class ViewingIndex
 {
@@ -70,8 +70,8 @@ public:
     }
 
     bool ReadyToLoad() { return mState == kMetadataReady || mState == kNoExifAvailable; }
-    bool ToBeDeleted(); // true if image is in the ZZ_to_be_deleted subfolder
-    bool IsFavorite();  // true if image is in the "favorites" subfolder
+    bool ToBeDeleted(); // true if image is in the "_MARKED_TO_BE_DELETED_" subfolder
+    bool IsFavorite();  // true if image is in the "_FAVORITES_" subfolder
 
 
     eImageEntryState        mState;

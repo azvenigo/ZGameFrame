@@ -51,6 +51,7 @@ public:
 
 
     void        FitImageToWindow();
+    void        CenterImage();
     bool        IsSizedToWindow();
 
     void        SetZoom(double fZoom);

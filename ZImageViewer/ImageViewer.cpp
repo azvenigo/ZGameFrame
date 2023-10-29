@@ -444,6 +444,11 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         InvalidateChildren();
         return true;
     }
+    else if (sType == "show_help")
+    {
+        ShowHelpDialog();
+        return true;
+    }
 
     if (mpWinImage && mpWinImage->mpImage)
     {
@@ -530,11 +535,6 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             }
             return true;
         }
-        else if (sType == "show_help")
-        {
-            ShowHelpDialog();
-            return true;
-        }
    }
 
     return ZWin::HandleMessage(message);
@@ -553,22 +553,27 @@ void ImageViewer::ShowHelpDialog()
     pHelp->msWinName = "ImageViewerHelp";
     pHelp->mbAcceptsCursorMessages = true;
     pHelp->mbAcceptsFocus = true;
+    pHelp->mTransformIn = ZWin::kToOrFrom;
+    pHelp->mTransformOut = ZWin::kToOrFrom;
+    pHelp->mToOrFrom = ZTransformation(ZPoint(mAreaAbsolute.right - gM*5, mAreaAbsolute.top+gM), 0.0, 0.0);
 
-    ZRect r(1600, 1300);
+    ZRect r(grFullArea.Width() * 0.6, grFullArea.Height() * 0.5);
     pHelp->SetArea(r);
     pHelp->mBehavior = ZWinDialog::Draggable | ZWinDialog::OKButton;
     pHelp->mStyle = gDefaultDialogStyle;
 
 
     ZRect rCaption(r);
+    rCaption.DeflateRect(gM / 4, gM / 4);
     ZWinLabel* pLabel = new ZWinLabel();
     pLabel->msText = "ZView Help";
     pLabel->SetArea(rCaption);
     pLabel->mStyle = gStyleCaption;
     pLabel->mStyle.pos = ZGUI::CT;
-    pLabel->mStyle.fp.nHeight = 72;
-    pLabel->mStyle.fp.nWeight = 500;
-    pLabel->mStyle.look = ZGUI::ZTextLook::kEmbossed;
+    pLabel->mStyle.paddingV = gM * 2;
+    pLabel->mStyle.fp.nHeight = gM * 2;
+    pLabel->mStyle.fp.nWeight = 800;
+    pLabel->mStyle.look = ZGUI::ZTextLook::kShadowed;
     pLabel->mStyle.look.colTop = 0xff999999;
     pLabel->mStyle.look.colBottom = 0xff777777;
     pHelp->ChildAdd(pLabel);
@@ -578,17 +583,20 @@ void ImageViewer::ShowHelpDialog()
     ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
 
     ZGUI::Style text(gStyleGeneralText);
+    text.fp.nHeight = std::max<int64_t> (gM / 2, 16);
+    text.paddingH = gM;
+
     ZGUI::Style sectionText(gStyleGeneralText);
     sectionText.fp.nWeight = 800;
-    sectionText.fp.nHeight *= 1.2;
+    sectionText.fp.nHeight = gM;
     sectionText.look.colTop = 0xffaaaaaa;
     sectionText.look.colBottom = 0xffaaaaaa;
 
-    ZRect rForm(1400, 1100);
-    rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
+    ZRect rForm(r.Width() * 0.48, r.Height() * 0.8);
+    rForm = ZGUI::Arrange(rForm, r, ZGUI::LT, gSpacer * 4, pLabel->mStyle.fp.nHeight + gSpacer);
     pForm->SetArea(rForm);
     pForm->SetScrollable();
-    pForm->mDialogStyle.bgCol = gDefaultDialogFill;
+    pForm->mDialogStyle.bgCol = 0xff444444;
     pHelp->ChildAdd(pForm);
     pHelp->Arrange(ZGUI::C, mAreaLocal);
 
@@ -623,7 +631,7 @@ void ImageViewer::ShowHelpDialog()
     
     pForm->AddMultiLine("\nManaging Images", sectionText);
     pForm->AddMultiLine("Use '1' to toggle an image as favorite. (It will be moved into a 'favorites' subfolder.", text);
-    pForm->AddMultiLine("Use 'DEL' to toggle an image as to-be-deleted. (It will be moved into a 'ZZ_TO_BE_DELETED_ZZ' subfolder.", text);
+    pForm->AddMultiLine("Use 'DEL' to toggle an image as to-be-deleted. (It will be moved into a '_MARKED_TO_BE_DELETED_' subfolder.", text);
     pForm->AddMultiLine("Use the DELETE button in the toolbar to bring up a confirmation dialog with the list of photos marked for deletion.", text);
 
     pForm->AddMultiLine("Use the filter buttons in the toolbar to view either all images, just favorites, or just images marked for deletion.", text);
@@ -634,9 +642,45 @@ void ImageViewer::ShowHelpDialog()
     pForm->AddMultiLine("\nYou can also use 'M' to quickly set a destination folder. Afterward 'M' will instantly move the image to that destination. (UNDO is available for this as well.)", text);
 
     pForm->AddMultiLine("\nAI Training Images", sectionText);
-    pForm->AddMultiLine("Hold SHIFT and left drag a selection rectangle to crop/resize to 256x256 and save the result. This is for quickly generating training data for Dreambooth....maybe others.", text);
+    pForm->AddMultiLine("Hold SHIFT and left drag a selection rectangle to crop/resize to 256x256 and save the result. This is for quickly generating training data for Dreambooth....maybe others.\n\n", text);
     pForm->InvalidateChildren();
+
+
+
+    pForm = new ZWinFormattedDoc();
+
+//    rForm.OffsetRect(rForm.Width() + gSpacer * 4, 0);
+    rForm = ZGUI::Arrange(rForm, r, ZGUI::RT, gSpacer * 4, pLabel->mStyle.fp.nHeight + gSpacer);
+
+    pForm->SetArea(rForm);
+    pForm->SetScrollable();
+    pForm->mDialogStyle = text;
+    pForm->mDialogStyle.bgCol = 0xff444444;
+    pHelp->ChildAdd(pForm);
+    pHelp->Arrange(ZGUI::C, mAreaLocal);
+
+
+    pForm->AddMultiLine("\nQuick Reference\n\n", sectionText);
+    pForm->mbEvenColumns = true;
+    pForm->AddLineNode("<line><text>TAB</text><text>Toggle UI</text></line>");
+
+    string sFormat = "<line wrap=0><text position=lb>%s</text><text position=lb>%s/fullscreen</text></line>";
+
+    string sLine;
+//    pForm->AddLineNode("\n");
+    Sprintf(sLine, sFormat.c_str(), "CTRL+F", "Toggle windowed/fullscreen");    pForm->AddLineNode(sLine);
+    Sprintf(sLine, sFormat.c_str(), "'O'", "Open Image Dialog");    pForm->AddLineNode(sLine);
+    Sprintf(sLine, sFormat.c_str(), "LEFT/RIGHT or Mouse wheel", "Flip through images in current folder");    pForm->AddLineNode(sLine);
+    Sprintf(sLine, sFormat.c_str(), "HOME/END", "Go to the first or last image");    pForm->AddLineNode(sLine);
+    Sprintf(sLine, sFormat.c_str(), "ALT+Wheel", "Zoom");    pForm->AddLineNode(sLine);
+    Sprintf(sLine, sFormat.c_str(), "Right-click", "Instant zoom between 100% and fit");    pForm->AddLineNode(sLine);
+    Sprintf(sLine, sFormat.c_str(), "'1'", "Toggle Favorite Mark");    pForm->AddLineNode(sLine);
+    Sprintf(sLine, sFormat.c_str(), "DEL", "Toggle Marked-for-Deletion");    pForm->AddLineNode(sLine);
+    Sprintf(sLine, sFormat.c_str(), "'M'", "Set folder for move-to.");    pForm->AddLineNode(sLine);
+    Sprintf(sLine, sFormat.c_str(), " ", "(After a folder is set, further presses move image instantly.)");    pForm->AddLineNode(sLine);
+
     ChildAdd(pHelp);
+    
 }
 
 void ImageViewer::HandleNavigateToParentFolder()
@@ -1137,6 +1181,10 @@ bool ImageViewer::Init()
         {
             ViewImage(sPersistedViewPath);
         }
+        else
+        {
+            gMessageSystem.Post("show_help", this);
+        }
 
 
         string sMessage;
@@ -1202,10 +1250,13 @@ void ImageViewer::UpdateControlPanel()
     if (mpPanel && mpPanel->GetArea().Width() == mAreaLocal.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
     {
         bool bShow = mbShowUI;
-        if (gInput.IsKeyDown(VK_MENU))
-            bShow = true;
+/*        if (gInput.IsKeyDown(VK_MENU))
+        {
+            mpPanel->SetVisible();
+            return;
+        }*/
 
-        mpPanel->mbHideOnMouseExit = !bShow;
+        //mpPanel->mbHideOnMouseExit = !bShow;
         
         if (bShow && !mpPanel->mbVisible)
         {
@@ -1231,6 +1282,7 @@ void ImageViewer::UpdateControlPanel()
 
 
     mpPanel = new ZWinControlPanel();
+    mpPanel->msWinName = "ImageViewer_CP";
         
     int64_t nGroupSide = nControlPanelSide - gSpacer * 4;
 
@@ -1267,12 +1319,12 @@ void ImageViewer::UpdateControlPanel()
 
 
     ZRect rPanelArea(mAreaLocal.left, mAreaLocal.top, mAreaLocal.right, mAreaLocal.top + nControlPanelSide);
-    mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
+    //mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
     mpPanel->SetArea(rPanelArea);
     mpPanel->mrTrigger = rPanelArea;
     mpPanel->mrTrigger.bottom = mpPanel->mrTrigger.top + mpPanel->mrTrigger.Height() / 4;
     ChildAdd(mpPanel, mbShowUI);
-    mpPanel->mbHideOnMouseExit = !mbShowUI;
+    //mpPanel->mbHideOnMouseExit = !mbShowUI;
 
     ZWinSizablePushBtn* pBtn;
 

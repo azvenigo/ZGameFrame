@@ -511,7 +511,7 @@ void ImageContest::UpdateControlPanel()
         if (gInput.IsKeyDown(VK_MENU))
             bShow = true;
 
-        mpPanel->mbHideOnMouseExit = !bShow;
+        //mpPanel->mbHideOnMouseExit = !bShow;
         mpPanel->SetVisible(bShow);
         return;
     }
@@ -540,12 +540,12 @@ void ImageContest::UpdateControlPanel()
 
 
     ZRect rPanelArea(mAreaLocal.left, mAreaLocal.top, mAreaLocal.right, mAreaLocal.top + nControlPanelSide);
-    mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
+    //mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
     mpPanel->SetArea(rPanelArea);
     mpPanel->mrTrigger = rPanelArea;
     mpPanel->mrTrigger.bottom = mpPanel->mrTrigger.top + mpPanel->mrTrigger.Height() / 4;
     ChildAdd(mpPanel, mbShowUI);
-    mpPanel->mbHideOnMouseExit = !mbShowUI;
+    //mpPanel->mbHideOnMouseExit = !mbShowUI;
 
     ZWinSizablePushBtn* pBtn;
 

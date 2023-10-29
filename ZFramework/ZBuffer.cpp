@@ -709,7 +709,7 @@ bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType
                 uint8_t nAlpha = ARGB_A(*pSrcBits);
                 if (nAlpha > 250)
                     *pDstBits = *pSrcBits;
-                else if (nAlpha >= 5)
+                else if (nAlpha > 8)
                 {
                     if (type == kAlphaDest)
                         *pDstBits = COL::AlphaBlend_Col2Alpha(*pSrcBits, *pDstBits, nAlpha);
@@ -742,7 +742,7 @@ bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType
 
 bool ZBuffer::BltAlphaNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, uint32_t nAlpha, eAlphaBlendType type)
 {
-	if (nAlpha < 5)     // If less than a small threshhold, we won't see anything from the source buffer anyway
+	if (nAlpha < 8)     // If less than a small threshhold, we won't see anything from the source buffer anyway
 		return true;
 
 //	if (nAlpha > 250)     // If close to 1, just do a plain blt
@@ -858,7 +858,7 @@ bool ZBuffer::Blt(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip, eAlphaB
 	else
 		rClip.SetRect(mSurfaceArea);
 
-    if (Clip(rSrc, rClip, rSrcClipped, rDstClipped))
+    if (Clip(pSrc->GetArea(), rClip, rSrcClipped, rDstClipped))
         return BltNoClip(pSrc, rSrcClipped, rDstClipped, type);
 
 	return false;
@@ -942,7 +942,7 @@ bool ZBuffer::FillAlpha(uint32_t nCol, ZRect* pRect)
 				*pDstBits++ = nCol;
 		}
 	}
-	else
+	else if (nAlpha > 8)
 	{
 		for (int64_t y = 0; y < nFillHeight; y++)
 		{

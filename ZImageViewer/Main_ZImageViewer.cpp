@@ -152,6 +152,13 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
         std::filesystem::create_directories(thumbPath);
     gThumbCache.Init(thumbPath);
 
+    if (!std::filesystem::exists(gLogger.msLogFilename))
+    {
+        ofstream logFile;
+        logFile.open(gLogger.msLogFilename);
+        logFile.close();
+    }
+
     gImageMeta.basePath = appDataPath;
     gImageMeta.basePath += "contests/";
 

@@ -40,7 +40,8 @@ public:
 		kSlideUp	= 4,
 		kSlideDown	= 5,
         kSpinCW     = 6,
-        kSpinCCW    = 7
+        kSpinCCW    = 7,
+        kToOrFrom   = 8
 	};
 
 	ZWin();
@@ -151,6 +152,7 @@ public:
     virtual void        PaintFromParent();          // copies pixels from parent texture into this one's for transparency support
     virtual void        TransformIn();
     virtual void        TransformOut();
+    virtual void        TransformTo(ZTransformation& to, int64_t nDuration);
 
 protected:
     virtual bool        Process();              // for doing any computation/simulation/etc. Returns true if anything was done
@@ -199,6 +201,7 @@ public:
 	bool                    mbAcceptsCursorMessages;
 	eTransformType          mTransformIn;
 	eTransformType          mTransformOut;
+    ZTransformation         mToOrFrom;
 	int64_t                 mnTransformInTime;
 	int64_t                 mnTransformOutTime;
     int64_t                 mIdleSleepMS;

@@ -55,7 +55,13 @@ bool ZWinImage::OnParentAreaChange()
 
     // if previously sized to window, keep sizing to window
     if (mViewState == kFitToWindow)
+    {
         FitImageToWindow();
+    }
+    else if (mViewState == kZoom100)
+    {
+        CenterImage();
+    }
 
     return ZWin::OnParentAreaChange();
 }
@@ -170,19 +176,25 @@ bool ZWinImage::OnMouseDownR(int64_t x, int64_t y)
 
             ZRect rImage(mpImage.get()->GetArea());
 
-
-
-            int64_t nNewLeft = (int64_t)(x - (rImage.Width() * fZoomPointU));
-            int64_t nNewRight = nNewLeft + (int64_t)rImage.Width();
-
-            int64_t nNewTop = (int64_t)(y - (rImage.Height() * fZoomPointV));
-            int64_t nNewBottom = nNewTop + (int64_t)rImage.Height();
-
-            ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
-
-            mImageArea.SetRect(rNewArea);
             SetZoom(1.0);
-            Invalidate();
+
+            if (rImage.Width() > mAreaLocal.Width() || rImage.Height() > mAreaLocal.Height())
+            {
+                int64_t nNewLeft = (int64_t)(x - (rImage.Width() * fZoomPointU));
+                int64_t nNewRight = nNewLeft + (int64_t)rImage.Width();
+
+                int64_t nNewTop = (int64_t)(y - (rImage.Height() * fZoomPointV));
+                int64_t nNewBottom = nNewTop + (int64_t)rImage.Height();
+
+                ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
+
+                mImageArea.SetRect(rNewArea);
+            }
+            else
+            {
+                CenterImage();
+            }
+
         }
     }
 
@@ -386,6 +398,14 @@ void ZWinImage::FitImageToWindow()
 
     Invalidate();
 }
+
+void ZWinImage::CenterImage()
+{
+    mImageArea.SetRect(ZGUI::Arrange(mImageArea, mAreaLocal, ZGUI::C));
+    Invalidate();
+}
+
+
 
 bool ZWinImage::IsSizedToWindow()
 {

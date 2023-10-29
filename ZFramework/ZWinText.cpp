@@ -94,7 +94,7 @@ bool ZWinLabel::Paint()
 //        gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(mpSurface.get(), mAreaAbsolute);
 
 //        ZDEBUG_OUT("x:", mAreaAbsolute.left, "y:", mAreaAbsolute.top, "\n");
-        mpSurface->Blur(2);
+        mpSurface->Blur(3);
         mpSurface->FillAlpha(mStyle.bgCol);
         mpSurface->DrawRectAlpha(mpSurface->GetArea(), 0xff000000 | mStyle.bgCol);
     }

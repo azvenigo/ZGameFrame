@@ -359,6 +359,9 @@ inline void ZRasterizer::SetupScanline(double fScanLine, double& fClipLeft, doub
 
 bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip, uint8_t nAlpha)
 {
+    if (nAlpha < 8)
+        return true;
+
 	ZRect rDest = pDestination->GetArea();
 	int64_t nDestStride = pDestination->GetArea().Width();
 	double fTextureW = (double) pTexture->GetArea().Width() - 0.5;
@@ -462,6 +465,9 @@ uint32_t SampleTexture(ZBuffer* pTexture, double fTexturePixelU, double fTexture
 
 bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip, uint32_t nSubsamples, uint8_t nAlpha)
 {
+    if (nAlpha < 8)
+        return true;
+
     ZRect rDest = pDestination->GetArea();
     int64_t nDestStride = pDestination->GetArea().Width();
     double fTextureW = (double)pTexture->GetArea().Width() - 0.5;
