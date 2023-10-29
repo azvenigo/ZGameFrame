@@ -304,16 +304,19 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     }
     else if (sType == "saveimg")
     {
-        string sFilename;
-        if (ZWinFileDialog::ShowSaveDialog("Images", "*.jpg;*.jpeg;*.png;*.tga;*.bmp;*.hdr", sFilename))
-            SaveImage(sFilename);
+        if (mpWinImage && mpWinImage->mpImage)
+        {
+            string sFilename;
+            if (ZWinFileDialog::ShowSaveDialog("Images", "*.jpg;*.jpeg;*.png;*.tga;*.bmp;*.hdr", sFilename))
+                SaveImage(sFilename);
+        }
         return true;
     }
     else if (sType == "openfolder")
     {
 #ifdef _WIN32
         string sPath;
-        Sprintf(sPath, "/select,%s", EntryFromIndex(mViewingIndex)->filename.string().c_str());
+        Sprintf(sPath, "/select,%s", mCurrentFolder.c_str());
         ShellExecute(0, "open", "explorer", sPath.c_str(), 0,  SW_SHOWNORMAL);
         return true;
 #endif
@@ -557,7 +560,7 @@ void ImageViewer::ShowHelpDialog()
     pHelp->mTransformOut = ZWin::kToOrFrom;
     pHelp->mToOrFrom = ZTransformation(ZPoint(mAreaAbsolute.right - gM*5, mAreaAbsolute.top+gM), 0.0, 0.0);
 
-    ZRect r(grFullArea.Width() * 0.6, grFullArea.Height() * 0.5);
+    ZRect r((int64_t) (grFullArea.Width() * 0.6), (int64_t)(grFullArea.Height() * 0.5));
     pHelp->SetArea(r);
     pHelp->mBehavior = ZWinDialog::Draggable | ZWinDialog::OKButton;
     pHelp->mStyle = gDefaultDialogStyle;
@@ -570,7 +573,7 @@ void ImageViewer::ShowHelpDialog()
     pLabel->SetArea(rCaption);
     pLabel->mStyle = gStyleCaption;
     pLabel->mStyle.pos = ZGUI::CT;
-    pLabel->mStyle.paddingV = gM * 2;
+    pLabel->mStyle.paddingV = (int32_t)gM * 2;
     pLabel->mStyle.fp.nHeight = gM * 2;
     pLabel->mStyle.fp.nWeight = 800;
     pLabel->mStyle.look = ZGUI::ZTextLook::kShadowed;
@@ -584,7 +587,7 @@ void ImageViewer::ShowHelpDialog()
 
     ZGUI::Style text(gStyleGeneralText);
     text.fp.nHeight = std::max<int64_t> (gM / 2, 16);
-    text.paddingH = gM;
+    text.paddingH = (int32_t)gM;
 
     ZGUI::Style sectionText(gStyleGeneralText);
     sectionText.fp.nWeight = 800;
@@ -592,7 +595,7 @@ void ImageViewer::ShowHelpDialog()
     sectionText.look.colTop = 0xffaaaaaa;
     sectionText.look.colBottom = 0xffaaaaaa;
 
-    ZRect rForm(r.Width() * 0.48, r.Height() * 0.8);
+    ZRect rForm((int64_t)(r.Width() * 0.48), (int64_t)(r.Height() * 0.8));
     rForm = ZGUI::Arrange(rForm, r, ZGUI::LT, gSpacer * 4, pLabel->mStyle.fp.nHeight + gSpacer);
     pForm->SetArea(rForm);
     pForm->SetScrollable();
@@ -1164,6 +1167,8 @@ bool ImageViewer::Init()
         mpWinImage->SetArea(rImageArea);
         mpWinImage->mFillColor = 0xff000000;
         mpWinImage->mZoomHotkey = VK_MENU;
+        if (mbSubsample)
+            mpWinImage->nSubsampling = 2;
         mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable|ZWinImage::kSelectableArea|ZWinImage::kLaunchGeolocation;
 
 //        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
@@ -1364,7 +1369,7 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = new ZWinSizablePushBtn();
     pBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
-    pBtn->msTooltip = "Go to Folder";
+    pBtn->msTooltip = "Open folder containing current image";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
 
@@ -1424,7 +1429,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
     mpDeleteMarkedButton = new ZWinSizablePushBtn();
     mpDeleteMarkedButton->mCaption.sText = "delete\nmarked";
-    mpDeleteMarkedButton->msTooltip = "Show confirmation of images to be deleted.";
+    mpDeleteMarkedButton->msTooltip = "Show confirmation of images marked for deleted.";
     mpDeleteMarkedButton->mCaption.style = gDefaultGroupingStyle;
     mpDeleteMarkedButton->mCaption.style.look.colTop = 0xffff0000;
     mpDeleteMarkedButton->mCaption.style.look.colBottom = 0xffff0000;
@@ -1656,6 +1661,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->SetArea(rButton);
     pBtn->SetMessage(ZMessage("show_help", this));
+    pBtn->msTooltip = "View Help and Quick Reference";
     pBtn->msWinGroup = "View";
     mpPanel->ChildAdd(pBtn);
 
