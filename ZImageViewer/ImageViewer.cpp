@@ -315,9 +315,12 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     else if (sType == "openfolder")
     {
 #ifdef _WIN32
-        string sPath;
-        Sprintf(sPath, "/select,%s", mCurrentFolder.c_str());
-        ShellExecute(0, "open", "explorer", sPath.c_str(), 0,  SW_SHOWNORMAL);
+        if (mpWinImage && mpWinImage->mpImage)
+        {
+            string sPath;
+            Sprintf(sPath, "/select,%s", EntryFromIndex(mViewingIndex)->filename.string().c_str());
+            ShellExecute(0, "open", "explorer", sPath.c_str(), 0, SW_SHOWNORMAL);
+        }
         return true;
 #endif
     }
@@ -605,7 +608,7 @@ void ImageViewer::ShowHelpDialog()
 
 
     pForm->AddMultiLine("\nAbout", sectionText);
-    pForm->AddMultiLine("Written by Alex Zvenigorodsky\nBuild:" __DATE__ __TIME__ "\n\n", text);
+    pForm->AddMultiLine("Written by Alex Zvenigorodsky\nBuild:" __DATE__ " " __TIME__ "\n\n", text);
 
     pForm->AddMultiLine("\nOverview", sectionText);
     pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text);
