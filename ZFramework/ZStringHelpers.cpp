@@ -4,7 +4,6 @@
 #include <locale>
 #include <fstream>
 #include <stdio.h>
-#include "ZCompression.h"
 #include "ZXMLNode.h"
 #include "ZBuffer.h"
 #include "ZZipAPI.h"

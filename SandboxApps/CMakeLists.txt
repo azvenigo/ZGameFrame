@@ -77,8 +77,6 @@ set(ZFRAMEWORK_FILES
 ../ZFramework/ZAnimObjects.h        ../ZFramework/ZAnimObjects.cpp
 ../ZFramework/ZBitBuffer.cpp
 ../ZFramework/ZBitBuffer.h
-../ZFramework/ZCompression.cpp
-../ZFramework/ZCompression.h
 ../ZFramework/zlibAPI.cpp
 ../ZFramework/zlibAPI.h
 ../ZFramework/ZMemBuffer.h          ../ZFramework/ZMemBuffer.cpp
