@@ -6,15 +6,24 @@ The system determines visibility lists and in combination with dirty rect system
 
 
 Libraries are extensive so I still need to describe them and their uses here. <tbd>
-Graphics
-2D Windowing system
-font system
-Rasterization
-Transformations
-Messaging
-Persistence
-Threading
 
+* Graphics 
+** 2D Windowing system
+** Color conversion and blending
+** font system
+** Rasterization
+** Transformations
+** Animation system
+** Styling
+** Thumbnail generation and cache
+* Messaging
+* Persistence
+* Threading
+* Compression
+* Debugging, Logging, Timing
+
+
+## Building does require ZLibraries to be at the same directory level as ZGameFrame. tbd: import them as a library
 
 ## Two projects here that use the framework:
 
