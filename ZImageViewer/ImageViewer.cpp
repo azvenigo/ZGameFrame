@@ -670,7 +670,7 @@ void ImageViewer::ShowHelpDialog()
     pForm->mbEvenColumns = true;
     pForm->AddLineNode("<line><text>TAB</text><text>Toggle UI</text></line>");
 
-    string sFormat = "<line wrap=0><text position=lb>%s</text><text position=lb>%s/fullscreen</text></line>";
+    string sFormat = "<line wrap=0><text position=lb>%s</text><text position=lb>%s</text></line>";
 
     string sLine;
 //    pForm->AddLineNode("\n");
