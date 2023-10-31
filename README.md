@@ -8,14 +8,14 @@ The system determines visibility lists and in combination with dirty rect system
 Libraries are extensive so I still need to describe them and their uses here. <tbd>
 
 * Graphics 
-** 2D Windowing system
-** Color conversion and blending
-** font system
-** Rasterization
-** Transformations
-** Animation system
-** Styling
-** Thumbnail generation and cache
+  * 2D Windowing system
+  * Color conversion and blending
+  * font system
+  * Rasterization
+  * Transformations
+  * Animation system
+  * Styling
+  * Thumbnail generation and cache
 * Messaging
 * Persistence
 * Threading
