@@ -4,8 +4,31 @@ The framework uses threading (almost to an extreme) where every gui element (aka
 
 The system determines visibility lists and in combination with dirty rect system, renders only portions of the screen that have changed.
 
+# Framework Design and Philosophy
+Libraries are extensive so I still need to describe them and their uses here. At a high level the idea is not do computation that doesn't need to be done. If a window hasn't changed, don't spend time repainting it.
+So rather than spend time doing micro optimization on getting some image processing sped up, determine if the processing needs to be done at all.
 
-Libraries are extensive so I still need to describe them and their uses here. <tbd>
+ZBuffer is a 2D surface class that can be clipped, Blt, rasterized, alpha blended. It provides an interface to raw uint32_t pixels in ARGB format. Because it is a software buffer, no stride restrictions are needed and buffers have a contiguous block of pixel data.
+
+All UI is via a heirarchical window called ZWin (aka widget in some systems) elements. Each ZWin spawns its own thread and has its own message queue. Each window renders to its own ZBuffer when it is "invalid", i.e. needs painting. Each window has it's own Process function to perform any periodic logic. So paint and process are all called by that ZWin's thread.
+
+The main thread loop handles the interface to the OS, taking input and delivering it to the appropriate internal queues.
+
+High level singletons (via global function pointers with explicit initialization and shutdown to avoid any timing dependencies with lazy instantiation) include:
+ZGraphicSystem - 
+ZRasterizer
+ZFontSystem
+ZRegistry
+ZMessageSystem
+ZInput
+ZAnimator
+ZTickManager
+ZWinDebugConsole
+
+
+
+
+
 
 * Graphics 
   * 2D Windowing system
