@@ -9,6 +9,7 @@
 #include <fstream>
 #include "easyexif/exif.h"
 #include "lunasvg.h"
+#include "mio/mmap.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -118,14 +119,33 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
     int height;
     int channels;
 
-    uint32_t nFileSize = (uint32_t)std::filesystem::file_size(sFilename);
-    std::ifstream imageFile(sFilename.c_str(), ios::in | ios::binary);    // open and set pointer at end
-    ZMemBufferPtr imageBuf(new ZMemBuffer(nFileSize));
-    imageFile.read((char*)imageBuf->data(), nFileSize);
-    imageBuf->seekp(nFileSize);
+
+
+//    uint32_t nFileSize = (uint32_t)std::filesystem::file_size(sFilename);
+
+
+//    std::ifstream imageFile(sFilename.c_str(), ios::in | ios::binary);    // open and set pointer at end
+//    ZMemBufferPtr imageBuf(new ZMemBuffer(nFileSize));
+//    imageFile.read((char*)imageBuf->data(), nFileSize);
+//    imageBuf->seekp(nFileSize);
+
+
+    mio::mmap_source ro_mmap;
+    std::error_code error;
+    ro_mmap.map(sFilename, error);
+    if (error)
+    {
+        ZDEBUG_OUT("ERROR: Could not open source ", sFilename, "\n");
+        return false;
+    }
+
+    uint8_t* pScanFileData = (uint8_t*)ro_mmap.data();
+    uint64_t nFileSize = std::filesystem::file_size(sFilename);
+
+
 
     mEXIF.clear();
-    mEXIF.parseFrom(imageBuf->data(), nFileSize);
+    mEXIF.parseFrom(pScanFileData, nFileSize);
     
 
 
@@ -133,7 +153,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 
 
 //    uint8_t* pImage = stbi_load(sFilename.c_str(), &width, &height, &channels, 4);
-    uint8_t* pImage = stbi_load_from_memory(imageBuf->data(), nFileSize, &width, &height, &channels, 4);
+    uint8_t* pImage = stbi_load_from_memory(pScanFileData, nFileSize, &width, &height, &channels, 4);
     if (!pImage)
     {
         ZDEBUG_OUT("ZBuffer::LoadBuffer failed to load ", sFilename, "\n");

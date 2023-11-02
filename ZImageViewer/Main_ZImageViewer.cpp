@@ -3,6 +3,7 @@
 #include "helpers/Registry.h"
 #include "helpers/CommandLineParser.h"
 #include "helpers/Logger.h"
+#include "helpers/ZZFileAPI.h"
 
 
 #include "ZWinDebugConsole.h"
@@ -139,9 +140,55 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
     appDataPath += "/ZImageViewer/";
 
 
+    string sCurBuild(__DATE__ " " __TIME__);
+    gRegistry.Set("app", "version", sCurBuild);
+
+
     std::filesystem::path appPath(argv[0]);
     gRegistry["apppath"] = appPath.parent_path().string();
     gRegistry["appDataPath"] = appDataPath.string();
+
+    tZZFilePtr filePtr;
+    gbSkipCertCheck = true;
+    string sURL;
+    Sprintf(sURL, "https://www.azvenigo.com/zimageviewerbuild/release.txt?cur=%s", SH::URL_Encode(sCurBuild).c_str());
+    if (cZZFile::Open(sURL, false, filePtr, LOG::gnVerbosityLevel > LVL_DEFAULT))
+    {
+        int64_t nSize = filePtr->GetFileSize();
+        if (nSize < 256)
+        {
+            uint8_t verFile[256];
+            if (filePtr->Read(verFile, nSize) == nSize)
+            {
+                string sLine((const char*) verFile, nSize);
+
+                size_t versionStart = sLine.find('[');
+                if (versionStart != string::npos)
+                {
+                    size_t versionEnd = sLine.find(']', versionStart + 1);
+                    if (versionEnd != string::npos)
+                    {
+                        string sNewBuild = sLine.substr(versionStart+1, versionEnd-versionStart-1);
+                        string sURL = sLine.substr(versionEnd + 1);
+
+                        gRegistry.Set("app", "newversion", sNewBuild);
+                        gRegistry.Set("app", "newurl", sURL);
+
+                        if (sNewBuild != sCurBuild)
+                        {
+                            ZOUT("Current build:", sCurBuild, " New Build Available:", sNewBuild, " URL:", sURL, "\n");
+                        }
+                    }
+                }
+            }
+            else
+                ZDEBUG_OUT("Unable to retrieve version file.\n");
+        }
+        else
+            ZOUT("Version file size larger than allowed (256b)\n");
+    }
+    else
+        ZDEBUG_OUT("Unable to retrieve version file.\n");
 
 
     string sUserPath(getenv("APPDATA"));

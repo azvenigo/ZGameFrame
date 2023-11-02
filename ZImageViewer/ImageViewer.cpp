@@ -324,6 +324,15 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         return true;
 #endif
     }
+    else if (sType == "download")
+    {
+        string sURL;
+        if (gRegistry.Get("app", "newurl", sURL))
+        {
+            ShellExecute(0, "open", "explorer", sURL.c_str(), 0, SW_SHOWNORMAL);
+        }
+        return true;
+    }
     else if (sType == "show_confirm")
     {
 //        tImageFilenames deletionList = GetImagesFlaggedToBeDeleted();
@@ -607,8 +616,10 @@ void ImageViewer::ShowHelpDialog()
     pHelp->Arrange(ZGUI::C, mAreaLocal);
 
 
+    string sCurBuild;
+    gRegistry.Get("app", "version", sCurBuild);
     pForm->AddMultiLine("\nAbout", sectionText);
-    pForm->AddMultiLine("Written by Alex Zvenigorodsky\nBuild:" __DATE__ " " __TIME__ "\n\n", text);
+    pForm->AddMultiLine("Written by Alex Zvenigorodsky\nBuild:\"" + sCurBuild + "\"\n\n", text);
 
     pForm->AddMultiLine("\nOverview", sectionText);
     pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text);
@@ -1685,6 +1696,27 @@ void ImageViewer::UpdateControlPanel()
     mpPanel->ChildAdd(pBtn);
 
 
+
+    string sCurVersion;
+    string sAvailVersion;
+    gRegistry.Get("app", "version", sCurVersion);
+    gRegistry.Get("app", "newversion", sAvailVersion);
+
+    if (sCurVersion != sAvailVersion)
+    {
+        rButton.OffsetRect(-rButton.Width() - gSpacer * 2, 0);
+        pBtn = new ZWinSizablePushBtn();
+        pBtn->mCaption.sText = "New Version";
+        pBtn->mCaption.style = gStyleButton;
+        pBtn->mCaption.style.look.colTop = 0xffff0088;
+        pBtn->mCaption.style.look.colTop = 0xff8800ff;
+        pBtn->mCaption.style.pos = ZGUI::C;
+        pBtn->msTooltip = "New version \"" + sAvailVersion + "\" is available for download.";
+        pBtn->SetArea(rButton);
+        Sprintf(sMessage, "download;target=%s", GetTargetName().c_str());
+        pBtn->SetMessage(sMessage);
+        mpPanel->ChildAdd(pBtn);
+    }
 }
 
 bool ImageViewer::OnParentAreaChange()
