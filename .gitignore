@@ -402,3 +402,4 @@ SandboxApps/ImageSandbox.vcxproj.filters
 build/
 font_cache/
 deploy_to_webserver.bat
+ZImageViewer/ZView_Installer.exe

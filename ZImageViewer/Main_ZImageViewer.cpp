@@ -236,7 +236,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 
 
     filesystem::path resourcesPath(appPath.parent_path());
-    resourcesPath.append("res/default_resources/");
+    resourcesPath.append("res/");
     gResources.Init(resourcesPath.string());// todo, move this define elsewhere?
 
     gpFontSystem = new ZFontSystem();

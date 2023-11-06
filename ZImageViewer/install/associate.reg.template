@@ -1,0 +1,23 @@
+Windows Registry Editor Version 5.00
+
+
+[HKEY_CURRENT_USER\Software\ZImageViewer]
+"Path"="$$INSTALL_LOC$$\\ZImageViewer.exe"
+"Version"="$$VERSION$$"
+
+
+
+[HKEY_CLASSES_ROOT\.jpg]
+@="ZImageViewer"
+"Content Type"="image/jpeg"
+
+[HKEY_CLASSES_ROOT\.png]
+@="ZImageViewer"
+"Content Type"="image/png"
+
+[HKEY_CLASSES_ROOT\ZImageViewer\shell]
+
+[HKEY_CLASSES_ROOT\ZImageViewer\shell\open]
+
+[HKEY_CLASSES_ROOT\ZImageViewer\shell\open\command]
+@=" \"$$INSTALL_LOC$$\\ZImageViewer.exe\" \"%1\" "

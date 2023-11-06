@@ -1,0 +1,1 @@
+..\ZLibraries\build\ZPackager\Debug\ZPackager.exe ZView_Installer.exe build\ZImageViewer\Release 
