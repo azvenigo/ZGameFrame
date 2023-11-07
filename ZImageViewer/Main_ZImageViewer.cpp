@@ -127,6 +127,47 @@ bool ZFrameworkApp::InitRegistry(std::filesystem::path userDataPath)
 }
 
 
+bool ReadCFG(const string& sCFGPath, string& sVersion, string& sBuildURL)
+{
+    tZZFilePtr filePtr;
+    if (cZZFile::Open(sCFGPath, false, filePtr, LOG::gnVerbosityLevel > LVL_DEFAULT))
+    {
+        uint64_t nSize = filePtr->GetFileSize();
+        uint8_t* pBuf = new uint8_t[nSize];
+        filePtr->Read(pBuf, nSize);
+        string sCFG((const char*)pBuf, nSize);
+
+        size_t nStart = sCFG.find("appver=");
+        if (nStart != string::npos)
+        {
+            nStart += 7; // skip "appver="
+            size_t nEndVer = sCFG.find('\r', nStart+1);
+            if (nEndVer != string::npos)
+            {
+                sVersion = sCFG.substr(nStart, nEndVer - nStart);
+            }
+        }
+
+        nStart = sCFG.find("buildurl=");
+        if (nStart != string::npos)
+        {
+            nStart += 9; // skip "buildurl="
+            size_t nEndVer = sCFG.find('\r', nStart+1);
+            if (nEndVer != string::npos)
+            {
+                sBuildURL = sCFG.substr(nStart, nEndVer - nStart);
+            }
+
+        }
+
+        delete[] pBuf;
+
+    }
+
+    return !sVersion.empty() && !sBuildURL.empty();
+}
+
+
 bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path userDataPath)
 {
     gGraphicSystem.SetArea(grFullArea);
@@ -140,55 +181,37 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
     appDataPath += "/ZImageViewer/";
 
 
-    string sCurBuild(__DATE__ " " __TIME__);
-    gRegistry.Set("app", "version", sCurBuild);
+    string sCurVersion;
+    string sCurURL;
+
+    if (ReadCFG("install/install.cfg", sCurVersion, sCurURL))
+    {
+        gRegistry.Set("app", "version", sCurVersion);
+    }
+
+
+    string sNewVersion;
+    string sNewURL;
+
+    gbSkipCertCheck = true;
+    string sURL;
+    Sprintf(sURL, "https://www.azvenigo.com/zimageviewerbuild/install.cfg?cur=%s", SH::URL_Encode(sCurVersion).c_str());
+    if (ReadCFG(sURL, sNewVersion, sNewURL))
+    {
+        gRegistry.Set("app", "newversion", sNewVersion);
+        gRegistry.Set("app", "newurl", sNewURL);
+
+        if (sNewVersion != sCurVersion)
+        {
+            ZOUT("Current build:", sCurVersion, " New Build Available:", sNewVersion, " URL:", sURL, "\n");
+        }
+    }
+
 
 
     std::filesystem::path appPath(argv[0]);
     gRegistry["apppath"] = appPath.parent_path().string();
     gRegistry["appDataPath"] = appDataPath.string();
-
-    tZZFilePtr filePtr;
-    gbSkipCertCheck = true;
-    string sURL;
-    Sprintf(sURL, "https://www.azvenigo.com/zimageviewerbuild/release.txt?cur=%s", SH::URL_Encode(sCurBuild).c_str());
-    if (cZZFile::Open(sURL, false, filePtr, LOG::gnVerbosityLevel > LVL_DEFAULT))
-    {
-        int64_t nSize = filePtr->GetFileSize();
-        if (nSize < 256)
-        {
-            uint8_t verFile[256];
-            if (filePtr->Read(verFile, nSize) == nSize)
-            {
-                string sLine((const char*) verFile, nSize);
-
-                size_t versionStart = sLine.find('[');
-                if (versionStart != string::npos)
-                {
-                    size_t versionEnd = sLine.find(']', versionStart + 1);
-                    if (versionEnd != string::npos)
-                    {
-                        string sNewBuild = sLine.substr(versionStart+1, versionEnd-versionStart-1);
-                        string sURL = sLine.substr(versionEnd + 1);
-
-                        gRegistry.Set("app", "newversion", sNewBuild);
-                        gRegistry.Set("app", "newurl", sURL);
-
-                        if (sNewBuild != sCurBuild)
-                        {
-                            ZOUT("Current build:", sCurBuild, " New Build Available:", sNewBuild, " URL:", sURL, "\n");
-                        }
-                    }
-                }
-            }
-            else
-                ZDEBUG_OUT("Unable to retrieve version file.\n");
-        }
-        else
-            ZOUT("Version file size larger than allowed (256b)\n");
-    }
-    else
-        ZDEBUG_OUT("Unable to retrieve version file.\n");
 
 
     string sUserPath(getenv("APPDATA"));
