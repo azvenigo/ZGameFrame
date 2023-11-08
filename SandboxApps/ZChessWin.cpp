@@ -624,7 +624,7 @@ bool ZChessWin::Init()
 
 
         pCP->AddSpace(panelH / 30);
-//        pCP->AddButton("Load Random Game", ZMessage("randgame", this));
+//        pCP->AddButton("", "Load Random Game", ZMessage("randgame", this));
         pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg);
 
         pCP->AddCaption("Animation Speed");
@@ -643,14 +643,14 @@ bool ZChessWin::Init()
 
         mpEditBoardWin->AddSpace(panelH / 30);
 
-        mpEditBoardWin->AddButton("Clear", ZMessage("clearboard", this));
-        mpEditBoardWin->AddButton("Reset", ZMessage("resetboard", this));
+        mpEditBoardWin->Button("clearboard", "Clear", ZMessage("clearboard", this));
+        mpEditBoardWin->Button("resetboard", "Reset", ZMessage("resetboard", this));
 
         mpEditBoardWin->AddSpace(panelH / 30);
-        mpEditBoardWin->AddButton("Change Turn", ZMessage("changeturn", this));
+        mpEditBoardWin->Button("changeturn", "Change Turn", ZMessage("changeturn", this));
 
         mpEditBoardWin->AddSpace(panelH / 30);
-        mpEditBoardWin->AddButton("Colors", ZMessage("showpalette", this));
+        mpEditBoardWin->Button("showpalette", "Colors", ZMessage("showpalette", this));
 
         mpEditBoardWin->AddSpace(panelH / 30);
         mpEditBoardWin->AddCaption("Size");

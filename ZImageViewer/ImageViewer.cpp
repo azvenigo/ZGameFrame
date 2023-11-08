@@ -69,6 +69,7 @@ ImageViewer::ImageViewer()
     mpDelFilterButton = nullptr;
     mpRankedFilterButton = nullptr;
     mpDeleteMarkedButton = nullptr;
+    mpShowContestButton = nullptr;
     mOutstandingMetadataCount = 0;
     mpRatedImagesStrip = nullptr;
 
@@ -410,10 +411,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         ImageContest* pWin = new ImageContest();
         pWin->SetArea(mAreaInParent);
         GetTopWindow()->ChildAdd(pWin);
-        if (mFilterState == kFavs)
-            pWin->ScanFolder(FavoritesPath());
-        else
-            pWin->ScanFolder(mCurrentFolder);
+        pWin->ScanFolder(FavoritesPath());
         SetVisible(false);
         return true;
     }
@@ -1211,26 +1209,26 @@ bool ImageViewer::Init()
 
         string sAppPath = gRegistry["apppath"];
         Sprintf(sMessage, "show_rotation_menu;target=%s", GetTargetName().c_str());
-        ZWinSizablePushBtn* pBtn = mpRotationMenu->AddSVGButton(sAppPath + "/res/rotate.svg", sMessage);
+        ZWinSizablePushBtn* pBtn = mpRotationMenu->SVGButton("show_rotation_menu", sAppPath + "/res/rotate.svg", sMessage);
         pBtn->msWinGroup = "Rotate";
 
         Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
-        pBtn = mpRotationMenu->AddButton("<", sMessage);
+        pBtn = mpRotationMenu->Button("<", "<", sMessage);
         pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
         Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
-        pBtn = mpRotationMenu->AddButton(">", sMessage);
+        pBtn = mpRotationMenu->Button(">", ">", sMessage);
         pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
         Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
-        pBtn = mpRotationMenu->AddButton("-", sMessage);
+        pBtn = mpRotationMenu->Button("-", "-", sMessage);
         pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
         Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
-        pBtn = mpRotationMenu->AddButton("|", sMessage);
+        pBtn = mpRotationMenu->Button("|", "|", sMessage);
         pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
@@ -1585,7 +1583,7 @@ void ImageViewer::UpdateControlPanel()
     pCheck->mUncheckedStyle = filterButtonStyle;
 
     pCheck->SetArea(rButton);
-    pCheck->msTooltip = "Favorites (hit '1' to toggle current image";
+    pCheck->msTooltip = "Favorites (hit '1' to toggle current image)";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpPanel->ChildAdd(pCheck);
@@ -1685,15 +1683,14 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.right = rButton.left + rButton.Width() * 4;
     rButton.OffsetRect(-rButton.Width()-gSpacer*2, 0);
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "Rank Photos";
-    pBtn->mCaption.style = gStyleButton;
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->msTooltip = "Rank images in pairs";
-    pBtn->SetArea(rButton);
+    mpShowContestButton = new ZWinSizablePushBtn();
+    mpShowContestButton->mCaption.sText = "Rank Photos";
+    mpShowContestButton->mCaption.style = gStyleButton;
+    mpShowContestButton->mCaption.style.pos = ZGUI::C;
+    mpShowContestButton->SetArea(rButton);
     Sprintf(sMessage, "show_contest;target=%s", GetTargetName().c_str());
-    pBtn->SetMessage(sMessage);
-    mpPanel->ChildAdd(pBtn);
+    mpShowContestButton->SetMessage(sMessage);
+    mpPanel->ChildAdd(mpShowContestButton);
 
 
 
@@ -2508,6 +2505,22 @@ void ImageViewer::UpdateCaptions()
         mpRankedFilterButton->mCaption.sText = "ranked";
         mpRankedFilterButton->mbEnabled = !mRankedArray.empty();
     }
+
+    if (mpShowContestButton)
+    {
+        if (mFavImageArray.size() < 5)
+        {
+            mpShowContestButton->msTooltip = "Choose at least five favorites to enable ranking";
+            mpShowContestButton->mbEnabled = false;
+        }
+        else
+        {
+            Sprintf(mpShowContestButton->msTooltip, "Rank the %u favorites in pairs", mFavImageArray.size());
+            mpShowContestButton->mbEnabled = true;
+        }
+    }
+
+
 
     if (mpDeleteMarkedButton)
     {

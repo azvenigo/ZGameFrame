@@ -4,6 +4,7 @@
 #include "ZFont.h"
 #include "ZGUIHelpers.h"
 #include "ZGUIStyle.h"
+#include <map>
 
 /////////////////////////////////////////////////////////////////////////
 // 
@@ -12,6 +13,8 @@ class ZWinSizablePushBtn;
 class ZWinCheck;
 class ZWinSlider;
 class ZWinLabel;
+
+typedef std::map<std::string, ZWinSizablePushBtn*> tIDToButtonMap;
 
 class ZWinControlPanel : public ZWin
 {
@@ -24,9 +27,9 @@ public:
 
     ZWinLabel*          AddCaption(const std::string& sCaption);
 
-    ZWinSizablePushBtn* AddButton(  const std::string& sCaption, const std::string& sMessage);
+    ZWinSizablePushBtn* Button(const std::string& sID, const std::string& sCaption = "", const std::string& sMessage = "");
 
-    ZWinSizablePushBtn* AddSVGButton(const std::string& sSVGFilepath, const std::string& sMessage);
+    ZWinSizablePushBtn* SVGButton(const std::string& sID, const std::string& sSVGFilepath = "", const std::string& sMessage = "");
 
     ZWinCheck*          AddToggle(  bool* pbValue,
                                 const std::string& sCaption, 
@@ -54,6 +57,8 @@ public:
     bool                mbHideOnMouseExit;
 
     ZGUI::Style         mGroupingStyle;
+
+    tIDToButtonMap      mButtons;
 
 private:
 

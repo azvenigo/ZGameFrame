@@ -425,8 +425,8 @@ bool ZWin::ChildToFront(ZWin* child)
 
     if(it != mChildList.end())
 	{
-		mChildList.remove( *it );
-		mChildList.push_front( *it );
+		mChildList.remove(child);
+		mChildList.push_front(child);
         child->Invalidate();
         Invalidate();
         gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
@@ -444,8 +444,8 @@ bool ZWin::ChildToBack(ZWin* child)
     if (it != mChildList.end())
     {
 //		ZDEBUG_OUT("ChildToBack:0x%x\n", uint64_t(child.get()));
-		mChildList.remove( *it );
-		mChildList.push_back( *it );
+		mChildList.remove(child);
+		mChildList.push_back(child);
         child->Invalidate();
         Invalidate();
         gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);

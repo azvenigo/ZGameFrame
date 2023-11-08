@@ -46,36 +46,46 @@ void ZWinControlPanel::FitToControls()
 
 
 
-ZWinSizablePushBtn* ZWinControlPanel::AddButton(const string& sCaption, const std::string& sMessage)
+ZWinSizablePushBtn* ZWinControlPanel::Button(const std::string& sID, const string& sCaption, const std::string& sMessage)
 {
 //    ZASSERT(mbInitted);
+    ZWinSizablePushBtn* pBtn = mButtons[sID];
+    if (!pBtn)
+    {
+        pBtn = new ZWinSizablePushBtn();
+        mButtons[sID] = pBtn;
+        ChildAdd(pBtn);
 
-    ZWinSizablePushBtn* pBtn;
+        pBtn->SetArea(mrNextControl);
+        mrNextControl.OffsetRect(0, mrNextControl.Height());
+    }
 
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = sCaption;
-    pBtn->SetMessage(sMessage);
-    pBtn->SetArea(mrNextControl);
-    ChildAdd(pBtn);
+    if (!sCaption.empty())
+        pBtn->mCaption.sText = sCaption;
+    if (!sMessage.empty())
+        pBtn->SetMessage(sMessage);
 
-    mrNextControl.OffsetRect(0, mrNextControl.Height());
 
     return pBtn;
 }
 
-ZWinSizablePushBtn* ZWinControlPanel::AddSVGButton(const string& sSVGFilepath, const std::string& sMessage)
+ZWinSizablePushBtn* ZWinControlPanel::SVGButton(const std::string& sID, const string& sSVGFilepath, const std::string& sMessage)
 {
-//    ZASSERT(mbInitted);
+    ZWinSizablePushBtn* pBtn = mButtons[sID];
+    if (!pBtn)
+    {
+        pBtn = new ZWinSizablePushBtn();
+        mButtons[sID] = pBtn;
+        ChildAdd(pBtn);
+        pBtn->SetArea(mrNextControl);
+        mrNextControl.OffsetRect(0, mrNextControl.Height());
+    }
 
-    ZWinSizablePushBtn* pBtn;
+    if (!sSVGFilepath.empty())
+        pBtn->mSVGImage.Load(sSVGFilepath);
+    if (!sMessage.empty())
+        pBtn->SetMessage(sMessage);
 
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mSVGImage.Load(sSVGFilepath);
-    pBtn->SetMessage(sMessage);
-    pBtn->SetArea(mrNextControl);
-    ChildAdd(pBtn);
-
-    mrNextControl.OffsetRect(0, mrNextControl.Height());
 
     return pBtn;
 }

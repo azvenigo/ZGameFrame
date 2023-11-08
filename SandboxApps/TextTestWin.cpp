@@ -183,7 +183,7 @@ bool TextTestWin::Init()
 
     ZGUI::ZTextLook captionLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
 
-    pCP->AddButton("Color", ZMessage("choosecolor", this));
+    pCP->Button("choosecolor", "Color", ZMessage("choosecolor", this));
 
     pCP->AddCaption("Height");
 
@@ -209,8 +209,8 @@ bool TextTestWin::Init()
     pCP->AddToggle(&mbEnableKerning, "View Kerning", "togglekerning;enable=1;target=TextTestWin", "togglekerning;enable=0;target=TextTestWin");
     pCP->AddSpace(16);
 
-    pCP->AddButton("Load Font", "loadfont;target=TextTestWin");
-    pCP->AddButton("Save Font", "savefont;target=TextTestWin");
+    pCP->Button("loadfont", "Load Font", "loadfont;target=TextTestWin");
+    pCP->Button("savefont", "Save Font", "savefont;target=TextTestWin");
 
     ChildAdd(pCP);
 

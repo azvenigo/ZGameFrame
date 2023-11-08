@@ -265,6 +265,8 @@ protected:
     ZWinCheck*              mpDelFilterButton;
     ZWinCheck*              mpRankedFilterButton;
     ZWinSizablePushBtn*     mpDeleteMarkedButton;
+    ZWinSizablePushBtn*     mpShowContestButton;
+
     WinTopWinners*          mpRatedImagesStrip;
 
 
