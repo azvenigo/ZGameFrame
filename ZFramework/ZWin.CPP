@@ -195,7 +195,7 @@ void ZWin::TransformIn()
 
         pImage->StartTransformation(start);
 
-//        mnTransformInTime = 1000;
+        //mnTransformInTime = 10000;
 
 
         ZTransformation lastTrans(end);
@@ -684,6 +684,8 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& 
 {
     if (!mbInitted || !mbVisible || pThis == this)
         return;
+
+    InvalidateChildren();
 
     ZRect rAbsIntersection(rAbsSrc);
     if (!rAbsIntersection.IntersectRect(mAreaAbsolute))

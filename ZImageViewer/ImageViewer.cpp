@@ -331,6 +331,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         if (gRegistry.Get("app", "newurl", sURL))
         {
             ShellExecute(0, "open", "explorer", sURL.c_str(), 0, SW_SHOWNORMAL);
+            HandleQuitCommand();
         }
         return true;
     }

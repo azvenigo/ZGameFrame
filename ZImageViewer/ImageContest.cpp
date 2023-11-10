@@ -523,7 +523,6 @@ void ImageContest::UpdateControlPanel()
         return;
     }
 
-    // panel needs to be created or is wrong dimensions
     if (!mpPanel)
     {
         //ZDEBUG_OUT("Deleting Control Panel\n");
