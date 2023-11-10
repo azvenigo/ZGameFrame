@@ -966,18 +966,18 @@ bool cProcessImageWin::Init()
 
     pCP->AddSpace(32);
 
-    ZWinLabel* pLabel = pCP->AddCaption("Compute Radius");
+    ZWinLabel* pLabel = pCP->Caption("computeradius", "Compute Radius");
     pLabel->msTooltipText= "Sets the radius for the operations below.";
     pLabel->mStyleTooltip = gStyleTooltip;
 
-    pCP->AddSlider(&mnProcessPixelRadius, 1, 50, 1, 0.25, "", true, false);
+    pCP->Slider("processpixelradius", &mnProcessPixelRadius, 1, 50, 1, 0.25, "", true, false);
 
     pCP->Button("radiusblur", "Blur", "radiusblur;target=imageprocesswin");
     pCP->Button("stackimages", "Stack", "stackimages;target=imageprocesswin");
     pCP->Button("computecontrast", "Contrast", "computecontrast;target=imageprocesswin");
 
     pCP->AddSpace(32);
-    pCP->AddCaption("Ops");
+    pCP->Caption("ops","Ops");
     pCP->Button("negative", "Negative", "negative;target=imageprocesswin");
     pCP->Button("mono", "Monochrome", "mono;target=imageprocesswin");
     pCP->Button("resize", "resize_256x256", "resize;target=imageprocesswin");
@@ -985,14 +985,14 @@ bool cProcessImageWin::Init()
 
     pCP->AddSpace(64);
 
-    pCP->AddCaption("Experiments");
+    pCP->Caption("experiments","Experiments");
     pCP->Button("computegradients", "compute gradients", "computegradients;target=imageprocesswin");
-    pCP->AddSlider(&mnGradientLevels, 1, 50, 1, 0.25, "", true, false);
+    pCP->Slider("gradientlevels", &mnGradientLevels, 1, 50, 1, 0.25, "", true, false);
 
     pCP->AddSpace(16);
 
     pCP->Button("floatcolorsandbox", "float color sandbox", "floatcolorsandbox;target=imageprocesswin");
-    pCP->AddSlider(&mnSubdivisionLevels, 1, 512, 1, 0.25, "", true, false);
+    pCP->Slider("subdivisionlevels", &mnSubdivisionLevels, 1, 512, 1, 0.25, "", true, false);
 
 
     ChildAdd(pCP);

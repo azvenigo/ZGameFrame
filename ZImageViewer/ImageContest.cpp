@@ -371,7 +371,7 @@ void ImageContest::ShowHelpDialog()
     pHelp->mbAcceptsCursorMessages = true;
     pHelp->mbAcceptsFocus = true;
 
-    ZRect r(800, 600);
+    ZRect r(mAreaLocal.Width()/2, mAreaLocal.Height()/2);
     pHelp->SetArea(r);
     pHelp->mBehavior = ZWinDialog::Draggable | ZWinDialog::OKButton;
     pHelp->mStyle = gDefaultDialogStyle;
@@ -508,28 +508,31 @@ void ImageContest::UpdateControlPanel()
     if (mpPanel && mpPanel->GetArea().Width() == mAreaLocal.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
     {
         bool bShow = mbShowUI;
-        if (gInput.IsKeyDown(VK_MENU))
-            bShow = true;
 
-        //mpPanel->mbHideOnMouseExit = !bShow;
-        mpPanel->SetVisible(bShow);
+        if (bShow && !mpPanel->mbVisible)
+        {
+            mpPanel->mTransformIn = kSlideDown;
+            mpPanel->TransformIn();
+        }
+        else if (!bShow && mpPanel->mbVisible)
+        {
+            mpPanel->mTransformOut = kSlideUp;
+            mpPanel->TransformOut();
+        }
+
         return;
     }
 
     // panel needs to be created or is wrong dimensions
-    if (mpPanel)
+    if (!mpPanel)
     {
         //ZDEBUG_OUT("Deleting Control Panel\n");
-        ChildDelete(mpPanel);
-        mpPanel = nullptr;
+        mpPanel = new ZWinControlPanel();
+        mpPanel->msWinName = "ImageContest_CP";
+        ChildAdd(mpPanel, mbShowUI);
     }
 
-
-    mpPanel = new ZWinControlPanel();
-    mpPanel->mStyle.bgCol = 0xff666688;
-        
-    int64_t nGroupSide = (gM * 2) - gSpacer * 4;
-
+    int64_t nGroupSide = nControlPanelSide - gSpacer * 4;
 
 
     mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
@@ -544,7 +547,6 @@ void ImageContest::UpdateControlPanel()
     mpPanel->SetArea(rPanelArea);
     mpPanel->mrTrigger = rPanelArea;
     mpPanel->mrTrigger.bottom = mpPanel->mrTrigger.top + mpPanel->mrTrigger.Height() / 4;
-    ChildAdd(mpPanel, mbShowUI);
     //mpPanel->mbHideOnMouseExit = !mbShowUI;
 
     ZWinSizablePushBtn* pBtn;
@@ -554,28 +556,21 @@ void ImageContest::UpdateControlPanel()
 
     string sAppPath = gRegistry["apppath"];
 
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mSVGImage.Load(sAppPath+"/res/exit.svg");
+    pBtn = mpPanel->SVGButton("back", sAppPath + "/res/exit.svg", ZMessage("quit", this));
     pBtn->msTooltip = "Back to viewer";
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("quit", this));
-    mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(rButton.Width() + gSpacer*2, 0);
     
 
     int64_t nButtonPadding = rButton.Width() / 8;
 
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
+    pBtn = mpPanel->SVGButton("openfolder", sAppPath + "/res/openfolder.svg", ZMessage("selectfolder", this));
     pBtn->msTooltip = "Go to Folder";
     pBtn->mSVGImage.style.paddingH = (int32_t)nButtonPadding;
     pBtn->mSVGImage.style.paddingV = (int32_t)nButtonPadding;
-
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("selectfolder", this));
     pBtn->msWinGroup = "File";
-    mpPanel->ChildAdd(pBtn);
 
     rButton.OffsetRect(rButton.Width(), 0);
 
@@ -587,21 +582,7 @@ void ImageContest::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
     rButton.right = rButton.left + (int64_t) (rButton.Width() * 3);     // wider buttons for management
 
-/*    pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "Winners";  // undo glyph
-    pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "Contests";
-    Sprintf(sMessage, "show_winners;target=%s", GetTargetName().c_str());
-    pBtn->SetMessage(sMessage);
-    mpPanel->ChildAdd(pBtn);
-
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);*/
-
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "Reset";  // undo glyph
+    pBtn = mpPanel->Button("reset", "Reset", ZMessage("reset_contest", this));
     pBtn->msTooltip = "Resets all of the ratings for images in this folder";
     pBtn->mCaption.style = gDefaultGroupingStyle;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
@@ -610,9 +591,6 @@ void ImageContest::UpdateControlPanel()
     pBtn->mCaption.style.look.colBottom = 0xffffff00;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Contests";
-    Sprintf(sMessage, "reset_contest;target=%s", GetTargetName().c_str());
-    pBtn->SetMessage(sMessage);
-    mpPanel->ChildAdd(pBtn);
 
 
 
@@ -625,19 +603,9 @@ void ImageContest::UpdateControlPanel()
 
     rButton.OffsetRect(-gSpacer/2, 0);
 
-
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mSVGImage.Load(sAppPath + "/res/fullscreen.svg");
-    pBtn->msWinGroup = "View";
-
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mSVGImage.Load(sAppPath + "/res/fullscreen.svg");
-    pBtn->msWinGroup = "View";
+    pBtn = mpPanel->SVGButton("fullscreen", sAppPath + "/res/fullscreen.svg", ZMessage("toggle_fullscreen"));
     pBtn->SetArea(rButton);
-    Sprintf(sMessage, "toggle_fullscreen");
-    pBtn->SetMessage(sMessage);
     pBtn->msWinGroup = "View";
-    mpPanel->ChildAdd(pBtn);
 
 
     ZGUI::Style filterButtonStyle = gDefaultGroupingStyle;
@@ -650,14 +618,11 @@ void ImageContest::UpdateControlPanel()
 
 
     rButton.OffsetRect(-rButton.Width(), 0);
-    pBtn = new ZWinSizablePushBtn();
-    pBtn->mCaption.sText = "?"; // unicode flip H
+    pBtn = mpPanel->Button("help", "?", ZMessage("show_help", this));
     pBtn->mCaption.style = filterButtonStyle;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("show_help", this));
     pBtn->msWinGroup = "View";
-    mpPanel->ChildAdd(pBtn);
 
     SetFocus();
 }

@@ -14,51 +14,64 @@ class ZWinCheck;
 class ZWinSlider;
 class ZWinLabel;
 
-typedef std::map<std::string, ZWinSizablePushBtn*> tIDToButtonMap;
+typedef std::map<std::string, ZWinSizablePushBtn*>  tIDToButtonMap;
+typedef std::map<std::string, ZWinCheck*>           tIDToCheckMap;
+typedef std::map<std::string, ZWinSlider*>          tIDToSliderMap;
+typedef std::map<std::string, ZWinLabel*>           tIDToLabelMap;
 
 class ZWinControlPanel : public ZWin
 {
 public:
     ZWinControlPanel();
 
-    virtual bool        Init();
+    virtual bool            Init();
 
-    void                FitToControls();
+    void                    FitToControls();
 
-    ZWinLabel*          AddCaption(const std::string& sCaption);
+    ZWinLabel*              Caption(    const std::string& sID, 
+                                        const std::string& sCaption = "");
 
-    ZWinSizablePushBtn* Button(const std::string& sID, const std::string& sCaption = "", const std::string& sMessage = "");
+    ZWinSizablePushBtn*     Button(     const std::string& sID, 
+                                        const std::string& sCaption = "", 
+                                        const std::string& sMessage = "");
 
-    ZWinSizablePushBtn* SVGButton(const std::string& sID, const std::string& sSVGFilepath = "", const std::string& sMessage = "");
+    ZWinSizablePushBtn*     SVGButton(  const std::string& sID, 
+                                        const std::string& sSVGFilepath = "", 
+                                        const std::string& sMessage = "");
 
-    ZWinCheck*          AddToggle(  bool* pbValue,
-                                const std::string& sCaption, 
-                                const std::string& sCheckMessage = "", 
-                                const std::string& sUncheckMessage = "");
+    ZWinCheck*              Toggle(     const std::string& sID,
+                                        bool* pbValue,
+                                        const std::string& sCaption = "", 
+                                        const std::string& sCheckMessage = "", 
+                                        const std::string& sUncheckMessage = "");
 
-    ZWinSlider*         AddSlider(  int64_t* pnSliderValue,
-                                int64_t nMin, 
-                                int64_t nMax, 
-                                int64_t nMultiplier, 
-                                double fThumbSizeRatio = 0.1,
-                                const std::string& sMessage = "", 
-                                bool bDrawValue = false, 
-                                bool bMouseOnlyDrawValue = false);
+    ZWinSlider*             Slider(  const std::string& sID,
+                                        int64_t* pnSliderValue = nullptr,
+                                        int64_t nMin = 0, 
+                                        int64_t nMax = 0, 
+                                        int64_t nMultiplier = 1, 
+                                        double fThumbSizeRatio = 0.1,
+                                        const std::string& sMessage = "", 
+                                        bool bDrawValue = false, 
+                                        bool bMouseOnlyDrawValue = false);
 
-    void                AddSpace(int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
+    void                    AddSpace( int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
 
-    bool		        OnMouseOut();
-    bool                Process();
-    bool		        Paint();
+    bool		            OnMouseOut();
+    bool                    Process();
+    bool		            Paint();
 
 
-    ZGUI::Style         mStyle;
-    ZRect               mrTrigger;
-    bool                mbHideOnMouseExit;
+    ZGUI::Style             mStyle;
+    ZRect                   mrTrigger;
+    bool                    mbHideOnMouseExit;
 
-    ZGUI::Style         mGroupingStyle;
+    ZGUI::Style             mGroupingStyle;
 
-    tIDToButtonMap      mButtons;
+    tIDToButtonMap          mButtons;
+    tIDToCheckMap           mChecks;
+    tIDToSliderMap          mSliders;
+    tIDToLabelMap           mLabels;
 
 private:
 

@@ -271,12 +271,7 @@ bool ZWinCheck::Init()
 	// Important note!
 	// Init must be called after image, font, and captions are set.
 	ZWinSizablePushBtn::Init();
-
-    if (!msRadioGroup.empty())
-    {
-        gMessageSystem.AddNotification("radio_check", this);
-    }
-
+    gMessageSystem.AddNotification("radio_check", this);
 
 	ZASSERT(!msWinName.empty())
 
@@ -290,8 +285,6 @@ bool ZWinCheck::Paint()
 
     if (!mpSurface.get())
         return false;
-
-	ZASSERT( mAreaLocal.Width() > 0 && mAreaLocal.Height() > 0 );
 
     if (*mpbChecked)
     {

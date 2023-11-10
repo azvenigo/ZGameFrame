@@ -181,6 +181,9 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
     appDataPath += "/ZImageViewer/";
 
 
+#ifndef _DEBUG
+
+
     string sCurVersion;
     string sCurURL;
 
@@ -206,7 +209,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
             ZOUT("Current build:", sCurVersion, " New Build Available:", sNewVersion, " URL:", sURL, "\n");
         }
     }
-
+#endif
 
 
     std::filesystem::path appPath(argv[0]);

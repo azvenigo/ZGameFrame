@@ -2,7 +2,6 @@
 #include "ZWinBtn.H"
 #include "ZWinText.H"
 #include "ZWinSlider.h"
-#include "ZWinFormattedText.h"
 #include "Resources.h"
 #include "ZInput.h"
 
@@ -92,50 +91,68 @@ ZWinSizablePushBtn* ZWinControlPanel::SVGButton(const std::string& sID, const st
 
 
 
-ZWinLabel* ZWinControlPanel::AddCaption(const std::string& sCaption)
+ZWinLabel* ZWinControlPanel::Caption(const std::string& sID, const std::string& sCaption)
 {
-    ZWinLabel* pWin = new ZWinLabel();
-    pWin->msText = sCaption;
-    pWin->SetArea(mrNextControl);
-    ChildAdd(pWin);
+    ZWinLabel* pLabel = mLabels[sID];
+    if (!pLabel)
+    {
+        pLabel = new ZWinLabel();
+        mLabels[sID] = pLabel;
+        ChildAdd(pLabel);
+        pLabel->SetArea(mrNextControl);
+        mrNextControl.OffsetRect(0, mrNextControl.Height());
+    }
 
-    mrNextControl.OffsetRect(0, mrNextControl.Height());
+    if (!sCaption.empty())
+        pLabel->msText = sCaption;
 
-    return pWin;
+    return pLabel;
 }
 
 
-ZWinCheck* ZWinControlPanel::AddToggle(bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage)
+ZWinCheck* ZWinControlPanel::Toggle(const std::string& sID, bool* pbValue, const string& sCaption, const string& sCheckMessage, const string& sUncheckMessage)
 {
-//    ZASSERT(mbInitted);
+    ZWinCheck* pCheck = mChecks[sID];
+    if (!pCheck)
+    {
+        pCheck = new ZWinCheck(pbValue);
+        mChecks[sID] = pCheck;
+        if (!sCheckMessage.empty() || !sUncheckMessage.empty())
+            pCheck->SetMessages(sCheckMessage, sUncheckMessage);
+        if (!sCaption.empty())
+            pCheck->mCaption.sText = sCaption;
 
-    ZWinCheck* pCheck = new ZWinCheck(pbValue);
-    pCheck->SetMessages(sCheckMessage, sUncheckMessage);
-    pCheck->mCaption.sText = sCaption;
-    pCheck->SetArea(mrNextControl);
-    ChildAdd(pCheck);
+        pCheck->SetArea(mrNextControl);
+        ChildAdd(pCheck);
 
-    mrNextControl.OffsetRect(0, mrNextControl.Height());
+        mrNextControl.OffsetRect(0, mrNextControl.Height());
+    }
     return pCheck;
 }
 
 
-ZWinSlider* ZWinControlPanel::AddSlider(int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, double fThumbSizeRatio, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue)
+ZWinSlider* ZWinControlPanel::Slider(const std::string& sID, int64_t* pnSliderValue, int64_t nMin, int64_t nMax, int64_t nMultiplier, double fThumbSizeRatio, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue)
 {
-    ZWinSlider* pSlider = new ZWinSlider(pnSliderValue);
-    pSlider->SetArea(mrNextControl);
+    ZWinSlider* pSlider = mSliders[sID];
+    if (!pSlider)
+    {
+        pSlider = new ZWinSlider(pnSliderValue);
+        mSliders[sID] = pSlider;
 
-    if (bDrawValue && bMouseOnlyDrawValue)
-        pSlider->mBehavior |= ZWinSlider::kDrawSliderValueOnMouseOver;
-    else if (bDrawValue)
-        pSlider->mBehavior |= ZWinSlider::kDrawSliderValueAlways;
+        pSlider->SetSliderRange(nMin, nMax, nMultiplier, fThumbSizeRatio);
 
-    pSlider->Init();
-    pSlider->SetSliderRange(nMin, nMax, nMultiplier, fThumbSizeRatio);
-    pSlider->SetSliderSetMessage(sMessage);
-    ChildAdd(pSlider);
+        if (bDrawValue && bMouseOnlyDrawValue)
+            pSlider->mBehavior |= ZWinSlider::kDrawSliderValueOnMouseOver;
+        else if (bDrawValue)
+            pSlider->mBehavior |= ZWinSlider::kDrawSliderValueAlways;
+        pSlider->SetArea(mrNextControl);
+        ChildAdd(pSlider);
+        mrNextControl.OffsetRect(0, mrNextControl.Height());
+    }
 
-    mrNextControl.OffsetRect(0, mrNextControl.Height());
+
+    if (!sMessage.empty())
+        pSlider->SetSliderSetMessage(sMessage);
 
     return pSlider;
 }

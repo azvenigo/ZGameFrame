@@ -1029,27 +1029,27 @@ bool Z3DTestWin::Init()
 
         string sUpdateSphereCountMsg(ZMessage("updatespherecount", this));
 
-        pCP->AddCaption("Sphere Count");
-        pCP->AddSlider(&mnTargetSphereCount, 1, 50, 1, 0.25, sUpdateSphereCountMsg, true, false);
+        pCP->Caption("Sphere Count");
+        pCP->Slider("spherecount", &mnTargetSphereCount, 1, 50, 1, 0.25, sUpdateSphereCountMsg, true, false);
         //    pCP->AddSpace(16);
 
-        pCP->AddCaption("Min Sphere Size");
-        pCP->AddSlider(&mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.25, sUpdateSphereCountMsg, true, false);
+        pCP->Caption("minspheresize", "Min Sphere Size");
+        pCP->Slider("minspheresize", &mnMinSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.25, sUpdateSphereCountMsg, true, false);
 
-        pCP->AddCaption("Max Sphere Size");
-        pCP->AddSlider(&mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.25, sUpdateSphereCountMsg, true, false);
+        pCP->Caption("maxspheresize", "Max Sphere Size");
+        pCP->Slider("maxspheresize", &mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.25, sUpdateSphereCountMsg, true, false);
 
-        pCP->AddCaption("Speed");
-        pCP->AddSlider(&mnRotateSpeed, 0, 100, 1, 0.25, "", true, false);
+        pCP->Caption("speed", "Speed");
+        pCP->Slider("rotatespeed", &mnRotateSpeed, 0, 100, 1, 0.25, "", true, false);
 
-        pCP->AddCaption("Ray Depth");
-        pCP->AddSlider(&mnRayDepth, 0, 10, 1, 0.25, "", true, false);
+        pCP->Caption("raydepth", "Ray Depth");
+        pCP->Slider("raydepth", &mnRayDepth, 0, 10, 1, 0.25, "", true, false);
 
 
 
         pCP->AddSpace(16);
-        pCP->AddCaption("Render Size");
-        pCP->AddSlider(&mnRenderSize, 1, 128, 16, 0.25, ZMessage("updaterendersize", this), true);
+        pCP->Caption("rendersize", "Render Size");
+        pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("updaterendersize", this), true);
 
         ZGUI::ZTextLook toggleLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
@@ -1057,14 +1057,14 @@ bool Z3DTestWin::Init()
 
         ZWinCheck* pToggle;
 
-        pToggle = pCP->AddToggle(&mbRenderCube, "Render Cube");
+        pToggle = pCP->Toggle("rendercubes", &mbRenderCube, "Render Cubes");
         pToggle->msWinGroup = "rendermode";
 
-        pToggle = pCP->AddToggle(&mbRenderSpheres, "Render Spheres");
+        pToggle = pCP->Toggle("renderspheres", &mbRenderSpheres, "Render Spheres");
         pToggle->msWinGroup = "rendermode";
 
-        pCP->AddToggle(&mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg);
-        pCP->AddToggle(&mbCenterSphere, "Center Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg);
+        pCP->Toggle("outersphere", &mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg);
+        pCP->Toggle("centersphere", &mbCenterSphere, "Center Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg);
 
         ChildAdd(pCP);
     }

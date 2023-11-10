@@ -620,15 +620,15 @@ bool ZChessWin::Init()
         ZGUI::ZTextLook buttonLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
         ZGUI::ZTextLook checkedButtonLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff73ff73);
 
-        ZWin* pEditButton = pCP->AddToggle(&mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this));
+        ZWin* pEditButton = pCP->Toggle("editmode", &mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this));
 
 
         pCP->AddSpace(panelH / 30);
 //        pCP->AddButton("", "Load Random Game", ZMessage("randgame", this));
-        pCP->AddToggle(&mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg);
+        pCP->Toggle("demomode", &mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg);
 
-        pCP->AddCaption("Animation Speed");
-        pCP->AddSlider(&mAutoplayMSBetweenMoves, kAutoplayMinMSBetweenMoves, kAutoplayMaxMSBetweenMoves, 1);
+        pCP->Caption("Animation Speed");
+        pCP->Slider("autoplay", &mAutoplayMSBetweenMoves, kAutoplayMinMSBetweenMoves, kAutoplayMaxMSBetweenMoves, 1);
 
         ChildAdd(pCP);
 
@@ -653,8 +653,8 @@ bool ZChessWin::Init()
         mpEditBoardWin->Button("showpalette", "Colors", ZMessage("showpalette", this));
 
         mpEditBoardWin->AddSpace(panelH / 30);
-        mpEditBoardWin->AddCaption("Size");
-        mpEditBoardWin->AddSlider(&mnPieceHeight, 1, 26, 10, 0.2, ZMessage("updatesize", this), true, false);
+        mpEditBoardWin->Caption("size", "Size");
+        mpEditBoardWin->Slider("pieceheight", &mnPieceHeight, 1, 26, 10, 0.2, ZMessage("updatesize", this), true, false);
 
         ChildAdd(mpEditBoardWin, false);
 
