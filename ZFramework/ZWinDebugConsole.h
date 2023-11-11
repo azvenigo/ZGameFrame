@@ -4,6 +4,7 @@
 #include "ZFont.h"
 #include <list>
 #include "ZWinSlider.h"
+#include "ZGUIStyle.h"
 #include "ZDebug.h"
 
 typedef std::list<std::string> tStringList;
@@ -24,6 +25,9 @@ public:
     virtual void		SetArea(const ZRect& newArea);
     virtual bool		OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
 
+
+    ZGUI::Style         mStyle;
+
 protected:
     virtual bool        Process();
 private:
@@ -37,8 +41,6 @@ private:
 
     ZRect        		mrDocumentArea;
     tZFontPtr           mFont;
-
-    uint32_t            mTextCol;
 
     bool				mbScrollable;
 

@@ -142,10 +142,9 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
     uint8_t* pScanFileData = (uint8_t*)ro_mmap.data();
     uint64_t nFileSize = std::filesystem::file_size(sFilename);
 
-
-
     mEXIF.clear();
-    mEXIF.parseFrom(pScanFileData, nFileSize);
+    if (sExt == ".jpg" || sExt == ".jpeg")
+        mEXIF.parseFrom(pScanFileData, nFileSize);
     
 
 
@@ -454,7 +453,7 @@ bool ZBuffer::ReadEXIFFromFile(const std::string& sName, easyexif::EXIFInfo& inf
     delete[] pBuf;
     if (result != 0)
     {
-        ZERROR("Error reading exif. Code:", result);
+        ZDEBUG_OUT("No exif available. Code:", result);
         return false;
     }
 

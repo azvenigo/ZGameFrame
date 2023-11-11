@@ -1455,7 +1455,7 @@ bool ZDynamicFont::RetrieveKerningPairs()
     if (nPairs == 0)
         return false;
 
-    ZDEBUG_OUT("Found %d pairs for font:%s", nPairs, mFontParams.sFacename.c_str());
+    ZDEBUG_OUT("Found ", nPairs, " pairs for font:", mFontParams.sFacename.c_str());
 
     KERNINGPAIR* pKerningPairArray = new KERNINGPAIR[nPairs];
 

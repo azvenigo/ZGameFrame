@@ -1601,11 +1601,15 @@ void ImageViewer::LoadMetadataProc(std::filesystem::path& imagePath, shared_ptr<
     if (!pEntry || !pnOutstanding)
         return;
 
-//    ZOUT("Loading EXIF:", imagePath, "\n");
+//    ZDEBUG_OUT("Loading EXIF:", imagePath, "\n");
 
     pEntry->mMeta = gImageMeta.Entry(imagePath.string());
 
-    if (ZBuffer::ReadEXIFFromFile(imagePath.string(), pEntry->mEXIF))
+    string sExt = imagePath.extension().string();
+    SH::makelower(sExt);
+    bool bJPG = (sExt == ".jpg" || sExt == ".jpeg");
+
+    if (bJPG && ZBuffer::ReadEXIFFromFile(imagePath.string(), pEntry->mEXIF))
     {
         pEntry->mState = ImageEntry::kMetadataReady;
     }
@@ -1614,7 +1618,7 @@ void ImageViewer::LoadMetadataProc(std::filesystem::path& imagePath, shared_ptr<
 
     (*pnOutstanding)--;
     int64_t n = *pnOutstanding;
-    ZDEBUG_OUT("outstanding:", n, "\n");
+    //ZDEBUG_OUT("outstanding:", n, "\n");
 }
 
 void ImageViewer::FlushLoads()

@@ -19,7 +19,11 @@ ZWinDebugConsole::ZWinDebugConsole()
 	mpWinSlider = NULL;
 
 	mrDocumentArea.SetRect(0,0,0,0);
-    mTextCol = 0xff00ffff;
+
+    mStyle = gStyleGeneralText;
+    mStyle.bgCol = 0xff444444;
+    mStyle.look.colTop = 0xff00ffff;
+    mStyle.look.colBottom = 0xff00ffff;
 
 	mbScrollable				= true;
 
@@ -152,7 +156,7 @@ bool ZWinDebugConsole::Paint()
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
-    mpSurface.get()->Fill(0xff000000, &mrDocumentArea);
+    mpSurface.get()->Fill(mStyle.bgCol, &mrDocumentArea);
 
 
     int64_t nHeight = mFont->Height();

@@ -48,7 +48,7 @@ ImageMetaEntry& ImageMeta::Entry(const std::string& filename, int64_t size)
 
     if (mSizeToMetaLists[nSizeBucket].empty())
     {
-        ZOUT("Creating new bucket:", nSizeBucket, " for size:", size);
+//        ZDEBUG_OUT("Creating new bucket:", nSizeBucket, " for size:", size);
         return mSizeToMetaLists[nSizeBucket].emplace_back(ImageMetaEntry(filename, size));
     }
 
@@ -56,12 +56,12 @@ ImageMetaEntry& ImageMeta::Entry(const std::string& filename, int64_t size)
     {
         if ((*imageIt).filename == filename)
         {
-            ZOUT("Found:", filename, " bucket:", nSizeBucket);
+            //ZDEBUG_OUT("Found:", filename, " bucket:", nSizeBucket);
             return *imageIt;
         }
     }
 
-    ZOUT("Creating entry for :", filename, " bucket:", nSizeBucket);
+    //ZDEBUG_OUT("Creating entry for :", filename, " bucket:", nSizeBucket);
     return mSizeToMetaLists[nSizeBucket].emplace_back(ImageMetaEntry(filename, size, 0, 0, 1000));
 }
 

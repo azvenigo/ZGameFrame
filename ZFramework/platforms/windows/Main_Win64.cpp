@@ -608,7 +608,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             SwitchFullscreen(!gGraphicSystem.mbFullScreen);
         }
-        else if (wParam == '`')
+        else if (wParam == VK_OEM_3)    // ~
         {
             gMessageSystem.Post("toggleconsole");
         }

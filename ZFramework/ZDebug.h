@@ -21,7 +21,7 @@ struct sDbgMsg
         kDefault    = 0xffffffff,       // white
         kWarning    = 0xffd48715,       // orange
         kError      = 0xffff0000,       // red
-        kDebug      = 0xff0000ff        // green
+        kDebug      = 0xff00ff44        // green
     };
 
     sDbgMsg(std::string line, uint32_t level = kDefault) { sLine = line; nLevel = level; }
