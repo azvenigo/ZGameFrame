@@ -111,7 +111,8 @@ void ZWinPaletteDialog::UpdatePalette()
         return;
 
     ZGUI::EditableColor& col = (*mpColorMap)[mnSelectingColorIndex];
-    col.col = COL::AHSV_To_ARGB(0xff, mCurH, mCurS, mCurV);
+    uint32_t originalA = (mOriginalColorMap[mnSelectingColorIndex].col & 0xff000000);
+    col.col = originalA | COL::AHSV_To_ARGB(0, mCurH, mCurS, mCurV);
 }
 
 
