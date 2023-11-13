@@ -218,13 +218,15 @@ ConfirmDeleteDialog* ConfirmDeleteDialog::ShowDialog(const std::string& sCaption
     limit<int64_t>(nWidth, 800, 2048);
 
     ZRect r(0, 0, nWidth, nWidth*3/4);
-    r = ZGUI::Arrange(r, rMain, ZGUI::RB, rMain.Height()/20, rMain.Height() / 20);
+    r = ZGUI::Arrange(r, rMain, ZGUI::LT, rMain.Height()/20, rMain.Height() / 20);
 
     pDialog->mBehavior |= ZWinDialog::eBehavior::Draggable;
     pDialog->mStyle = gDefaultDialogStyle;
     pDialog->SetArea(r);
     pDialog->msCaption = sCaption;
     pDialog->mFiles = fileList;
+    pDialog->mTransformIn = ZWin::kSlideDown;
+    pDialog->mTransformOut = ZWin::kSlideUp;
 
     gpMainWin->ChildAdd(pDialog, false);
     return pDialog;

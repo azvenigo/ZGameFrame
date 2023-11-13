@@ -479,7 +479,7 @@ bool ZWinSizablePushBtn::Paint()
     {
         mpSurface->FillAlpha(0x88333333); 
         mpSurface->FillAlpha(0x88888888);     
-        mpSurface->Colorize(0, 0);             // gray
+//        mpSurface->Colorize(0, 0);             // gray
     }
 
 	return ZWin::Paint();

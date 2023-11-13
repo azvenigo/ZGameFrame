@@ -4,7 +4,6 @@
 #include "ZRasterizer.h"
 #include "ZRandom.h"
 #include "Resources.h"
-extern bool gbApplicationExiting;
 
 using namespace std;
 
@@ -107,9 +106,6 @@ bool cLifeWin::Paint()
 {
     if (!mbInvalid)
         return false;
-
-//	if (gbApplicationExiting)
-//		return true;
 
 	const std::lock_guard<std::mutex> lock(mShutdownMutex);
 

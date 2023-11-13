@@ -265,6 +265,9 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
     resourcesPath.append("res/");
     gResources.Init(resourcesPath.string());// todo, move this define elsewhere?
 
+    ZGUI::ComputeLooks();
+
+
     gpFontSystem = new ZFontSystem();
     filesystem::path font_cache(appDataPath);
     font_cache.append("font_cache");
@@ -289,8 +292,6 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 
 void ZFrameworkApp::Shutdown()
 {
-    gRegistry.Save();
-
     if (gpMainWin)
     {
         gpMainWin->Shutdown();
@@ -307,4 +308,6 @@ void ZFrameworkApp::Shutdown()
     gResources.Shutdown();
     gGraphicSystem.Shutdown();
     gAnimator.KillAllObjects();
+
+    gRegistry.Save();
 }

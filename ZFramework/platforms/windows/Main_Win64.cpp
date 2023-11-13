@@ -33,7 +33,8 @@ using namespace std;
 ATOM					MyRegisterClass(HINSTANCE, LPTSTR);
 BOOL					WinInitInstance(int argc, char* argv[]);
 extern bool             gbGraphicSystemResetNeeded; 
-extern bool             gbApplicationExiting = false;
+bool                    gbApplicationExiting = false;
+bool                    gbApplicationRestart = false;
 ZRect                   grFullArea;
 ZRect                   grWindowedArea;
 ZRect                   grFullScreenArea;
@@ -242,7 +243,12 @@ int main(int argc, char* argv[])
 
     ZFrameworkApp::Shutdown();
     gDebug.Flush();
-    //    FlushDebugOutQueue();
+
+    if (gbApplicationRestart)
+    {
+        ShellExecute(0, "open", argv[0], nullptr, 0, SW_SHOWNORMAL);
+    }
+
 
     return 0;
 }
@@ -406,8 +412,6 @@ BOOL WinInitInstance(int argc, char* argv[])
         return FALSE;
     }
 
-    ZGUI::ComputeSizes();
-
 	gGraphicSystem.SetHWND(ghWnd);
 
 
@@ -515,7 +519,7 @@ void HandleWindowSizeChanged()
         if (grFullArea.right != rC.right || grFullArea.bottom != rC.bottom)
         {
             grFullArea.SetRect(0, 0, rC.right, rC.bottom);
-            ZGUI::ComputeSizes();
+            ZGUI::ComputeLooks();
 
             gRegistry.Set("appwin", "fullscreen", gGraphicSystem.mbFullScreen);
 
@@ -550,15 +554,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_WINDOWPOSCHANGED:
     {
         WINDOWPOS* pPos = (WINDOWPOS*)lParam;
-        string s;
-        Sprintf(s, "snap flags:%x\n", pPos->flags);
-        OutputDebugString(s.c_str());
-
-/*        if (pPos->flags & SWP_SNAP != 0)
-        {
-
-            HandleWindowSizeChanged();
-        }*/
         gbWindowSizeChanged = true;
     }
         break;

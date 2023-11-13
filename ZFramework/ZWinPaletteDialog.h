@@ -7,7 +7,7 @@
 
 typedef std::list<uint32_t> tColorList;
 
-struct ColorWatch
+/*struct ColorWatch
 {
     ColorWatch(uint32_t* _pWatch = nullptr, const std::string& _sLabel = "") : mpWatchColor(_pWatch), mOriginalColor(*_pWatch), msWatchLabel(_sLabel) {}
     uint32_t* mpWatchColor;
@@ -15,7 +15,8 @@ struct ColorWatch
     std::string msWatchLabel;
 };
 
-typedef std::vector<ColorWatch> tColorWatchVector;
+//typedef std::vector<ColorWatch> tColorWatchVector;
+*/
 
 class ZWinPaletteDialog : public ZWinDialog
 {
@@ -32,7 +33,7 @@ public:
 
     ZGUI::Style mStyle;
 
-    static ZWinPaletteDialog* ShowPaletteDialog(std::string sCaption, tColorWatchVector& watch, std::string sOnOKMeessage = "", size_t nRecentColors = 0);
+    static ZWinPaletteDialog* ShowPaletteDialog(std::string sCaption, ZGUI::tColorMap* pColorMap, std::string sOnOKMeessage = "", size_t nRecentColors = 0);
 
 protected:
     void        OnOK();
@@ -49,7 +50,11 @@ protected:
 
     void        ComputeAreas();
 
-    tColorWatchVector mWatchArray;
+//    tColorWatchVector mWatchArray;
+    ZGUI::tColorMap* mpColorMap;
+
+    ZGUI::tColorMap mOriginalColorMap;
+
     tColorList      mRecentColors;
 
     bool            mbSelectingSV;

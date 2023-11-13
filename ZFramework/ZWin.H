@@ -244,6 +244,7 @@ protected:
 public:
     uint8_t     mBehavior;
     std::string msOnOKMessage;
+    std::string msPreviousFocusWin;
     ZGUI::Style mStyle;
 };
 

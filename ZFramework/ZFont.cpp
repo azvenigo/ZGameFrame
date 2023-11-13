@@ -1455,7 +1455,7 @@ bool ZDynamicFont::RetrieveKerningPairs()
     if (nPairs == 0)
         return false;
 
-    ZDEBUG_OUT("Found ", nPairs, " pairs for font:", mFontParams.sFacename.c_str());
+//    ZDEBUG_OUT("Found ", nPairs, " pairs for font:", mFontParams.sFacename.c_str());
 
     KERNINGPAIR* pKerningPairArray = new KERNINGPAIR[nPairs];
 
@@ -1556,7 +1556,7 @@ bool ZFontSystem::SetCacheFolder(const std::string& sFolderPath)
 {
     if (!std::filesystem::exists(sFolderPath))
     {
-        ZDEBUG_OUT("Font Cache Folder:%s Doesn't exist!\n", sFolderPath.c_str());
+        //ZDEBUG_OUT("Font Cache Folder:%s Doesn't exist!\n", sFolderPath.c_str());
         return false;
     }
 
@@ -1636,7 +1636,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
     {
         if (!params.bSymbolic) // no caching symbolic fonts
         {
-            ZDEBUG_OUT("Saving font:%s to cache", fp.sFacename.c_str());
+            //ZDEBUG_OUT("Saving font:%s to cache", fp.sFacename.c_str());
             pNewFont->SaveFont(FontCacheFilename(params));
         }
     }

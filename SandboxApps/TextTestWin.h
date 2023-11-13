@@ -35,8 +35,7 @@ private:
 
     std::string msText;
 
-    uint32_t    mFontColor;
-
+    ZGUI::Palette mPalette;
 };
 
 

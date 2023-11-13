@@ -60,8 +60,8 @@ IDI_ICON1               ICON                    "..\\ZImageViewer\\raw_resources
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,37
- PRODUCTVERSION 1,0,0,37
+ FILEVERSION 1,0,0,39
+ PRODUCTVERSION 1,0,0,39
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -78,12 +78,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Alex Zvenigorodsky"
             VALUE "FileDescription", "ZView Image Viewer"
-            VALUE "FileVersion", "1.0.0.37"
+            VALUE "FileVersion", "1.0.0.39"
             VALUE "InternalName", "ZImageViewer.rc"
             VALUE "LegalCopyright", "Copyright (C) 2023"
             VALUE "OriginalFilename", "ZImageViewer.rc"
             VALUE "ProductName", "ZView"
-            VALUE "ProductVersion", "1.0.0.37"
+            VALUE "ProductVersion", "1.0.0.39"
         END
     END
     BLOCK "VarFileInfo"

@@ -3,16 +3,13 @@
 #include "ZMessageSystem.h"
 #include "ZTimer.h"
 #include "ZWinFormattedText.h"
-#include "ZWinScriptedDialog.h"
 #include "helpers/StringHelpers.h"
 #include "ZWinText.H"
 #include <iostream>
 
-#include "ZGraphicSystem.h"
-extern ZGraphicSystem		gGraphicSystem;
-extern int64_t				gnFramesPerSecond;
-extern ZTimer				gTimer;
-extern bool                 gbApplicationExiting;
+extern bool             gbApplicationExiting;
+extern bool             gbApplicationRestart;
+
 
 #ifdef _DEBUG
 #define new new(_NORMAL_BLOCK, THIS_FILE, __LINE__)
@@ -33,7 +30,8 @@ ZMainWin::ZMainWin()
 
 bool ZMainWin::Init()
 {
-	gMessageSystem.AddNotification("quit_app_confirmed", this);
+    gMessageSystem.AddNotification("app_restart", this);
+    gMessageSystem.AddNotification("quit_app_confirmed", this);
 	gMessageSystem.AddNotification("chardown", this);
 	gMessageSystem.AddNotification("keydown", this);
 	gMessageSystem.AddNotification("keyup", this);
@@ -127,6 +125,13 @@ bool ZMainWin::HandleMessage(const ZMessage& message)
         InvalidateChildren();       // wakes all children that may be waiting on CVs
 		return true;
 	}
+    else if (sType == "app_restart")
+    {
+        gbApplicationRestart = true;
+        gbApplicationExiting = true;
+        InvalidateChildren();       // wakes all children that may be waiting on CVs
+        return true;
+    }
     else if (sType == "message_box")
     {
         ShowMessageBox(message.GetParam("caption"), message.GetParam("text"), message.GetParam("on_ok"));

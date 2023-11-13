@@ -1212,16 +1212,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "showpalette")
     {
-
-        tColorWatchVector colors = { ColorWatch(&mPalette.mColorMap[kLightSqCol].col, "light squares"),
-                                    ColorWatch(&mPalette.mColorMap[kDarkSqCol].col, "dark squares"),
-                                    ColorWatch(&mPalette.mColorMap[kWhiteCol].col, "white pieces"),
-                                    ColorWatch(&mPalette.mColorMap[kBlackCol].col, "black pieces")
-
-        
-        };
-
-        ZWinPaletteDialog::ShowPaletteDialog("Board Colors", colors, ZMessage("palette_ok", this), 2);
+        ZWinPaletteDialog::ShowPaletteDialog("Board Colors", &mPalette.mColorMap, ZMessage("palette_ok", this), 2);
         return true;
     }
     else if (sType == "palette_ok")

@@ -2,7 +2,10 @@
 #include "Resources.h"
 #include "ZBuffer.h"
 #include "helpers/Registry.h"
+#include "helpers/StringHelpers.h"
+#include "ZWinPaletteDialog.h"
 #include "lunasvg.h"
+#include "ZColor.h"
 
 
 using namespace std;
@@ -56,12 +59,20 @@ bool cResources::Init(const string& sDefaultResourcePath)
 {
 	bool bResult = true;
 
-
-    // Try and set the default palette....if false, it has already been persisted
+    // If there is a persisted palette, retrieve it
+    ZGUI::Palette persisted;
     if (gRegistry.Contains("resources", "palette"))
-        gAppPalette = ZGUI::Palette(gRegistry.GetValue("resources", "palette"));
-    else
+        persisted = ZGUI::Palette(gRegistry.GetValue("resources", "palette"));
+
+    // if number of colors persisted doesn't match baked in, then toss out persisted and readd
+    if (persisted.mColorMap.size() != gAppPalette.mColorMap.size())
+    {
+        gRegistry.Remove(string("resources"), string("palette"));
         gRegistry.SetDefault("resources", "palette", (string)gAppPalette);
+    }
+    else
+        gAppPalette = persisted;
+
 
 
     // Adjust font sizes based on screen resolution
@@ -97,12 +108,20 @@ bool cResources::Init(const string& sDefaultResourcePath)
     bResult &= AddResource(sDefaultResourcePath+"slider_bg.png", gDimRectBackground);
     assert(bResult);
 
+    uint32_t nCol = 0;
+    if (gAppPalette.GetByName("dialog_fill", nCol))
+        ColorizeResources(nCol);
 
+
+    gMessageSystem.AddNotification("colorize", this);
+    gMessageSystem.AddNotification("show_app_palette", this);
+    
 	return bResult;
 }
 
 bool cResources::Shutdown()
 {
+    gMessageSystem.RemoveAllNotifications(this);
     gRegistry["resources"]["palette"] = (string)gAppPalette;
 
     for (auto bufferIt : mBufferResourceMap)
@@ -148,5 +167,37 @@ tZBufferPtr cResources::GetBuffer(const string& sName)
 
 	ZASSERT_MESSAGE(false, "No buffer mapped");
 	return NULL;
+}
+
+bool cResources::ColorizeResources(uint32_t nCol)
+{
+    uint32_t nHSV = COL::ARGB_To_AHSV(nCol);
+    uint32_t nH = AHSV_H(nHSV);
+    uint32_t nS = AHSV_S(nHSV);
+
+    for (auto& resource : mBufferResourceMap)
+    {
+        resource.second->Colorize(nH, nS);
+    }
+    return true;
+}
+
+
+bool cResources::ReceiveMessage(const ZMessage& message)
+{
+    string sType = message.GetType();
+
+    if (sType == "colorize")
+    {
+        ColorizeResources((uint32_t)SH::ToInt(message.GetParam("col")));
+        return true;
+    }
+    else if (sType == "show_app_palette")
+    {
+        ZWinPaletteDialog::ShowPaletteDialog("Application Color Palette", &gAppPalette.mColorMap, ZMessage("app_restart"));
+        return true;
+    }
+
+    return false;
 }
 

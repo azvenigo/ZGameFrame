@@ -89,7 +89,7 @@ bool TextTestWin::Init()
     mbAcceptsFocus = true;
 
     mIdleSleepMS = 10000;
-    mFontColor = 0xff88ff88;
+    mPalette.mColorMap.push_back(ZGUI::EditableColor("font_col", 0xff88ff88));
 
     msText = "Type here";
 
@@ -395,8 +395,8 @@ bool TextTestWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "choosecolor")
     {
-        tColorWatchVector watchlist = { ColorWatch(&mFontColor) };
-        ZWinPaletteDialog::ShowPaletteDialog("testcaption", watchlist);
+
+        ZWinPaletteDialog::ShowPaletteDialog("testcaption", &mPalette.mColorMap);
         return true;
     }
 #endif

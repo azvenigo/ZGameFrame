@@ -5,9 +5,13 @@ using namespace std;
 
 uint32_t        gDefaultDialogFill(0xff575757);
 uint32_t        gDefaultTextAreaFill(0xff888888);
-//uint32_t        gDefaultSpacer(16);
-//int64_t         gnDefaultGroupInlaySize(9);
+uint32_t        gDefaultTooltipFill(0xaa000088);
+uint32_t        gDefaultButtonChecked(0xff008800);
+uint32_t        gDefaultButtonUnchecked(0xff888888);
+
 ZRect           grDefaultDialogBackgroundEdgeRect(3, 3, 53, 52);
+
+
 int64_t         gM; // default measure defined by window diagonal ( diagonal / 100 )... all scaled GUI elements should be based off of this measure
 int64_t         gSpacer;
 
@@ -15,7 +19,7 @@ int64_t         gSpacer;
 ZFontParams     gDefaultTitleFont("Gadugi", 40);
 ZFontParams     gDefaultTextFont("Gadugi", 20);
 
-ZGUI::Style gStyleTooltip(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, 8, 8, 0xaa000088);
+ZGUI::Style gStyleTooltip(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, 8, 8, gDefaultTooltipFill);
 ZGUI::Style gStyleCaption(ZFontParams("Gadugi", 36, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, 0, 0, gDefaultDialogFill);
 ZGUI::Style gStyleButton(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, 0, 0, gDefaultDialogFill);
 ZGUI::Style gStyleToggleChecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, 0, 0, gDefaultDialogFill);
@@ -28,19 +32,19 @@ ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::Z
 
 ZGUI::Palette gAppPalette{
 {
-    { "dialog_fill", gDefaultDialogFill },     // 0
-    { "text_area_fill", gDefaultTextAreaFill },   // 1
-    { "btn_col_checked", 0xff008800 },             // 2  checked button color
-    { "", 0xff888888 }             // 3
+    { "dialog_fill", gDefaultDialogFill },              // 0
+    { "text_area_fill", gDefaultTextAreaFill },         // 1
+    { "btn_col_checked",  gDefaultButtonChecked},       // 2  checked button color
+    { "btn_col_unchecked",  gDefaultButtonUnchecked},   // 3
+    { "tooltip_fill", gDefaultTooltipFill },            // 4
+
 } };
 
 
 namespace ZGUI
 {
-    void ComputeSizes()
+    void ComputeLooks()
     {
-//        gDefaultSpacer = (uint32_t)(grFullArea.Height() / 125);
-//        gnDefaultGroupInlaySize = 9;
         gM = (int64_t) (sqrt(grFullArea.Width() * grFullArea.Width() + grFullArea.Height() * grFullArea.Height()) / 100.0);  // default measure
         gSpacer = gM / 5;
         gSpacer = std::max<int64_t>(gSpacer, 4);
@@ -65,11 +69,23 @@ namespace ZGUI
         gDefaultGroupingStyle.paddingV = (int32_t)std::min<int64_t>(-2, (int64_t)(-gM / 5));
 
         gDefaultTitleFont.nHeight = std::max<int64_t>(gM, 14);
-        //    gDefaultCaptionFont.nHeight = grFullArea.Height() / 60;
         gDefaultTextFont.nHeight = std::max<int64_t>(gM/4, 10);
 
         gDefaultFormattedDocStyle.paddingH = (int32_t)gSpacer;
         gDefaultFormattedDocStyle.paddingV = (int32_t)gSpacer;
+
+
+
+        // update colors
+        gAppPalette.GetByName("tooltip_fill", gStyleTooltip.bgCol);
+        gAppPalette.GetByName("dialog_fill", gStyleCaption.bgCol);
+        gAppPalette.GetByName("dialog_fill", gStyleButton.bgCol);
+        gAppPalette.GetByName("dialog_fill", gStyleToggleChecked.bgCol);
+        gAppPalette.GetByName("dialog_fill", gStyleToggleUnchecked.bgCol);
+        gAppPalette.GetByName("dialog_fill", gDefaultDialogStyle.bgCol);
+        gAppPalette.GetByName("text_area_fill", gDefaultWinTextEditStyle.bgCol);
+        gAppPalette.GetByName("dialog_fill", gStyleButton.bgCol);
+
 
     }
 

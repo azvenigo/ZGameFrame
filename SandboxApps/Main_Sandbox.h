@@ -16,29 +16,6 @@
 #include "ZWinControlPanel.h"
 #include "ZWinDebugConsole.h"
 
-
-/*extern ZRect                grFullArea;
-extern ZWinDebugConsole*    gpDebugConsole;
-extern ZGraphicSystem       gGraphicSystem;
-extern ZGraphicSystem*      gpGraphicSystem;
-extern ZRasterizer          gRasterizer;
-extern bool                 gbGraphicSystemResetNeeded;
-extern bool                 gbApplicationExiting;
-extern bool                 gbPaused;
-extern ZTimer               gTimer;
-extern int64_t              gnFramesPerSecond;
-extern ZFontSystem*         gpFontSystem;
-extern std::list<string>    gDebugOutQueue;
-extern std::mutex           gDebugOutMutex;
-extern ZMessageSystem       gMessageSystem;
-extern ZTickManager         gTickManager;
-extern int64_t              gnCheckerWindowCount;
-extern int64_t              gnRandomWindowCount;
-extern int64_t              gnLifeGridSize;
-extern ZWin*                gpCaptureWin;
-extern ZWin*                gpMouseOverWin;
-extern ZPoint               gLastMouseMove;*/
-
 namespace Sandbox
 {
     enum eSandboxMode

@@ -294,7 +294,7 @@ void ZTransformable::UpdateVertsAndBounds()
 	for (int i = 0; i < 4; i++)
 	{
 		TransformPoint(mVerts[i].x, mVerts[i].y, fW / 2.0, fH / 2.0, mCurTransform.mRotation, mCurTransform.mScale);
-        mVerts[i].Offset(mCurTransform.mPosition.x, mCurTransform.mPosition.y);
+        mVerts[i].Offset((double)mCurTransform.mPosition.x, (double)mCurTransform.mPosition.y);
 		int64_t nX = (int64_t) mVerts[i].x;
 		int64_t nY = (int64_t) mVerts[i].y;
         if (mBounds.left > nX)

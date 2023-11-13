@@ -140,7 +140,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
     }
 
     uint8_t* pScanFileData = (uint8_t*)ro_mmap.data();
-    uint64_t nFileSize = std::filesystem::file_size(sFilename);
+    uint32_t nFileSize = (uint32_t)std::filesystem::file_size(sFilename);
 
     mEXIF.clear();
     if (sExt == ".jpg" || sExt == ".jpeg")

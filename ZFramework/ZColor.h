@@ -101,7 +101,7 @@ namespace COL
                 fH += 360.0f;
         }
 
-        outA = A >> 7;  // quantize 8 bit down to 2
+        outA = A >> 6;  // quantize 8 bit down to 2
         outH = (uint32_t)(fH * 1023.0f / 360.0f);     // scaled to 10 bits
         outS = (uint32_t)(fS * 1023.0f);             // scaled to 10 bits
         outV = (uint32_t)(fV * 1023.0f / 255.0f);     // scaled to 10 bits
@@ -214,7 +214,7 @@ namespace COL
 
     inline uint32_t AHSV_To_ARGB(uint32_t ahsv)
     {
-        return ARGB_To_AHSV(AHSV_A(ahsv), AHSV_H(ahsv), AHSV_S(ahsv), AHSV_V(ahsv));
+        return AHSV_To_ARGB(AHSV_A(ahsv), AHSV_H(ahsv), AHSV_S(ahsv), AHSV_V(ahsv));
     }
 
 

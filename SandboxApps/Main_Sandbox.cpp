@@ -27,7 +27,6 @@ ZGraphicSystem          gGraphicSystem;
 ZGraphicSystem*         gpGraphicSystem = &gGraphicSystem;
 ZRasterizer             gRasterizer;
 bool                    gbGraphicSystemResetNeeded(false);
-//extern bool             gbApplicationExiting = false;
 ZTimer                  gTimer(true);
 int64_t                 gnFramesPerSecond = 0;
 ZFontSystem*            gpFontSystem = nullptr;
@@ -316,7 +315,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
         return false;
     }
 
-    gResources.Init("res/default_resources/");// todo, move this define elsewhere?
+    gResources.Init("res/");// todo, move this define elsewhere?
 
 
 
@@ -367,7 +366,6 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 
 void ZFrameworkApp::Shutdown()
 {
-//    gbApplicationExiting = true;
     gRegistry.Save();
 
     if (gpMainWin)

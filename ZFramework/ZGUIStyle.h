@@ -42,7 +42,7 @@ extern ZGUI::Style gDefaultFormattedDocStyle;
 
 namespace ZGUI
 {
-    void ComputeSizes();    // To be called by application whenever creating or changing screen size to calculate proper sizing
+    void ComputeLooks();    // To be called by application whenever creating or changing screen size to calculate proper sizing
 
 
     class ZTextLook

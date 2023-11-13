@@ -8,6 +8,7 @@
 #include "ZFont.h"
 #include "ZGUIHelpers.h"
 #include "ZGUIStyle.h"
+#include "ZMessageSystem.h"
 
 class ZBuffer;
 
@@ -52,7 +53,7 @@ extern ZRect        grSliderThumbEdge;
 
 typedef std::map<std::string, tZBufferPtr >	tBufferResourceMap;
 
-class cResources
+class cResources : public IMessageTarget
 {
 public:
 	cResources();
@@ -65,8 +66,13 @@ public:
 
 	tBufferResourceMap  mBufferResourceMap;
 
+    std::string         GetTargetName() { return "ZResources"; }
+    bool                ReceiveMessage(const ZMessage& message);
+
+
 protected:
 	bool                AddResource(const std::string& sName, tZBufferPtr buffer);
+    bool                ColorizeResources(uint32_t nCol);
 };
 
 extern cResources	    gResources;

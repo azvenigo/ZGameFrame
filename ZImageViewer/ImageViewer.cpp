@@ -245,6 +245,11 @@ bool ImageViewer::OnKeyDown(uint32_t key)
         break;
     case 'c':
     case 'C':
+        if (gInput.IsKeyDown(VK_CONTROL))
+        {
+            gMessageSystem.Post(ZMessage("show_app_palette"));
+            return true;            
+        }
         if (mCopyToFolder.empty())
         {
             HandleCopyCommand();
@@ -1273,14 +1278,14 @@ void ImageViewer::UpdateControlPanel()
         {
             mpPanel->mTransformIn = kSlideDown;
             mpPanel->TransformIn();
+            return;
         }
         else if (!bShow && mpPanel->mbVisible)
         {
             mpPanel->mTransformOut = kSlideUp;
             mpPanel->TransformOut();
+            return;
         }
-
-        return;
     }
 
     // panel needs to be created or is wrong dimensions
@@ -1383,21 +1388,6 @@ void ImageViewer::UpdateControlPanel()
 
 
 
-    rButton.OffsetRect(rButton.Width(), 0);
-    mpDeleteMarkedButton = mpPanel->Button("show_confirm", "delete\nmarked", ZMessage("show_confirm", this));
-    mpDeleteMarkedButton->mCaption.sText = "delete\nmarked";
-    mpDeleteMarkedButton->msTooltip = "Show confirmation of images marked for deleted.";
-    mpDeleteMarkedButton->mCaption.style = gDefaultGroupingStyle;
-    mpDeleteMarkedButton->mCaption.style.look.colTop = 0xffff0000;
-    mpDeleteMarkedButton->mCaption.style.look.colBottom = 0xffff0000;
-    mpDeleteMarkedButton->mCaption.style.fp.nHeight = nGroupSide / 2;
-    mpDeleteMarkedButton->mCaption.style.wrap = true;
-    mpDeleteMarkedButton->mCaption.style.pos = ZGUI::C;
-    mpDeleteMarkedButton->SetArea(rButton);
-    mpDeleteMarkedButton->msWinGroup = "Manage";
-
-
-
 
 
     // Transformation (rotation, flip, etc.)
@@ -1418,7 +1408,6 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
 
     // Filter group
-
     ZGUI::Style filterButtonStyle = gDefaultGroupingStyle;
     filterButtonStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
     filterButtonStyle.fp.nHeight = nGroupSide / 3;
@@ -1427,52 +1416,49 @@ void ImageViewer::UpdateControlPanel()
     filterButtonStyle.look.colTop = 0xff888888;
     filterButtonStyle.look.colBottom = 0xff888888;
 
+    string sCaption;
 
     // All
-    ZWinCheck* pCheck = mpPanel->Toggle("filterall", nullptr, "all", ZMessage("filter_all", this), "");
-    pCheck->SetState(true, false);
+    ZWinCheck* pCheck = mpPanel->Toggle("filterall", nullptr, "", ZMessage("filter_all", this), "");
+    pCheck->SetState(mFilterState == kAll, false);
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffffffff;
     pCheck->mCheckedStyle.look.colBottom = 0xffffffff;
     pCheck->mUncheckedStyle = filterButtonStyle;
     pCheck->SetArea(rButton);
+    Sprintf(sCaption, "All\n(%d)", mImageArray.size());
+    pCheck->mCaption.sText = sCaption;
     pCheck->msTooltip = "All images";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpAllFilterButton = pCheck;
 
-    // ToBeDeleted
-    rButton.OffsetRect(rButton.Width(), 0);
-    pCheck = mpPanel->Toggle("filterdel", nullptr, "del", ZMessage("filter_del", this), "");
-    pCheck->mCheckedStyle = filterButtonStyle;
-    pCheck->mCheckedStyle.look.colTop = 0xffff4444;
-    pCheck->mCheckedStyle.look.colBottom = 0xffff4444;
-    pCheck->mUncheckedStyle = filterButtonStyle;
-    pCheck->SetArea(rButton);
-    pCheck->msTooltip = "Images marked for deletion (hit del to toggle current image)";
-    pCheck->msWinGroup = "Filter";
-    pCheck->msRadioGroup = "FilterGroup";
-    mpDelFilterButton = pCheck;
 
     // Favorites
     rButton.OffsetRect(rButton.Width(), 0);
 
-    pCheck = mpPanel->Toggle("filterfavs", nullptr, "favs", ZMessage("filter_favs", this), "");
+    pCheck = mpPanel->Toggle("filterfavs", nullptr, "", ZMessage("filter_favs", this), "");
+    pCheck->mbEnabled = !mFavImageArray.empty();
+    pCheck->SetState(mFilterState == kFavs, false);
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffe1b131;
     pCheck->mCheckedStyle.look.colBottom = 0xffe1b131;
     pCheck->mUncheckedStyle = filterButtonStyle;
     pCheck->SetArea(rButton);
+    Sprintf(sCaption, "Favorites\n(%d)", mFavImageArray.size());
+    pCheck->mCaption.sText = sCaption;
     pCheck->msTooltip = "Favorites (hit '1' to toggle current image)";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
     mpFavsFilterButton = pCheck;
+
 
     // Ranked
     rButton.OffsetRect(rButton.Width(), 0);
 
     pCheck = mpPanel->Toggle("filterranked", nullptr, "ranked", ZMessage("filter_ranked", this), "");
     pCheck->mCheckedStyle = filterButtonStyle;
+    pCheck->mbEnabled = !mRankedArray.empty();
     pCheck->mCheckedStyle.look.colTop = 0xffe1b131;
     pCheck->mCheckedStyle.look.colBottom = 0xffe1b131;
     pCheck->mUncheckedStyle = filterButtonStyle;
@@ -1480,13 +1466,46 @@ void ImageViewer::UpdateControlPanel()
     pCheck->msTooltip = "Images that have been ranked (button to the right)";
     pCheck->msWinGroup = "Filter";
     pCheck->msRadioGroup = "FilterGroup";
+    pCheck->SetState(mFilterState == kRanked, false);
     mpRankedFilterButton = pCheck;
 
-  
-    mpFavsFilterButton->SetState(mFilterState == kFavs, false);
-    mpDelFilterButton->SetState(mFilterState == kToBeDeleted, false);
-    mpAllFilterButton->SetState(mFilterState == kAll, false);
-    mpRankedFilterButton->SetState(mFilterState == kRanked, false);
+
+    // ToBeDeleted
+    rButton.OffsetRect(rButton.Width(), 0);
+    pCheck = mpPanel->Toggle("filterdel", nullptr, "", ZMessage("filter_del", this), "");
+    pCheck->mbEnabled = !mToBeDeletedImageArray.empty();
+    pCheck->SetState(mFilterState == kToBeDeleted, false);
+    pCheck->mCheckedStyle = filterButtonStyle;
+    pCheck->mCheckedStyle.look.colTop = 0xffff4444;
+    pCheck->mCheckedStyle.look.colBottom = 0xffff4444;
+    pCheck->mUncheckedStyle = filterButtonStyle;
+    pCheck->SetArea(rButton);
+    Sprintf(sCaption, "To Be Del\n(%d)", mToBeDeletedImageArray.size());
+    pCheck->mCaption.sText = sCaption;
+    pCheck->msTooltip = "Images marked for deletion (hit del to toggle current image)";
+    pCheck->msWinGroup = "Filter";
+    pCheck->msRadioGroup = "FilterGroup";
+    mpDelFilterButton = pCheck;
+
+
+    rButton.OffsetRect(rButton.Width() + gSpacer*4, 0);
+    mpDeleteMarkedButton = mpPanel->Button("show_confirm", "delete\nmarked", ZMessage("show_confirm", this));
+    mpDeleteMarkedButton->SetVisible(mFilterState == kToBeDeleted);
+    mpDeleteMarkedButton->mCaption.sText = "delete\nmarked";
+    mpDeleteMarkedButton->msTooltip = "Show confirmation of images marked for deleted.";
+    mpDeleteMarkedButton->mCaption.style = gDefaultGroupingStyle;
+    mpDeleteMarkedButton->mCaption.style.look.colTop = 0xffff0000;
+    mpDeleteMarkedButton->mCaption.style.look.colBottom = 0xffff0000;
+    mpDeleteMarkedButton->mCaption.style.fp.nHeight = nGroupSide / 2;
+    mpDeleteMarkedButton->mCaption.style.wrap = true;
+    mpDeleteMarkedButton->mCaption.style.pos = ZGUI::C;
+    mpDeleteMarkedButton->SetArea(rButton);
+
+
+
+
+
+
 
 
     if (gGraphicSystem.mbFullScreen)
@@ -1535,6 +1554,16 @@ void ImageViewer::UpdateControlPanel()
     mpShowContestButton->mCaption.style = gStyleButton;
     mpShowContestButton->mCaption.style.pos = ZGUI::C;
     mpShowContestButton->SetArea(rButton);
+    if (mFavImageArray.size() < 5)
+    {
+        mpShowContestButton->msTooltip = "Choose at least five favorites to enable ranking";
+        mpShowContestButton->mbEnabled = false;
+    }
+    else
+    {
+        Sprintf(mpShowContestButton->msTooltip, "Rank the %u favorites in pairs", mFavImageArray.size());
+        mpShowContestButton->mbEnabled = true;
+    }
 
 
     string sCurVersion;
@@ -1542,7 +1571,7 @@ void ImageViewer::UpdateControlPanel()
     gRegistry.Get("app", "version", sCurVersion);
     gRegistry.Get("app", "newversion", sAvailVersion);
 
-#ifndef _DEBUG
+    #ifndef _DEBUG
     if (sCurVersion != sAvailVersion)
     {
         rButton.OffsetRect(-rButton.Width() - gSpacer * 2, 0);
@@ -1555,6 +1584,9 @@ void ImageViewer::UpdateControlPanel()
         pBtn->SetArea(rButton);
     }
 #endif
+
+
+    mpPanel->Invalidate();
 }
 
 bool ImageViewer::OnParentAreaChange()
@@ -1573,7 +1605,7 @@ bool ImageViewer::OnParentAreaChange()
 
 bool ImageViewer::ViewImage(const std::filesystem::path& filename)
 {
-    if (!filename.empty() && filesystem::exists(filename))
+    if (!filename.empty() && filesystem::exists(filename.parent_path()))
     {
         if (mCurrentFolder != filename.parent_path())
             ScanForImagesInFolder(filename.parent_path());
@@ -2314,63 +2346,6 @@ void ImageViewer::UpdateCaptions()
     mpWinImage->mCaptionMap["no_image"].Clear();
     mpWinImage->mCaptionMap["image_count"].Clear();
     mpWinImage->mCaptionMap["rank"].Clear();
-
-    string sCaption;
-    Sprintf(sCaption, "Favorites\n(%d)", mFavImageArray.size());
-
-    // need to make sure panel isn't being reset while updating these
-    mPanelMutex.lock();
-    if (mpFavsFilterButton)
-    {
-        mpFavsFilterButton->mCaption.sText = sCaption;
-        mpFavsFilterButton->mbEnabled = !mFavImageArray.empty();
-    }
-
-    Sprintf(sCaption, "To Be Del\n(%d)", mToBeDeletedImageArray.size());
-    if (mpDelFilterButton)
-    {
-        mpDelFilterButton->mCaption.sText = sCaption;
-        mpDelFilterButton->mbEnabled = !mToBeDeletedImageArray.empty();
-    }
-
- 
-    Sprintf(sCaption, "All\n(%d)", mImageArray.size());
-    if (mpAllFilterButton)
-        mpAllFilterButton->mCaption.sText = sCaption;
-
-/*    Sprintf(sCaption, "%d ranked", mRankedArray.size());
-    if (mpRankedFilterButton)
-        mpRankedFilterButton->mCaption.sText = sCaption;*/
-    if (mpRankedFilterButton)
-    {
-        mpRankedFilterButton->mCaption.sText = "ranked";
-        mpRankedFilterButton->mbEnabled = !mRankedArray.empty();
-    }
-
-    if (mpShowContestButton)
-    {
-        if (mFavImageArray.size() < 5)
-        {
-            mpShowContestButton->msTooltip = "Choose at least five favorites to enable ranking";
-            mpShowContestButton->mbEnabled = false;
-        }
-        else
-        {
-            Sprintf(mpShowContestButton->msTooltip, "Rank the %u favorites in pairs", mFavImageArray.size());
-            mpShowContestButton->mbEnabled = true;
-        }
-    }
-
-
-
-    if (mpDeleteMarkedButton)
-    {
-        mpDeleteMarkedButton->mbEnabled = !mToBeDeletedImageArray.empty();
-    }
-
-
-    mPanelMutex.unlock();
-
 
     if (mpWinImage)
     {

@@ -472,10 +472,21 @@ ZWin* ZWin::GetChildWindowByWinName(const string& sWinName)
 	return NULL;
 }
 
-ZWin* ZWin::GetChildWindowByWinNameRecursive(const string& /*sWinName*/)
+ZWin* ZWin::GetChildWindowByWinNameRecursive(const string& sWinName)
 {
-	ZASSERT_MESSAGE(false, "not yet implemented");
-	return NULL;
+    ZWin* pChild = GetChildWindowByWinName(sWinName);
+    if (pChild)
+        return pChild;
+
+    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
+    for (auto p : mChildList)
+    {
+        pChild = p->GetChildWindowByWinNameRecursive(sWinName);
+        if (pChild)
+            return pChild;
+    }
+
+    return NULL;
 }
 
 
@@ -674,6 +685,8 @@ bool  ZWin::Paint()
 {
     if (!mbInitted || !mbInvalid)
         return false;
+
+    assert((mAreaLocal.Width() == mAreaInParent.Width()) && (mAreaLocal.Width() == mAreaAbsolute.Width()) && (mAreaLocal.Height() == mAreaInParent.Height()) && (mAreaLocal.Height() == mAreaAbsolute.Height()));
 
     mpSurface.get()->SetRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
 	mbInvalid = false;
@@ -1148,7 +1161,7 @@ bool ZWinDialog::Init()
 
     ZGUI::Style arrangeStyle(gStyleButton);
     if (arrangeList.size() == 1)
-        arrangeStyle.paddingH = gM * 10;
+        arrangeStyle.paddingH = (int32_t)(gM * 10);
 
     if (!arrangeList.empty())
         ArrangeWindows(arrangeList, rButtonArea, arrangeStyle, -1, 1);
@@ -1157,6 +1170,10 @@ bool ZWinDialog::Init()
     //mTransformOut = kFade;
 
     ZWin::Init();
+
+    if (gInput.keyboardFocusWin)
+        msPreviousFocusWin = gInput.keyboardFocusWin->GetTargetName();
+
     SetFocus();
 
 
@@ -1165,6 +1182,13 @@ bool ZWinDialog::Init()
 
 bool ZWinDialog::Shutdown()
 {
+    if (!msPreviousFocusWin.empty())
+    {
+        ZWin* pWin = GetTopWindow()->GetChildWindowByWinNameRecursive(msPreviousFocusWin);
+        if (pWin)
+            pWin->SetFocus();
+    }
+
     return ZWin::Shutdown();
 }
 
@@ -1172,16 +1196,28 @@ bool ZWinDialog::Shutdown()
 bool ZWinDialog::Paint()
 {
     uint32_t cols[4];
-    cols[0] = 0xff444444;
-    cols[1] = 0xff888888;
-    cols[2] = 0xff444444;
-    cols[3] = 0xff888888;
+
+    uint32_t nBaseCol = mStyle.bgCol;
+    uint32_t nBaseHSV = COL::ARGB_To_AHSV(nBaseCol);
+
+    uint32_t a = AHSV_A(nBaseHSV);
+    uint32_t h = AHSV_H(nBaseHSV);
+    uint32_t s = AHSV_S(nBaseHSV);
+    uint32_t v = AHSV_V(nBaseHSV);
+
+    uint32_t nDimHSV = AHSV(a, h, s, (uint32_t)(v/2));
+    uint32_t nDim = COL::AHSV_To_ARGB(nDimHSV);
 
 
-//    GetTopWindow()->RenderToBuffer(mpSurface, mAreaAbsolute, mAreaLocal, this);
-//    mpSurface.get()->FillAlpha(0xaa000000);
+    cols[0] = nDim;
+    cols[2] = nDim;
+    cols[1] = nBaseCol;
+    cols[3] = nBaseCol;
+
+
     mpSurface.get()->FillGradient(cols);
-    mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaLocal, ZBuffer::kEdgeBltMiddle_None);
+/*    mpSurface.get()->Fill(0xff000000);
+    mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaLocal, ZBuffer::kEdgeBltMiddle_Stretch);*/
 
 
     return false;

@@ -104,14 +104,17 @@ bool ZWinLabel::Paint()
         PaintFromParent();
     }
 
-    if (mStyle.wrap)
+    if (!msText.empty())
     {
-        mStyle.Font()->DrawTextParagraph(mpSurface.get(), msText, mAreaLocal, &mStyle);
-    }
-    else
-    {
-        ZRect rOut = mStyle.Font()->Arrange(mAreaLocal, (uint8_t*)msText.c_str(), msText.length(), mStyle.pos);
-        mStyle.Font()->DrawText(mpSurface.get(), msText, rOut, &mStyle.look);
+        if (mStyle.wrap)
+        {
+            mStyle.Font()->DrawTextParagraph(mpSurface.get(), msText, mAreaLocal, &mStyle);
+        }
+        else
+        {
+            ZRect rOut = mStyle.Font()->Arrange(mAreaLocal, (uint8_t*)msText.c_str(), msText.length(), mStyle.pos);
+            mStyle.Font()->DrawText(mpSurface.get(), msText, rOut, &mStyle.look);
+        }
     }
 
     return ZWin::Paint();
