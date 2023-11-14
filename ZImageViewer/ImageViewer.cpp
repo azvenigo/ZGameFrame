@@ -125,11 +125,18 @@ void ImageViewer::UpdateUI()
 
     //ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
 
-    if (mOutstandingMetadataCount == -1 && !mpRatedImagesStrip && !mRankedImageMetadata.empty())
+    if (!mRankedImageMetadata.empty())
     {
-        mpRatedImagesStrip = new WinTopWinners();
-        ChildAdd(mpRatedImagesStrip);
-        mpRatedImagesStrip->pMetaList = &mRankedImageMetadata;
+        if (mOutstandingMetadataCount == -1)
+        {
+            if (!mpRatedImagesStrip)
+            {
+                mpRatedImagesStrip = new WinTopWinners();
+                ChildAdd(mpRatedImagesStrip);
+            }
+
+            mpRatedImagesStrip->pMetaList = &mRankedImageMetadata;
+        }
     }
 
     ZRect rImageArea(mAreaLocal);
@@ -318,7 +325,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         }
         return true;
     }
-    else if (sType == "openfolder")
+    else if (sType == "gotofolder")
     {
 #ifdef _WIN32
         if (mpWinImage && mpWinImage->mpImage)
@@ -1317,7 +1324,7 @@ void ImageViewer::UpdateControlPanel()
 
     ZWinSizablePushBtn* pBtn;
 
-    ZRect rButton(nGroupSide, nGroupSide);
+    ZRect rButton((int64_t)(nGroupSide*1.5), nGroupSide);
     rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
 
     string sAppPath = gRegistry["apppath"];
@@ -1343,8 +1350,8 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.OffsetRect(rButton.Width(), 0);
 
-    pBtn = mpPanel->SVGButton("openfolder", sAppPath + "/res/openfolder.svg", ZMessage("openfolder", this));
-    pBtn->msTooltip = "Open folder containing current image";
+    pBtn = mpPanel->SVGButton("gotofolder", sAppPath + "/res/gotofolder.svg", ZMessage("gotofolder", this));
+    pBtn->msTooltip = "Browse folder with current image";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
     pBtn->SetArea(rButton);
@@ -1488,10 +1495,11 @@ void ImageViewer::UpdateControlPanel()
     mpDelFilterButton = pCheck;
 
 
-    rButton.OffsetRect(rButton.Width() + gSpacer*4, 0);
-    mpDeleteMarkedButton = mpPanel->Button("show_confirm", "delete\nmarked", ZMessage("show_confirm", this));
+    rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
+    rButton.right = rButton.left + rButton.Width() * 3;
+    mpDeleteMarkedButton = mpPanel->Button("show_confirm", "delete marked", ZMessage("show_confirm", this));
     mpDeleteMarkedButton->SetVisible(mFilterState == kToBeDeleted);
-    mpDeleteMarkedButton->mCaption.sText = "delete\nmarked";
+    mpDeleteMarkedButton->mCaption.sText = "delete marked";
     mpDeleteMarkedButton->msTooltip = "Show confirmation of images marked for deleted.";
     mpDeleteMarkedButton->mCaption.style = gDefaultGroupingStyle;
     mpDeleteMarkedButton->mCaption.style.look.colTop = 0xffff0000;
@@ -1524,7 +1532,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(-nControlPanelSide, 0);
 
 
-    pBtn = mpPanel->SVGButton("toggle_fullscreen", sAppPath + "/res/fullscreen.svg", ZMessage("toggle_fullscreen", GetTopWindow()));
+    pBtn = mpPanel->SVGButton("toggle_fullscreen", sAppPath + "/res/fullscreen.svg", ZMessage("toggle_fullscreen"));
     pBtn->msWinGroup = "View";
     pBtn->SetArea(rButton);
     pBtn->msTooltip = "Toggle Fullscreen";
@@ -1853,8 +1861,7 @@ bool ImageViewer::FreeCacheMemory()
 bool ImageViewer::KickMetadataLoading()
 {
     const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
-    mOutstandingMetadataCount = mImageArray.size();;
-    static int64_t enqueued = 0;
+    mOutstandingMetadataCount = mImageArray.size();
 
     // kick off exif reading if necessary
     for (auto& entry : mImageArray)
@@ -1863,7 +1870,6 @@ bool ImageViewer::KickMetadataLoading()
         {
             entry->mState = ImageEntry::kLoadingMetadata;
             mpImageLoaderPool->enqueue(&ImageViewer::LoadMetadataProc, entry->filename, entry, &mOutstandingMetadataCount);
-            enqueued++;
         }
     }
 

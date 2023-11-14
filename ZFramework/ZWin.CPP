@@ -686,7 +686,10 @@ bool  ZWin::Paint()
     if (!mbInitted || !mbInvalid)
         return false;
 
-    assert((mAreaLocal.Width() == mAreaInParent.Width()) && (mAreaLocal.Width() == mAreaAbsolute.Width()) && (mAreaLocal.Height() == mAreaInParent.Height()) && (mAreaLocal.Height() == mAreaAbsolute.Height()));
+    assert(mAreaLocal.Width() == mAreaInParent.Width());
+    assert(mAreaLocal.Width() == mAreaAbsolute.Width());
+    assert(mAreaLocal.Height() == mAreaInParent.Height());
+    assert(mAreaLocal.Height() == mAreaAbsolute.Height());
 
     mpSurface.get()->SetRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
 	mbInvalid = false;

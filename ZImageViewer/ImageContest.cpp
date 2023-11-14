@@ -223,7 +223,7 @@ bool ImageContest::OnKeyDown(uint32_t key)
 bool ImageContest::HandleMessage(const ZMessage& message)
 {
     string sType = message.GetType();
-    if (sType == "quit")
+    if (sType == "return")
     {
         HandleQuitCommand();
         return true;
@@ -550,12 +550,12 @@ void ImageContest::UpdateControlPanel()
 
     ZWinSizablePushBtn* pBtn;
 
-    ZRect rButton(nGroupSide, nGroupSide);
+    ZRect rButton((int64_t)(nGroupSide * 1.5), nGroupSide);
     rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
 
     string sAppPath = gRegistry["apppath"];
 
-    pBtn = mpPanel->SVGButton("back", sAppPath + "/res/exit.svg", ZMessage("quit", this));
+    pBtn = mpPanel->SVGButton("back", sAppPath + "/res/return.svg", ZMessage("return", this));
     pBtn->msTooltip = "Back to viewer";
     pBtn->SetArea(rButton);
 
@@ -565,11 +565,11 @@ void ImageContest::UpdateControlPanel()
     int64_t nButtonPadding = rButton.Width() / 8;
 
     pBtn = mpPanel->SVGButton("openfolder", sAppPath + "/res/openfolder.svg", ZMessage("selectfolder", this));
-    pBtn->msTooltip = "Go to Folder";
+    pBtn->msTooltip = "Choose Folder";
     pBtn->mSVGImage.style.paddingH = (int32_t)nButtonPadding;
     pBtn->mSVGImage.style.paddingV = (int32_t)nButtonPadding;
     pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "File";
+    pBtn->msWinGroup = "Folder";
 
     rButton.OffsetRect(rButton.Width(), 0);
 
@@ -578,8 +578,8 @@ void ImageContest::UpdateControlPanel()
 
 
     // Contests
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-    rButton.right = rButton.left + (int64_t) (rButton.Width() * 3);     // wider buttons for management
+    rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
+    rButton.right = rButton.left + (int64_t) (rButton.Width() * 2);     // wider buttons for management
 
     pBtn = mpPanel->Button("reset", "Reset", ZMessage("reset_contest", this));
     pBtn->msTooltip = "Resets all of the ratings for images in this folder";
