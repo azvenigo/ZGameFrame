@@ -30,6 +30,9 @@ ZWinImage::ZWinImage()
     mIdleSleepMS = 10000;
 
     mBehavior = eBehavior::kNone;
+
+    if (msWinName.empty())
+        msWinName = "ZWinImage_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 ZWinImage::~ZWinImage()

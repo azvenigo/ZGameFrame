@@ -63,7 +63,6 @@ void ZMainWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRe
     if (!rAbsIntersection.IntersectRect(mAreaAbsolute))
         return;// no intersection
 
-    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
     {
         ZWin* pChild = *it;

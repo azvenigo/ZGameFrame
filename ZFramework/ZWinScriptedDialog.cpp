@@ -62,6 +62,9 @@ ZWinScriptedDialog::ZWinScriptedDialog()
 	mbDrawDefaultBackground = true;
 	mbFillBackground = false;
     mnBackgroundColor = 0;
+
+    if (msWinName.empty())
+        msWinName = "ZWinScriptedDialog_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 ZWinScriptedDialog::~ZWinScriptedDialog()

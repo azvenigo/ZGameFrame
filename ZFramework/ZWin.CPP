@@ -1042,7 +1042,7 @@ bool ZWin::WindowThreadProc(void* pContext)
 #ifdef _WIN64
     HRESULT r;
     string sName;
-    Sprintf(sName, "th_0x%x", (int) (int64_t)GetCurrentThread());
+    Sprintf(sName, "th_%s", pThis->GetTargetName().c_str());
     r = SetThreadDescription(GetCurrentThread(), SH::string2wstring(sName).c_str());
 
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);

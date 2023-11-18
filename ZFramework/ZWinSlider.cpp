@@ -27,6 +27,9 @@ ZWinSlider::ZWinSlider(int64_t* pnSliderValue)
 
     mBehavior = kInvalidateOnMouseUp|kDrawSliderValueOnMouseOver;
     mbInvalidateParentWhenInvalid = true;
+
+    if (msWinName.empty())
+        msWinName = "ZWinSlider_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 ZWinSlider::~ZWinSlider()

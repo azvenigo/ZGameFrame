@@ -181,6 +181,8 @@ ZWinTextEdit::ZWinTextEdit(string* pText)
     mnSelectionStart = -1;
     mnSelectionEnd = -1;
     mStyle = gDefaultWinTextEditStyle;
+    if (msWinName.empty())
+        msWinName = "ZWinTextEdit_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 bool ZWinTextEdit::Init()

@@ -257,6 +257,9 @@ ZWinCheck::ZWinCheck(bool* pbChecked)
         mpbChecked = &mbInternal;
     else
 	    mpbChecked = pbChecked;
+
+    if (msWinName.empty())
+        msWinName = "ZWinCheck_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -387,6 +390,8 @@ ZWinSizablePushBtn::ZWinSizablePushBtn()
 
     mrEdge = grStandardButtonEdge;
 
+    if (msWinName.empty())
+        msWinName = "ZWinSizablePushBtn_" + gMessageSystem.GenerateUniqueTargetName();
 
 //	mbTransformable     = false;
 }

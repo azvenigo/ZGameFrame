@@ -35,8 +35,9 @@ ZWinDebugConsole::ZWinDebugConsole()
 
     mIdleSleepMS = 200;
 	mbAcceptsCursorMessages = true;
-    msWinName = "ZWinDebugConsole";
 
+    if (msWinName.empty())
+        msWinName = "ZWinDebugConsole_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 

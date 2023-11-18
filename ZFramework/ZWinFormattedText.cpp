@@ -86,6 +86,8 @@ ZWinFormattedDoc::ZWinFormattedDoc()
 
 	mbAcceptsCursorMessages = true;
 
+    if (msWinName.empty())
+        msWinName = "ZWinFormattedDoc_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 ZWinFormattedDoc::~ZWinFormattedDoc()

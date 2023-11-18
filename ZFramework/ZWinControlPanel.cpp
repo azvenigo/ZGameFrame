@@ -9,6 +9,8 @@ using namespace std;
 
 ZWinControlPanel::ZWinControlPanel() : mbHideOnMouseExit(false), mStyle(gDefaultDialogStyle), mGroupingStyle(gDefaultGroupingStyle)
 {
+    if (msWinName.empty())
+        msWinName = "ZWinControlPanel_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 

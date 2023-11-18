@@ -19,6 +19,9 @@ ZWinPaletteDialog::ZWinPaletteDialog()
     msWinName = kPaletteDialogName;
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
+
+    if (msWinName.empty())
+        msWinName = "ZWinPaletteDialog_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 bool ZWinPaletteDialog::Init()
