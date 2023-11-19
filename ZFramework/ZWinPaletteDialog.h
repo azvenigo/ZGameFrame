@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ZWin.H"
+#include "ZWinText.H"
+#include "ZWinBtn.H"
 #include <string>
 #include "ZGUIStyle.h"
 #include <list>
@@ -21,6 +23,14 @@ typedef std::list<uint32_t> tColorList;
 class ZWinPaletteDialog : public ZWinDialog
 {
 public:
+
+    enum eCategory : uint8_t
+    {
+        kOriginal = 0,
+        kEdited = 1,
+        kDefault = 2
+    };
+
     ZWinPaletteDialog();
     bool        Init();
 
@@ -45,7 +55,7 @@ protected:
     void        SelectSV(int64_t x, int64_t y); // relative to mrSVArea
     void        SelectH(int64_t y); // relative to mrHArea.top
     void        SelectFromPalette(int64_t x, int64_t y);
-    void        SelectPaletteIndex(size_t nIndex, bool bOriginalColor = false);
+    void        SelectPaletteIndex(size_t nIndex, eCategory category = kEdited);
     void        UpdatePalette();        // based on selected changes
 
     void        ComputeAreas();
@@ -69,9 +79,12 @@ protected:
 
     ZRect           mrSVArea;
     ZRect           mrHArea;
+    ZRect           mrTitleArea;
+    ZRect           mrColorValueBoxesArea;
+    ZRect           mrPaletteEntryArea;
+
+    ZWinTextEdit*   mpRGBEdit;
+    std::string     msRGBTextValue;
 
     size_t          mnSelectingColorIndex;
-
-    ZRect           mrPaletteArea;
-    ZRect           mrRecentColorsArea;
 };

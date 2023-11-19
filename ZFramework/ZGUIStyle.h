@@ -104,8 +104,6 @@ namespace ZGUI
         std::string name;       // for
 
         operator std::string() const;
-
-    private:
         uint32_t default_color;
     };
 

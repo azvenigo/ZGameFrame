@@ -514,11 +514,41 @@ bool ZWinTextEdit::OnKeyDown(uint32_t c)
 
             if (nMin < nMax)
             {
-                ZOUT("copying:", mpText->substr(nMin, nMax - nMin), "\n");
+                gInput.SetClipboard(mpText->substr(nMin, nMax - nMin));
             }
             break;
         }
         break;
+    case 'v':
+    case 'V':
+        if (mbCTRLDown)
+        {
+            string sInsert = gInput.GetClipboard();
+            if (!sInsert.empty())
+            {
+                if (mbSelecting)
+                {
+                    mbSelecting = false;
+
+                    int64_t nMin = min<int64_t>(mnSelectionStart, mnSelectionEnd);
+                    int64_t nMax = max<int64_t>(mnSelectionStart, mnSelectionEnd);
+                    if (nMax > nMin)
+                    {
+                        mpText->erase(nMin, nMax - nMin);
+                        mpText->insert(nMin, sInsert);
+                        mCursorPosition -= (nMax-nMin);
+                    }
+                    mnSelectionStart = -1;
+                    mnSelectionEnd = -1;
+                }
+
+                mpText->insert(mCursorPosition, sInsert);
+                mCursorPosition += sInsert.length();
+
+                HandleCursorMove(mCursorPosition);
+            }
+            Invalidate();
+        }
     }
     return true;
 }

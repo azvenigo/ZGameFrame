@@ -19,6 +19,7 @@ ZWinPaletteDialog::ZWinPaletteDialog()
     msWinName = kPaletteDialogName;
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
+    mpRGBEdit = nullptr;
 
     if (msWinName.empty())
         msWinName = "ZWinPaletteDialog_" + gMessageSystem.GenerateUniqueTargetName();
@@ -26,7 +27,12 @@ ZWinPaletteDialog::ZWinPaletteDialog()
 
 bool ZWinPaletteDialog::Init()
 {
+    mpRGBEdit = new ZWinTextEdit(&msRGBTextValue);
+    mpRGBEdit->mStyle = gStyleButton;
+    ChildAdd(mpRGBEdit);
+
     ComputeAreas();
+
 
     SelectPaletteIndex(0);
 
@@ -55,9 +61,9 @@ bool ZWinPaletteDialog::OnMouseDownL(int64_t x, int64_t y)
         Invalidate();
         return false;
     }
-    else if (mrPaletteArea.PtInRect(x, y))
+    else if (mrPaletteEntryArea.PtInRect(x, y))
     {
-        SelectFromPalette(x - mrPaletteArea.left, y - mrPaletteArea.top);
+        SelectFromPalette(x - mrPaletteEntryArea.left, y - mrPaletteEntryArea.top);
         return false;
     }
 
@@ -116,6 +122,14 @@ void ZWinPaletteDialog::UpdatePalette()
     ZGUI::EditableColor& col = (*mpColorMap)[mnSelectingColorIndex];
     uint32_t originalA = (mOriginalColorMap[mnSelectingColorIndex].col & 0xff000000);
     col.col = originalA | COL::AHSV_To_ARGB(0, mCurH, mCurS, mCurV);
+
+    string s = SH::ToHexString(col.col);
+    if (msRGBTextValue != s)
+    {
+        msRGBTextValue = s;
+        if (mpRGBEdit)
+            mpRGBEdit->Invalidate();
+    }
 }
 
 
@@ -124,27 +138,34 @@ void ZWinPaletteDialog::SelectFromPalette(int64_t x, int64_t y)
     if (!mpColorMap)
         return;
 
-    if (x < 0)
-        x = 0;
-    else if (x > mrPaletteArea.Width())
-        x = mrPaletteArea.Width();
+    limit<int64_t>(x, 0, mrPaletteEntryArea.Width());
+    limit<int64_t>(y, 0, mrPaletteEntryArea.Height());
 
-    if (y < 0)
-        y = 0;
-    else if (y > mrPaletteArea.Height())
-        y = mrPaletteArea.Height();
+    size_t nIndex = y / gM;
 
 
-    size_t nSwatchWidth = mrPaletteArea.Width() / mpColorMap->size();
-    size_t nIndex = x / nSwatchWidth;
+    ZRect rColorEntry(mrPaletteEntryArea.left, mrPaletteEntryArea.top, mrPaletteEntryArea.right, mrPaletteEntryArea.top + gM);
+    rColorEntry.OffsetRect(0, nIndex * gM);
 
-    // if clicking on lower half, select the original
-    bool bOriginal = y > mrPaletteArea.Height() / 2;
+    ZRect rCurColor(rColorEntry);
+    rCurColor.left = rCurColor.right - rColorEntry.Width() / 3;
+    rCurColor.MoveRect(mrPaletteEntryArea.Width() - gM, nIndex*gM);
 
-    SelectPaletteIndex(nIndex, bOriginal);
+    ZRect rOldColor(rCurColor);
+    rOldColor.OffsetRect(-rCurColor.Width(), 0);
+
+    ZRect rDefaultColor(rOldColor);
+    rDefaultColor.OffsetRect(-rCurColor.Width(), 0);
+
+    if (rCurColor.PtInRect(x, y))
+        SelectPaletteIndex(nIndex, kEdited);
+    else if (rOldColor.PtInRect(x, y))
+        SelectPaletteIndex(nIndex, kOriginal);
+    else if (rDefaultColor.PtInRect(x, y))
+        SelectPaletteIndex(nIndex, kDefault);
 }
 
-void ZWinPaletteDialog::SelectPaletteIndex(size_t nIndex, bool bOriginalColor)
+void ZWinPaletteDialog::SelectPaletteIndex(size_t nIndex, eCategory category)
 {
     if (!mpColorMap)
         return;
@@ -156,8 +177,10 @@ void ZWinPaletteDialog::SelectPaletteIndex(size_t nIndex, bool bOriginalColor)
         ZGUI::EditableColor& col = (*mpColorMap)[mnSelectingColorIndex];
         ZGUI::EditableColor& original = mOriginalColorMap[mnSelectingColorIndex];
 
-        if (bOriginalColor)
+        if (category == kOriginal)
             col.col = original.col;
+        else if (category == kDefault)
+            col.col = col.default_color;
 
         uint32_t hsv = COL::ARGB_To_AHSV(col.col);
 
@@ -227,8 +250,13 @@ bool ZWinPaletteDialog::Paint()
 
     ZWinDialog::Paint();
 
-    tZFontPtr pTitleFont = gpFontSystem->GetFont(gDefaultTitleFont);
-    pTitleFont->DrawText(mpSurface.get(), msCaption, ZGUI::Arrange(pTitleFont->StringRect(msCaption), mAreaLocal, ZGUI::ICIT, gSpacer, gSpacer), &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffeeeeee, 0xffaaaaaa));
+    ZGUI::Style titleStyle(gStyleCaption);
+    titleStyle.look.colTop = 0xffeeeeee;
+    titleStyle.look.colBottom = 0xffaaaaaa;
+    titleStyle.look.decoration = ZGUI::ZTextLook::kShadowed;
+    titleStyle.pos = ZGUI::CT;
+
+    titleStyle.Font()->DrawText(mpSurface.get(), msCaption, mrTitleArea, &titleStyle);
 
 
     double fScalar = 1023.0/(double)mrSVArea.Height();
@@ -287,34 +315,45 @@ bool ZWinPaletteDialog::Paint()
 
 
 
-        size_t nWatchedColors = (*mpColorMap).size();
-        size_t nWatchedColorSwatchSide = mrPaletteArea.Width() / nWatchedColors;
-        ZRect rSwatch(mrPaletteArea.left, mrPaletteArea.top, mrPaletteArea.left + nWatchedColorSwatchSide, mrPaletteArea.bottom);
+        ZRect rColorEntry(mrPaletteEntryArea.left, mrPaletteEntryArea.top, mrPaletteEntryArea.right, mrPaletteEntryArea.top + gM);
+
         for (int i = 0; i < mpColorMap->size(); i++)
         {
+
+
             ZGUI::EditableColor& col = (*mpColorMap)[i];
             ZGUI::EditableColor& originalCol = mOriginalColorMap[i];
-            ZRect rSwatchHalf(rSwatch);
-            rSwatchHalf.bottom = rSwatch.top + rSwatch.Height() / 2;
 
-            mpSurface->Fill(col.col, &rSwatchHalf);
-            mStyle.Font()->DrawText(mpSurface.get(), col.name, ZGUI::Arrange(mStyle.Font()->StringRect(col.name), rSwatch, ZGUI::ICOT));
+            ZRect rSwatch(rColorEntry);
+            rSwatch.left = rSwatch.right - rColorEntry.Width()/3;
 
-            rSwatchHalf.OffsetRect(0, rSwatchHalf.Height());
-            mpSurface->Fill(originalCol.col, &rSwatchHalf);
+            mpSurface->Fill(col.col, &rSwatch); // cur color
+            rSwatch.OffsetRect(-rSwatch.Width(), 0);
+            mpSurface->Fill(originalCol.col, &rSwatch); // original.col
+            rSwatch.OffsetRect(-rSwatch.Width(), 0);
+            mpSurface->Fill(originalCol.default_color, &rSwatch); // default color
 
-            rSwatch.OffsetRect(rSwatch.Width(), 0);
+            mStyle.Font()->DrawText(mpSurface.get(), col.name, ZGUI::Arrange(mStyle.Font()->StringRect(col.name), rColorEntry, ZGUI::ILIC, gSpacer, 0));
+
+
+            rColorEntry.OffsetRect(0, rColorEntry.Height());
         }
 
-        ZRect rCaption(mrPaletteArea);
-        rCaption.bottom = (mrPaletteArea.top + mrPaletteArea.bottom) / 2;
 
-        mStyle.Font()->DrawText(mpSurface.get(), "new", ZGUI::Arrange(mStyle.Font()->StringRect("new"), rCaption, ZGUI::ORIC, gSpacer, gSpacer));
-        rCaption.OffsetRect(0, rCaption.Height());
-        mStyle.Font()->DrawText(mpSurface.get(), "old", ZGUI::Arrange(mStyle.Font()->StringRect("old"), rCaption, ZGUI::ORIC, gSpacer, gSpacer));
+        ZRect rCaption(mrPaletteEntryArea.Width()/3, mStyle.fp.nHeight);
+        rCaption = ZGUI::Arrange(rCaption, mrPaletteEntryArea, ZGUI::ILOT, gSpacer, gSpacer);
 
 
-        mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mrPaletteArea, ZBuffer::kEdgeBltMiddle_None);
+        ZGUI::Style style(mStyle);
+        style.pos = ZGUI::CB;
+
+        mStyle.Font()->DrawText(mpSurface.get(), "def", rCaption, &style);
+        rCaption.OffsetRect(rCaption.Width(), 0);
+        mStyle.Font()->DrawText(mpSurface.get(), "prev", rCaption, &style);
+        rCaption.OffsetRect(rCaption.Width(), 0);
+        mStyle.Font()->DrawText(mpSurface.get(), "new", rCaption, &style);
+
+        mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mrPaletteEntryArea, ZBuffer::kEdgeBltMiddle_None);
     }
 
     return ZWin::Paint();
@@ -322,15 +361,36 @@ bool ZWinPaletteDialog::Paint()
 
 void ZWinPaletteDialog::ComputeAreas()
 {
-    size_t nMeasure = mAreaLocal.Width() / 20;
-    size_t nHSSide = nMeasure * 15;
+    ZRect rFull = mAreaLocal;
+    rFull.DeflateRect(gM, gM);
 
-    mrSVArea.SetRect(nMeasure, nMeasure*2, nMeasure + nHSSide, nMeasure *2  + nHSSide);
-    mrHArea.SetRect(mrSVArea.right + nMeasure, mrSVArea.top, mAreaLocal.Width() - nMeasure, mrSVArea.bottom);
+    int64_t nHSVSide = rFull.Width();
+    if (rFull.Height() < rFull.Width())
+        nHSVSide = rFull.Height();
+    nHSVSide = nHSVSide * 2 / 3;
 
-//    mrSelectingColorArea.SetRect(mrSVArea.left, mrSVArea.bottom + nMeasure, mrSVArea.left + nMeasure * 4, mrSVArea.bottom + nMeasure * 3);
+    mrTitleArea = ZGUI::Arrange(ZRect(rFull.Width(), gDefaultTitleFont.nHeight + gSpacer * 2), rFull, ZGUI::ICIT, gSpacer, gSpacer);
 
-    mrPaletteArea.SetRect(mrSVArea.left, mrHArea.bottom + nMeasure * 2, mrSVArea.right, mrHArea.bottom + nMeasure * 5);
+
+    ZRect rHSVArea = ZGUI::Arrange(ZRect(nHSVSide, nHSVSide), rFull, ZGUI::IRIT, gSpacer, mrTitleArea.bottom + gM);    // top right under title area
+
+    int64_t nSVSide = nHSVSide - gM * 2;
+
+    mrHArea = ZGUI::Arrange(ZRect(gM, nSVSide), rHSVArea, ZGUI::IRIT);                               // Right HUE rectangle
+    mrSVArea = ZGUI::Arrange(ZRect(nSVSide, nSVSide), rHSVArea, ZGUI::ILIT);               // Left SV square
+
+    mrColorValueBoxesArea.SetRect(rHSVArea.left, rHSVArea.bottom + gSpacer, rHSVArea.right, rFull.bottom);
+    mrPaletteEntryArea.SetRect(rFull.left, rHSVArea.top, rHSVArea.left - gM, rHSVArea.bottom);
+
+
+    if (mpRGBEdit)
+    {
+        ZRect rEdit(mStyle.Font()->StringRect("0X00000000"));   // enough space for ARGB hex
+        rEdit.InflateRect(gSpacer, gSpacer);
+        rEdit = ZGUI::Arrange(rEdit, mrSVArea, ZGUI::ILOB, 0, gM);
+        mpRGBEdit->SetArea(rEdit);
+    }
+
     ZWin::ComputeAreas();
 }
 
@@ -343,11 +403,12 @@ ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, ZG
 
     ZRect rMain(gpMainWin->GetArea());
 
-    ZRect r(rMain.Width() / 6, (int64_t)(rMain.Height() / 2.5));
+    ZRect r(rMain.Width() / 3, (int64_t)(rMain.Width() / 4));
     r = ZGUI::Arrange(r, rMain, ZGUI::C);
 
     pDialog->mBehavior |= ZWinDialog::eBehavior::Draggable | ZWinDialog::eBehavior::OKButton | ZWinDialog::eBehavior::CancelButton;
     pDialog->mStyle = gDefaultDialogStyle;
+    pDialog->mStyle.fp = gStyleButton.fp;
 
     pDialog->mpColorMap = pColorMap;
     pDialog->mOriginalColorMap = *pColorMap;

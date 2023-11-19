@@ -148,6 +148,7 @@ public:
     void            SetTracking(int64_t nTracking) { mFontParams.nTracking = nTracking; }
 
     bool            DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, ZGUI::ZTextLook* pLook = nullptr, ZRect* pClip = nullptr);
+    bool            DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, ZGUI::Style* pStyle, ZRect* pClip = nullptr);
     bool            DrawTextParagraph(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, ZGUI::Style* pStyle = nullptr, ZRect* pClip = NULL);
 
 

@@ -4,6 +4,7 @@
 #include "ZMainWin.h"
 #include "ZWinText.H"
 
+using namespace std;
 
 ZInput::ZInput() : captureWin(nullptr), mouseOverWin(nullptr), keyboardFocusWin(nullptr), lastMouseMove(-1, -1), lastMouseMoveTime(0), bMouseHoverPosted(false), lButtonDown(false), rButtonDown(false)
 {
@@ -217,7 +218,7 @@ void ZInput::CheckMouseForHover()
     }
 }
 
-bool ZInput::ShowTooltip(const std::string& tooltip, const ZGUI::Style& style)
+bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
 {
     if (!mpTooltipWin->mbInitted)
         gpMainWin->ChildAdd(mpTooltipWin);
@@ -262,5 +263,72 @@ bool ZInput::UpdateTooltipLocation(ZPoint pt)
     return true;
 }
 
+string ZInput::GetClipboard()
+{
+#ifdef _WIN64
+    if (OpenClipboard(nullptr)) 
+    {
+        HANDLE hData = GetClipboardData(CF_TEXT);
+
+        if (hData != nullptr) 
+        {
+            char* text = static_cast<char*>(GlobalLock(hData));
+
+            if (text != nullptr) 
+            {
+                mClipboardText.assign(text, strlen(text));
+                ZOUT("Text copied from clipboard\n");
+
+                GlobalUnlock(hData);
+            }
+            else 
+            {
+                ZERROR("Failed to lock memory.\n");
+            }
+        }
+        else 
+        {
+            ZDEBUG_OUT("Failed to get clipboard data.\n");
+        }
+
+        CloseClipboard();
+    }
+    else 
+    {
+        ZDEBUG_OUT("Failed to open OS clipboard.\n");
+    }
+#endif
+
+    return mClipboardText;
+}
+
+void ZInput::SetClipboard(const std::string& text)
+{
+    mClipboardText = text;
+
+#ifdef _WIN64
+    if (OpenClipboard(nullptr))
+    {
+        EmptyClipboard();
+
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, gInput.mClipboardText.length() + 1);
+
+        if (hMem != nullptr)
+        {
+            strcpy_s(static_cast<char*>(GlobalLock(hMem)), gInput.mClipboardText.length() + 1, gInput.mClipboardText.data());
+            GlobalUnlock(hMem);
+
+            SetClipboardData(CF_TEXT, hMem);
+            CloseClipboard();
+
+            ZOUT("Copied to clipboard\n");
+        }
+        else
+        {
+            std::cerr << "Failed to allocate memory." << std::endl;
+        }
+    }
+#endif
+}
 
 

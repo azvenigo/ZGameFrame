@@ -68,7 +68,8 @@ public:
     std::string GetTargetName() { return "Win64AppMessageHandler"; }
     bool        ReceiveMessage(const ZMessage& message)
     {
-        if (message.GetType() == "toggle_fullscreen")
+        string type = message.GetType();
+        if (type == "toggle_fullscreen")
         {
             SwitchFullscreen(!gGraphicSystem.mbFullScreen);
         }
