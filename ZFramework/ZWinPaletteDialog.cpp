@@ -63,7 +63,7 @@ bool ZWinPaletteDialog::OnMouseDownL(int64_t x, int64_t y)
     }
     else if (mrPaletteEntryArea.PtInRect(x, y))
     {
-        SelectFromPalette(x - mrPaletteEntryArea.left, y - mrPaletteEntryArea.top);
+        SelectFromPalette(x, y);
         return false;
     }
 
@@ -99,6 +99,7 @@ void ZWinPaletteDialog::SelectSV(int64_t x, int64_t y)
     mCurS = (uint32_t)(x * fScalar);
     mCurV = (uint32_t)(y * fScalar);
     UpdatePalette();
+    UpdateTextEdit();
 }
 
 void ZWinPaletteDialog::SelectH(int64_t y)
@@ -112,6 +113,7 @@ void ZWinPaletteDialog::SelectH(int64_t y)
 
     mCurH = (uint32_t)(y * fScalar);
     UpdatePalette();
+    UpdateTextEdit();
 }
 
 void ZWinPaletteDialog::UpdatePalette()
@@ -122,8 +124,13 @@ void ZWinPaletteDialog::UpdatePalette()
     ZGUI::EditableColor& col = (*mpColorMap)[mnSelectingColorIndex];
     uint32_t originalA = (mOriginalColorMap[mnSelectingColorIndex].col & 0xff000000);
     col.col = originalA | COL::AHSV_To_ARGB(0, mCurH, mCurS, mCurV);
+}
 
-    string s = SH::ToHexString(col.col);
+void ZWinPaletteDialog::UpdateTextEdit()
+{
+    ZGUI::EditableColor& col = (*mpColorMap)[mnSelectingColorIndex];
+
+    string s = SH::ToHexString(col.col).substr(2);  // strip off 0X
     if (msRGBTextValue != s)
     {
         msRGBTextValue = s;
@@ -133,35 +140,37 @@ void ZWinPaletteDialog::UpdatePalette()
 }
 
 
+ZRect ZWinPaletteDialog::PaletteRect(int64_t nIndex, eCategory category)
+{
+    ZRect r(mrPaletteEntryArea.left, mrPaletteEntryArea.top, mrPaletteEntryArea.right, mrPaletteEntryArea.top + mnPaletteEntryHeight);
+    int64_t w = r.Width() / 3;
+
+    r.OffsetRect(0, nIndex * mnPaletteEntryHeight);
+
+    if (category == kDefault)
+        return ZRect(r.left, r.top, r.left + w, r.bottom);
+    else if (category == kOriginal)
+        return ZRect(r.left+2, r.top, r.right - w, r.bottom);
+
+    return ZRect(r.left + 2*w, r.top, r.right, r.bottom);
+}
+
 void ZWinPaletteDialog::SelectFromPalette(int64_t x, int64_t y)
 {
     if (!mpColorMap)
         return;
 
-    limit<int64_t>(x, 0, mrPaletteEntryArea.Width());
-    limit<int64_t>(y, 0, mrPaletteEntryArea.Height());
+    size_t nIndex = (y-mrPaletteEntryArea.top) / mnPaletteEntryHeight;
 
-    size_t nIndex = y / gM;
+    ZRect rE(PaletteRect(nIndex, kEdited));
+    ZRect rO(PaletteRect(nIndex, kOriginal));
+    ZRect rD(PaletteRect(nIndex, kDefault));
 
-
-    ZRect rColorEntry(mrPaletteEntryArea.left, mrPaletteEntryArea.top, mrPaletteEntryArea.right, mrPaletteEntryArea.top + gM);
-    rColorEntry.OffsetRect(0, nIndex * gM);
-
-    ZRect rCurColor(rColorEntry);
-    rCurColor.left = rCurColor.right - rColorEntry.Width() / 3;
-    rCurColor.MoveRect(mrPaletteEntryArea.Width() - gM, nIndex*gM);
-
-    ZRect rOldColor(rCurColor);
-    rOldColor.OffsetRect(-rCurColor.Width(), 0);
-
-    ZRect rDefaultColor(rOldColor);
-    rDefaultColor.OffsetRect(-rCurColor.Width(), 0);
-
-    if (rCurColor.PtInRect(x, y))
+    if (rE.PtInRect(x,y))
         SelectPaletteIndex(nIndex, kEdited);
-    else if (rOldColor.PtInRect(x, y))
+    if (rO.PtInRect(x, y))
         SelectPaletteIndex(nIndex, kOriginal);
-    else if (rDefaultColor.PtInRect(x, y))
+    if (rD.PtInRect(x, y))
         SelectPaletteIndex(nIndex, kDefault);
 }
 
@@ -174,21 +183,29 @@ void ZWinPaletteDialog::SelectPaletteIndex(size_t nIndex, eCategory category)
     {
         mnSelectingColorIndex = nIndex;
 
-        ZGUI::EditableColor& col = (*mpColorMap)[mnSelectingColorIndex];
         ZGUI::EditableColor& original = mOriginalColorMap[mnSelectingColorIndex];
 
         if (category == kOriginal)
-            col.col = original.col;
+            SetCurColor(original.col);
         else if (category == kDefault)
-            col.col = col.default_color;
+            SetCurColor(original.default_color);
 
-        uint32_t hsv = COL::ARGB_To_AHSV(col.col);
-
-        mCurH = AHSV_H(hsv);
-        mCurS = AHSV_S(hsv);
-        mCurV = AHSV_V(hsv);
-        Invalidate();
+        UpdateTextEdit();
     }
+}
+
+void ZWinPaletteDialog::SetCurColor(uint32_t col)
+{
+    ZGUI::EditableColor& editCol = (*mpColorMap)[mnSelectingColorIndex];
+    editCol.col = col;
+
+    uint32_t hsv = COL::ARGB_To_AHSV(col);
+
+    mCurH = AHSV_H(hsv);
+    mCurS = AHSV_S(hsv);
+    mCurV = AHSV_V(hsv);
+
+    Invalidate();
 }
 
 
@@ -313,30 +330,21 @@ bool ZWinPaletteDialog::Paint()
         ZGUI::EditableColor& edCol = (*mpColorMap)[mnSelectingColorIndex];
         uint32_t hsv = COL::ARGB_To_AHSV(edCol.col);
 
-
-
-        ZRect rColorEntry(mrPaletteEntryArea.left, mrPaletteEntryArea.top, mrPaletteEntryArea.right, mrPaletteEntryArea.top + gM);
-
         for (int i = 0; i < mpColorMap->size(); i++)
         {
-
-
             ZGUI::EditableColor& col = (*mpColorMap)[i];
             ZGUI::EditableColor& originalCol = mOriginalColorMap[i];
 
-            ZRect rSwatch(rColorEntry);
-            rSwatch.left = rSwatch.right - rColorEntry.Width()/3;
+            mpSurface->Fill(col.col, &PaletteRect(i, kEdited)); // cur color
+            mpSurface->Fill(originalCol.col, &PaletteRect(i, kOriginal)); // original.col
+            mpSurface->Fill(originalCol.default_color, &PaletteRect(i, kDefault)); // default color
 
-            mpSurface->Fill(col.col, &rSwatch); // cur color
-            rSwatch.OffsetRect(-rSwatch.Width(), 0);
-            mpSurface->Fill(originalCol.col, &rSwatch); // original.col
-            rSwatch.OffsetRect(-rSwatch.Width(), 0);
-            mpSurface->Fill(originalCol.default_color, &rSwatch); // default color
+            mpSurface->DrawRectAlpha(PaletteRect(i, kEdited), 0x88000000);
+            mpSurface->DrawRectAlpha(PaletteRect(i, kOriginal), 0x88000000);
+            mpSurface->DrawRectAlpha(PaletteRect(i, kDefault), 0x88000000);
 
-            mStyle.Font()->DrawText(mpSurface.get(), col.name, ZGUI::Arrange(mStyle.Font()->StringRect(col.name), rColorEntry, ZGUI::ILIC, gSpacer, 0));
-
-
-            rColorEntry.OffsetRect(0, rColorEntry.Height());
+            ZRect rCaption(PaletteRect(i, kDefault));
+            mStyle.Font()->DrawText(mpSurface.get(), col.name, ZGUI::Arrange(mStyle.Font()->StringRect(col.name), rCaption, ZGUI::ILIC, gSpacer, 0));
         }
 
 
@@ -383,15 +391,43 @@ void ZWinPaletteDialog::ComputeAreas()
     mrPaletteEntryArea.SetRect(rFull.left, rHSVArea.top, rHSVArea.left - gM, rHSVArea.bottom);
 
 
+    if (mpColorMap)
+    {
+        mnPaletteEntryHeight = mrPaletteEntryArea.Height() / mpColorMap->size();
+        limit<size_t>(mnPaletteEntryHeight, gM, gM * 4);
+    }
+    else
+    {
+        mnPaletteEntryHeight = gM * 2;
+    }
+
+
     if (mpRGBEdit)
     {
-        ZRect rEdit(mStyle.Font()->StringRect("0X00000000"));   // enough space for ARGB hex
-        rEdit.InflateRect(gSpacer, gSpacer);
+        ZRect rEdit(mStyle.Font()->StringRect("WWWWWWWW"));   // enough space for ARGB hex without 0x
+        rEdit.InflateRect(gSpacer*2, gSpacer);
         rEdit = ZGUI::Arrange(rEdit, mrSVArea, ZGUI::ILOB, 0, gM);
         mpRGBEdit->SetArea(rEdit);
+        mpRGBEdit->mnCharacterLimit = 8;
+        mpRGBEdit->msOnChangeMessage = ZMessage("rgb_edit", this);
     }
 
     ZWin::ComputeAreas();
+}
+
+bool ZWinPaletteDialog::HandleMessage(const ZMessage& message)
+{
+    if (message.GetType() == "rgb_edit")
+    {
+        string s = "0x" + msRGBTextValue;
+        if (s.length() < 10)
+            s = "0xFF" + msRGBTextValue;
+        SetCurColor((uint32_t) SH::ToInt(s));
+        UpdatePalette();
+        return true;
+    }
+
+    return ZWinDialog::HandleMessage(message);
 }
 
 
@@ -403,7 +439,7 @@ ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, ZG
 
     ZRect rMain(gpMainWin->GetArea());
 
-    ZRect r(rMain.Width() / 3, (int64_t)(rMain.Width() / 4));
+    ZRect r(rMain.Width() / 3, (int64_t)(rMain.Width() / 4.5));
     r = ZGUI::Arrange(r, rMain, ZGUI::C);
 
     pDialog->mBehavior |= ZWinDialog::eBehavior::Draggable | ZWinDialog::eBehavior::OKButton | ZWinDialog::eBehavior::CancelButton;

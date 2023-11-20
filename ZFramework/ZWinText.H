@@ -64,6 +64,10 @@ public:
 
 
     ZGUI::Style     mStyle;
+    int64_t         mnCharacterLimit;    // no limit if -1
+
+    std::string     msOnChangeMessage;
+    std::string     msOnEnterMessage;
 
 protected:
     std::string*    mpText;
@@ -74,6 +78,7 @@ protected:
     void            DeleteSelection();
 
     void            HandleCursorMove(int64_t newCursorPos, bool bScrollView = true);
+    void            HandleTextCharacterLimit();
     int64_t         FindNextBreak(int64_t nDir);
     void            ConstrainCursorPosition();
     int64_t         StyleOffset();      // if style is centered, helps compute view offset

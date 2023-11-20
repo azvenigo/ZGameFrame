@@ -300,7 +300,12 @@ bool ZWinCheck::Paint()
         mCaption.style = mUncheckedStyle;
     }
 
-	return ZWinSizablePushBtn::Paint();
+	ZWinSizablePushBtn::Paint();
+
+    if (mbEnabled && mDrawState == kDown)
+    {
+        mpSurface->FillAlpha(0x88000000|(gStyleToggleChecked.bgCol&0x00ffffff));    // 50% alpha
+    }
 }
 
 

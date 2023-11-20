@@ -622,7 +622,6 @@ void ImageViewer::ShowHelpDialog()
     rForm = ZGUI::Arrange(rForm, r, ZGUI::LT, gSpacer * 4, pLabel->mStyle.fp.nHeight + gSpacer);
     pForm->SetArea(rForm);
     pForm->SetScrollable();
-    pForm->mDialogStyle.bgCol = 0xff444444;
     pHelp->ChildAdd(pForm);
     pHelp->Arrange(ZGUI::C, mAreaLocal);
 
@@ -682,8 +681,9 @@ void ImageViewer::ShowHelpDialog()
 
     pForm->SetArea(rForm);
     pForm->SetScrollable();
-    pForm->mDialogStyle = text;
-    pForm->mDialogStyle.bgCol = 0xff444444;
+//    pForm->mDialogStyle = text;
+    pForm->mDialogStyle.look.colTop = 0xffffffff;
+    pForm->mDialogStyle.look.colBottom = 0xffffffff;
     pHelp->ChildAdd(pForm);
     pHelp->Arrange(ZGUI::C, mAreaLocal);
 

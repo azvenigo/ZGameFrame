@@ -34,12 +34,16 @@ public:
     ZWinPaletteDialog();
     bool        Init();
 
+    void        SetCurColor(uint32_t col);
+
     void        ShowRecentColors(size_t nCount);
 
     bool        OnMouseDownL(int64_t x, int64_t y);
     bool        OnMouseUpL(int64_t x, int64_t y);
     bool        OnMouseMove(int64_t x, int64_t y);
     bool        OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
+
+    bool        HandleMessage(const ZMessage& message);
 
     ZGUI::Style mStyle;
 
@@ -54,9 +58,13 @@ protected:
 
     void        SelectSV(int64_t x, int64_t y); // relative to mrSVArea
     void        SelectH(int64_t y); // relative to mrHArea.top
+
     void        SelectFromPalette(int64_t x, int64_t y);
     void        SelectPaletteIndex(size_t nIndex, eCategory category = kEdited);
+    ZRect       PaletteRect(int64_t nIndex, eCategory category);
+
     void        UpdatePalette();        // based on selected changes
+    void        UpdateTextEdit();
 
     void        ComputeAreas();
 
@@ -87,4 +95,5 @@ protected:
     std::string     msRGBTextValue;
 
     size_t          mnSelectingColorIndex;
+    size_t          mnPaletteEntryHeight;
 };

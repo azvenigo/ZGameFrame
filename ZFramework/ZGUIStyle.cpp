@@ -32,11 +32,11 @@ ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::Z
 
 ZGUI::Palette gAppPalette{
 {
-    { "dialog_fill", gDefaultDialogFill },              // 0
-    { "text_area_fill", gDefaultTextAreaFill },         // 1
-    { "btn_col_checked",  gDefaultButtonChecked},       // 2  checked button color
-    { "btn_col_unchecked",  gDefaultButtonUnchecked},   // 3
-    { "tooltip_fill", gDefaultTooltipFill },            // 4
+    { "Dialog Fill", gDefaultDialogFill },              // 0
+    { "Text Fill", gDefaultTextAreaFill },         // 1
+    { "Toggle Checked",  gDefaultButtonChecked},       // 2  checked button color
+    { "Toggle Unchecked",  gDefaultButtonUnchecked},   // 3
+    { "Tooltip Fill", gDefaultTooltipFill },            // 4
 
 } };
 
@@ -77,14 +77,15 @@ namespace ZGUI
 
 
         // update colors
-        gAppPalette.GetByName("tooltip_fill", gStyleTooltip.bgCol);
-        gAppPalette.GetByName("dialog_fill", gStyleCaption.bgCol);
-        gAppPalette.GetByName("dialog_fill", gStyleButton.bgCol);
-        gAppPalette.GetByName("dialog_fill", gStyleToggleChecked.bgCol);
-        gAppPalette.GetByName("dialog_fill", gStyleToggleUnchecked.bgCol);
-        gAppPalette.GetByName("dialog_fill", gDefaultDialogStyle.bgCol);
-        gAppPalette.GetByName("text_area_fill", gDefaultWinTextEditStyle.bgCol);
-        gAppPalette.GetByName("dialog_fill", gStyleButton.bgCol);
+        gAppPalette.GetByName("Tooltip Fill", gStyleTooltip.bgCol);
+        gAppPalette.GetByName("Dialog Fill", gStyleCaption.bgCol);
+        gAppPalette.GetByName("Dialog Fill", gStyleButton.bgCol);
+        gAppPalette.GetByName("Toggle Checked", gStyleToggleChecked.bgCol);
+        gAppPalette.GetByName("Toggle Unchecked", gStyleToggleUnchecked.bgCol);
+        gAppPalette.GetByName("Dialog Fill", gDefaultDialogStyle.bgCol);
+        gAppPalette.GetByName("Text Fill", gDefaultWinTextEditStyle.bgCol);
+        gAppPalette.GetByName("Text Fill", gDefaultFormattedDocStyle.bgCol);
+        gAppPalette.GetByName("Dialog Fill", gStyleButton.bgCol);
 
 
     }

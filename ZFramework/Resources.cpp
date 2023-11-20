@@ -109,7 +109,7 @@ bool cResources::Init(const string& sDefaultResourcePath)
     assert(bResult);
 
     uint32_t nCol = 0;
-    if (gAppPalette.GetByName("dialog_fill", nCol))
+    if (gAppPalette.GetByName("Dialog Fill", nCol))
         ColorizeResources(nCol);
 
 

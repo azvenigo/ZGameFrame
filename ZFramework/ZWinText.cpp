@@ -180,6 +180,7 @@ ZWinTextEdit::ZWinTextEdit(string* pText)
     mbMouseDown = false;
     mnSelectionStart = -1;
     mnSelectionEnd = -1;
+    mnCharacterLimit = -1;
     mStyle = gDefaultWinTextEditStyle;
     if (msWinName.empty())
         msWinName = "ZWinTextEdit_" + gMessageSystem.GenerateUniqueTargetName();
@@ -362,11 +363,17 @@ int64_t ZWinTextEdit::FindNextBreak(int64_t nDir)
 
 bool ZWinTextEdit::OnChar(char c)
 {
+    string sBeforeEdit(*mpText);
+
     switch (c)
     {
-
+    case VK_RETURN:
+        if (!msOnEnterMessage.empty())
+            gMessageSystem.Post(msOnEnterMessage);
+        break;
     case VK_ESCAPE:
-        gMessageSystem.Post("quit_app_confirmed");
+        if (mpParentWin)
+            mpParentWin->SetFocus();
         break;
     default:
         if (!mbCTRLDown && c > 31 && c < 128)   // only specific chars
@@ -374,12 +381,17 @@ bool ZWinTextEdit::OnChar(char c)
             if (mbSelecting)
                 DeleteSelection();
 
-            mpText->insert(mCursorPosition, 1, c);
-            HandleCursorMove(mCursorPosition + 1);
+            if (mnCharacterLimit >= 0 && mpText->length() < mnCharacterLimit)
+            {
+                mpText->insert(mCursorPosition, 1, c);
+                HandleCursorMove(mCursorPosition + 1);
+            }
         }
         break;
     }
 
+    if (!msOnChangeMessage.empty() && sBeforeEdit != *mpText)
+        gMessageSystem.Post(msOnChangeMessage);
 
     return true;
 }
@@ -419,9 +431,21 @@ void ZWinTextEdit::DeleteSelection()
     }
 }
 
+void ZWinTextEdit::HandleTextCharacterLimit()
+{
+    // limit 
+    if (mpText && mnCharacterLimit >= 0 && mpText->length() > mnCharacterLimit)
+    {
+        *mpText = mpText->substr(0, mnCharacterLimit);
+        HandleCursorMove(mCursorPosition);
+    }
+}
+
 
 bool ZWinTextEdit::OnKeyDown(uint32_t c)
 {
+    string sBeforeEdit(*mpText);
+    
     switch (c)
     {
     case VK_LEFT:
@@ -501,6 +525,7 @@ bool ZWinTextEdit::OnKeyDown(uint32_t c)
         {
             mnSelectionStart = 0;
             mnSelectionEnd = mpText->length();
+            HandleCursorMove(0);
             mbSelecting = true;
         }
         break;
@@ -535,21 +560,27 @@ bool ZWinTextEdit::OnKeyDown(uint32_t c)
                     if (nMax > nMin)
                     {
                         mpText->erase(nMin, nMax - nMin);
-                        mpText->insert(nMin, sInsert);
                         mCursorPosition -= (nMax-nMin);
+                        limit<int64_t>(mCursorPosition, 0, mpText->length());
                     }
                     mnSelectionStart = -1;
                     mnSelectionEnd = -1;
                 }
 
                 mpText->insert(mCursorPosition, sInsert);
+                HandleTextCharacterLimit();
                 mCursorPosition += sInsert.length();
+                limit<int64_t>(mCursorPosition, 0, mpText->length());
 
                 HandleCursorMove(mCursorPosition);
             }
             Invalidate();
         }
     }
+
+    if (!msOnChangeMessage.empty() && sBeforeEdit != *mpText)
+        gMessageSystem.Post(msOnChangeMessage);
+
     return true;
 }
 
@@ -570,6 +601,8 @@ bool ZWinTextEdit::OnKeyUp(uint32_t c)
 
 void ZWinTextEdit::HandleCursorMove(int64_t newCursorPos, bool bScrollView)
 {
+    limit<int64_t>(newCursorPos, 0, mpText->length());
+
     tZFontPtr pFont = mStyle.Font();
 
     int64_t nAbsStringPixels = pFont->StringWidth(*mpText);
