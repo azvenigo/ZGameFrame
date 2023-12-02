@@ -57,8 +57,11 @@ ZWinSizablePushBtn* ZWinControlPanel::Button(const std::string& sID, const strin
         mButtons[sID] = pBtn;
         ChildAdd(pBtn);
 
-        pBtn->SetArea(mrNextControl);
-        mrNextControl.OffsetRect(0, mrNextControl.Height());
+        if (mrNextControl.Area() > 0)
+        {
+            pBtn->SetArea(mrNextControl);
+            mrNextControl.OffsetRect(0, mrNextControl.Height());
+        }
     }
 
     if (!sCaption.empty())
@@ -78,8 +81,12 @@ ZWinSizablePushBtn* ZWinControlPanel::SVGButton(const std::string& sID, const st
         pBtn = new ZWinSizablePushBtn();
         mButtons[sID] = pBtn;
         ChildAdd(pBtn);
-        pBtn->SetArea(mrNextControl);
-        mrNextControl.OffsetRect(0, mrNextControl.Height());
+
+        if (mrNextControl.Area() > 0)
+        {
+            pBtn->SetArea(mrNextControl);
+            mrNextControl.OffsetRect(0, mrNextControl.Height());
+        }
     }
 
     if (!sSVGFilepath.empty())
@@ -101,8 +108,11 @@ ZWinLabel* ZWinControlPanel::Caption(const std::string& sID, const std::string& 
         pLabel = new ZWinLabel();
         mLabels[sID] = pLabel;
         ChildAdd(pLabel);
-        pLabel->SetArea(mrNextControl);
-        mrNextControl.OffsetRect(0, mrNextControl.Height());
+        if (mrNextControl.Area() > 0)
+        {
+            pLabel->SetArea(mrNextControl);
+            mrNextControl.OffsetRect(0, mrNextControl.Height());
+        }
     }
 
     if (!sCaption.empty())
@@ -124,10 +134,13 @@ ZWinCheck* ZWinControlPanel::Toggle(const std::string& sID, bool* pbValue, const
         if (!sCaption.empty())
             pCheck->mCaption.sText = sCaption;
 
-        pCheck->SetArea(mrNextControl);
+        if (mrNextControl.Area() > 0)
+        {
+            pCheck->SetArea(mrNextControl);
+            mrNextControl.OffsetRect(0, mrNextControl.Height());
+        }
         ChildAdd(pCheck);
 
-        mrNextControl.OffsetRect(0, mrNextControl.Height());
     }
     return pCheck;
 }
@@ -147,9 +160,12 @@ ZWinSlider* ZWinControlPanel::Slider(const std::string& sID, int64_t* pnSliderVa
             pSlider->mBehavior |= ZWinSlider::kDrawSliderValueOnMouseOver;
         else if (bDrawValue)
             pSlider->mBehavior |= ZWinSlider::kDrawSliderValueAlways;
-        pSlider->SetArea(mrNextControl);
         ChildAdd(pSlider);
-        mrNextControl.OffsetRect(0, mrNextControl.Height());
+        if (mrNextControl.Area() > 0)
+        {
+            pSlider->SetArea(mrNextControl);
+            mrNextControl.OffsetRect(0, mrNextControl.Height());
+        }
     }
 
 

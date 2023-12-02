@@ -103,6 +103,11 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel->FitToControls();
 
+    gpControlPanel->mTransformIn = ZWin::kToOrFrom;
+    gpControlPanel->mTransformOut = ZWin::kToOrFrom;
+    gpControlPanel->mToOrFrom = ZTransformation(ZPoint(grFullArea.right, grFullArea.top + gM), 0.0, 0.0);
+
+
     gpMainWin->ChildAdd(gpControlPanel);
 
 

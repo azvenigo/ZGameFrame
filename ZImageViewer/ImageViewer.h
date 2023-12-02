@@ -9,10 +9,12 @@
 #include "ImageContest.h"
 
 
+
 class ZWinImage;
 class ZWinCheck;
 class ZWinSizablePushBtn;
 class ZWinControlPanel;
+class ZWinFolderSelector;
 class WinTopWinners;
 
 
@@ -266,6 +268,7 @@ protected:
     ZWinCheck*              mpRankedFilterButton;
     ZWinSizablePushBtn*     mpDeleteMarkedButton;
     ZWinSizablePushBtn*     mpShowContestButton;
+    ZWinFolderSelector*     mpFolderSelector;
 
     WinTopWinners*          mpRatedImagesStrip;
 

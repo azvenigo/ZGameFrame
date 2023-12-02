@@ -78,9 +78,37 @@ public:
 };
 
 
+namespace fs = std::filesystem;
+
+int processFolder(const fs::path& folderPath) 
+{
+    int nCount = 0;
+    for (const auto& entry : fs::directory_iterator(folderPath) )
+    {
+        try 
+        {
+            if (fs::is_directory(entry.status())) 
+            {
+                std::cout << entry.path() << std::endl;
+                nCount++;
+                // You can perform additional operations on the folder here
+            }
+        }
+        catch (const std::exception& ex) 
+        {
+            std::cerr << "Error processing " << entry.path() << ": " << ex.what() << std::endl;
+        }
+    }
+    return nCount;
+}
+
 int main(int argc, char* argv[])
 {
      
+    int nCount = processFolder("c:\\");
+    cout << "nCount:" << nCount << "\n";
+
+
     // Enable exception handling
     SetUnhandledExceptionFilter([](PEXCEPTION_POINTERS exceptionInfo) -> LONG {
         std::cerr << "Unhandled exception: " << std::hex << exceptionInfo->ExceptionRecord->ExceptionCode << std::endl;

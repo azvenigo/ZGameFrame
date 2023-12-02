@@ -87,8 +87,9 @@ bool ZChoosePGNWin::Init()
 
     mpGamesList = new ZWinFormattedDoc();
     mpGamesList->SetArea(rListbox);
-    mpGamesList->mDialogStyle.bgCol = gDefaultTextAreaFill;
-    mpGamesList->mbDrawBorder = true;
+    mpGamesList->mStyle.bgCol = gDefaultTextAreaFill;
+    mpGamesList->Set(ZWinFormattedDoc::kBackgroundFill, true);
+    mpGamesList->Set(ZWinFormattedDoc::kDrawBorder, true);
     ChildAdd(mpGamesList);
 
     return ZWin::Init();
@@ -253,8 +254,8 @@ bool ZPGNWin::Init()
 
     mpGameTagsWin = new ZWinFormattedDoc();
     mpGameTagsWin->SetArea(rGameTags);
-    mpGameTagsWin->mDialogStyle.bgCol = gDefaultTextAreaFill;
-    mpGameTagsWin->mbDrawBorder = true;
+    mpGameTagsWin->mStyle.bgCol = gDefaultTextAreaFill;
+    mpGameTagsWin->Set(ZWinFormattedDoc::kDrawBorder|ZWinFormattedDoc::kBackgroundFill, true);
 
     ChildAdd(mpGameTagsWin); 
 
@@ -333,8 +334,8 @@ bool ZPGNWin::Init()
 
     mpMovesWin = new ZWinFormattedDoc();
     mpMovesWin->SetArea(rMoves);
-    mpMovesWin->mDialogStyle.bgCol = 0xff444444;
-    mpMovesWin->mbDrawBorder = true;
+    mpMovesWin->mStyle.bgCol = 0xff444444;
+    mpMovesWin->Set(ZWinFormattedDoc::kDrawBorder| ZWinFormattedDoc::kBackgroundFill, true);
 
     ChildAdd(mpMovesWin);
 
@@ -476,7 +477,7 @@ void ZPGNWin::UpdateView()
     }
 //    mpMovesWin->InvalidateChildren();
     mpMovesWin->SetScrollable();
-    mpMovesWin->mbUnderlineLinks = false;
+    mpMovesWin->Set(ZWinFormattedDoc::kUnderlineLinks, false);
     mpMovesWin->ScrollTo(mMoveFont.nHeight * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
 
     InvalidateChildren();
@@ -789,7 +790,7 @@ bool ZChessWin::OnMouseDownL(int64_t x, int64_t y)
                 if (SetCapture())
                 {
                     //            OutputDebugLockless("capture x:%d, y:%d\n", mZoomOffset.x, mZoomOffset.y);
-                    SetMouseDownPos(squareOffset.x, squareOffset.x);
+                    mMouseDownOffset.Set(squareOffset.x, squareOffset.x);
                     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
                     mpDraggingPiece = pieceImage;
                     mrDraggingPiece.SetRect(pieceImage->GetArea());

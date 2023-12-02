@@ -381,7 +381,7 @@ bool ZWinTextEdit::OnChar(char c)
             if (mbSelecting)
                 DeleteSelection();
 
-            if (mnCharacterLimit >= 0 && mpText->length() < mnCharacterLimit)
+            if (mnCharacterLimit >= 0 && (int64_t)mpText->length() < mnCharacterLimit)
             {
                 mpText->insert(mCursorPosition, 1, c);
                 HandleCursorMove(mCursorPosition + 1);
@@ -434,7 +434,7 @@ void ZWinTextEdit::DeleteSelection()
 void ZWinTextEdit::HandleTextCharacterLimit()
 {
     // limit 
-    if (mpText && mnCharacterLimit >= 0 && mpText->length() > mnCharacterLimit)
+    if (mpText && mnCharacterLimit >= 0 && (int64_t)mpText->length() > mnCharacterLimit)
     {
         *mpText = mpText->substr(0, mnCharacterLimit);
         HandleCursorMove(mCursorPosition);

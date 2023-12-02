@@ -355,11 +355,11 @@ bool ZWinPaletteDialog::Paint()
         ZGUI::Style style(mStyle);
         style.pos = ZGUI::CB;
 
-        mStyle.Font()->DrawText(mpSurface.get(), "def", rCaption, &style);
+        mStyle.Font()->DrawText(mpSurface.get(), "reset", rCaption, &style);
         rCaption.OffsetRect(rCaption.Width(), 0);
-        mStyle.Font()->DrawText(mpSurface.get(), "prev", rCaption, &style);
+        mStyle.Font()->DrawText(mpSurface.get(), "undo", rCaption, &style);
         rCaption.OffsetRect(rCaption.Width(), 0);
-        mStyle.Font()->DrawText(mpSurface.get(), "new", rCaption, &style);
+        mStyle.Font()->DrawText(mpSurface.get(), "edit", rCaption, &style);
 
         mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mrPaletteEntryArea, ZBuffer::kEdgeBltMiddle_None);
     }

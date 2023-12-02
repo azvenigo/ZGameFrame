@@ -91,9 +91,6 @@ public:
 	virtual bool        IsPointInWindowScreenCoordinates(int64_t screenX, int64_t screenY);
 	virtual bool        IsPointInWindowWindowCoordinates(int64_t x, int64_t y);
 	
-	virtual void        SetMouseDownPos(int64_t mouseX,  int64_t mouseY);
-	virtual void        GetMouseDownPos(int64_t& mouseX, int64_t& mouseY);
-	
 	// IMessageTarget
 	virtual bool        ReceiveMessage(const ZMessage& message);
 	virtual std::string GetTargetName() { return msWinName; }						// returns a unique target identifier
@@ -318,18 +315,5 @@ inline
 bool ZWin::IsPointInWindowScreenCoordinates(int64_t screenX, int64_t screenY) 
 {
 	return mAreaAbsolute.PtInRect(screenX, screenY);
-}
-
-inline
-void ZWin::GetMouseDownPos(int64_t& mouseX, int64_t& mouseY) 
-{
-    mouseX = mMouseDownOffset.x;
-    mouseY = mMouseDownOffset.y;
-}
-
-inline
-void ZWin::SetMouseDownPos(int64_t mouseX, int64_t mouseY) {   
-	mMouseDownOffset.x = mouseX;
-	mMouseDownOffset.y = mouseY;
 }
 

@@ -43,6 +43,19 @@ typedef std::list<tFormattedLine>	tDocument;
 class ZWinFormattedDoc : public ZWin
 {
 public:
+    enum eBehavior : uint32_t
+    {
+        kNone                   = 0,
+        kBackgroundFill         = 1,
+        kBackgroundEdgeBlt      = 2,
+        kBackgroundFromParent   = 4,
+        kDrawBorder             = 8,
+        kUnderlineLinks         = 16,
+        kEvenColumns            = 32,
+        kScrollable             = 64
+    };
+
+
 	ZWinFormattedDoc();
 	~ZWinFormattedDoc();
 
@@ -58,13 +71,22 @@ public:
 
     void                SetScrollable(bool enable = true) 
     { 
-        mbScrollable = enable; 
+        Set(kScrollable, enable);
         mbAcceptsCursorMessages |= enable; 
         UpdateScrollbar(); 
     }
     void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
 	void				UpdateScrollbar();					// Creates a scrollbar if one is needed
 
+    void                Set(uint32_t flag, bool set)
+    {
+        if (set)
+            mBehavior |= flag;
+        else
+            mBehavior &= ~flag;
+    }
+
+    bool                IsSet(uint32_t flag) { return (mBehavior & flag) > 0; }
 
 	virtual void		SetArea(const ZRect& newArea);
 	virtual bool		OnMouseDownL(int64_t x, int64_t y);
@@ -77,11 +99,12 @@ public:
 #endif*/
 
 
-    bool  				mbDrawBorder;
+/*    bool  				mbDrawBorder;
     bool				mbUnderlineLinks;
-    bool                mbEvenColumns;
+    bool                mbEvenColumns;*/
+    uint32_t            mBehavior;
     int64_t				mnScrollToOnInit;
-    ZGUI::Style         mDialogStyle;
+    ZGUI::Style         mStyle;
 
 private:
 
@@ -108,7 +131,7 @@ private:
 
 	int64_t				mnMouseDownSliderVal;
 	double				mfMouseMomentum;
-    bool				mbScrollable;
+//    bool				mbScrollable;
 
     std::vector<int64_t>mColumnWidths;
 

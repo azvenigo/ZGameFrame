@@ -6,8 +6,8 @@
 #include "ZWinSlider.h"
 #include "ZGUIStyle.h"
 #include "ZDebug.h"
+#include "ZTypes.h"
 
-typedef std::list<std::string> tStringList;
 
 class ZWinDebugConsole : public ZWin
 {

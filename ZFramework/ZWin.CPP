@@ -90,7 +90,7 @@ bool ZWin::Init()
             if (mpSurface && (mpSurface->GetArea().Width() != mAreaLocal.Width() || mpSurface->GetArea().Height() != mAreaLocal.Height()))
             {
                 mpSurface.reset(new ZBuffer());
-                    mpSurface->Init(mAreaAbsolute.Width(), mAreaAbsolute.Height());
+                mpSurface->Init(mAreaAbsolute.Width(), mAreaAbsolute.Height());
             }
             Paint();        // TBD this may be desired since our texture may be requested before the threadproc has a chance to call paint
             TransformIn();
@@ -1006,6 +1006,7 @@ void ZWin::InvalidateChildren()
 
 void ZWin::SetArea( const ZRect& area ) 
 {
+    assert(area.Width() > 0 && area.Height() > 0);
     if (!mpSurface)
         mpSurface.reset(new ZBuffer());
 
@@ -1021,6 +1022,7 @@ void ZWin::SetArea( const ZRect& area )
     mAreaLocal.SetRect(0, 0, area.Width(), area.Height());
     ZTransformable::Init(mAreaLocal);
 
+    Invalidate();
     ComputeAreas();
 }
 
@@ -1230,7 +1232,7 @@ bool ZWinDialog::OnMouseDownL(int64_t x, int64_t y)
 {
     if ((mBehavior & eBehavior::Draggable) && SetCapture())
     {
-        SetMouseDownPos(x, y);
+        mMouseDownOffset.Set(x, y);
     }
     return ZWin::OnMouseDownL(x, y);
 }

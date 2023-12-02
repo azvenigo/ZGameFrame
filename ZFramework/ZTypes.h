@@ -503,8 +503,9 @@ typedef std::list<ZRect> tRectList;
 /////////////////////////////////////////////////////////////////////////////
 
 
-// Standard maps
+// Standard containers
 typedef std::map<std::string, std::string> tKeyValueMap;
+typedef std::list<std::string> tStringList;
 
 
 

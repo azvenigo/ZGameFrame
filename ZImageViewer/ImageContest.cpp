@@ -404,7 +404,7 @@ void ImageContest::ShowHelpDialog()
     rForm = ZGUI::Arrange(rForm, r, ZGUI::C);
     pForm->SetArea(rForm);
     pForm->SetScrollable();
-    pForm->mDialogStyle.bgCol = gDefaultDialogFill;
+    pForm->mStyle.bgCol = gDefaultDialogFill;
     pForm->mbAcceptsCursorMessages = false;
     pHelp->ChildAdd(pForm);
     pHelp->Arrange(ZGUI::C, mAreaLocal);

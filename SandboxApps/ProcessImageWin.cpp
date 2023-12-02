@@ -1010,7 +1010,8 @@ bool cProcessImageWin::Init()
 
     mpImageProps = new ZWinFormattedDoc();
     mpImageProps->SetArea(rImageProps);
-    mpImageProps->mDialogStyle.bgCol = gDefaultTextAreaFill;
+    mpImageProps->mStyle.bgCol = gDefaultTextAreaFill;
+    mpImageProps->Set(ZWinFormattedDoc::kBackgroundFill, true);
     mpImageProps->SetScrollable();
 
     pWP->ChildAdd(mpImageProps);
@@ -1315,7 +1316,7 @@ bool cProcessImageWin::OnMouseDownL(int64_t x, int64_t y)
     {
         if (SetCapture())
         {
-            SetMouseDownPos(x,y);
+            mMouseDownOffset.Set(x, y);
             return true;
         }
     }

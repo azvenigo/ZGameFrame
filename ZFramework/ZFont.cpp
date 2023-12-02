@@ -255,7 +255,7 @@ int64_t ZFont::StringWidth(const string& sText)
 
 bool ZFont::DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, ZGUI::Style* pStyle, ZRect* pClip)
 {
-    ZRect r(ZGUI::Arrange(StringRect(sText), rAreaToDrawTo, pStyle->pos));
+    ZRect r(ZGUI::Arrange(StringRect(sText), rAreaToDrawTo, pStyle->pos, pStyle->paddingH, pStyle->paddingV));
     return DrawText(pBuffer, sText, r, &pStyle->look, pClip);
 }
 

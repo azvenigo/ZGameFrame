@@ -125,7 +125,7 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
                 if (y < 0)
                     y = 0;
 
-                SetMouseDownPos(x,y);
+                mMouseDownOffset.Set(x, y);
                 return true;
             }
         }
@@ -151,7 +151,7 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
         {
             if (SetCapture())
             {
-                SetMouseDownPos(mImageArea.left - x, mImageArea.top - y);
+                mMouseDownOffset.Set(mImageArea.left - x, mImageArea.top - y);
                 return true;
             }
         }

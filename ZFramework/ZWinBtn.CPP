@@ -306,6 +306,8 @@ bool ZWinCheck::Paint()
     {
         mpSurface->FillAlpha(0x88000000|(gStyleToggleChecked.bgCol&0x00ffffff));    // 50% alpha
     }
+
+    return true;
 }
 
 

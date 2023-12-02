@@ -8,6 +8,7 @@
 #include "ZWinFileDialog.h"
 #include "ConfirmDeleteDialog.h"
 #include "ZWinControlPanel.h"
+#include "ZWinFolderSelector.h"
 #include "ZWinText.H"
 #include "ZGUIStyle.h"
 #include <algorithm>
@@ -72,7 +73,7 @@ ImageViewer::ImageViewer()
     mpShowContestButton = nullptr;
     mOutstandingMetadataCount = 0;
     mpRatedImagesStrip = nullptr;
-
+    mpFolderSelector = nullptr;
 
     assert(gGraphicSystem.GetScreenBuffer());
 }
@@ -144,6 +145,9 @@ void ImageViewer::UpdateUI()
     if (mpPanel && mbShowUI)
         rImageArea.top = mpPanel->GetArea().Height();
 
+    if (mpFolderSelector)
+        mpFolderSelector->SetVisible(mbShowUI);
+
     if (mpRatedImagesStrip)
     {
         if (mFilterState == kRanked)
@@ -157,6 +161,14 @@ void ImageViewer::UpdateUI()
         }
         else
             mpRatedImagesStrip->SetVisible(false);
+    }
+
+    if (mpFolderSelector)
+    {
+        ZRect rSelector(mpFolderSelector->VisibleArea());
+        rSelector.MoveRect(0, mpPanel->GetArea().bottom);
+        mpFolderSelector->SetArea(rSelector);
+        mpFolderSelector->SetState(ZWinFolderSelector::kCollapsed);
     }
 
     if (mpWinImage && mbInitted)
@@ -682,14 +694,15 @@ void ImageViewer::ShowHelpDialog()
     pForm->SetArea(rForm);
     pForm->SetScrollable();
 //    pForm->mDialogStyle = text;
-    pForm->mDialogStyle.look.colTop = 0xffffffff;
-    pForm->mDialogStyle.look.colBottom = 0xffffffff;
+    pForm->Set(ZWinFormattedDoc::kBackgroundFill, true);
+    pForm->mStyle.look.colTop = 0xffffffff;
+    pForm->mStyle.look.colBottom = 0xffffffff;
     pHelp->ChildAdd(pForm);
     pHelp->Arrange(ZGUI::C, mAreaLocal);
 
 
     pForm->AddMultiLine("\nQuick Reference\n\n", sectionText);
-    pForm->mbEvenColumns = true;
+    pForm->Set(ZWinFormattedDoc::kEvenColumns|ZWinFormattedDoc::kBackgroundFill, true);
     pForm->AddLineNode("<line><text>TAB</text><text>Toggle UI</text></line>");
 
     string sFormat = "<line wrap=0><text position=lb>%s</text><text position=lb>%s</text></line>";
@@ -1244,6 +1257,16 @@ bool ImageViewer::Init()
         pBtn = mpRotationMenu->Button("|", "|", sMessage);
         pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
+
+        mpFolderSelector = new ZWinFolderSelector();
+        mpFolderSelector->mCurPath = mCurrentFolder;
+        mpFolderSelector->mStyle.bgCol = 0;
+        mpFolderSelector->mStyle.pos = ZGUI::LC;
+        mpFolderSelector->mStyle.paddingH = (int32_t)gSpacer;
+        mpFolderSelector->mStyle.paddingV = (int32_t)gSpacer;
+        mpFolderSelector->mStyle.fp.nHeight = gM * 4 / 5;
+        ChildAdd(mpFolderSelector);
+
 
         mpRotationMenu->mbHideOnMouseExit = true;
         ChildAdd(mpRotationMenu, false);
@@ -1985,6 +2008,8 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
     Clear();
 
     mCurrentFolder = folder;
+    if (mpFolderSelector)
+        mpFolderSelector->mCurPath = folder;
 
     bool bErrors = false;
 
@@ -2346,7 +2371,7 @@ void ImageViewer::UpdateCaptions()
         bShow = true;
 
     mpWinImage->mCaptionMap["filename"].Clear();
-    mpWinImage->mCaptionMap["folder"].Clear();
+//    mpWinImage->mCaptionMap["folder"].Clear();
     mpWinImage->mCaptionMap["favorite"].Clear();
     mpWinImage->mCaptionMap["for_delete"].Clear();
     mpWinImage->mCaptionMap["no_image"].Clear();
@@ -2396,14 +2421,13 @@ void ImageViewer::UpdateCaptions()
 
                 if (ValidIndex(mViewingIndex))
                 {
-                    string sFilename = EntryFromIndex(mViewingIndex)->filename.filename().string();
                     ZGUI::Style filenameStyle(gStyleButton);
                     filenameStyle.pos = ZGUI::LT;
                     filenameStyle.paddingV += (int32_t)(folderStyle.fp.nHeight);
                     filenameStyle.look = ZGUI::ZTextLook::kShadowed;
-                    mpWinImage->mCaptionMap["filename"].sText = sFilename;
+/*                    mpWinImage->mCaptionMap["filename"].sText = sFilename;
                     mpWinImage->mCaptionMap["filename"].style = filenameStyle;
-                    mpWinImage->mCaptionMap["filename"].visible = true;
+                    mpWinImage->mCaptionMap["filename"].visible = true;*/
 
                     const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
                     if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite() && mpFavoritesFont)
@@ -2445,12 +2469,12 @@ void ImageViewer::UpdateCaptions()
 
         }
 
-        if (bShow)
+/*        if (bShow)
         {
             mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
             mpWinImage->mCaptionMap["folder"].style = folderStyle;
             mpWinImage->mCaptionMap["folder"].visible = true;
-        }
+        }*/
 
 
         if (!mMoveToFolder.empty())
@@ -2496,6 +2520,10 @@ void ImageViewer::UpdateCaptions()
             const std::lock_guard<std::recursive_mutex> lock(mpWinImage->mpTable->mTableMutex);
 
             mpWinImage->mpTable->Clear();
+
+            mpWinImage->mpTable->AddRow("Filename", EntryFromIndex(mViewingIndex)->filename.filename().string());
+
+
 
             if (!exif.LensInfo.Model.empty())
                 mpWinImage->mpTable->AddRow("Lens", exif.LensInfo.Model);

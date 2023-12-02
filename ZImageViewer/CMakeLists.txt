@@ -39,6 +39,7 @@ set (GUI_FILES
 ../ZFramework/ZWin.h                ../ZFramework/ZWin.cpp
 ../ZFramework/ZWinBtn.h             ../ZFramework/ZWinBtn.cpp
 ../ZFramework/ZWinDebugConsole.h    ../ZFramework/ZWinDebugConsole.cpp
+../ZFramework/ZWinFolderSelector.h  ../ZFramework/ZWinFolderSelector.cpp
 ../ZFramework/ZWinFormattedText.h   ../ZFramework/ZWinFormattedText.cpp
 ../ZFramework/ZWinImage.h           ../ZFramework/ZWinImage.cpp
 ../ZFramework/ZMainWin.h            ../ZFramework/ZMainWin.cpp
