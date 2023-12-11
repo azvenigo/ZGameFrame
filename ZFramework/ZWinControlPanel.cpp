@@ -200,9 +200,9 @@ bool ZWinControlPanel::Paint()
         rBounds.right--;
         rBounds.bottom--;
 
-        mpSurface->DrawRectAlpha(rBounds, 0x88000000);
+        mpSurface->DrawRectAlpha(0x88000000, rBounds);
         rBounds.OffsetRect(1, 1);
-        mpSurface->DrawRectAlpha(rBounds, 0x88ffffff);
+        mpSurface->DrawRectAlpha(0x88ffffff, rBounds);
         
         mGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rBounds, &mGroupingStyle);
 

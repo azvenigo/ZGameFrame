@@ -1040,7 +1040,7 @@ bool ZBuffer::Colorize(uint32_t nH, uint32_t nS, ZRect* pRect)
 }
 
 
-void  ZBuffer::DrawRectAlpha(ZRect rRect, uint32_t nCol)
+void  ZBuffer::DrawRectAlpha(uint32_t nCol, ZRect rRect)
 {
     // Bottom and right are inclusive, so -1
     rRect.right--;

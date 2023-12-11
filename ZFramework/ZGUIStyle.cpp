@@ -6,7 +6,7 @@ using namespace std;
 uint32_t        gDefaultDialogFill(0xff575757);
 uint32_t        gDefaultTextAreaFill(0xff888888);
 uint32_t        gDefaultTooltipFill(0xaa000088);
-uint32_t        gDefaultButtonChecked(0xff008800);
+uint32_t        gDefaultHighlight(0xff008800);
 uint32_t        gDefaultButtonUnchecked(0xff888888);
 
 ZRect           grDefaultDialogBackgroundEdgeRect(3, 3, 53, 52);
@@ -33,9 +33,9 @@ ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::Z
 ZGUI::Palette gAppPalette{
 {
     { "Dialog Fill", gDefaultDialogFill },              // 0
-    { "Text Fill", gDefaultTextAreaFill },         // 1
-    { "Toggle Checked",  gDefaultButtonChecked},       // 2  checked button color
-    { "Toggle Unchecked",  gDefaultButtonUnchecked},   // 3
+    { "Text Fill", gDefaultTextAreaFill },              // 1
+    { "Highlight",  gDefaultHighlight},                 // 2
+    { "Toggle Unchecked",  gDefaultButtonUnchecked},    // 3
     { "Tooltip Fill", gDefaultTooltipFill },            // 4
 
 } };
@@ -80,14 +80,14 @@ namespace ZGUI
         gAppPalette.GetByName("Tooltip Fill", gStyleTooltip.bgCol);
         gAppPalette.GetByName("Dialog Fill", gStyleCaption.bgCol);
         gAppPalette.GetByName("Dialog Fill", gStyleButton.bgCol);
-        gAppPalette.GetByName("Toggle Checked", gStyleToggleChecked.bgCol);
+        gAppPalette.GetByName("Highlight", gDefaultHighlight);
         gAppPalette.GetByName("Toggle Unchecked", gStyleToggleUnchecked.bgCol);
         gAppPalette.GetByName("Dialog Fill", gDefaultDialogStyle.bgCol);
         gAppPalette.GetByName("Text Fill", gDefaultWinTextEditStyle.bgCol);
         gAppPalette.GetByName("Text Fill", gDefaultFormattedDocStyle.bgCol);
         gAppPalette.GetByName("Dialog Fill", gStyleButton.bgCol);
 
-
+        gStyleToggleChecked.bgCol = gDefaultHighlight;
     }
 
 

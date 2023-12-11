@@ -752,18 +752,27 @@ bool ZWin::ComputeVisibility()
         gpGraphicSystem->GetScreenBuffer()->AddScreenRectAndComputeVisibility(sr);
 	}
 
-    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
+    if (!mChildListMutex.try_lock())
+        return false;
+
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
 	{
         ZWin* pWin = *it;
 
 		//ZDEBUG_OUT("ChildPaint:0x%x\n", uint32_t(pWin));
 
-        if ( pWin->mbVisible && pWin->mpSurface)
-		    pWin->ComputeVisibility();
+        if (pWin->mbVisible && pWin->mpSurface)
+        {
+            if (!pWin->ComputeVisibility())
+            {
+                mChildListMutex.unlock();
+                return false;
+            }
+        }
 	}
 
-	return true;
+    mChildListMutex.unlock();
+    return true;
 }
 
 bool ZWin::OnParentAreaChange()

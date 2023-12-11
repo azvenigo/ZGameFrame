@@ -63,7 +63,9 @@ bool ZWinFolderSelector::Paint()
 
     if ((mState == kExpanded || mState == kFullPath) && mrMouseOver.Area() > 0)
     {
-        mpSurface->FillAlpha(0x88FF00FF, &mrMouseOver);
+        mpSurface->FillAlpha(0x88FFFFFF, &mrMouseOver);
+        mStyle.Font()->DrawText(mpSurface.get(), mMouseOverSubpath.string(), r, &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, gDefaultHighlight, gDefaultHighlight));
+//        mpSurface->DrawRectAlpha(0x88ffffff, mrMouseOver);
     }
 
     return ZWin::Paint();
@@ -190,7 +192,7 @@ ZRect ZWinFolderSelector::VisibleArea()
 ZRect ZWinFolderSelector::PathArea()
 {
     ZRect r(mAreaLocal.Width(), mStyle.fp.nHeight);
-    r.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+//    r.DeflateRect(mStyle.paddingH, mStyle.paddingV);
     return r;
 }
 
@@ -275,7 +277,7 @@ void ZWinFolderSelector::SetState(eState state)
     {
         ZRect rList(PathArea());
         rList.OffsetRect(0, rList.Height() + gSpacer);
-        rList.bottom = grFullArea.Height() / 2;
+        rList.bottom = grFullArea.Height() / 2 - gM*4;
         mpFolderList->SetArea(rList);
 
         int64_t nSide = gM;
@@ -308,7 +310,6 @@ bool ZWinFolderSelector::HandleMessage(const ZMessage& message)
 void ZWinFolderSelector::MouseOver(int64_t x, std::filesystem::path& subPath, ZRect& rArea)
 {
     ZRect r(PathArea());
-
     tZFontPtr pFont = mStyle.Font();
 
 
@@ -321,7 +322,7 @@ void ZWinFolderSelector::MouseOver(int64_t x, std::filesystem::path& subPath, ZR
     size_t slash = sPath.find('\\');
     do
     {
-        endW = pFont->StringWidth(sPath.substr(0, slash)) + mStyle.paddingH * 2;
+        endW = pFont->StringWidth(sPath.substr(0, slash-1)) + mStyle.paddingH * 2;
         if (x < endW)
         {
             subPath = sPath.substr(0, slash);

@@ -339,9 +339,9 @@ bool ZWinPaletteDialog::Paint()
             mpSurface->Fill(originalCol.col, &PaletteRect(i, kOriginal)); // original.col
             mpSurface->Fill(originalCol.default_color, &PaletteRect(i, kDefault)); // default color
 
-            mpSurface->DrawRectAlpha(PaletteRect(i, kEdited), 0x88000000);
-            mpSurface->DrawRectAlpha(PaletteRect(i, kOriginal), 0x88000000);
-            mpSurface->DrawRectAlpha(PaletteRect(i, kDefault), 0x88000000);
+            mpSurface->DrawRectAlpha(0x88000000, PaletteRect(i, kEdited));
+            mpSurface->DrawRectAlpha(0x88000000, PaletteRect(i, kOriginal));
+            mpSurface->DrawRectAlpha(0x88000000, PaletteRect(i, kDefault));
 
             ZRect rCaption(PaletteRect(i, kDefault));
             mStyle.Font()->DrawText(mpSurface.get(), col.name, ZGUI::Arrange(mStyle.Font()->StringRect(col.name), rCaption, ZGUI::ILIC, gSpacer, 0));

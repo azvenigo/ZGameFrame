@@ -187,9 +187,9 @@ int main(int argc, char* argv[])
                     if (pScreenBuffer->DoesVisibilityNeedComputing())
                     {
                         int64_t nStartTime = gTimer.GetUSSinceEpoch();
-                        pScreenBuffer->SetVisibilityComputingFlag(false);
                         pScreenBuffer->ResetVisibilityList();
-                        gpMainWin->ComputeVisibility();
+                        if (gpMainWin->ComputeVisibility())
+                            pScreenBuffer->SetVisibilityComputingFlag(false);   // Only clear the flag if all visibility was computed successfully
 
                         int64_t nEndTime = gTimer.GetUSSinceEpoch();
 

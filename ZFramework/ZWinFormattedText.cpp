@@ -347,7 +347,7 @@ bool ZWinFormattedDoc::Paint()
         mpSurface.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalDocBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mAreaInParent);
     else if (IsSet(kBackgroundFromParent))
     {
-     //   PaintFromParent();
+        //PaintFromParent();
         GetTopWindow()->RenderToBuffer(mpSurface, mAreaAbsolute, mAreaLocal, this);
     }
 

@@ -96,7 +96,7 @@ bool ZWinLabel::Paint()
 //        ZDEBUG_OUT("x:", mAreaAbsolute.left, "y:", mAreaAbsolute.top, "\n");
         mpSurface->Blur(3);
         mpSurface->FillAlpha(mStyle.bgCol);
-        mpSurface->DrawRectAlpha(mpSurface->GetArea(), 0xff000000 | mStyle.bgCol);
+        mpSurface->DrawRectAlpha(0xff000000 | mStyle.bgCol, mpSurface->GetArea());
     }
     else
     {
