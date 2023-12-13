@@ -41,13 +41,10 @@ bool ZWinFolderSelector::Init()
 
 bool ZWinFolderSelector::Paint()
 {
-    if (!mpSurface)
+    if (!PrePaintCheck())
         return false;
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
-
-    if (!mbVisible || !mbInvalid)
-        return false;
 
     if (ARGB_A(mStyle.bgCol) > 0x0f)
     {

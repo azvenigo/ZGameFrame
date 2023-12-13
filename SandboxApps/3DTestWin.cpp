@@ -1255,7 +1255,7 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
 
 bool Z3DTestWin::Paint()
 {
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
 
 #ifdef RENDER_TEAPOT

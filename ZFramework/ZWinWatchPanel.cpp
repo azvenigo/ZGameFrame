@@ -136,11 +136,9 @@ bool ZWinWatchPanel::Process()
 
 bool ZWinWatchPanel::Paint()
 {
+    if (!PrePaintCheck())
+        return false;
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbVisible)
-        return false;
-    if (!mbInvalid)
-        return false;
 
     mpSurface.get()->Fill(gDefaultDialogFill);
 

@@ -72,7 +72,7 @@ bool TestWin::Process()
 
 bool TestWin::Paint()
 {
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());

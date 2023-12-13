@@ -379,12 +379,12 @@ bool ZWinImage::LoadImage(const string& sName)
 
 void ZWinImage::SetArea(const ZRect& newArea)
 {
-    mbVisible = false;
+    if (mpSurface)
+        mpSurface->mRenderState = ZBuffer::kBusy_SkipRender;
     ZWin::SetArea(newArea);
 
     if (mViewState == kFitToWindow)
         FitImageToWindow();
-    mbVisible = true;
 }
 
 
@@ -490,23 +490,18 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
 
 bool ZWinImage::Paint()
 {
-    if (!mpSurface)
+    ZDEBUG_OUT_LOCKLESS("ZWinImage::Paint() - in...");
+    if (!PrePaintCheck())
         return false;
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
-
-    if (!mbVisible)
-        return false;
-
-    if (!mbInvalid)
-        return false;
 
 
     ZASSERT(mpSurface.get()->GetPixels() != nullptr);
 
     ZRect rDest(mpSurface.get()->GetArea());
 
-    mpSurface.get()->Fill(mFillColor);
+      mpSurface.get()->Fill(mFillColor);
 
     ZASSERT(mpSurface.get()->GetPixels() != nullptr);
 
@@ -558,6 +553,8 @@ bool ZWinImage::Paint()
         if (pRenderImage && mpTable)
             mpTable->Paint(mpSurface.get());
     }
+
+    ZDEBUG_OUT_LOCKLESS("out...\n");
 
 	return ZWin::Paint();
 }

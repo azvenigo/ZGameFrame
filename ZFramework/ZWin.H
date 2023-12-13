@@ -154,6 +154,10 @@ public:
 protected:
     virtual bool        Process();              // for doing any computation/simulation/etc. Returns true if anything was done
 	virtual bool        Paint();
+    inline  bool        PrePaintCheck()
+    {
+        return mbInvalid && mbVisible && mbInitted && mpSurface;
+    }
 
 
 	// Window Threading

@@ -75,12 +75,10 @@ bool ZWinLabel::Process()
 
 bool ZWinLabel::Paint()
 {
-    if (!mpSurface /*|| !mbVisible*/)
+    if (!PrePaintCheck())
         return false;
 
     const lock_guard<recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbInvalid)
-        return false;
 
     if (ARGB_A(mStyle.bgCol) > 0xf0)
     {
@@ -267,9 +265,9 @@ void ZWinTextEdit::SetArea(const ZRect& area)
 
 bool ZWinTextEdit::Paint()
 {
-    const lock_guard<recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
+    const lock_guard<recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     mpSurface.get()->Fill(mStyle.bgCol);
 

@@ -148,12 +148,8 @@ size_t ZWinDebugConsole::GetVisibleLines()
 
 bool ZWinDebugConsole::Paint()
 {
-	if (!mbInvalid || !mbVisible)
-		return false;
-
-    if (!mpSurface.get())
+    if (!PrePaintCheck())
         return false;
-
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 

@@ -177,15 +177,8 @@ ZWinSlider* ZWinControlPanel::Slider(const std::string& sID, int64_t* pnSliderVa
 
 bool ZWinControlPanel::Paint()
 {
-    if (!mbVisible)
+    if (!PrePaintCheck())
         return false;
-
-    if (!mbInvalid)
-        return false;
-
-    if (!mpSurface.get())
-        return false;
-
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 

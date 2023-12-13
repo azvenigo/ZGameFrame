@@ -18,10 +18,11 @@ public:
 		kAlphaSource	= 1
 	};
 
-    enum eRenderFlags
+    enum eRenderState : uint32_t
     {
-        kRenderFlag_None            = 0,
-        kRenderFlag_ReadyToRender   = 1 
+        kFreeToModify    = 0,
+        kReadyToRender   = 1,
+        kBusy_SkipRender = 2
     };
 
     enum eBltEdgeFlags
@@ -69,12 +70,6 @@ public:
     virtual easyexif::EXIFInfo& GetEXIF() { return mEXIF; }
     static bool             ReadEXIFFromFile(const std::string& sName, easyexif::EXIFInfo& info);
 
-    // Flags
-    virtual bool            GetRenderFlag(eRenderFlags flag) { return mRenderFlags & flag; }
-    virtual void            SetRenderFlag(eRenderFlags flag) { mRenderFlags = mRenderFlags | flag; }
-    virtual void            ClearRenderFlag(eRenderFlags flag) { mRenderFlags = mRenderFlags & ~flag; }
-
-
     // Drawing
     virtual bool            Fill(uint32_t nCol, ZRect* pRect = nullptr);			// fills a rect with nCol, forcing alpha to ARGB_A(nCol)
 	virtual bool            FillAlpha(uint32_t nCol, ZRect* pRect = nullptr);	// fills a rect with nCol, blending based on ARGB_A(nCol)
@@ -118,6 +113,9 @@ public:
     static bool             Clip(const ZBuffer* pSrc, const ZBuffer* pDst, ZRect& rSrc, ZRect& rDst);
     static bool             Clip(const ZRect& rSrcSurface, const ZRect& rDstSurface, ZRect& rSrc, ZRect& rDst);
 
+#ifdef _DEBUG
+    std::string             sDebugOwner;
+#endif
 
 protected:
 	bool                    FloatScanLineIntersection(double fScanLine, const ZColorVertex& v1, const ZColorVertex& v2, double& fIntersection, double& fR, double& fG, double& fB, double& fA);
@@ -128,10 +126,10 @@ protected:
 
 
 public:
-	uint32_t*               mpPixels;        // The color data
-	ZRect                   mSurfaceArea;
-    easyexif::EXIFInfo      mEXIF;
-    std::recursive_mutex    mMutex;
-    bool                    mbHasAlphaPixels;
-    uint32_t                mRenderFlags;
+	uint32_t*                   mpPixels;        // The color data
+	ZRect                       mSurfaceArea;
+    easyexif::EXIFInfo          mEXIF;
+    std::recursive_mutex        mMutex;
+    bool                        mbHasAlphaPixels;
+    std::atomic<eRenderState>   mRenderState;
 };

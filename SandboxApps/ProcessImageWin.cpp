@@ -1351,7 +1351,7 @@ double LimitUV(double f, double fMin, double fMax)
 
 bool cProcessImageWin::Paint()
 {
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());

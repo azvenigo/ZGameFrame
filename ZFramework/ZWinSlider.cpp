@@ -199,8 +199,8 @@ bool ZWinSlider::OnMouseOut()
 
 bool ZWinSlider::Paint()
 {
-	if (!mbInvalid || !mbInitted|| !mpSurface.get())
-		return false;
+    if (!PrePaintCheck())
+        return false;
 
     tZBufferPtr pThumb = mCustomSliderThumb;
     ZRect rThumbEdge = mrCustomThumbEdge;

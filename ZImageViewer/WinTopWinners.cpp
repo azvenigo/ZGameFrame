@@ -179,13 +179,11 @@ bool WinTopWinners::HandleMessage(const ZMessage& message)
 
 bool WinTopWinners::Paint()
 {
-    if (!mpSurface)
-        return false;
-   
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
 
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
+ 
     mpSurface->Fill(mStyle.bgCol);
 
     if (pMetaList && !pMetaList->empty())

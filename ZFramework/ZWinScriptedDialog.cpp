@@ -179,9 +179,7 @@ bool ZWinScriptedDialog::Shutdown()
 
 bool ZWinScriptedDialog::Paint()
 {
-	if (!mbInvalid)
-		return false;
-    if (!mpSurface)
+    if (!PrePaintCheck())
         return false;
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface->GetMutex());

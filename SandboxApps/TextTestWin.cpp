@@ -233,11 +233,9 @@ bool TextTestWin::Shutdown()
 
 bool TextTestWin::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
-
-
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
 	string sTemp;
 

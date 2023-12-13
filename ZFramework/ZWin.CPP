@@ -683,7 +683,7 @@ bool ZWin::Process()
 
 bool  ZWin::Paint()
 {
-    if (!mbInitted || !mbInvalid)
+    if (!PrePaintCheck())
         return false;
 
     assert(mAreaLocal.Width() == mAreaInParent.Width());
@@ -691,8 +691,8 @@ bool  ZWin::Paint()
     assert(mAreaLocal.Height() == mAreaInParent.Height());
     assert(mAreaLocal.Height() == mAreaAbsolute.Height());
 
-    mpSurface.get()->SetRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
-	mbInvalid = false;
+    mbInvalid = false;
+    mpSurface.get()->mRenderState = ZBuffer::kReadyToRender;
 	return true;
 }               
 
@@ -998,10 +998,12 @@ void ZWin::SetVisible(bool bVisible)
 void ZWin::Invalidate()	
 {
 //    ZDEBUG_OUT("Invalidate: mWorkToDoCV\n");
-    mWorkToDoCV.notify_one();
+    if (mpSurface)
+        mpSurface->mRenderState = ZBuffer::kBusy_SkipRender;
     mbInvalid = true;
     if (mbInvalidateParentWhenInvalid && mpParentWin)
         mpParentWin->mbInvalid = true;
+    mWorkToDoCV.notify_one();
 }
 
 void ZWin::InvalidateChildren()
@@ -1017,13 +1019,18 @@ void ZWin::SetArea( const ZRect& area )
 {
     assert(area.Width() > 0 && area.Height() > 0);
     if (!mpSurface)
+    {
         mpSurface.reset(new ZBuffer());
+    }
 
     if (area.Width() != mAreaLocal.Width() || area.Height() != mAreaLocal.Height())
     {
-        if (area.Width() > 0 && area.Height() > 0)
+        if (area.Area() > 0)
         {
             mpSurface->Init(area.Width(), area.Height());
+#ifdef _DEBUG
+            mpSurface->sDebugOwner = GetTargetName();
+#endif
         }// else no need to create a surface
     }
 
@@ -1209,6 +1216,9 @@ bool ZWinDialog::Shutdown()
 
 bool ZWinDialog::Paint()
 {
+    if (!PrePaintCheck())
+        return false;
+
     uint32_t cols[4];
 
     uint32_t nBaseCol = mStyle.bgCol;

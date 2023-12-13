@@ -19,6 +19,7 @@
 #include "ImageMeta.h"
 #include "WinTopWinners.h"
 #include "ZGraphicSystem.h"
+#include "ZScreenBuffer.h"
 
 
 using namespace std;
@@ -123,7 +124,6 @@ void ImageViewer::HandleQuitCommand()
 
 void ImageViewer::UpdateUI()
 {
-
     //ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
 
     if (!mRankedImageMetadata.empty())
@@ -171,12 +171,15 @@ void ImageViewer::UpdateUI()
         mpFolderSelector->SetState(ZWinFolderSelector::kCollapsed);
     }
 
+//    gGraphicSystem.GetScreenBuffer()->EnableRendering(false);
     if (mpWinImage && mbInitted)
         mpWinImage->SetArea(rImageArea);
+//    gGraphicSystem.GetScreenBuffer()->EnableRendering(true);
 
     UpdateControlPanel();
     UpdateCaptions();
     InvalidateChildren();
+
 }
 
 bool ImageViewer::OnKeyUp(uint32_t key)
@@ -2619,17 +2622,10 @@ void ImageViewer::ToggleFavorite()
 
 bool ImageViewer::Paint()
 {
-    if (!mpSurface)
+    if (!PrePaintCheck())
         return false;
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
-
-    if (!mbVisible)
-        return false;
-
-    if (!mbInvalid)
-        return false;
-
 
     if (mImageArray.empty())
     {

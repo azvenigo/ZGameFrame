@@ -104,7 +104,7 @@ bool cLifeWin::Shutdown()
 
 bool cLifeWin::Paint()
 {
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
 
 	const std::lock_guard<std::mutex> lock(mShutdownMutex);

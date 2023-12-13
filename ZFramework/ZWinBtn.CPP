@@ -283,10 +283,7 @@ bool ZWinCheck::Init()
 
 bool ZWinCheck::Paint()
 {
-	if (!mbInvalid)
-		return false;
-
-    if (!mpSurface.get())
+    if (!PrePaintCheck())
         return false;
 
     if (*mpbChecked)
@@ -440,12 +437,10 @@ bool ZWinSizablePushBtn::InitFromXML(ZXMLNode* pNode)
 
 bool ZWinSizablePushBtn::Paint()
 {
-    if (!mpSurface)
+    if (!PrePaintCheck())
         return false;
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbInvalid)
-        return false;
 
     if (mAreaLocal.right == 0 || mAreaLocal.bottom == 0)
         return false;

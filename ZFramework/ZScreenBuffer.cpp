@@ -132,7 +132,7 @@ int32_t ZScreenBuffer::RenderVisibleRects()
         if (sr.mpSourceBuffer != pCurBuffer)
         {
             if (pCurBuffer)
-                pCurBuffer->ClearRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
+                pCurBuffer->mRenderState = ZBuffer::kFreeToModify;
 
 #ifdef USE_LOCKING_SCREEN_RECTS
             if (pCurBuffer)
@@ -146,7 +146,7 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 #endif
         }
 
-        if (pCurBuffer->GetRenderFlag(ZBuffer::kRenderFlag_ReadyToRender))
+        if (pCurBuffer->mRenderState == ZBuffer::kReadyToRender)
         {
             nRenderedCount++;
             ZRect rTexture(sr.mpSourceBuffer->GetArea());
@@ -175,7 +175,7 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 	}
 
     if (pCurBuffer)
-        pCurBuffer->ClearRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
+        pCurBuffer->mRenderState = ZBuffer::kFreeToModify;
 
 #ifdef USE_LOCKING_SCREEN_RECTS
     if (pCurBuffer)
@@ -245,7 +245,7 @@ int32_t ZScreenBuffer::RenderVisibleRects(const ZRect& rClip)
 
         //ZDEBUG_OUT("dr: TL[", rClippedDest.left, ",", rClippedDest.top, "] lines:", nScanLines,"\n");
 
-        int nRet = SetDIBitsToDevice(mDC,   // HDC
+            int nRet = SetDIBitsToDevice(mDC,   // HDC
             (DWORD)rClippedDest.left,       // Dest X
             (DWORD)rClippedDest.top,        // Dest Y
             (DWORD)rClippedDest.Width(),    // Dest Width
@@ -534,8 +534,13 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
 	newList.push_back(std::move(screenRect));
 
     // Set the render flag for all buffers in the new list
-    for (auto sr : newList)
-        sr.mpSourceBuffer->SetRenderFlag(ZBuffer::kRenderFlag_ReadyToRender);
+    for (auto& sr : newList)
+    {
+//        sr.mpSourceBuffer->mMutex.lock();
+        if (sr.mpSourceBuffer->mRenderState != ZBuffer::eRenderState::kBusy_SkipRender) // only set ready to render if not busy
+            sr.mpSourceBuffer->mRenderState = ZBuffer::kReadyToRender;
+//        sr.mpSourceBuffer->mMutex.lock();
+    }
 
 	mScreenRectList = newList;
 	return true;

@@ -79,7 +79,7 @@ ZWinFormattedDoc::ZWinFormattedDoc()
 	mnMouseDownSliderVal    = 0;
 	mfMouseMomentum         = 0.0;
 
-    mBehavior               = kNone;
+    mBehavior               = kBackgroundFill;
     mStyle                  = gDefaultFormattedDocStyle;
 
 	mbAcceptsCursorMessages = true;
@@ -321,10 +321,7 @@ void ZWinFormattedDoc::UpdateScrollbar()
 
 bool ZWinFormattedDoc::Paint()
 {
-	if (!mbInvalid)
-		return false;
-
-    if (!mpSurface.get())
+    if (!PrePaintCheck())
         return false;
 
     if (IsSet(kEvenColumns) && mColumnWidths.empty())

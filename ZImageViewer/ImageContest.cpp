@@ -864,17 +864,10 @@ void ImageContest::UpdateCaptions()
 
 bool ImageContest::Paint()
 {
-    if (!mpSurface)
+    if (!PrePaintCheck())
         return false;
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
-
-    if (!mbVisible)
-        return false;
-
-    if (!mbInvalid)
-        return false;
-
 
     return ZWin::Paint();
 }

@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
                     // Copy to our window surface
                     pScreenBuffer->BeginRender();
 
-                    if (pScreenBuffer->DoesVisibilityNeedComputing())
+                    while (pScreenBuffer->DoesVisibilityNeedComputing())
                     {
                         int64_t nStartTime = gTimer.GetUSSinceEpoch();
                         pScreenBuffer->ResetVisibilityList();

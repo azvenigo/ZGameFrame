@@ -97,9 +97,9 @@ bool ZChoosePGNWin::Init()
 
 bool ZChoosePGNWin::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     mpSurface->Fill(mFillColor);
 
@@ -347,9 +347,9 @@ bool ZPGNWin::Init()
 
 bool ZPGNWin::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     mpSurface->Fill(mFillColor);
 
@@ -938,9 +938,9 @@ bool ZChessWin::Process()
 
 bool ZChessWin::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     mpSurface->Fill(0xff444444);
     DrawBoard();
@@ -1684,9 +1684,9 @@ bool ZPiecePromotionWin::OnMouseDownL(int64_t x, int64_t y)
 
 bool ZPiecePromotionWin::Paint()
 {
-    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
-    if (!mbInvalid)
+    if (!PrePaintCheck())
         return false;
+    const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
 //    mpTransformTexture->Fill(mAreaToDrawTo, 0xff4444ff);
 

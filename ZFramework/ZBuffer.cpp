@@ -37,7 +37,7 @@ static char THIS_FILE[] = __FILE__;
 ZBuffer::ZBuffer()
 {
 	mpPixels                = NULL;
-    mRenderFlags            = kRenderFlag_None; // 0
+    mRenderState            = kFreeToModify;
     mbHasAlphaPixels = false;
 	mSurfaceArea.SetRect(0,0,0,0);
 }
