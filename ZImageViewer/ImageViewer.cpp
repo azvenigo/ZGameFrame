@@ -74,7 +74,7 @@ ImageViewer::ImageViewer()
     mpShowContestButton = nullptr;
     mOutstandingMetadataCount = 0;
     mpRatedImagesStrip = nullptr;
-    mpFolderSelector = nullptr;
+    mpFolderLabel = nullptr;
 
     assert(gGraphicSystem.GetScreenBuffer());
 }
@@ -145,8 +145,8 @@ void ImageViewer::UpdateUI()
     if (mpPanel && mbShowUI)
         rImageArea.top = mpPanel->GetArea().Height();
 
-    if (mpFolderSelector)
-        mpFolderSelector->SetVisible(mbShowUI);
+    if (mpFolderLabel)
+        mpFolderLabel->SetVisible(mbShowUI);
 
     if (mpRatedImagesStrip)
     {
@@ -163,12 +163,11 @@ void ImageViewer::UpdateUI()
             mpRatedImagesStrip->SetVisible(false);
     }
 
-    if (mpFolderSelector)
+    if (mpFolderLabel)
     {
-        ZRect rSelector(mpFolderSelector->VisibleArea());
+        ZRect rSelector(mpFolderLabel->GetArea());
         rSelector.MoveRect(0, mpPanel->GetArea().bottom);
-        mpFolderSelector->SetArea(rSelector);
-        mpFolderSelector->SetState(ZWinFolderSelector::kCollapsed);
+        mpFolderLabel->SetArea(rSelector);
     }
 
 //    gGraphicSystem.GetScreenBuffer()->EnableRendering(false);
@@ -1261,14 +1260,16 @@ bool ImageViewer::Init()
         pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
-        mpFolderSelector = new ZWinFolderSelector();
-        mpFolderSelector->mCurPath = mCurrentFolder;
-        mpFolderSelector->mStyle.bgCol = 0;
-        mpFolderSelector->mStyle.pos = ZGUI::LC;
-        mpFolderSelector->mStyle.paddingH = (int32_t)gSpacer;
-        mpFolderSelector->mStyle.paddingV = (int32_t)gSpacer;
-        mpFolderSelector->mStyle.fp.nHeight = gM * 4 / 5;
-        ChildAdd(mpFolderSelector);
+        mpFolderLabel = new ZWinFolderLabel();
+        mpFolderLabel->mBehavior = ZWinFolderLabel::kCollapsable;
+        mpFolderLabel->mCurPath = mCurrentFolder;
+        mpFolderLabel->mStyle.bgCol = 0;
+        mpFolderLabel->mStyle.pos = ZGUI::LC;
+        mpFolderLabel->mStyle.paddingH = (int32_t)gSpacer;
+        mpFolderLabel->mStyle.paddingV = (int32_t)gSpacer;
+        mpFolderLabel->mStyle.fp.nHeight = gM * 4 / 5;
+        mpFolderLabel->SetArea(ZRect(0, 0, mAreaLocal.Width() / 4, gM));
+        ChildAdd(mpFolderLabel);
 
 
         mpRotationMenu->mbHideOnMouseExit = true;
@@ -1542,15 +1543,13 @@ void ImageViewer::UpdateControlPanel()
 
 
 
-    if (gGraphicSystem.mbFullScreen)
-    {
-        ZRect rExit(nControlPanelSide, nControlPanelSide);
-        rExit = ZGUI::Arrange(rExit, mAreaLocal, ZGUI::RT);
-        pBtn = mpPanel->SVGButton("quit", sAppPath + "/res/exit.svg", ZMessage("quit", this));
-        pBtn->msTooltip = "Exit";
-        pBtn->SetArea(rExit);
-
-    }
+    ZRect rExit(nControlPanelSide, nControlPanelSide);
+    rExit = ZGUI::Arrange(rExit, mAreaLocal, ZGUI::RT);
+    pBtn = mpPanel->SVGButton("quit", sAppPath + "/res/exit.svg", ZMessage("quit", this));
+    pBtn->msTooltip = "Exit";
+    pBtn->SetArea(rExit);
+    pBtn->SetVisible(!gGraphicSystem.mbFullScreen);
+        
 
     rButton.SetRect(0, 0, nGroupSide, nGroupSide);
     rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gSpacer / 2);
@@ -2011,8 +2010,11 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
     Clear();
 
     mCurrentFolder = folder;
-    if (mpFolderSelector)
-        mpFolderSelector->mCurPath = folder;
+    if (mpFolderLabel)
+    {
+        mpFolderLabel->mCurPath = folder;
+        mpFolderLabel->SizeToPath();
+    }
 
     bool bErrors = false;
 

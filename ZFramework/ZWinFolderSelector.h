@@ -9,59 +9,84 @@
 class ZWinSizablePushBtn;
 class ZWinFormattedDoc;
 
-class ZWinFolderSelector : public ZWin
+class ZWinFolderLabel : public ZWin
 {
 public:
-    enum eState : uint8_t
+    enum eBehavior : uint32_t
     {
-        kCollapsed = 0,
-        kFullPath = 1,
-        kExpanded = 2
-    };    
-    
-    ZWinFolderSelector();
+        kNone = 0,
+        kCollapsable = 1,
+        kSelectable = 2,
+    };
+
+
+    ZWinFolderLabel();
 
     virtual bool            Init();
     virtual bool            Paint();
 
-    virtual void            SetArea(const ZRect& newArea);
     virtual bool            HandleMessage(const ZMessage& message);
 
     virtual bool            OnMouseIn();
+    virtual bool            OnMouseOut();
     virtual bool            OnMouseDownL(int64_t x, int64_t y);
-    virtual bool            OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
     virtual bool            OnMouseMove(int64_t x, int64_t y);
+
+    void                    SizeToPath();
 
     ZGUI::Style             mStyle;
 
     std::filesystem::path   mCurPath;
 
-    void                    SetState(eState state);
-
-    ZRect                   VisibleArea();
     std::string             VisiblePath();
-    ZRect                   PathArea();
+    ZRect                   PathRect();
+
+    eBehavior               mBehavior;
 
 protected:
-    virtual bool            Process();
+//    virtual bool            Process();
+
+private:
+
+    void MouseOver(int64_t x, std::filesystem::path& subPath, ZRect& rArea);
+
+    ZRect mrMouseOver;
+    std::filesystem::path mMouseOverSubpath;
+}; 
+
+class ZWinFolderSelector : public ZWin
+{
+public:
+    ZWinFolderSelector();
+
+    virtual bool            Init();
+    virtual bool            Paint();
+
+    virtual bool            HandleMessage(const ZMessage& message);
+
+    virtual bool            OnMouseDownL(int64_t x, int64_t y);
+
+
+
+    ZGUI::Style             mStyle;
+
+    std::filesystem::path   mCurPath;
+
+    bool ScanFolder(const std::filesystem::path& folder);
+    static ZWinFolderSelector* Show(ZWinFolderLabel* pLabel, ZRect& rList);
+
+protected:
+//    virtual bool            Process();
 
 private:
 
 
-
-
-    bool ScanFolder(const std::filesystem::path& folder);
-    void MouseOver(int64_t x, std::filesystem::path& subPath, ZRect& rArea);
-
-    eState mState;
     ZRect mrMouseOver;
-    std::filesystem::path mMouseOverSubpath;
+    ZRect mrList;
 
-
-
-//    int64_t ComputeTailVisibleChars(int64_t nWidth);  // how many chars from current path can be visible in the area provided
-
+    tZBufferPtr mBackground;
 
     ZWinSizablePushBtn* mpOpenFolderBtn;
     ZWinFormattedDoc* mpFolderList;
+    ZWinFolderLabel* mpLabel;
 };

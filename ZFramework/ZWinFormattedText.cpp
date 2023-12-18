@@ -338,14 +338,18 @@ bool ZWinFormattedDoc::Paint()
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
-    if (IsSet(kBackgroundFill))
-        mpSurface.get()->FillAlpha(mStyle.bgCol, &rLocalDocBorderArea);
-    else if (IsSet(kDrawBorder))
-        mpSurface.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalDocBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mAreaInParent);
-    else if (IsSet(kBackgroundFromParent))
+    if (IsSet(kBackgroundFromParent))
     {
         //PaintFromParent();
         GetTopWindow()->RenderToBuffer(mpSurface, mAreaAbsolute, mAreaLocal, this);
+    }
+    if (IsSet(kBackgroundFill))
+    {
+        mpSurface.get()->FillAlpha(mStyle.bgCol, &rLocalDocBorderArea);
+    }
+    if (IsSet(kDrawBorder))
+    {
+        mpSurface.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalDocBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mAreaInParent);
     }
 
 	ZRect rClip(rLocalDocArea);

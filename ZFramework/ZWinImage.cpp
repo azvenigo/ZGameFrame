@@ -490,9 +490,10 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
 
 bool ZWinImage::Paint()
 {
-    ZDEBUG_OUT_LOCKLESS("ZWinImage::Paint() - in...");
     if (!PrePaintCheck())
         return false;
+
+    //ZDEBUG_OUT_LOCKLESS("ZWinImage::Paint() - in...");
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
@@ -554,7 +555,7 @@ bool ZWinImage::Paint()
             mpTable->Paint(mpSurface.get());
     }
 
-    ZDEBUG_OUT_LOCKLESS("out...\n");
+//    ZDEBUG_OUT_LOCKLESS("out...\n");
 
 	return ZWin::Paint();
 }

@@ -156,7 +156,7 @@ protected:
 	virtual bool        Paint();
     inline  bool        PrePaintCheck()
     {
-        return mbInvalid && mbVisible && mbInitted && mpSurface;
+        return mbInvalid && mbVisible && mbInitted && mbPaints && mpSurface;
     }
 
 
@@ -207,6 +207,7 @@ public:
 	int64_t                 mnTransformOutTime;
     int64_t                 mIdleSleepMS;
     bool                    mbAcceptsFocus;
+    bool                    mbPaints;   // whether this window has its own surface and painting or only children
 };
 
 typedef std::shared_ptr<ZWin> tZWinPtr;

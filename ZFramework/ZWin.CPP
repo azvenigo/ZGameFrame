@@ -47,7 +47,8 @@ mnTransformInTime(kDefaultTransformTime),
 mnTransformOutTime(kDefaultTransformTime),
 mbShutdownFlag(false),
 mIdleSleepMS(kDefaultIdleTime),
-mTooltipStyle(gStyleTooltip)
+mTooltipStyle(gStyleTooltip),
+mbPaints(true)
 {
 //    Sprintf(msWinName, "win_%x", this); // default to unique window name
 
@@ -87,7 +88,7 @@ bool ZWin::Init()
         if (mAreaLocal.Width() > 0 && mAreaLocal.Height() > 0)
         {
             ZTransformable::Init(mAreaAbsolute);
-            if (mpSurface && (mpSurface->GetArea().Width() != mAreaLocal.Width() || mpSurface->GetArea().Height() != mAreaLocal.Height()))
+            if (mbPaints && mpSurface && (mpSurface->GetArea().Width() != mAreaLocal.Width() || mpSurface->GetArea().Height() != mAreaLocal.Height()))
             {
                 mpSurface.reset(new ZBuffer());
                 mpSurface->Init(mAreaAbsolute.Width(), mAreaAbsolute.Height());
@@ -347,12 +348,13 @@ bool ZWin::ChildAdd(ZWin* child, bool bAutoShow)
 
 	child->SetParentWin(this);
 
-    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     ZASSERT_MESSAGE(find(mChildList.begin(), mChildList.end(), child) == mChildList.end(), "Child already added!");
     if (mChildList.empty())
         gMessageSystem.AddNotification("kill_child", this);
 
+    mChildListMutex.lock();
     mChildList.push_front(child);
+    mChildListMutex.unlock();
 
 	child->ComputeAreas();
 
@@ -405,7 +407,6 @@ void ZWin::ChildDeleteAll()
 }
 bool ZWin::ChildDelete(ZWin* pChild)
 {
-    const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
     if (pChild)
     {
         if (ChildRemove(pChild))
@@ -615,24 +616,19 @@ bool  ZWin::ProcessCursorMessage(const ZMessage& message)
 	// If this window doesn't have capture, then see if any child needs the cursor message
 	if( !AmCapturing() && mChildList.size() ) 
 	{
-        ZWin* currChild;
-        const std::lock_guard<std::recursive_mutex> lock(mChildListMutex);
-        tWinList::iterator it = mChildList.begin();
-
-		while( it != mChildList.end() ) 
-		{
-			currChild = (*it);
-			if ( currChild->mbVisible && currChild->mbAcceptsCursorMessages ) 
-			{
-//                ZDEBUG_OUT("in x:", nX, " y:", nY, " rect:", RectToString(currChild->mAreaAbsolute), "\n");
-                if (currChild->IsPointInWindowScreenCoordinates(nX, nY) )
-				{
-					return currChild->ProcessCursorMessage(message); 
-				} 
-			} 
-
-			it++;
-		}
+        mChildListMutex.lock();
+        for (auto& child : mChildList)
+        {
+            if (child->mbVisible && child->mbAcceptsCursorMessages)
+            {
+                if (child->IsPointInWindowScreenCoordinates(nX, nY))
+                {
+                    mChildListMutex.unlock();
+                    return child->ProcessCursorMessage(message);
+                }
+            }
+        }
+        mChildListMutex.unlock();
 	}
 
 	if (mbVisible)
@@ -720,9 +716,12 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& 
         return;
 
     Paint();
-    mpSurface.get()->GetMutex().lock();
-    pDest->Blt(mpSurface.get(), rClippedSrc, rClippedDst);
-    mpSurface.get()->GetMutex().unlock();
+    if (mbPaints)
+    {
+        mpSurface.get()->GetMutex().lock();
+        pDest->Blt(mpSurface.get(), rClippedSrc, rClippedDst);
+        mpSurface.get()->GetMutex().unlock();
+    }
 
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
     {
@@ -733,6 +732,9 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& 
 
 void ZWin::PaintFromParent()
 {
+    if (!PrePaintCheck())
+        return;
+
     if (mpParentWin && mpParentWin->mpSurface && mpParentWin->mbVisible)
     {
         tZBufferPtr parentBuffer = mpParentWin->mpSurface;
@@ -746,14 +748,14 @@ bool ZWin::ComputeVisibility()
 	if (!mbVisible)
 		return true;
 
-//	if (mbVisible)
+    if (!mChildListMutex.try_lock())
+        return false;
+   
+    if (mbPaints)
 	{
 		ZScreenRect sr(mpSurface, mAreaAbsolute, ZPoint(0, 0));
         gpGraphicSystem->GetScreenBuffer()->AddScreenRectAndComputeVisibility(sr);
 	}
-
-    if (!mChildListMutex.try_lock())
-        return false;
 
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
 	{
@@ -998,9 +1000,12 @@ void ZWin::SetVisible(bool bVisible)
 void ZWin::Invalidate()	
 {
 //    ZDEBUG_OUT("Invalidate: mWorkToDoCV\n");
-    if (mpSurface)
-        mpSurface->mRenderState = ZBuffer::kBusy_SkipRender;
-    mbInvalid = true;
+    if (mbPaints)
+    {
+        if (mpSurface)
+            mpSurface->mRenderState = ZBuffer::kBusy_SkipRender;
+        mbInvalid = true;
+    }
     if (mbInvalidateParentWhenInvalid && mpParentWin)
         mpParentWin->mbInvalid = true;
     mWorkToDoCV.notify_one();
@@ -1018,20 +1023,23 @@ void ZWin::InvalidateChildren()
 void ZWin::SetArea( const ZRect& area ) 
 {
     assert(area.Width() > 0 && area.Height() > 0);
-    if (!mpSurface)
+    if (mbPaints)
     {
-        mpSurface.reset(new ZBuffer());
-    }
-
-    if (area.Width() != mAreaLocal.Width() || area.Height() != mAreaLocal.Height())
-    {
-        if (area.Area() > 0)
+        if (!mpSurface)
         {
-            mpSurface->Init(area.Width(), area.Height());
+            mpSurface.reset(new ZBuffer());
+        }
+
+        if (area.Width() != mAreaLocal.Width() || area.Height() != mAreaLocal.Height())
+        {
+            if (area.Area() > 0)
+            {
+                mpSurface->Init(area.Width(), area.Height());
 #ifdef _DEBUG
-            mpSurface->sDebugOwner = GetTargetName();
+                mpSurface->sDebugOwner = GetTargetName();
 #endif
-        }// else no need to create a surface
+            }// else no need to create a surface
+        }
     }
 
     mAreaInParent.SetRect(area);
