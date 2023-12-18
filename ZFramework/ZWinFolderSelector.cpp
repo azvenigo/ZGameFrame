@@ -106,7 +106,8 @@ bool ZWinFolderLabel::OnMouseOut()
 
 bool ZWinFolderLabel::OnMouseDownL(int64_t x, int64_t y)
 {
-    gMessageSystem.Post("scan", this, "folder", mMouseOverSubpath.string());
+    if ((mBehavior&kSelectable)!=0)
+        gMessageSystem.Post("scan", this, "folder", mMouseOverSubpath.string());
 
     return ZWin::OnMouseDownL(x, y);
 }
