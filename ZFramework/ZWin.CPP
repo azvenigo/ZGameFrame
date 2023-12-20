@@ -109,7 +109,7 @@ bool ZWin::Shutdown()
         TransformOut();
         SetVisible(false);
 
-		mbShutdownFlag = true;
+        SignalShutdown();
 		mThread.join();
 
 		const std::lock_guard<std::mutex> lock(mShutdownMutex);	// prevent shutdown until this returns

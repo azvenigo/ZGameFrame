@@ -271,6 +271,7 @@ int main(int argc, char* argv[])
 
 
     ZFrameworkApp::Shutdown();
+
     gDebug.Flush();
 
     if (gbApplicationRestart)

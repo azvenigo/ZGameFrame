@@ -122,12 +122,9 @@ void ImageContest::UpdateUI()
     if (mpRatedImagesStrip)
     {
         mpRatedImagesStrip->pMetaList = &mCurrentFolderImageMeta;
+        mpRatedImagesStrip->SetArea(rRatedStrip);
         mpRatedImagesStrip->Invalidate();
     }
-
-
-    if (mpRatedImagesStrip)
-        mpRatedImagesStrip->SetArea(rRatedStrip);
 
     InvalidateChildren();
 }
@@ -354,6 +351,7 @@ void ImageContest::ResetContest()
         }
     }
     gImageMeta.Save();
+    ScanMetadata();
     UpdateUI();
 }
 

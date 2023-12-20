@@ -2260,8 +2260,7 @@ bool ImageViewer::Process()
                 mRankedImageMetadata.emplace_back(std::move(rankedEntry));
             }
 
-            UpdateUI();
-
+            UpdateFilteredView(mFilterState);
         }
 
 

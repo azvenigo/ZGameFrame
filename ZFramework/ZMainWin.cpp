@@ -131,7 +131,7 @@ bool ZMainWin::HandleMessage(const ZMessage& message)
 	}
 	else if (sType == "quit_app_confirmed")
 	{
-		gbApplicationExiting = true;
+        gbApplicationExiting = true;
         InvalidateChildren();       // wakes all children that may be waiting on CVs
 		return true;
 	}
