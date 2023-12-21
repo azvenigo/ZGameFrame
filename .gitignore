@@ -403,3 +403,5 @@ build/
 font_cache/
 deploy_to_webserver.bat
 ZImageViewer/ZView_Installer.exe
+ZImageViewer/index.html
+ZImageViewer/index.html.template.html
