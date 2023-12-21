@@ -91,3 +91,14 @@ if __name__ == "__main__":
     with open(cfg_file_path, 'w') as file:
         file.write(cfg_content)
     print(f"cfg version updated")
+    
+    print("--writing release index.html--")
+    indexhtml_template_file_path = 'index.html.template.html' 
+    indexhtml_final_file_path = 'index.html'
+    indexhtml_content = open_encoded_file(indexhtml_template_file_path)
+    indexhtml_version_regex = r'Version=(\d+).(\d+).(\d+).(\d+)'
+    indexhtml_content = re.sub(indexhtml_version_regex, f'Version=<b>{major}.{minor}.{build}.{revision}</b>', indexhtml_content)
+    
+    with open(indexhtml_final_file_path, 'w') as file:
+        file.write(indexhtml_content)
+    
