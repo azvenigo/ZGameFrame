@@ -217,8 +217,8 @@ protected:
 
     void                    ShowHelpDialog();
 
-    ZWinControlPanel*       mpPanel;
-    std::recursive_mutex    mPanelMutex;
+    ZIVControlPanel*        mpPanel;
+//    std::recursive_mutex    mPanelMutex;
 
     ZWinControlPanel*       mpRotationMenu;
 

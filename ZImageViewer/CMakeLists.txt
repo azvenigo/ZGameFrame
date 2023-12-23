@@ -30,6 +30,7 @@ ImageContest.h ImageContest.cpp
 ImageMeta.h     ImageMeta.cpp
 ConfirmDeleteDialog.h ConfirmDeleteDialog.cpp
 WinTopWinners.h WinTopWinners.cpp
+ZIVControlPanel.h ZIVControlPanel.cpp
 ZImageViewer.rc 
 resource_win64.h
 raw_resources/ZImageViewer.ico
