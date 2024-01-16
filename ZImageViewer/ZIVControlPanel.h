@@ -7,6 +7,16 @@
 class ZIVControlPanel : public ZWinControlPanel
 {
 public:
+
+    enum mMode : uint8_t
+    {
+        kNone = 0,
+        kSift = 1,
+        kFavor = 2,
+        kManage = 3
+    };
+
+
     ZIVControlPanel();
     bool            Init();
     void            UpdateUI();
@@ -18,4 +28,7 @@ protected:
     bool            Paint();
 
     bool            mbShow;
+
+
+    eState          mMode;
 };

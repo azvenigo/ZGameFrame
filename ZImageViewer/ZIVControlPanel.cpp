@@ -6,7 +6,7 @@
 
 using namespace std;
 
-ZIVControlPanel::ZIVControlPanel() : mbShow(true)
+ZIVControlPanel::ZIVControlPanel() : mbShow(true), mMode(kSift)
 {
     msWinName = "ImageViewer_CP";
 
@@ -43,22 +43,16 @@ void ZIVControlPanel::UpdateUI()
 
     int32_t nButtonPadding = (int32_t)(rButton.Width() / 8);
 
+
+
+
+    // File Group
     pBtn = SVGButton("loadimg", sAppPath + "/res/openfile.svg", ZMessage("loadimg", this));
     pBtn->msTooltip = "Load Image";
     pBtn->msWinGroup = "File";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
     pBtn->SetArea(rButton);
-
-    rButton.OffsetRect(rButton.Width(), 0);
-
-    pBtn = SVGButton("saveimg", sAppPath + "/res/save.svg", ZMessage("saveimg", this));
-    pBtn->msWinGroup = "File";
-    pBtn->msTooltip = "Save Image";
-    pBtn->mSVGImage.style.paddingH = nButtonPadding;
-    pBtn->mSVGImage.style.paddingV = nButtonPadding;
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "File";
 
     rButton.OffsetRect(rButton.Width(), 0);
 
@@ -72,61 +66,7 @@ void ZIVControlPanel::UpdateUI()
     rButton.OffsetRect(rButton.Width(), 0);
 
 
-    string sMessage;
-
-
-    // Management
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 2.5);     // wider buttons for management
-
-    pBtn = Button("undo", "undo", ZMessage("undo", this));
-    pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = (int64_t)(nGroupSide / 1.5);
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "Manage";
-
-    rButton.OffsetRect(rButton.Width(), 0);
-
-    pBtn = Button("move", "move", ZMessage("set_move_folder", this));
-    pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = (int64_t)(nGroupSide / 1.5);
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "Manage";
-
-    rButton.OffsetRect(rButton.Width(), 0);
-
-    pBtn = Button("copy", "copy", ZMessage("set_copy_folder", this));
-    pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = (int64_t)(nGroupSide / 1.5);
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "Manage";
-
-
-
-
-
-
-    // Transformation (rotation, flip, etc.)
-    rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
-    rButton.right = rButton.left + rButton.Height();    // square button
-
-    pBtn = SVGButton("show_rotation_menu", sAppPath + "/res/rotate.svg");
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.25);     // wider buttons for management
-    pBtn->SetArea(rButton);
-    Sprintf(sMessage, "show_rotation_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
-    pBtn->SetMessage(sMessage);
-    pBtn->msWinGroup = "Rotate";
-
-
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
-
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-
-    // Filter group
+    // Mode Group
     ZGUI::Style filterButtonStyle = gDefaultGroupingStyle;
     filterButtonStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
     filterButtonStyle.fp.nHeight = nGroupSide / 3;
@@ -138,25 +78,25 @@ void ZIVControlPanel::UpdateUI()
     string sCaption;
 
     // All
-    ZWinCheck* pCheck = Toggle("filterall", nullptr, "", ZMessage("filter_all", this), "");
+    ZWinCheck* pCheck = Toggle("mode_sift", nullptr, "", ZMessage("mode_sift", this), "");
     pCheck->SetState(mFilterState == kAll, false);
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffffffff;
     pCheck->mCheckedStyle.look.colBottom = 0xffffffff;
     pCheck->mUncheckedStyle = filterButtonStyle;
     pCheck->SetArea(rButton);
-    Sprintf(sCaption, "All\n(%d)", mImageArray.size());
+    Sprintf(sCaption, "Sift\n(%d)", mImageArray.size());
     pCheck->mCaption.sText = sCaption;
-    pCheck->msTooltip = "All images";
-    pCheck->msWinGroup = "Filter";
-    pCheck->msRadioGroup = "FilterGroup";
+    pCheck->msTooltip = "Keep or Delete";
+    pCheck->msWinGroup = "Modes";
+    pCheck->msRadioGroup = "ModesGroup";
     mpAllFilterButton = pCheck;
 
 
     // Favorites
     rButton.OffsetRect(rButton.Width(), 0);
 
-    pCheck = Toggle("filterfavs", nullptr, "", ZMessage("filter_favs", this), "");
+    pCheck = Toggle("mode_favs", nullptr, "", ZMessage("mode_favs", this), "");
     pCheck->mbEnabled = !mFavImageArray.empty();
     pCheck->SetState(mFilterState == kFavs, false);
     pCheck->mCheckedStyle = filterButtonStyle;
@@ -187,6 +127,109 @@ void ZIVControlPanel::UpdateUI()
     pCheck->msRadioGroup = "FilterGroup";
     pCheck->SetState(mFilterState == kRanked, false);
     mpRankedFilterButton = pCheck;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // context specific Group
+
+
+
+    if (mMode == kSift)
+    {
+    }
+    else if (mMode == kFavor)
+    {
+    }
+    else if (mMode == kManage)
+    {
+        pBtn = SVGButton("saveimg", sAppPath + "/res/save.svg", ZMessage("saveimg", this));
+        pBtn->msWinGroup = "File";
+        pBtn->msTooltip = "Save Image";
+        pBtn->mSVGImage.style.paddingH = nButtonPadding;
+        pBtn->mSVGImage.style.paddingV = nButtonPadding;
+        pBtn->SetArea(rButton);
+        pBtn->msWinGroup = "File";
+
+        rButton.OffsetRect(rButton.Width(), 0);
+
+
+        // Management
+        rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
+        rButton.right = rButton.left + (int64_t)(rButton.Width() * 2.5);     // wider buttons for management
+
+        pBtn = Button("undo", "undo", ZMessage("undo", this));
+        pBtn->mCaption.style = gDefaultGroupingStyle;
+        pBtn->mCaption.style.fp.nHeight = (int64_t)(nGroupSide / 1.5);
+        pBtn->mCaption.style.pos = ZGUI::C;
+        pBtn->SetArea(rButton);
+        pBtn->msWinGroup = "Manage";
+
+        rButton.OffsetRect(rButton.Width(), 0);
+
+        pBtn = Button("move", "move", ZMessage("set_move_folder", this));
+        pBtn->mCaption.style = gDefaultGroupingStyle;
+        pBtn->mCaption.style.fp.nHeight = (int64_t)(nGroupSide / 1.5);
+        pBtn->mCaption.style.pos = ZGUI::C;
+        pBtn->SetArea(rButton);
+        pBtn->msWinGroup = "Manage";
+
+        rButton.OffsetRect(rButton.Width(), 0);
+
+        pBtn = Button("copy", "copy", ZMessage("set_copy_folder", this));
+        pBtn->mCaption.style = gDefaultGroupingStyle;
+        pBtn->mCaption.style.fp.nHeight = (int64_t)(nGroupSide / 1.5);
+        pBtn->mCaption.style.pos = ZGUI::C;
+        pBtn->SetArea(rButton);
+        pBtn->msWinGroup = "Manage";
+
+
+
+
+
+
+        // Transformation (rotation, flip, etc.)
+        rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
+        rButton.right = rButton.left + rButton.Height();    // square button
+
+        pBtn = SVGButton("show_rotation_menu", sAppPath + "/res/rotate.svg");
+        rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
+        rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.25);     // wider buttons for management
+        pBtn->SetArea(rButton);
+        Sprintf(sMessage, "show_rotation_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
+        pBtn->SetMessage(sMessage);
+        pBtn->msWinGroup = "Rotate";
+
+
+        rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
+
+        rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
+
+    }
+
+
+
+    // view Group
+
+
+
+
+
+
+
+    string sMessage;
+
 
 
     // ToBeDeleted
