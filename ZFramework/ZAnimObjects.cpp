@@ -139,6 +139,7 @@ ZAnimObject_TextMover::ZAnimObject_TextMover(ZGUI::Style _style) : ZAnimObject()
 	mfX  = 0;
 	mfY  = 0;
 	mfDX = 0;
+
 	mfDY = 0;
 	mnStartAlpha = 0;
 	mnEndAlpha = 0;

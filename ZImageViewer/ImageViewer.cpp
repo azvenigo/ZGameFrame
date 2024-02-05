@@ -20,6 +20,7 @@
 #include "WinTopWinners.h"
 #include "ZGraphicSystem.h"
 #include "ZScreenBuffer.h"
+#include "ZAnimator.h"
 
 
 using namespace std;
@@ -56,6 +57,7 @@ ImageViewer::ImageViewer()
     msWinName = "ZWinImageViewer";
     mpPanel = nullptr;
     mpRotationMenu = nullptr;
+    mpManageMenu = nullptr;
     //mpSymbolicFont = nullptr;
     mpFavoritesFont = nullptr;
     mpWinImage = nullptr;
@@ -264,12 +266,24 @@ bool ImageViewer::OnKeyDown(uint32_t key)
             MoveImage(EntryFromIndex(mViewingIndex)->filename, mMoveToFolder);
         }
         break;
+    case 'p':
+    case 'P':
+        gMessageSystem.Post(ZMessage("show_app_palette"));
+        return true;
+    case 'r':
+    case 'R':
+        if (gInput.IsKeyDown(VK_CONTROL))
+        {
+            FindAndLaunchCR3();
+            return true;
+        }
+        break;
     case 'c':
     case 'C':
         if (gInput.IsKeyDown(VK_CONTROL))
         {
-            gMessageSystem.Post(ZMessage("show_app_palette"));
-            return true;            
+            gMessageSystem.Post("copylink", this);
+            return true;
         }
         if (mCopyToFolder.empty())
         {
@@ -350,6 +364,18 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         }
         return true;
 #endif
+    }
+    else if (sType == "copylink")
+    {
+        gInput.SetClipboard(EntryFromIndex(mViewingIndex)->filename.string());
+
+        ZGUI::Style messageStyle(gStyleCaption);
+        messageStyle.bgCol = 0x8800ff00;
+        messageStyle.paddingH = (int32_t)gM;
+
+        gInput.ShowTooltip("Copied", messageStyle);
+
+        return true;
     }
     else if (sType == "download")
     {
@@ -563,6 +589,31 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             }
             return true;
         }
+        else if (sType == "show_manage_menu")
+        {
+            if (mpManageMenu)
+            {
+                if (mpManageMenu->mbVisible)
+                {
+                    mpManageMenu->SetVisible(false);
+                }
+                else
+                {
+                    mpManageMenu->mStyle.paddingH = (int32_t)gSpacer;
+                    mpManageMenu->mStyle.paddingV = (int32_t)gSpacer;
+
+                    ZRect r = StringToRect(message.GetParam("r"));
+                    r.InflateRect(gSpacer * 2, gSpacer * 2);
+                    r.bottom = r.top + r.Height() * 4 + gM;
+
+                    mpManageMenu->SetArea(r);
+                    mpManageMenu->ArrangeWindows(mpManageMenu->GetChildrenInGroup("Manage"), ZRect(r.Width(), r.Height()), mpManageMenu->mStyle, 1, -1);
+                    mpManageMenu->SetVisible();
+                    ChildToFront(mpManageMenu);
+                }
+            }
+            return true;
+        }
         else if (sType == "undo")
         {
             if (!mUndoFrom.empty() && !mUndoTo.empty())
@@ -674,6 +725,9 @@ void ImageViewer::ShowHelpDialog()
     pForm->AddMultiLine("Use '1' to toggle an image as favorite. (It will be moved into a 'favorites' subfolder.", text);
     pForm->AddMultiLine("Use 'DEL' to toggle an image as to-be-deleted. (It will be moved into a '_MARKED_TO_BE_DELETED_' subfolder.", text);
     pForm->AddMultiLine("Use the DELETE button in the toolbar to bring up a confirmation dialog with the list of photos marked for deletion.", text);
+    pForm->AddMultiLine("CTRL-'C' copies the path of the current image to the clipboard.", text);
+    pForm->AddMultiLine("CTRL-'R' look for the RAW (.cr3) version of the current image. (current folder, 'raw' subfolder, or '../raw' folders.)", text);
+
 
     pForm->AddMultiLine("Use the filter buttons in the toolbar to view either all images, just favorites, or just images marked for deletion.", text);
 
@@ -1260,6 +1314,29 @@ bool ImageViewer::Init()
         pBtn->mCaption.style = mSymbolicStyle;
         pBtn->msWinGroup = "Rotate";
 
+        mpRotationMenu->mbHideOnMouseExit = true;
+        ChildAdd(mpRotationMenu, false);
+
+
+        Sprintf(sMessage, "show_manage_menu;target=%s", GetTargetName().c_str());
+        pBtn = mpRotationMenu->SVGButton("show_manage_menu", sAppPath + "/res/rotate.svg", sMessage);
+
+        mpManageMenu = new ZWinControlPanel();
+        pBtn = mpManageMenu->Button("undo", "undo", ZMessage("undo", this));
+        pBtn->msWinGroup = "Manage";
+
+        pBtn = mpManageMenu->Button("move", "move", ZMessage("set_move_folder", this));
+        pBtn->msWinGroup = "Manage";
+
+        pBtn = mpManageMenu->Button("copy", "copy", ZMessage("set_copy_folder", this));
+        pBtn->msWinGroup = "Manage";
+
+        mpManageMenu->mbHideOnMouseExit = true;
+        ChildAdd(mpManageMenu, false);
+
+
+
+
         mpFolderLabel = new ZWinFolderLabel();
         mpFolderLabel->mBehavior = ZWinFolderLabel::kCollapsable;
         mpFolderLabel->mCurPath = mCurrentFolder;
@@ -1272,8 +1349,9 @@ bool ImageViewer::Init()
         ChildAdd(mpFolderLabel);
 
 
-        mpRotationMenu->mbHideOnMouseExit = true;
-        ChildAdd(mpRotationMenu, false);
+
+
+
     }
 
     if (!ValidIndex(mViewingIndex))
@@ -1387,11 +1465,21 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
 
 
+    pBtn = mpPanel->SVGButton("copylink", sAppPath + "/res/linkcopy.svg", ZMessage("copylink", this));
+    pBtn->msTooltip = "Copy path to image to clipboard";
+    pBtn->mSVGImage.style.paddingH = nButtonPadding;
+    pBtn->mSVGImage.style.paddingV = nButtonPadding;
+    pBtn->SetArea(rButton);
+    pBtn->msWinGroup = "File";
+
+    rButton.OffsetRect(rButton.Width(), 0);
+
+
     string sMessage;
 
 
     // Management
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
+/*    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
     rButton.right = rButton.left + (int64_t) (rButton.Width() * 2.5);     // wider buttons for management
 
     pBtn = mpPanel->Button("undo", "undo", ZMessage("undo", this));
@@ -1419,7 +1507,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Manage";
 
-
+    */
 
 
 
@@ -1435,6 +1523,17 @@ void ImageViewer::UpdateControlPanel()
     Sprintf(sMessage, "show_rotation_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
     pBtn->SetMessage(sMessage);
     pBtn->msWinGroup = "Rotate";
+
+
+    pBtn = mpPanel->Button("show_manage_menu", "Manage", "show_manage_menu");
+    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
+    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.25);     // wider buttons for management
+    pBtn->SetArea(rButton);
+    Sprintf(sMessage, "show_manage_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
+    pBtn->SetMessage(sMessage);
+    pBtn->msWinGroup = "Manage";
+
+
 
 
     rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
@@ -1660,6 +1759,56 @@ bool ImageViewer::ViewImage(const std::filesystem::path& filename)
 
     return true;
 }
+
+
+// 1) look for cr3 version in cur folder
+// 2) look for cr3 version in 'raw' subfolder
+// 3) look for cr3 version in '../raw' subfolder
+bool ImageViewer::FindAndLaunchCR3()
+{
+#ifdef _WIN64
+    if (!ValidIndex(mViewingIndex))
+        return false;
+
+    std::filesystem::path cr3Filename = mImageArray[mViewingIndex.absoluteIndex]->filename.filename();
+    cr3Filename.replace_extension(".cr3");
+
+    std::filesystem::path curFolderPath = mCurrentFolder;
+    curFolderPath.append(cr3Filename.string());
+
+    if (std::filesystem::exists(curFolderPath))
+    {
+        // launch from cur folder
+        ShellExecuteA(0, "open", curFolderPath.string().c_str(), 0, 0, SW_SHOWNORMAL);
+        return true;
+    }
+
+    std::filesystem::path curFolderRawPath = mCurrentFolder;
+    curFolderRawPath += "/raw/";
+    curFolderRawPath.append(cr3Filename.string());
+
+    if (std::filesystem::exists(curFolderRawPath))
+    {
+        // launch 
+        ShellExecuteA(0, "open", curFolderRawPath.string().c_str(), 0, 0, SW_SHOWNORMAL);
+        return true;
+    }
+
+    std::filesystem::path parentFolderRawPath = mCurrentFolder.parent_path();
+    parentFolderRawPath += "/raw/";
+    parentFolderRawPath.append(cr3Filename.string());
+
+    if (std::filesystem::exists(parentFolderRawPath))
+    {
+        // launch 
+        ShellExecuteA(0, "open", parentFolderRawPath.string().c_str(), 0, 0, SW_SHOWNORMAL);
+        return true;
+    }
+#endif
+
+    return false;
+}
+
 
 void ImageViewer::LoadMetadataProc(std::filesystem::path& imagePath, shared_ptr<ImageEntry> pEntry, std::atomic<int64_t>* pnOutstanding)
 {

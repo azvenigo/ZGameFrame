@@ -4,6 +4,7 @@
 #include "helpers/CommandLineParser.h"
 #include "helpers/Logger.h"
 #include "helpers/ZZFileAPI.h"
+#include "helpers/FileHelpers.h"
 
 
 #include "ZWinDebugConsole.h"
@@ -184,7 +185,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 #ifndef _DEBUG
 
 
-    string sCurVersion;
+    string sCurVersion = GetFileVersion(argv[0]);
     string sCurURL;
 
     if (ReadCFG("install/install.cfg", sCurVersion, sCurURL))

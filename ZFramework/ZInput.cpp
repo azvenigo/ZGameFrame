@@ -236,6 +236,7 @@ bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
     mpTooltipWin->SetVisible();
     toolTipAppear = lastMouseMove;
     UpdateTooltipLocation(lastMouseMove);
+    bMouseHoverPosted = true;   // set true so that it's not replaced by other hover
     return true;
 }
 
@@ -305,6 +306,7 @@ string ZInput::GetClipboard()
 void ZInput::SetClipboard(const std::string& text)
 {
     mClipboardText = text;
+    ZOUT("Set Clipboard to:", text);
 
 #ifdef _WIN64
     if (OpenClipboard(nullptr))

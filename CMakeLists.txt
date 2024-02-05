@@ -40,6 +40,7 @@ endif()
 
 
 set(COMMON_FILES 
+../../ZLibraries/Common/helpers/FileHelpers.h         ../../ZLibraries/Common/helpers/FileHelpers.cpp
 ../../ZLibraries/Common/helpers/FNMatch.h           ../../ZLibraries/Common/helpers/FNMatch.cpp 
 ../../ZLibraries/Common/helpers/HTTPCache.h         ../../ZLibraries/Common/helpers/HTTPCache.cpp
 ../../ZLibraries/Common/helpers/CommandLineParser.h ../../ZLibraries/Common/helpers/CommandLineParser.cpp
@@ -57,6 +58,9 @@ set(COMMON_FILES
 add_library(mio INTERFACE External/mio)
 add_library(mio::mio ALIAS mio)
 
+#if(MSVC)
+list(APPEND LINK_LIBS  Version.lib)
+#endif()
 
 
 list(APPEND COMMON_FILES  ../external/zlib-1.2.11/deflate.c  ../external/zlib-1.2.11/inflate.c 

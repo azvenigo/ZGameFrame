@@ -195,6 +195,8 @@ protected:
     bool                    MoveImage(std::filesystem::path oldPath, std::filesystem::path newPath);
     bool                    CopyImage(std::filesystem::path curPath, std::filesystem::path newPath);
 
+    bool                    FindAndLaunchCR3();
+
     bool                    RemoveImageArrayEntry(const ViewingIndex& vi);
 
 
@@ -221,6 +223,7 @@ protected:
     std::recursive_mutex    mPanelMutex;
 
     ZWinControlPanel*       mpRotationMenu;
+    ZWinControlPanel*       mpManageMenu;
 
     ZWinImage*              mpWinImage;  
 
