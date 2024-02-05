@@ -1325,12 +1325,14 @@ bool ImageViewer::Init()
         pBtn = mpManageMenu->Button("undo", "undo", ZMessage("undo", this));
         pBtn->msWinGroup = "Manage";
 
-        pBtn = mpManageMenu->Button("move", "move", ZMessage("set_move_folder", this));
+//        pBtn = mpManageMenu->Button("move", "move", ZMessage("set_move_folder", this));
+        pBtn = mpManageMenu->SVGButton("move", sAppPath + "/res/movefile.svg", ZMessage("set_move_folder", this));
         pBtn->msWinGroup = "Manage";
 
-        pBtn = mpManageMenu->Button("copy", "copy", ZMessage("set_copy_folder", this));
+//        pBtn = mpManageMenu->Button("copy", "copy", ZMessage("set_copy_folder", this));
+        pBtn = mpManageMenu->SVGButton("copy", sAppPath + "/res/copyfile.svg", ZMessage("set_copy_folder", this));
         pBtn->msWinGroup = "Manage";
-
+        
         mpManageMenu->mbHideOnMouseExit = true;
         ChildAdd(mpManageMenu, false);
 
