@@ -322,7 +322,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 
     gResources.Init("res/");// todo, move this define elsewhere?
 
-
+    ZGUI::ComputeLooks();
 
     filesystem::path appDataPath(userDataPath);
     appDataPath += "/ZSandbox/";

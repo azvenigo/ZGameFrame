@@ -1151,6 +1151,7 @@ ZWinDialog::ZWinDialog() : mStyle(gDefaultDialogStyle), mBehavior(eBehavior::Non
 
 bool ZWinDialog::Init()
 {
+    assert(gM > 0);
     //ZRect rButton(0, 0, gM * 4, gM * 2);
     ZRect rButtonArea(mAreaLocal);
     rButtonArea.top = rButtonArea.bottom - gM * 2;

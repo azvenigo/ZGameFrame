@@ -148,7 +148,9 @@ void ImageViewer::UpdateUI()
         rImageArea.top = mpPanel->GetArea().Height();
 
     if (mpFolderLabel)
-        mpFolderLabel->SetVisible(mbShowUI);
+    {
+        mpFolderLabel->SetVisible(mbShowUI && !mCurrentFolder.empty());
+    }
 
     if (mpRatedImagesStrip)
     {
@@ -367,13 +369,16 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     }
     else if (sType == "copylink")
     {
-        gInput.SetClipboard(EntryFromIndex(mViewingIndex)->filename.string());
+        if (ValidIndex(mViewingIndex))
+        {
+            gInput.SetClipboard(EntryFromIndex(mViewingIndex)->filename.string());
 
-        ZGUI::Style messageStyle(gStyleCaption);
-        messageStyle.bgCol = 0x8800ff00;
-        messageStyle.paddingH = (int32_t)gM;
+            ZGUI::Style messageStyle(gStyleCaption);
+            messageStyle.bgCol = 0x8800ff00;
+            messageStyle.paddingH = (int32_t)gM;
 
-        gInput.ShowTooltip("Copied", messageStyle);
+            gInput.ShowTooltip("Copied", messageStyle);
+        }
 
         return true;
     }
@@ -1348,11 +1353,7 @@ bool ImageViewer::Init()
         mpFolderLabel->mStyle.paddingV = (int32_t)gSpacer;
         mpFolderLabel->mStyle.fp.nHeight = gM * 4 / 5;
         mpFolderLabel->SetArea(ZRect(0, 0, mAreaLocal.Width() / 4, gM));
-        ChildAdd(mpFolderLabel);
-
-
-
-
+        ChildAdd(mpFolderLabel, !mCurrentFolder.empty());
 
     }
 
@@ -1472,6 +1473,7 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
     pBtn->SetArea(rButton);
+    pBtn->mbEnabled = ValidIndex(mViewingIndex);
     pBtn->msWinGroup = "File";
 
     rButton.OffsetRect(rButton.Width(), 0);
