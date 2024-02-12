@@ -7,7 +7,7 @@
 #include "ZScreenBuffer.h"
 #include "Resources.h"
 #include "ZStringHelpers.h"
-#include "ZWinScriptedDialog.h"
+//#include "ZWinScriptedDialog.h"
 #include "ZWinBtn.H"
 #include "ZWinSlider.h"
 #include "ZWinImage.h"

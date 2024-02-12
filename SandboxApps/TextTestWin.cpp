@@ -144,32 +144,38 @@ bool TextTestWin::Init()
     ZRect rFontSelectionWin(mAreaLocal.right - nWidth - nSpacer, mAreaLocal.top + nSpacer, mAreaLocal.right, mAreaLocal.top + nHeight - nSpacer);
     ZRect rTextAreaWin(10,10,rFontSelectionWin.Width()-10,rFontSelectionWin.Height()-10);
 
-    ZWinScriptedDialog* pWin = new ZWinScriptedDialog();
+    //ZWinScriptedDialog* pWin = new ZWinScriptedDialog();
+    ZWinFormattedDoc* pWin = new ZWinFormattedDoc();
     pWin->SetArea(rFontSelectionWin);
+    pWin->mStyle = gDefaultFormattedDocStyle;
+    pWin->mStyle.bgCol = 0xff444444;
+    pWin->mBehavior |= (ZWinFormattedDoc::kScrollable | ZWinFormattedDoc::kBackgroundFill);
 
     mpBackground.get()->LoadBuffer("res/paper.jpg");
 
-    string sDialogScript("<scripteddialog winname=fontselectionwin area=" + RectToString(rFontSelectionWin) + " draw_background=1 bgcolor=0xff444444>");
-    sDialogScript += "<textwin area=" + RectToString(rTextAreaWin) + " text_background_fill=1 text_fill_color=0xff444444 text_edge_blt=0 text_scrollable=1 underline_links=1 auto_scroll=1 auto_scroll_momentum=0.001>";
+//    string sDialogScript("<scripteddialog winname=fontselectionwin area=" + RectToString(rFontSelectionWin) + " draw_background=1 bgcolor=0xff444444>");
+//    sDialogScript += "<textwin area=" + RectToString(rTextAreaWin) + " text_background_fill=1 text_fill_color=0xff444444 text_edge_blt=0 text_scrollable=1 underline_links=1 auto_scroll=1 auto_scroll_momentum=0.001>";
 
-    string sEncodedFontParams("fontparams="+SH::URL_Encode(gDefaultTextFont)+" ");
+
+
+//    string sEncodedFontParams("fontparams="+SH::URL_Encode(gDefaultTextFont)+" ");
 
     for (int i = 0; i < gWindowsFontFacenames.size(); i++)
     {
         string sMessage;
         Sprintf(sMessage, "link=setcustomfont;fontindex=%d;target=TextTestWin", i);
 
-        sDialogScript += "<line wrap=0><text color=0xffffffff color2=0xffffffff deco=normal ";
-        sDialogScript += sEncodedFontParams;
-        sDialogScript += sMessage.c_str();
-        sDialogScript += " position=lc>";
-        sDialogScript += gWindowsFontFacenames[i];
-        sDialogScript += "</text></line>";
-    }
-    sDialogScript += "</textwin>";
-    sDialogScript += "</scripteddialog>";
+        string sLine("<line wrap=0><text color=0xffffffff color2=0xffffffff deco=normal ");
+//        sLine += sEncodedFontParams;
+        sLine += sMessage.c_str();
+        sLine += " position=lc>";
+        sLine += gWindowsFontFacenames[i];
+        sLine += "</text></line>";
 
-    pWin->PreInit(sDialogScript);
+        pWin->AddLineNode(sLine);
+    }
+
+//    pWin->PreInit(sDialogScript);
     ChildAdd(pWin);
 
 

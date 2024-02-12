@@ -6,7 +6,7 @@
 #include "ZGraphicSystem.h"
 #include "Resources.h"
 #include "ZStringHelpers.h"
-#include "ZWinScriptedDialog.h"
+//#include "ZWinScriptedDialog.h"
 #include <iostream>
 #include <Zrandom.h>
 #include "ZTimer.h"

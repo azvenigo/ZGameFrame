@@ -43,7 +43,7 @@ set (GUI_FILES
 ../ZFramework/ZWinFormattedText.h   ../ZFramework/ZWinFormattedText.cpp
 ../ZFramework/ZWinImage.h           ../ZFramework/ZWinImage.cpp
 ../ZFramework/ZMainWin.h            ../ZFramework/ZMainWin.cpp
-../ZFramework/ZWinScriptedDialog.h  ../ZFramework/ZWinScriptedDialog.cpp
+../ZFramework/ZWinPanel.h           ../ZFramework/ZWinPanel.cpp
 ../ZFramework/ZWinSlider.h          ../ZFramework/ZWinSlider.cpp
 ../ZFramework/ZWinControlPanel.h    ../ZFramework/ZWinControlPanel.cpp
 ../ZFramework/ZWinWatchPanel.h      ../ZFramework/ZWinWatchPanel.cpp
