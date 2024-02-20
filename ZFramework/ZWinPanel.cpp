@@ -1,6 +1,7 @@
-#include "ZWinScriptedDialog.h"
+#include "ZWinPanel.h"
 #include "ZWinSlider.h"
 #include "ZWinImage.h"
+#include "ZWinText.H"
 #include "ZWinBtn.h"
 #include "ZWinFormattedText.h"
 #include "ZStringHelpers.h"
@@ -12,312 +13,320 @@
 
 using namespace std;
 
-extern tZBufferPtr  gDefaultDialogBackground;
-
-extern tZBufferPtr  gStandardButtonUpEdgeImage;
-extern tZBufferPtr  gStandardButtonDownEdgeImage;
-extern ZRect        grStandardButtonEdge;
 
 
 
-const string		ksScriptedDialog("scripteddialog");
-const string		ksElement("element");
+// defining a panel layout
+// will consist of rows of controls
+// each row has sets of controls with attributes
+// panel will have behavior flags
 
-const string		ksElementDrawBackground("draw_background");
-const string		ksElementBackgroundColor("bgcolor");
-const string		ksTransformable("transformable");
-const string		ksTransformIn("transform_in");
-const string		ksTransformOut("transform_out");
-
-const string		ksTransformInTime("transform_in_time");
-const string		ksTransformOutTime("transform_out_time");
-
-const string		ksElementWinName("winname");
-
-const string		ksElementImage("image");
-const string		ksElementTextWin("textwin");
-const string		ksElementTextWinRawFormat("rawformat");
-const string		ksCaption("caption");
-
-const string		ksElementButton("btn");
-
-const string		ksAreaTag("area");     // format "l,t,r,b"
-const string		ksColorTag("color");      // format "r,g,b"
-const string		ksMessageTag("message");
-const string        ksFontParamsTag("fontparams");
-
-const int64_t       kButtonMeasure = 32;
-const int64_t       kPadding = 4;
-
-#ifdef _DEBUG
-#define new new(_NORMAL_BLOCK, THIS_FILE, __LINE__)
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
+// <panel   attribs>
+//     <row> <control attribs/>  </row>
+// </panel>
 
 
-ZWinScriptedDialog::ZWinScriptedDialog()
+
+
+
+
+
+ZWinPanel::ZWinPanel() : mBehavior(kNone)
 {
-	//mbTransformable = true;
-	mbDrawDefaultBackground = true;
-	mbFillBackground = false;
-    mnBackgroundColor = 0;
-
+    mRows = 0;
     if (msWinName.empty())
-        msWinName = "ZWinScriptedDialog_" + gMessageSystem.GenerateUniqueTargetName();
+        msWinName = "ZWinPanel_" + gMessageSystem.GenerateUniqueTargetName();
+
+    mStyle = gDefaultPanelStyle;
+    mbAcceptsCursorMessages = true;
 }
 
-ZWinScriptedDialog::~ZWinScriptedDialog()
+ZWinPanel::~ZWinPanel()
 {
 }
 
-void ZWinScriptedDialog::PreInit(const string& sDialogScript)
+
+bool ZWinPanel::Init()
 {
-	msDialogScript = sDialogScript;
-}
+    if (mbInitted)
+        return true;
 
-bool ZWinScriptedDialog::Init()
-{
-	ExecuteScript(msDialogScript);
+    ResolveLayoutTokens();
+    if (!ParseLayout())
+        return false;
 
-	//   cCEFont* pFont = gpFontSystem->GetDefaultFont(0);
-//	gMessageSystem.AddNotification("kill_window", this);
-
-	tMessageBoxButtonList::iterator it;
-
-
-	//////////////////////////////////////////////
-	// Add the Auto-arranged buttons
-
-	if (mArrangedMessageBoxButtonList.size() > 0)
-	{
-		// Find the largest button
-		int64_t nLargestCaptionSize = 0;
-		for (it = mArrangedMessageBoxButtonList.begin(); it != mArrangedMessageBoxButtonList.end(); it++)
-		{
-			ZWinSizablePushBtn* pBtn = *it;
-
-			string sCaption = pBtn->mCaption.sText;
-			int64_t nSize = pBtn->mCaption.style.Font()->StringWidth(sCaption);
-			ZASSERT(nSize < mAreaLocal.Width());
-
-			if (nSize > nLargestCaptionSize)
-				nLargestCaptionSize = nSize;
-		}
-
-		// Calculate the padding between buttons
-		//
-		//  |      [button1]      [button2]      |
-		//     a              b               c
-		//
-		//  With 2 buttons, there are three spaces, a b & c
-
-		int64_t nButtonWidth = nLargestCaptionSize;
-
-		int64_t nButtonsPerRow = (mAreaInParent.Width()) / (nButtonWidth);
-
-		// If there are fewer buttons than can fit.... use this value
-		if (nButtonsPerRow > (int64_t) mArrangedMessageBoxButtonList.size())
-			nButtonsPerRow = (int64_t) mArrangedMessageBoxButtonList.size();
-
-		int64_t nActualPaddingRoom = mAreaInParent.Width() - (nButtonsPerRow * nButtonWidth);
-
-		int64_t nPixelsBetweenButtons = nActualPaddingRoom / (nButtonsPerRow+1); // calculate the spaces.... nNumButtons+1
-
-
-		int64_t nYPos = 0;
-		int64_t nXPos = nPixelsBetweenButtons;
-
-		// Create buttons for each entry in our button list
-		for (it = mArrangedMessageBoxButtonList.begin(); it != mArrangedMessageBoxButtonList.end(); it++)
-		{
-			ZWinSizablePushBtn* pBtn = *it;
-
-			int64_t nFontSize = pBtn->mCaption.style.fp.nHeight;
-
-			ZRect rButtonArea(nXPos, nYPos, nXPos + nLargestCaptionSize + nFontSize*kPadding*2, nYPos + kButtonMeasure);
-			pBtn ->SetArea(rButtonArea);
-
-			nXPos += rButtonArea.Width() + nPixelsBetweenButtons;     // next x offset
-
-			// If the button won't fit on this line
-			if (nXPos + rButtonArea.Width() > mAreaInParent.Width())
-			{
-				// Advance to the next row of buttons
-				nYPos += kButtonMeasure + nFontSize*kPadding;
-				nXPos = nPixelsBetweenButtons;
-
-				ZASSERT(nYPos < mAreaInParent.Height() - kButtonMeasure*2);    // assert that it will fit in the window
-			}
-		}
-
-		// Now move all of the buttons down to the bottom of the window
-		int64_t nButtonRows = (mArrangedMessageBoxButtonList.size() + nButtonsPerRow - 1) / nButtonsPerRow;
-
-		int64_t nYOffset = mAreaInParent.Height() - kPadding*2 - kButtonMeasure - (kButtonMeasure) * nButtonRows;
-		for (it = mArrangedMessageBoxButtonList.begin(); it != mArrangedMessageBoxButtonList.end(); it++)
-		{
-			ZWinSizablePushBtn* pBtn = *it;
-			ZRect rCurrentRect(pBtn->GetArea());
-			rCurrentRect.OffsetRect(0,nYOffset);
-			pBtn->SetArea(rCurrentRect);
-		}
-	}
-
-	mbAcceptsCursorMessages = true;
-
-	if (mbFillBackground)
-		mpSurface->Fill(mnBackgroundColor);
-
+    UpdateUI();
 	return ZWin::Init();
 }
 
-bool ZWinScriptedDialog::Shutdown()
+bool ZWinPanel::Shutdown()
 {
 	return ZWin::Shutdown();
 };
 
-bool ZWinScriptedDialog::Paint()
+bool ZWinPanel::Paint()
 {
     if (!PrePaintCheck())
         return false;
-
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface->GetMutex());
    
-    // Draw the dialog edge
-	if (mbDrawDefaultBackground)
-		mpSurface->Fill(gDefaultDialogFill);
+    if (ARGB_A(mStyle.bgCol) > 0x0f)
+        mpSurface->Fill(mStyle.bgCol);
+
 	return ZWin::Paint();
 }
 
 
-bool ZWinScriptedDialog::ExecuteScript(string sDialogScript)
+bool ZWinPanel::ParseLayout()
 {
 	string sElement;
 
-	ZXMLNode dialogTree;
-	dialogTree.Init(sDialogScript);
+	ZXMLNode tree;
+    tree.Init(mPanelLayout);
 
-	ZXMLNode* pDialogNode = dialogTree.GetChild(ksScriptedDialog);
-	ZASSERT(pDialogNode);
-	if (!pDialogNode)
+    ZXMLNode* pPanel = tree.GetChild("panel");
+	if (!pPanel)
 		return false;
 
-	// Window Attributes
-	msWinName = pDialogNode->GetAttribute(ksElementWinName);
-//	if (pDialogNode->HasAttribute(ksTransformable))
-//		mbTransformable	= SH::ToBool(pDialogNode->GetAttribute(ksTransformable));
+	// Panel Attributes
+    //      Behavior
 
-	if (pDialogNode->HasAttribute(ksTransformIn))
+    //      Sizing
+    //          min size
+    //          max size
+    //          % of parent or % of full screen, or?
+
+    //      Style?
+    
+
+
+	// Rows
+	tXMLNodeList rowList;
+    pPanel->GetChildren("row", rowList);
+
+	for (auto pRow : rowList)
 	{
-		string sTransformType = pDialogNode->GetAttribute(ksTransformIn);
-		if (sTransformType == "none" || sTransformType == "0")
-			mTransformIn = kNone;
-		else if (sTransformType == "fade" || sTransformType == "1")
-			mTransformIn = kFade;
-		else if (sTransformType == "slideleft" || sTransformType == "2")
-			mTransformIn = kSlideLeft;
-		else if (sTransformType == "slideright" || sTransformType == "3")
-			mTransformIn = kSlideRight;
-		else if (sTransformType == "slideup" || sTransformType == "4")
-			mTransformIn = kSlideUp;
-		else if (sTransformType == "slidedown" || sTransformType == "5")
-			mTransformIn = kSlideDown;
-	}
-
-	if (pDialogNode->HasAttribute(ksTransformInTime))
-		mnTransformInTime = SH::ToInt( pDialogNode->GetAttribute(ksTransformInTime));
-
-	if (pDialogNode->HasAttribute(ksTransformOut))
-	{
-		string sTransformType = pDialogNode->GetAttribute(ksTransformOut);
-		if (sTransformType == "none" || sTransformType == "0")
-			mTransformOut = kNone;
-		else if (sTransformType == "fade" || sTransformType == "1")
-			mTransformOut = kFade;
-		else if (sTransformType == "slideleft" || sTransformType == "2")
-			mTransformOut = kSlideLeft;
-		else if (sTransformType == "slideright" || sTransformType == "3")
-			mTransformOut = kSlideRight;
-		else if (sTransformType == "slideup" || sTransformType == "4")
-			mTransformOut = kSlideUp;
-		else if (sTransformType == "slidedown" || sTransformType == "5")
-			mTransformOut = kSlideDown;
-	}
-
-	if (pDialogNode->HasAttribute(ksTransformOutTime))
-		mnTransformOutTime = SH::ToInt( pDialogNode->GetAttribute(ksTransformOutTime));
-
-	if (pDialogNode->HasAttribute(ksElementDrawBackground))
-		mbDrawDefaultBackground = SH::ToBool(pDialogNode->GetAttribute(ksElementDrawBackground));
-
-	if (pDialogNode->HasAttribute(ksElementBackgroundColor))
-	{
-		mnBackgroundColor = (uint32_t) SH::ToInt(pDialogNode->GetAttribute(ksElementBackgroundColor));
-		mbFillBackground = true;
-	}
-
-	// Children
-	tXMLNodeList elementNodeList;
-	pDialogNode->GetChildren(elementNodeList);
-
-	for (tXMLNodeList::iterator it = elementNodeList.begin(); it != elementNodeList.end(); it++)
-	{
-		ZXMLNode* pChild = *it;
-		ProcessNode(pChild);
+        if (!ParseRow(pRow))
+            return false;
+        mRows++;
 	}
 
 	return true;
 }
 
-bool ZWinScriptedDialog::ProcessNode(ZXMLNode* pNode)
+bool ZWinPanel::Registered(const std::string& _name)
 {
-	ZASSERT(pNode);
+    for (auto& r : mRegistered)
+    {
+        if (r.first == _name)
+            return true;
+    }
 
-	// Find the next component
-	string sComponent = pNode->GetName();
+    return false;
+}
 
-	// Set the window name if there is one
-    msWinName = pNode->GetAttribute(ksElementWinName);
+tWinList ZWinPanel::GetRowWins(int32_t row)
+{
+    tWinList wins;
+    if (row >= 0 && row < mRows)
+    {
+        for (auto& r : mRegistered)
+        {
+            if (r.second.row == row)
+                wins.push_back(GetChildWindowByWinName(r.first));
+        }
+    }
 
-	if (sComponent == ksElementTextWin)
-	{
-		ZWinFormattedDoc* pWin = new ZWinFormattedDoc();
-		pWin->InitFromXML(pNode);
-		ChildAdd(pWin);
-	}
-	else if (sComponent == ksElementButton)
-	{
-		ZWinSizablePushBtn* pBtn = new ZWinSizablePushBtn();
-		pBtn->InitFromXML(pNode);
-		ChildAdd(pBtn);
-		bool bArrangedButton = pNode->GetAttribute(ksAreaTag).empty();	// if there is no area specified, then this button is auto-arranged
-		if (bArrangedButton)
-			mArrangedMessageBoxButtonList.push_back(pBtn);
-	}
-	else if (sComponent == ksElementImage)
-	{
-		ZWinImage* pWinImage = new ZWinImage();
-		if (pWinImage->InitFromXML(pNode))
-		{
-			return ChildAdd(pWinImage);
-		}
-		else
-		{
-			ZASSERT(false);
-			delete pWinImage;
-		}
-	}
-	else
-	{
-		ZASSERT_MESSAGE(false, string("Unknown Component \"" + sComponent + "\"").c_str() );     // unknown command encountered
-		return false;      
-	}
+    return wins;
+}
+
+
+bool ZWinPanel::ParseRow(ZXMLNode* pRow)
+{
+	ZASSERT(pRow);
+    tXMLNodeList controls;
+    pRow->GetChildren(controls);
+
+    // for each 
+    for (auto control : controls)
+    {
+        string type = control->GetName();
+        string id = control->GetAttribute("id");
+
+        string msgSuffix;
+        if ((mBehavior & kCloseOnButton) != 0)
+            msgSuffix = ";closepanel&target=" + GetTargetName();
+
+        if (id.empty() || Registered(id))
+        {
+            ZERROR("ID:", id, " invalid. Must have unique IDs for each registered window.");
+            return false;
+        }
+
+        ZWin* pWin = nullptr;
+
+        if (type == "button")
+        {
+            // add a button
+            pWin = new ZWinSizablePushBtn();
+            ZWinSizablePushBtn* pBtn = (ZWinSizablePushBtn*)pWin;
+            pBtn->mCaption.sText = control->GetAttribute("caption");
+            pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
+        }
+        else if (type == "svgbutton")
+        {
+            // add svg button
+            pWin = new ZWinSizablePushBtn();
+            ZWinSizablePushBtn* pBtn = (ZWinSizablePushBtn*)pWin;
+            pBtn->mSVGImage.Load(control->GetAttribute("svgpath"));
+            pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
+        }
+        else if (type == "toggle")
+        {
+            // add toggle
+            pWin = new ZWinCheck();
+            ZWinCheck* pCheck = (ZWinCheck*)pWin;
+            pCheck->msButtonMessage = control->GetAttribute("checkmsg") + msgSuffix;
+            pCheck->msUncheckMessage = control->GetAttribute("uncheckmsg") + msgSuffix;
+        }
+        else if (type == "label")
+        {
+            // add label
+            pWin = new ZWinLabel();
+            ZWinLabel* pLabel = (ZWinLabel*)pWin;
+            pLabel->msText = control->GetAttribute("caption") + msgSuffix;
+        }
+        else
+        {
+            ZASSERT(false);
+            ZERROR("Unsupported type:", type);
+            return false;
+        }
+
+        // Common attributes
+        pWin->msWinGroup = control->GetAttribute("group");
+        pWin->msWinName = id;
+        ChildAdd(pWin);
+
+        mRegistered[id].row = mRows;
+        return true;
+    }
 
 	return false;
 }
 
-bool ZWinScriptedDialog::HandleMessage(const ZMessage& message)
+bool ZWinPanel::HandleMessage(const ZMessage& message)
 {
+    string sType = message.GetType();
+    if (sType == "closepanel")
+    {
+        if (mpParentWin)
+            mpParentWin->SetFocus();
+        gMessageSystem.Post("kill_child", "name", msWinName);
+    }
+
 	return ZWin::HandleMessage(message);
 }
+
+void ZWinPanel::UpdateUI()
+{
+    ZRect rLocal = mRelativeArea.Area(grFullArea);
+
+    int32_t h = mAreaLocal.Height() - (mRows + 1) * mStyle.paddingV;
+    for (int32_t i = 0; i < mRows; i++)
+    {
+        tWinList rowWins = GetRowWins(i);
+        int32_t w = mAreaLocal.Width() - (rowWins.size() + 1) * mStyle.paddingH;
+
+        int rowi = 0;
+        for (auto pWin : rowWins)
+        {
+            ZPoint tl(mStyle.paddingH + rowi * w, mStyle.paddingV);
+            ZRect r(tl.x, tl.y, tl.x + w, tl.y + h);
+            pWin->SetArea(r);
+        }
+    }
+}
+
+void ZWinPanel::SetRelativeArea(const ZRect& ref, ZGUI::ePosition pos, const ZRect& area)
+{
+    mRelativeArea = ZGUI::RelativeArea(area, ref, pos);
+    SetArea(area);
+}
+
+
+bool ZWinPanel::OnParentAreaChange()
+{
+    if (!mpSurface)
+        return false;
+
+//    SetArea(mpParentWin->GetArea());
+
+    ZRect rNewParent(mpParentWin->GetArea());
+
+    SetArea(mRelativeArea.Area(rNewParent));
+
+
+    ZWin::OnParentAreaChange();
+    UpdateUI();
+
+    return true;
+}
+
+
+bool ZWinPanel::ResolveLayoutTokens()
+{
+    for (size_t i = 0; i < mPanelLayout.size(); i++)
+    {
+        if (mPanelLayout[i] == '%')
+        {
+            for (size_t j = i+1; j < mPanelLayout.size(); j++)
+            {
+                if (mPanelLayout[j] == '%')
+                {
+                    string sToken = mPanelLayout.substr(i+1, j - i - 1);    // pull token name
+                    if (!sToken.empty())
+                    {
+                        string sValue = ResolveToken(sToken);
+                        if (!sValue.empty())
+                        {
+                            string sNew = mPanelLayout.substr(0, i);
+                            sNew += sValue;
+                            sNew += mPanelLayout.substr(j + 1);
+                            mPanelLayout = sNew;
+                            i += sValue.length() - sToken.length() + 2;         // adjust the iterator to skip the replaced token. +2 to skip the leading and end '%'
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+
+string ZWinPanel::ResolveToken(std::string token)
+{
+    string sGroup;
+    SH::SplitToken(sGroup, token, "/");     // in case token is passed in as "group/key"
+    string sKey;
+    if (token.empty())
+    {
+        sKey = sGroup;
+        if (gRegistry.contains(sKey))
+            return gRegistry[sKey];
+
+        return "";
+    }
+
+    string sValue;
+    if (!gRegistry.Get(sGroup, sKey, sValue))
+    {
+        ZWARNING("Unable to lookup registry group:", sGroup, " key:", sKey);
+    }
+
+    return sValue;
+}
+

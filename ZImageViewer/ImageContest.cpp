@@ -456,13 +456,13 @@ bool ImageContest::Init()
         mpChooseBtn[kLeft] = new ZWinSizablePushBtn();
         mpChooseBtn[kLeft]->mSVGImage.Load(sAppPath + "/res/left.svg");
         mpChooseBtn[kLeft]->msTooltip = "Choose Left";
-        mpChooseBtn[kLeft]->SetMessage(ZMessage("select_winner;side=left", this));
+        mpChooseBtn[kLeft]->msButtonMessage = ZMessage("select_winner;side=left", this);
         ChildAdd(mpChooseBtn[kLeft]);
 
         mpChooseBtn[kRight] = new ZWinSizablePushBtn();
         mpChooseBtn[kRight]->mSVGImage.Load(sAppPath + "/res/right.svg");
         mpChooseBtn[kRight]->msTooltip = "Choose Right";
-        mpChooseBtn[kRight]->SetMessage(ZMessage("select_winner;side=right", this));
+        mpChooseBtn[kRight]->msButtonMessage = ZMessage("select_winner;side=right", this);
         ChildAdd(mpChooseBtn[kRight]);
 
         ZGUI::Style style = gStyleCaption;

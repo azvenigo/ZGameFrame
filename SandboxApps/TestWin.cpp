@@ -4,6 +4,9 @@
 #include "ZWinSlider.h"
 #include "Resources.h"
 #include "ZWinBtn.H"
+#include "ZWinPanel.h"
+
+using namespace std;
 
 TestWin::TestWin()
 {
@@ -63,12 +66,37 @@ bool TestWin::Init()
         rBtn.OffsetRect(20, 20);
     }*/
 
+
+    ZWinPanel* panel = new ZWinPanel();
+    panel->mPanelLayout = "<panel><row><svgbutton id=test1 group=group1 svgpath=%apppath%/res/test.svg></svgbutton></row></panel>";
+
+    //panel->SetArea(ZRect(10, 200, 510, 300));
+    panel->SetRelativeArea(grFullArea, ZGUI::ePosition::IRIB, ZGUI::Arrange(ZRect(500, 100), grFullArea, ZGUI::ePosition::IRIB, 200, 10));
+    ChildAdd(panel);
+
+
+
     return ZWin::Init();
 }
 bool TestWin::Process()
 {
     return ZWin::Process();
 }
+
+
+bool TestWin::OnParentAreaChange()
+{
+    if (!mpSurface)
+        return false;
+
+    SetArea(mpParentWin->GetArea());
+
+    ZWin::OnParentAreaChange();
+
+    return true;
+}
+
+
 
 bool TestWin::Paint()
 {

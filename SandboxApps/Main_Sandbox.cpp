@@ -133,13 +133,6 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
 
     gRegistry["sandbox"]["mode"] = (int32_t)mode;
 
-    if (mode == eSandboxMode::kTestWin)
-    {
-        TestWin* pWin = new TestWin();
-        pWin->SetArea(grFullArea);
-        gpMainWin->ChildAdd(pWin);
-
-    }
     if (mode == eSandboxMode::kFloatLinesWin)
 	{
 

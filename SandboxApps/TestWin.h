@@ -17,6 +17,9 @@ public:
    bool		Paint();
    virtual bool	OnKeyDown(uint32_t key);
 
+   bool     OnParentAreaChange();
+
+
   
 private:
     int64_t  mnSliderVal;

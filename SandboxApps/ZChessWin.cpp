@@ -67,7 +67,7 @@ bool ZChoosePGNWin::Init()
     pBtn->mCaption.style = btnStyle;
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
-    pBtn->SetMessage(ZMessage("randgame", this));
+    pBtn->msButtonMessage = ZMessage("randgame", this);
     ChildAdd(pBtn);
 
 
@@ -80,7 +80,7 @@ bool ZChoosePGNWin::Init()
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
-    pBtn->SetMessage(ZMessage("cancelpgnselect", mpParentWin));
+    pBtn->msButtonMessage = ZMessage("cancelpgnselect", mpParentWin);
     ChildAdd(pBtn);
 
     ZRect rListbox(gSpacer, gSpacer + rControl.bottom, mAreaLocal.Width() - gSpacer, rButton.top - gSpacer);
@@ -277,7 +277,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.sText = ")"; // wingdings 3 to the beggining
     pBtn->mCaption.style = wd3;
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("beginning", this));
+    pBtn->msButtonMessage = ZMessage("beginning", this);
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
@@ -285,7 +285,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("backone", this));
+    pBtn->msButtonMessage = ZMessage("backone", this);
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
@@ -293,7 +293,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("forwardone", this));
+    pBtn->msButtonMessage = ZMessage("forwardone", this);
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
@@ -301,7 +301,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("end", this));
+    pBtn->msButtonMessage = ZMessage("end", this);
     ChildAdd(pBtn);
 
     pBtn = new ZWinSizablePushBtn();
@@ -309,7 +309,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width() * 2, 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("chessdb", mpParentWin));
+    pBtn->msButtonMessage = ZMessage("chessdb", mpParentWin);
     ChildAdd(pBtn);
 
 
@@ -318,7 +318,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width() *2, 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("loadgame", mpParentWin));
+    pBtn->msButtonMessage = ZMessage("loadgame", mpParentWin);
     ChildAdd(pBtn);
 
 
@@ -327,7 +327,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->SetMessage(ZMessage("savegame", mpParentWin));
+    pBtn->msButtonMessage = ZMessage("savegame", mpParentWin);
     ChildAdd(pBtn);
 
     ZRect rMoves(rGameTags.left, rGameTags.bottom + gSpacer, rGameTags.right, rButton.top - gSpacer * 2);

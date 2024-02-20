@@ -1525,7 +1525,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.right = rButton.left + (int64_t)(rButton.Width()*1.25 );     // wider buttons for management
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "show_rotation_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
-    pBtn->SetMessage(sMessage);
+    pBtn->msButtonMessage = sMessage;
     pBtn->msWinGroup = "Rotate";
 
 
@@ -1534,7 +1534,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.25);     // wider buttons for management
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "show_manage_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
-    pBtn->SetMessage(sMessage);
+    pBtn->msButtonMessage = sMessage;
     pBtn->msWinGroup = "Manage";
 
 

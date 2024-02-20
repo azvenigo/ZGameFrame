@@ -2,41 +2,71 @@
 
 #include "ZWin.h"
 #include <string>
-#include "ZFont.h"
-#include <list>
+#include <unordered_set>
 #include "ZMessageSystem.h"
+#include "helpers/Registry.h"   // for resolving environment tokens like %apppath%
 
 
-class ZWinSizablePushBtn;
 class ZXMLNode;
 
-typedef  std::list<ZWinSizablePushBtn*> tMessageBoxButtonList;
-
-class ZWinScriptedDialog : public ZWin
+class RegisteredWin
 {
 public:
-   ZWinScriptedDialog();
-   ~ZWinScriptedDialog();
+    RegisteredWin(int32_t _row = 0) : row(_row)
+    {
+    }
+    // tbd....what attributes for this window?  sizing, grouping
+    int32_t row;
+};
 
-   void PreInit(const std::string& sDialogScript);
-   virtual bool Init();
-   virtual bool Shutdown();
+typedef std::map<std::string, RegisteredWin> tRegisteredWins;
 
-   // IMessageTarget
-   virtual bool HandleMessage(const ZMessage& message);
+class ZWinPanel : public ZWin
+{
+public:
+
+    enum eBehavior : uint32_t
+    {
+        kNone               = 0,
+        kHideOnMouseExit    = 1,      // 1
+        kCloseOnButton      = 1 << 1, // 2
+    };
+
+    ZWinPanel();
+    ~ZWinPanel();
+
+   bool         Init(); 
+   bool         Shutdown();
+
+   bool         HandleMessage(const ZMessage& message);
+
+   void         SetRelativeArea(const ZRect& ref, ZGUI::ePosition pos, const ZRect& area); // sets up relative area to automatically adjust when parent area changes
+
+
+   std::string  mPanelLayout;
+   ZGUI::Style  mStyle;
+   ZGUI::Style  mGroupingStyle;
+   uint32_t     mBehavior;
+   ZGUI::RelativeArea mRelativeArea;
+
+
+   bool         OnParentAreaChange();
+
 
 protected:
-   virtual bool Paint();
+   bool         Paint();
 
-private:
+   bool         Registered(const std::string& name);
+   tWinList     GetRowWins(int32_t row);
 
-   bool ExecuteScript(std::string sDialogScript);
-   bool ProcessNode(ZXMLNode* pNode);
+   void         UpdateUI();
 
-   std::string				msDialogScript;
-   tMessageBoxButtonList	mArrangedMessageBoxButtonList;
-   bool						mbDrawDefaultBackground;
-   bool						mbFillBackground;
-   uint32_t					mnBackgroundColor;
+   bool         ParseLayout();
+   bool         ParseRow(ZXMLNode* pRow);
+   bool         ResolveLayoutTokens();
+   std::string  ResolveToken(std::string token);
+
+   tRegisteredWins mRegistered;
+   int32_t      mRows;
 };
 

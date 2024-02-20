@@ -40,6 +40,7 @@ extern ZGUI::Style gDefaultDialogStyle;
 extern ZGUI::Style gDefaultWinTextEditStyle;
 extern ZGUI::Style gDefaultGroupingStyle;
 extern ZGUI::Style gDefaultFormattedDocStyle;
+extern ZGUI::Style gDefaultPanelStyle;
 
 namespace ZGUI
 {

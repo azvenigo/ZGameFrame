@@ -2,6 +2,7 @@
 
 #include "ZTypes.h"
 #include <string>
+#include <assert.h>
 
 class ZFontParams;
 class ZTextLook;
@@ -102,11 +103,56 @@ namespace ZGUI
          OLOB = HOutside|Left|VOutside|Bottom,  ILOB = HInside|Left|VOutside|Bottom, ICOB = HInside|HCenter|VOutside|Bottom, IROB = HInside|Right|VOutside|Bottom,  OROB = HOutside|Right|VOutside|Bottom,
     };
 
+
+    /// <summary>
+    /// RelativeArea - convenient method for child to maintain aspect ratio, size and position relative to a parent.
+    /// Once constructed, Area() function returns the computed area
+    /// </summary>
+    class RelativeArea
+    {
+    public:
+        RelativeArea(const ZRect& area = {}, const ZRect& ref = {}, ePosition _anchorpos = ILIT)
+        {
+            if (area.Area() > 0)
+                aspectratio = (double)area.Width() / (double)area.Height();
+
+            if (ref.Area() > 0)
+            {
+                sizeratio = (double)area.Height() / (double)ref.Height();
+
+                anchorPos = _anchorpos;
+                if ((anchorPos & ZGUI::ePosition::R) != 0)
+                    offset.x = (double)(ref.right - area.right) / (double)ref.Width();
+                else
+                    offset.x = (double)(area.left - ref.left) / (double)ref.Width();
+
+                if ((anchorPos & ZGUI::ePosition::B) != 0)
+                    offset.y = (double)(ref.bottom - area.bottom) / (double)ref.Height();
+                else
+                    offset.y = (double)(area.top - ref.top) / (double)ref.Height();
+            }
+        }
+
+        // serialization
+        RelativeArea(std::string s);    // from string
+        operator std::string() const;   // to string
+
+        ZRect Area(const ZRect& ref) const;
+
+
+        ePosition   anchorPos;
+        ZFPoint     offset; // normalized % offset from anchor 0.0-1.0
+        double      aspectratio;  
+        double      sizeratio;  // normalized % of size based on parent (my_height / parent_height)
+    };
+
+
     ZRect       Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t paddingH = 0, int64_t paddingV = 0);  // moves r relative to ref based on position flags
 
     ZRect       ScaledFit(const ZRect& r, const ZRect& ref);    // scales r to fit inside ref maintaining r's aspect ratio
 
     std::string ToString(ePosition pos);
     ePosition   FromString(std::string s);
+
 };
 

@@ -1,6 +1,7 @@
 #include "ZGUIHelpers.h"
 #include "helpers/StringHelpers.h"
 #include "ZDebug.h"
+#include "json.hpp"
 
 using namespace std;
 
@@ -257,4 +258,82 @@ namespace ZGUI
 
         return ZRect(nXOffset, nYOffset, nXOffset + nImageWidth, nYOffset + nImageHeight);
     }
+
+
+    ZRect RelativeArea::Area(const ZRect& ref) const
+    {
+        // compute area from reference
+
+        int64_t rh = ref.Height();
+
+        double h = ref.Height() * sizeratio;
+        double w = h * aspectratio;
+
+        ZRect r((int64_t)w, (int64_t)h);
+
+        double x;
+        double y;
+
+        if ((anchorPos & ZGUI::ePosition::R) != 0)
+        {
+            x = (double)ref.right - ((double)ref.Width()) * offset.x;
+            if ((anchorPos & ZGUI::ePosition::HInside) != 0)    // if inside the rect, shift left
+                x -= w;
+        }
+        else
+        {
+            x = (double)ref.left + ((double)ref.Width() * offset.x);
+            if ((anchorPos & ZGUI::ePosition::HOutside) != 0)    // if outside the rect, shift left
+                x -= w;
+        }
+
+        if ((anchorPos & ZGUI::ePosition::B) != 0)
+        {
+            y = (double)ref.bottom - ((double)ref.Height()) * offset.y;
+            if ((anchorPos & ZGUI::ePosition::VInside) != 0)    // if outside the rect, shift up
+                y -= h;
+        }
+        else
+        {
+            y = (double)ref.top + ((double)ref.Height() * offset.y);
+            if ((anchorPos & ZGUI::ePosition::VOutside) != 0)    // if outside the rect, shift up
+                y -= h;
+        }
+
+        r.OffsetRect((int64_t)x, (int64_t)y);
+
+
+        return r;
+    }
+
+
+
+    ePosition   anchorPos;
+    ZFPoint     offset; // normalized % offset from anchor 0.0-1.0
+    double      aspectratio;
+    double      sizeratio;  // normalized % of size based on parent (my_height / parent_height)
+
+    RelativeArea::operator std::string() const
+    {
+        nlohmann::json j;
+        j["p"] = (uint32_t)anchorPos;
+        j["ox"] = offset.x;
+        j["oy"] = offset.y;
+        j["a"] = aspectratio;
+        j["s"] = sizeratio;
+
+        return j.dump();
+    }
+
+    RelativeArea::RelativeArea(string s)
+    {
+        nlohmann::json j = nlohmann::json::parse(s);
+
+        if (j.contains("p")) anchorPos = (ePosition)j["p"];
+        if (j.contains("ox")) offset.x = j["ox"];
+        if (j.contains("oy")) offset.y = j["oy"];
+        if (j.contains("a")) aspectratio = j["a"];
+        if (j.contains("s")) sizeratio = j["s"];
+    }
+
 };

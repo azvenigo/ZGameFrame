@@ -29,6 +29,8 @@ ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, (
 ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill);
 ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 16, -2);
 ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, (int32_t)gSpacer, (int32_t)gSpacer, 0, false);
+ZGUI::Style gDefaultPanelStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Unknown, (int32_t)gSpacer, gSpacer);
+
 
 ZGUI::Palette gAppPalette{
 {
@@ -74,6 +76,8 @@ namespace ZGUI
         gDefaultFormattedDocStyle.paddingH = (int32_t)gSpacer;
         gDefaultFormattedDocStyle.paddingV = (int32_t)gSpacer;
 
+        gDefaultPanelStyle.paddingH = (int32_t)gSpacer;
+        gDefaultPanelStyle.paddingV = (int32_t)gSpacer;
 
 
         // update colors
@@ -86,6 +90,8 @@ namespace ZGUI
         gAppPalette.GetByName("Text Fill", gDefaultWinTextEditStyle.bgCol);
         gAppPalette.GetByName("Text Fill", gDefaultFormattedDocStyle.bgCol);
         gAppPalette.GetByName("Dialog Fill", gStyleButton.bgCol);
+        gAppPalette.GetByName("Dialog Fill", gDefaultPanelStyle.bgCol);
+
 
         gStyleToggleChecked.bgCol = gDefaultHighlight;
     }

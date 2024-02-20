@@ -67,7 +67,7 @@ ZWinSizablePushBtn* ZWinControlPanel::Button(const std::string& sID, const strin
     if (!sCaption.empty())
         pBtn->mCaption.sText = sCaption;
     if (!sMessage.empty())
-        pBtn->SetMessage(sMessage);
+        pBtn->msButtonMessage = sMessage;
 
 
     return pBtn;
@@ -92,7 +92,7 @@ ZWinSizablePushBtn* ZWinControlPanel::SVGButton(const std::string& sID, const st
     if (!sSVGFilepath.empty())
         pBtn->mSVGImage.Load(sSVGFilepath);
     if (!sMessage.empty())
-        pBtn->SetMessage(sMessage);
+        pBtn->msButtonMessage = sMessage;
 
 
     return pBtn;
@@ -130,7 +130,10 @@ ZWinCheck* ZWinControlPanel::Toggle(const std::string& sID, bool* pbValue, const
         pCheck = new ZWinCheck(pbValue);
         mChecks[sID] = pCheck;
         if (!sCheckMessage.empty() || !sUncheckMessage.empty())
-            pCheck->SetMessages(sCheckMessage, sUncheckMessage);
+        {
+            pCheck->msButtonMessage = sCheckMessage;
+            pCheck->msUncheckMessage = sUncheckMessage;
+        }
         if (!sCaption.empty())
             pCheck->mCaption.sText = sCaption;
 

@@ -118,9 +118,6 @@ public:
 	virtual bool            OnMouseUpL(int64_t x, int64_t y);
 	virtual bool            OnMouseMove(int64_t x, int64_t y);
 
-	virtual void            SetMessage(std::string sMessage) { msButtonMessage = sMessage; }
-	virtual std::string     GetMessage() { return msButtonMessage; }
-
     ZGUI::TextBox           mCaption;
     ZGUI::SVGImageBox       mSVGImage;
 
@@ -131,6 +128,7 @@ public:
     tZBufferPtr             mpUpEdgeImage;
     tZBufferPtr             mpDownEdgeImage;
     ZRect                   mrEdge;
+    std::string             msButtonMessage;
 
 
 protected:
@@ -139,7 +137,6 @@ protected:
 
 	eSizablePushBtnState	mDrawState;
 
-	std::string             msButtonMessage;
 };
 
 
@@ -153,30 +150,30 @@ public:
 	~ZWinCheck();
 
 public:
-	virtual bool  			Init(void);
-	virtual bool			OnMouseDownL(int64_t x, int64_t y);
-	virtual bool			OnMouseUpL(int64_t x, int64_t y);
+	virtual bool            Init(void);
+	virtual bool            OnMouseDownL(int64_t x, int64_t y);
+	virtual bool            OnMouseUpL(int64_t x, int64_t y);
 
 	// IMessageTarget
-	virtual bool			HandleMessage(const ZMessage& message);
+	virtual bool            HandleMessage(const ZMessage& message);
 
 public:  // ZWinCheck ///////////////////////////////////////////////////////
 
-	bool					GetState() { return *mpbChecked; }
-	void					SetState(bool bChecked, bool bPostNotifications = true);
-	void					SetMessages(const std::string& sCheckMessage, const std::string sUncheckMessage) { msButtonMessage = sCheckMessage; msUncheckMessage = sUncheckMessage; }
+	bool                    GetState() { return *mpbChecked; }
+	void                    SetState(bool bChecked, bool bPostNotifications = true);
+//	void                    SetMessages(const std::string& sCheckMessage, const std::string sUncheckMessage) { msButtonMessage = sCheckMessage; msUncheckMessage = sUncheckMessage; }
 
     // Style
     ZGUI::Style             mCheckedStyle;
     ZGUI::Style             mUncheckedStyle;
     std::string             msRadioGroup;   // only one in the group shoudl be checked
+    std::string             msUncheckMessage;
 
 protected:
-    virtual bool  			Paint();
+    virtual bool            Paint();
    
-    bool*					mpbChecked;
+    bool*                   mpbChecked;
     bool                    mbInternal;     // if control has no external bool, keep it internal
-	std::string				msUncheckMessage;
 };
 
 
