@@ -104,6 +104,9 @@ bool ZWinLabel::Paint()
 
     if (!msText.empty())
     {
+        if ((mBehavior & AutoSizeText) != 0)
+            mStyle.fp.nHeight = mAreaLocal.Height() / 2;
+
         if (mStyle.wrap)
         {
             mStyle.Font()->DrawTextParagraph(mpSurface.get(), msText, mAreaLocal, &mStyle);

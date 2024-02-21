@@ -152,9 +152,13 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
         string type = control->GetName();
         string id = control->GetAttribute("id");
 
+        string msgPrefix;
         string msgSuffix;
         if ((mBehavior & kCloseOnButton) != 0)
-            msgSuffix = ";closepanel&target=" + GetTargetName();
+        {
+            msgPrefix = "{";
+            msgSuffix = "}{closepanel;target=" + GetTargetName() + "}";
+        }
 
         if (id.empty() || Registered(id))
         {
@@ -170,7 +174,8 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             pWin = new ZWinSizablePushBtn();
             ZWinSizablePushBtn* pBtn = (ZWinSizablePushBtn*)pWin;
             pBtn->mCaption.sText = control->GetAttribute("caption");
-            pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
+            pBtn->mCaption.autoSizeFont = true;
+            pBtn->msButtonMessage = msgPrefix+control->GetAttribute("msg") + msgSuffix;
         }
         else if (type == "svgbutton")
         {
@@ -178,15 +183,15 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             pWin = new ZWinSizablePushBtn();
             ZWinSizablePushBtn* pBtn = (ZWinSizablePushBtn*)pWin;
             pBtn->mSVGImage.Load(control->GetAttribute("svgpath"));
-            pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
+            pBtn->msButtonMessage = msgPrefix+control->GetAttribute("msg") + msgSuffix;
         }
         else if (type == "toggle")
         {
             // add toggle
             pWin = new ZWinCheck();
             ZWinCheck* pCheck = (ZWinCheck*)pWin;
-            pCheck->msButtonMessage = control->GetAttribute("checkmsg") + msgSuffix;
-            pCheck->msUncheckMessage = control->GetAttribute("uncheckmsg") + msgSuffix;
+            pCheck->msButtonMessage = msgPrefix+control->GetAttribute("checkmsg") + msgSuffix;
+            pCheck->msUncheckMessage = msgPrefix+control->GetAttribute("uncheckmsg") + msgSuffix;
         }
         else if (type == "label")
         {
@@ -194,6 +199,7 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             pWin = new ZWinLabel();
             ZWinLabel* pLabel = (ZWinLabel*)pWin;
             pLabel->msText = control->GetAttribute("caption");
+            pLabel->mBehavior |= ZWinLabel::eBehavior::AutoSizeText;
         }
         else
         {
@@ -221,6 +227,7 @@ bool ZWinPanel::HandleMessage(const ZMessage& message)
         if (mpParentWin)
             mpParentWin->SetFocus();
         gMessageSystem.Post("kill_child", "name", msWinName);
+        return true;
     }
 
 	return ZWin::HandleMessage(message);

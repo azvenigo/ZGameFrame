@@ -16,6 +16,9 @@ namespace ZGUI
         if (rDraw.Width() == 0 || rDraw.Height() == 0)
             rDraw = pDst->GetArea();
 
+        if (autoSizeFont)
+            style.fp.nHeight = rDraw.Height()/2;
+
         return style.Font()->DrawTextParagraph(pDst, sText, rDraw, &style);
     }
 

@@ -13,12 +13,13 @@ class ZFont;
 class ZWinLabel : public ZWin
 {
 public:
-    enum eBehavior : uint8_t
+    enum eBehavior : uint32_t
     {
         None                = 0,
         TooltipOnHover      = 1,        // 1   
         CloseOnMouseOut     = 1 << 1,   // 2
         CloseOnClick        = 1 << 2,   // 4
+        AutoSizeText        = 1 << 3,   // 8
     };
 
     ZWinLabel(uint8_t _behavior = None);
@@ -27,12 +28,11 @@ public:
     virtual bool		OnMouseHover(int64_t x, int64_t y);
     virtual bool        Process();
 
-    virtual void        SetBehavior(uint8_t b) { mBehavior = (eBehavior)b; }
-
 //    static  ZWinLabel* ShowTooltip(ZWin* pMainWin, const std::string& sTooltip, const ZGUI::Style& style = {});
 
     std::string		    msText;
     ZGUI::Style         mStyle;
+    uint32_t            mBehavior;
 
     std::string		    msTooltipText;
     ZGUI::Style         mStyleTooltip;
@@ -40,7 +40,6 @@ public:
 protected:   
     virtual bool		Paint();
 
-    eBehavior           mBehavior;
 };
 
 
