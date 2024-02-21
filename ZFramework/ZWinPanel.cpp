@@ -90,11 +90,10 @@ bool ZWinPanel::ParseLayout()
 
 	// Panel Attributes
     //      Behavior
-
-    //      Sizing
-    //          min size
-    //          max size
-    //          % of parent or % of full screen, or?
+    if (SH::ToBool(pPanel->GetAttribute("hide_on_mouse_exit")))
+        mBehavior |= kHideOnMouseExit;
+    if (SH::ToBool(pPanel->GetAttribute("close_on_button")))
+        mBehavior |= kCloseOnButton;
 
     //      Style?
     
@@ -194,7 +193,7 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             // add label
             pWin = new ZWinLabel();
             ZWinLabel* pLabel = (ZWinLabel*)pWin;
-            pLabel->msText = control->GetAttribute("caption") + msgSuffix;
+            pLabel->msText = control->GetAttribute("caption");
         }
         else
         {
@@ -209,10 +208,9 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
         ChildAdd(pWin);
 
         mRegistered[id].row = mRows;
-        return true;
     }
 
-	return false;
+    return true;
 }
 
 bool ZWinPanel::HandleMessage(const ZMessage& message)
@@ -230,20 +228,31 @@ bool ZWinPanel::HandleMessage(const ZMessage& message)
 
 void ZWinPanel::UpdateUI()
 {
-    ZRect rLocal = mRelativeArea.Area(grFullArea);
-
-    int32_t h = mAreaLocal.Height() - (mRows + 1) * mStyle.paddingV;
-    for (int32_t i = 0; i < mRows; i++)
+    if (mRows > 0)
     {
-        tWinList rowWins = GetRowWins(i);
-        int32_t w = mAreaLocal.Width() - (rowWins.size() + 1) * mStyle.paddingH;
+        ZRect rLocal = mRelativeArea.Area(grFullArea);
 
-        int rowi = 0;
-        for (auto pWin : rowWins)
+        ZRect controlArea = mAreaLocal;
+        controlArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+
+        int32_t rowh = controlArea.Height()/mRows;
+
+        for (int32_t row = 0; row < mRows; row++)
         {
-            ZPoint tl(mStyle.paddingH + rowi * w, mStyle.paddingV);
-            ZRect r(tl.x, tl.y, tl.x + w, tl.y + h);
-            pWin->SetArea(r);
+            tWinList rowWins = GetRowWins(row);
+            if (!rowWins.empty())
+            {
+                int32_t w = controlArea.Width() / rowWins.size();
+
+                int col = 0;
+                for (auto pWin : rowWins)
+                {
+                    ZPoint tl(controlArea.left + col*w, controlArea.top + row*rowh);
+                    ZRect r(tl.x, tl.y, tl.x+w, tl.y+rowh);
+                    pWin->SetArea(r);
+                    col++;
+                }
+            }
         }
     }
 }

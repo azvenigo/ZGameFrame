@@ -48,30 +48,16 @@ bool TestWin::Init()
     ChildAdd(pWin);
 
 
-    ZRect rBtn(1500, 500, 1800, 700);
-
-/*    for (int i = 0; i < 1; i++)
-    {
-
-        ZWinSizablePushBtn* pBtn = new ZWinSizablePushBtn();
-        pBtn->mSVGImage.Load("C:/temp/svg/tivo.svg");
-        pBtn->msTooltip = "Test Tooltip";
-        pBtn->mSVGImage.style.paddingH = 30;
-        pBtn->mSVGImage.style.paddingV = 30;
-
-        pBtn->SetArea(rBtn);
-        pBtn->SetMessage(ZMessage("loadimg", this));
-        ChildAdd(pBtn);
-
-        rBtn.OffsetRect(20, 20);
-    }*/
-
-
     ZWinPanel* panel = new ZWinPanel();
-    panel->mPanelLayout = "<panel><row><svgbutton id=test1 group=group1 svgpath=%apppath%/res/test.svg></svgbutton></row></panel>";
+    panel->mPanelLayout = "<panel close_on_button=1>";
+    panel->mPanelLayout += "<row><svgbutton id=test1 group=group1 svgpath=%apppath%/res/test.svg></svgbutton><button id=test2 group=group1 caption=hello></button></row>";
+    panel->mPanelLayout += "<row><label id=label1 caption=\"A label\"></label></row>";
+    panel->mPanelLayout += "<row><button id=test3 group=group1 caption=hello></button><svgbutton id=test4 group=group1 svgpath=%apppath%/res/test.svg></svgbutton></row>";
+    panel->mPanelLayout += "</panel>";
+
 
     //panel->SetArea(ZRect(10, 200, 510, 300));
-    panel->SetRelativeArea(grFullArea, ZGUI::ePosition::IRIB, ZGUI::Arrange(ZRect(500, 100), grFullArea, ZGUI::ePosition::IRIB, 200, 10));
+    panel->SetRelativeArea(grFullArea, ZGUI::ePosition::IRIB, ZGUI::Arrange(ZRect(600, 800), grFullArea, ZGUI::ePosition::C, 200, 10));
     ChildAdd(panel);
 
 
