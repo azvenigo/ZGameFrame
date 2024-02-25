@@ -59,7 +59,7 @@ bool TestWin::Init()
     //panel->SetArea(ZRect(10, 200, 510, 300));
     //panel->SetRelativeArea(grFullArea, ZGUI::ePosition::IRIB, ZGUI::Arrange(ZRect(600, 800), grFullArea, ZGUI::ePosition::C, 200, 10));
     pBtn->SetArea(ZRect(100, 200, 132, 232));
-    pBtn->mPanelArea = ZRect(100, 200, 500, 500);
+    pBtn->mPanelScaleVsBtn.Set(5.0, 2.0);
     ChildAdd(pBtn);
 
 

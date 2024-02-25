@@ -44,7 +44,8 @@ public:
     ZWinPopupPanelBtn*      PopupPanelButton(   const std::string& sID,
                                                 const std::string& sSVGFilepath,
                                                 const std::string& sPanelLayout,
-                                                const ZRect& rPanelArea);
+                                                const ZFPoint& panelScaleVsBtn,
+                                                const ZGUI::ePosition panelPos);
 
     ZWinCheck*              Toggle(     const std::string& sID,
                                         bool* pbValue,

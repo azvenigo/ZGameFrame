@@ -28,9 +28,6 @@ using namespace std;
 
 
 
-
-
-
 ZWinPanel::ZWinPanel() : mBehavior(kNone)
 {
     mRows = 0;
@@ -40,8 +37,11 @@ ZWinPanel::ZWinPanel() : mBehavior(kNone)
         msWinName = "ZWinPanel_" + gMessageSystem.GenerateUniqueTargetName();
 
     mStyle = gDefaultPanelStyle;
+    mGroupingStyle = gDefaultGroupingStyle;
     mbAcceptsCursorMessages = true;
     mbMouseWasOver = false;
+    mDrawBorder = false;
+    mSpacers = 0;        
 }
 
 ZWinPanel::~ZWinPanel()
@@ -75,6 +75,36 @@ bool ZWinPanel::Paint()
    
     if (ARGB_A(mStyle.bgCol) > 0x0f)
         mpSurface->Fill(mStyle.bgCol);
+    if (mDrawBorder)
+    {
+        ZRect rBounds(mAreaLocal);
+     //   rBounds.DeflateRect(gSpacer, gSpacer);
+        mpSurface->DrawRectAlpha(0x88000000, rBounds);
+        rBounds.OffsetRect(1, 1);
+        mpSurface->DrawRectAlpha(0x88ffffff, rBounds);
+    }
+
+
+    tGroupNameToWinList groups = GetChildGroups();
+    for (auto& group : groups)
+    {
+        // draw embossed rect
+        ZRect rBounds(GetBounds(group.second));
+        rBounds.InflateRect(gSpacer, gSpacer);
+        rBounds.right--;
+        rBounds.bottom--;
+
+        mpSurface->DrawRectAlpha(0x88000000, rBounds);
+        rBounds.OffsetRect(1, 1);
+        mpSurface->DrawRectAlpha(0x88ffffff, rBounds);
+
+        mGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rBounds, &mGroupingStyle);
+
+
+
+        // if caption set, draw that
+
+    }
 
 	return ZWin::Paint();
 }
@@ -82,7 +112,7 @@ bool ZWinPanel::Paint()
 
 bool ZWinPanel::Process()
 {
-    if ((mBehavior & kHideOnMouseExit) != 0)
+    if (IsSet(kHideOnMouseExit))
     {
         if (gInput.captureWin == nullptr)   // only process this if no window has capture
         {
@@ -127,6 +157,11 @@ bool ZWinPanel::ParseLayout()
         mBehavior |= kHideOnMouseExit;
     if (SH::ToBool(pPanel->GetAttribute("hide_on_button")))
         mBehavior |= kHideOnButton;
+
+    if (pPanel->HasAttribute("spacers"))
+        mSpacers = SH::ToInt(pPanel->GetAttribute("spacers"));
+    mDrawBorder = SH::ToBool(pPanel->GetAttribute("border"));
+
 
     //      Style?
     
@@ -187,7 +222,7 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
 
         string msgPrefix;
         string msgSuffix;
-        if ((mBehavior & kHideOnButton) != 0)
+        if (IsSet(kHideOnButton))
         {
             msgPrefix = "{";
             msgSuffix = "}{set_visible;visible=0;target=" + GetTargetName() + "}";
@@ -269,14 +304,15 @@ bool ZWinPanel::HandleMessage(const ZMessage& message)
 
 void ZWinPanel::UpdateUI()
 {
-    if (mRows > 0)
+    if (mRows > 0 && mAreaLocal.Area())
     {
-        ZRect rLocal = mRelativeArea.Area(mpParentWin->GetArea());
-
         ZRect controlArea = mAreaLocal;
         controlArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
 
-        int32_t rowh = controlArea.Height()/mRows;
+        int32_t spaceBetweenRows = mSpacers * gSpacer;
+        int32_t totalSpaceBetweenRows = (mRows - 1) * spaceBetweenRows;
+
+        int32_t rowh = (controlArea.Height()-totalSpaceBetweenRows)/mRows;
 
         for (int32_t row = 0; row < mRows; row++)
         {
@@ -288,7 +324,7 @@ void ZWinPanel::UpdateUI()
                 int col = 0;
                 for (auto pWin : rowWins)
                 {
-                    ZPoint tl(controlArea.left + col*w, controlArea.top + row*rowh);
+                    ZPoint tl(controlArea.left + col*w, controlArea.top + row*(rowh + spaceBetweenRows));
                     ZRect r(tl.x, tl.y, tl.x+w, tl.y+rowh);
                     pWin->SetArea(r);
                     col++;
@@ -300,6 +336,7 @@ void ZWinPanel::UpdateUI()
 
 void ZWinPanel::SetRelativeArea(const ZRect& area, const ZRect& ref, ZGUI::ePosition pos)
 {
+    assert(IsSet(kRelativeScale));
     mRelativeArea = ZGUI::RelativeArea(area, ref, pos);
     SetArea(area);
     UpdateUI();
@@ -311,11 +348,11 @@ bool ZWinPanel::OnParentAreaChange()
     if (!mpSurface)
         return false;
 
-//    SetArea(mpParentWin->GetArea());
-
-    ZRect rNewParent(mpParentWin->GetArea());
-
-    SetArea(mRelativeArea.Area(rNewParent));
+    if (IsSet(kRelativeScale))
+    {
+        ZRect rNewParent(mpParentWin->GetArea());
+        SetArea(mRelativeArea.Area(rNewParent));
+    }
 
 
     ZWin::OnParentAreaChange();
@@ -336,6 +373,7 @@ void ZWinPanel::SetVisible(bool bVisible)
         mbMouseWasOver = false;
     }
 
+    UpdateUI();
     return ZWin::SetVisible(bVisible);
 }
 
@@ -399,6 +437,8 @@ string ZWinPanel::ResolveToken(std::string token)
 ZWinPopupPanelBtn::ZWinPopupPanelBtn()
 {
     mpWinPanel = nullptr;
+    mPanelScaleVsBtn = { 2.0, 2.0 };
+    mPanelPos = ZGUI::ePosition::ICOB;      // beneath
 }
 
 ZWinPopupPanelBtn::~ZWinPopupPanelBtn()
@@ -447,7 +487,6 @@ void ZWinPopupPanelBtn::TogglePanel()
     {
         mpWinPanel = new ZWinPanel();
         mpWinPanel->mPanelLayout = mPanelLayout;
-        mpWinPanel->SetRelativeArea(mPanelArea, pTop->GetArea(), ZGUI::C);
         pTop->ChildAdd(mpWinPanel, false);
     }
 
@@ -458,7 +497,10 @@ void ZWinPopupPanelBtn::TogglePanel()
     rArea.OffsetRect(0, mAreaLocal.Height());
 
     mpWinPanel->SetRelativeArea(rArea, pTop->GetArea(), ZGUI::C);*/
-    mpWinPanel->SetRelativeArea(mPanelArea, pTop->GetArea(), ZGUI::C);
+
+
+//    mpWinPanel->SetRelativeArea(mPanelArea, pTop->GetArea(), ZGUI::C);
+    UpdateUI();
     mpWinPanel->SetVisible(!mpWinPanel->mbVisible);
 }
 
@@ -467,19 +509,19 @@ bool ZWinPopupPanelBtn::OnParentAreaChange()
     if (!mpSurface)
         return false;
 
+    UpdateUI();
+    ZWin::OnParentAreaChange();
+}
+
+void ZWinPopupPanelBtn::UpdateUI()
+{
     if (mpWinPanel)
     {
-        ZWin* pTop = GetTopWindow();
-        ZRect rNewParent(pTop->GetArea());
+        
+        ZRect rArea(mAreaLocal.Width()*mPanelScaleVsBtn.x, mAreaLocal.Height()*mPanelScaleVsBtn.y);
+        rArea.InflateRect(mBtnStyle.paddingH, mBtnStyle.paddingV);
+        rArea = ZGUI::Arrange(rArea, mAreaAbsolute, mPanelPos, mBtnStyle.paddingH, mBtnStyle.paddingV);
 
-        ZRect rArea(mAreaInParent);
-        rArea.left -= gM;
-        rArea.right += gM;
-        rArea.bottom += gM * 4;
-
-        mpWinPanel->SetRelativeArea(rArea, pTop->GetArea(), ZGUI::C);
-//        mpWinPanel->SetVisible(mpWinPanel->mbVisible);
+        mpWinPanel->SetArea(rArea);
     }
-
-    ZWin::OnParentAreaChange();
 }

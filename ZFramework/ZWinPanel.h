@@ -29,49 +29,56 @@ public:
     enum eBehavior : uint32_t
     {
         kNone               = 0,
-        kHideOnMouseExit    = 1,        // 1
-        kHideOnButton       = 1 << 1,   // 2
-        kCloseOnButton      = 1 << 2,   // 4
+        kDrawBorder         = 1,        // 1
+        kRelativeScale      = 1 << 1,   // 2
+        kHideOnMouseExit    = 1 << 2,   // 4
+        kHideOnButton       = 1 << 3,   // 8
+        kCloseOnButton      = 1 << 4    // 16
     };
 
     ZWinPanel();
     ~ZWinPanel();
 
-   bool         Init(); 
-   bool         Shutdown();
-   void         SetVisible(bool bVisible = true);
+   bool                 Init(); 
+   bool                 Shutdown();
+   void                 SetVisible(bool bVisible = true);
 
-   bool         HandleMessage(const ZMessage& message);
+   bool                 HandleMessage(const ZMessage& message);
 
-   void         SetRelativeArea(const ZRect& area, const ZRect& ref, ZGUI::ePosition pos); // sets up relative area to automatically adjust when parent area changes
-
-
-   std::string  mPanelLayout;
-   ZGUI::Style  mStyle;
-   ZGUI::Style  mGroupingStyle;
-   uint32_t     mBehavior;
-   ZGUI::RelativeArea mRelativeArea;
+   void                 SetRelativeArea(const ZRect& area, const ZRect& ref, ZGUI::ePosition pos); // sets up relative area to automatically adjust when parent area changes
 
 
-   bool         OnParentAreaChange();
+   std::string          mPanelLayout;
+   ZGUI::Style          mStyle;
+   ZGUI::Style          mGroupingStyle;
+   uint32_t             mBehavior;
+   ZGUI::RelativeArea   mRelativeArea;
+
+
+   bool                 OnParentAreaChange();
 
 protected:
-   bool         Paint();
-   bool         Process();
+   bool                 Paint();
+   bool                 Process();
 
-   bool         Registered(const std::string& name);
-   tWinList     GetRowWins(int32_t row);
+   bool                 Registered(const std::string& name);
+   tWinList             GetRowWins(int32_t row);
 
-   void         UpdateUI();
+   void                 UpdateUI();
 
-   bool         ParseLayout();
-   bool         ParseRow(ZXMLNode* pRow);
-   bool         ResolveLayoutTokens();
-   std::string  ResolveToken(std::string token);
+   bool                 ParseLayout();
+   bool                 ParseRow(ZXMLNode* pRow);
+   bool                 ResolveLayoutTokens();
+   std::string          ResolveToken(std::string token);
 
-   tRegisteredWins mRegistered;
-   int32_t      mRows;
-   bool         mbMouseWasOver;
+   inline bool          IsSet(uint32_t flag) { return (mBehavior & flag) != 0; }
+
+
+   tRegisteredWins      mRegistered;
+   int32_t              mRows;
+   int32_t              mSpacers;            // number of gSpacers between controls
+   int32_t              mDrawBorder;
+   bool                 mbMouseWasOver;
 };
 
 
@@ -81,19 +88,22 @@ public:
     ZWinPopupPanelBtn();
     ~ZWinPopupPanelBtn();
 
-    bool        Init();
-    bool        Shutdown();
+    bool            Init();
+    bool            Shutdown();
 
-    bool        OnMouseUpL(int64_t x, int64_t y);
+    bool            OnMouseUpL(int64_t x, int64_t y);
 
 
-    bool        OnParentAreaChange();
+    bool            OnParentAreaChange();
 
-    std::string mPanelLayout;
-    ZRect       mPanelArea;
+    std::string     mPanelLayout;
+    ZGUI::ePosition mPanelPos;
+    ZFPoint         mPanelScaleVsBtn;
+
 
 protected:
-    void        TogglePanel();
+    void            TogglePanel();
+    void            UpdateUI();
 
     ZWinPanel* mpWinPanel;
 };

@@ -1520,14 +1520,14 @@ void ImageViewer::UpdateControlPanel()
     rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
     rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
 
-    string sPanelLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1>";
+    string sPanelLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
     sPanelLayout += "<row><button    id=undo caption=undo msg=undo;target=" + GetTargetName() + " tooltip=\"Undo last move or copy command.\"/></row>";
     sPanelLayout += "<row><svgbutton id=move svgpath=%apppath%/res/movefile.svg msg=set_move_folder;target=" + GetTargetName() + " tooltip=\"Select a Move Folder for quick-move with 'M'\"/></row>";
     sPanelLayout += "<row><svgbutton id=copy svgpath=%apppath%/res/copyfile.svg msg=set_copy_folder;target=" + GetTargetName() + " tooltip=\"Select a Copy Folder for quick-copy with 'C'\"/></row>";
     sPanelLayout += "</panel>";
 
-    ZRect rPopupPanel(rButton.left, rButton.bottom, rButton.right, rButton.bottom + rButton.Height() * 3);
-    ZWinPopupPanelBtn* pPopupBtn = mpPanel->PopupPanelButton("manage_menu", sAppPath + "/res/manage.svg", sPanelLayout, rPopupPanel);
+    ZRect rPopupPanel(rButton.left-gSpacer, rButton.bottom+gSpacer, rButton.right+gSpacer, rButton.bottom + (rButton.Height()+gSpacer) * 3);
+    ZWinPopupPanelBtn* pPopupBtn = mpPanel->PopupPanelButton("manage_menu", sAppPath + "/res/manage.svg", sPanelLayout, ZFPoint(1.0, 3.0),  ZGUI::ePosition::ICOB);
     pPopupBtn->msWinGroup = "Manage";
     pPopupBtn->SetArea(rButton);
 

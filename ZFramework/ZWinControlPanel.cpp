@@ -99,7 +99,7 @@ ZWinSizablePushBtn* ZWinControlPanel::SVGButton(const std::string& sID, const st
     return pBtn;
 }
 
-ZWinPopupPanelBtn* ZWinControlPanel::PopupPanelButton(const std::string& sID, const string& sSVGFilepath, const string& sPanelLayout, const ZRect& rPanelArea)
+ZWinPopupPanelBtn* ZWinControlPanel::PopupPanelButton(const std::string& sID, const string& sSVGFilepath, const string& sPanelLayout, const ZFPoint& panelScaleVsBtn, const ZGUI::ePosition panelPos)
 {
     ZWinPopupPanelBtn* pBtn = mPopupPanelButtons[sID];
     if (!pBtn)
@@ -107,7 +107,8 @@ ZWinPopupPanelBtn* ZWinControlPanel::PopupPanelButton(const std::string& sID, co
         pBtn = new ZWinPopupPanelBtn();
         mPopupPanelButtons[sID] = pBtn;
         pBtn->mPanelLayout = sPanelLayout;
-        pBtn->mPanelArea = rPanelArea;
+        pBtn->mPanelScaleVsBtn = panelScaleVsBtn;
+        pBtn->mPanelPos = panelPos;
         ChildAdd(pBtn);
 
 

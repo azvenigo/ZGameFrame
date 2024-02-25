@@ -790,19 +790,22 @@ bool ZWin::OnParentAreaChange()
 
 void ZWin::ComputeAreas() 
 {
-    mAreaAbsolute = mAreaLocal;
-    ZWin* pWin = this;
-	do
-	{
-		mAreaAbsolute.OffsetRect(pWin->mAreaInParent.left, pWin->mAreaInParent.top);
-        pWin = pWin->mpParentWin;
-    } while (pWin);
+    if (mAreaLocal.Area() > 0)
+    {
+        mAreaAbsolute = mAreaLocal;
+        ZWin* pWin = this;
+        do
+        {
+            mAreaAbsolute.OffsetRect(pWin->mAreaInParent.left, pWin->mAreaInParent.top);
+            pWin = pWin->mpParentWin;
+        } while (pWin);
 
-    for (auto child : mChildList)
-        child->ComputeAreas();
+        for (auto child : mChildList)
+            child->ComputeAreas();
 
-    if (gpGraphicSystem && gpGraphicSystem->GetScreenBuffer())
-        gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
+        if (gpGraphicSystem && gpGraphicSystem->GetScreenBuffer())
+            gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
+    }
 }
 
 bool ZWin::SetCapture()
