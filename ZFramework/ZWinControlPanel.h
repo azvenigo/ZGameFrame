@@ -13,11 +13,13 @@ class ZWinSizablePushBtn;
 class ZWinCheck;
 class ZWinSlider;
 class ZWinLabel;
+class ZWinPopupPanelBtn;
 
 typedef std::map<std::string, ZWinSizablePushBtn*>  tIDToButtonMap;
 typedef std::map<std::string, ZWinCheck*>           tIDToCheckMap;
 typedef std::map<std::string, ZWinSlider*>          tIDToSliderMap;
 typedef std::map<std::string, ZWinLabel*>           tIDToLabelMap;
+typedef std::map<std::string, ZWinPopupPanelBtn*>   tIDToPopupPanelBtnMap;
 
 class ZWinControlPanel : public ZWin
 {
@@ -38,6 +40,11 @@ public:
     ZWinSizablePushBtn*     SVGButton(  const std::string& sID, 
                                         const std::string& sSVGFilepath = "", 
                                         const std::string& sMessage = "");
+
+    ZWinPopupPanelBtn*      PopupPanelButton(   const std::string& sID,
+                                                const std::string& sSVGFilepath,
+                                                const std::string& sPanelLayout,
+                                                const ZRect& rPanelArea);
 
     ZWinCheck*              Toggle(     const std::string& sID,
                                         bool* pbValue,
@@ -72,6 +79,7 @@ public:
     tIDToCheckMap           mChecks;
     tIDToSliderMap          mSliders;
     tIDToLabelMap           mLabels;
+    tIDToPopupPanelBtnMap   mPopupPanelButtons;
 
 private:
 

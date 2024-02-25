@@ -13,6 +13,7 @@
 #include "ZGUIStyle.h"
 #include <algorithm>
 #include "ZWinBtn.H"
+#include "ZWinPanel.h"
 #include "helpers/Registry.h"
 #include "ImageContest.h"
 #include "ZTimer.h"
@@ -57,7 +58,7 @@ ImageViewer::ImageViewer()
     msWinName = "ZWinImageViewer";
     mpPanel = nullptr;
     mpRotationMenu = nullptr;
-    mpManageMenu = nullptr;
+    //mpManageMenu = nullptr;
     //mpSymbolicFont = nullptr;
     mpFavoritesFont = nullptr;
     mpWinImage = nullptr;
@@ -373,11 +374,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         {
             gInput.SetClipboard(EntryFromIndex(mViewingIndex)->filename.string());
 
-            ZGUI::Style messageStyle(gStyleCaption);
-            messageStyle.bgCol = 0x8800ff00;
-            messageStyle.paddingH = (int32_t)gM;
-
-            gInput.ShowTooltip("Copied", messageStyle);
+            ShowTooltipMessage("Copied", 0x8800ff00);
         }
 
         return true;
@@ -594,7 +591,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             }
             return true;
         }
-        else if (sType == "show_manage_menu")
+/*        else if (sType == "show_manage_menu")
         {
             if (mpManageMenu)
             {
@@ -618,7 +615,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                 }
             }
             return true;
-        }
+        }*/
         else if (sType == "undo")
         {
             if (!mUndoFrom.empty() && !mUndoTo.empty())
@@ -634,6 +631,15 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
    }
 
     return ZWin::HandleMessage(message);
+}
+
+void ImageViewer::ShowTooltipMessage(const string& msg, uint32_t col)
+{
+    ZGUI::Style messageStyle(gStyleCaption);
+    messageStyle.bgCol = col;
+    messageStyle.paddingH = (int32_t)gM;
+
+    gInput.ShowTooltip(msg, messageStyle);
 }
 
 void ImageViewer::ShowHelpDialog()
@@ -800,7 +806,7 @@ void ImageViewer::HandleMoveCommand()
     }
 
     string sFolder;
-    if (ZWinFileDialog::ShowSelectFolderDialog(sFolder, mCurrentFolder.string()))
+    if (ZWinFileDialog::ShowSelectFolderDialog(sFolder, mCurrentFolder.string(), "Select Move Destination"))
     {
         if (filesystem::path(sFolder) == mCurrentFolder)
         {
@@ -809,9 +815,15 @@ void ImageViewer::HandleMoveCommand()
             return;
         }
         if (MoveImage(EntryFromIndex(mViewingIndex)->filename, filesystem::path(sFolder)))
+        {
+            ShowTooltipMessage("moved", 0xff888800);
             mMoveToFolder = sFolder;
+        }
         else
+        {
+            ShowTooltipMessage("move error", 0xffff0000);
             mMoveToFolder.clear();
+        }
     }
     else
     {
@@ -832,31 +844,39 @@ void ImageViewer::HandleCopyCommand()
     }
 
     string sFolder;
-    if (ZWinFileDialog::ShowSelectFolderDialog(sFolder, mCurrentFolder.string()))
+    if (ZWinFileDialog::ShowSelectFolderDialog(sFolder, mCurrentFolder.string(), "Select Copy Destination"))
     {
         filesystem::path newPath(sFolder);
 
-        bool bNewPathInTree = newPath.parent_path() == mCurrentFolder || newPath.parent_path() == FavoritesPath() || newPath.parent_path() == ToBeDeletedPath();
+        bool bForbiddenFolder = newPath == mCurrentFolder || newPath.parent_path() == FavoritesPath() || newPath.parent_path() == ToBeDeletedPath();
 
-        if (bNewPathInTree)
+        if (bForbiddenFolder)
         {
             // do not set copy to folder into our tree
             mCopyToFolder.clear();
+            ShowTooltipMessage(string("Cannot copy image to ") + sFolder, 0xffff0000);
             return;
         }
+
         if (CopyImage(EntryFromIndex(mViewingIndex)->filename, filesystem::path(sFolder)))
+        {
+            ShowTooltipMessage(string("Copied image to ") + newPath.string(), 0xff008800);
             mCopyToFolder = sFolder;
+        }
         else
+        {
+            ShowTooltipMessage(string("Error copying image to ") + newPath.string(), 0xffff0000);
             mCopyToFolder.clear();
+        }
     }
     else
     {
         mCopyToFolder.clear();
-
     }
 
     if (mpWinImage)
         mpWinImage->SetFocus();
+    UpdateCaptions();
 }
 
 
@@ -948,8 +968,6 @@ bool ImageViewer::CopyImage(std::filesystem::path curPath, std::filesystem::path
         ZERROR("Error copying from \"", curPath, "\" to \"", newPath, "\"\ncode:", err.code(), " error:", err.what(), "\n");
         return false;
     };
-
-    Invalidate();
 
     return true;
 }
@@ -1323,10 +1341,10 @@ bool ImageViewer::Init()
         ChildAdd(mpRotationMenu, false);
 
 
-        Sprintf(sMessage, "show_manage_menu;target=%s", GetTargetName().c_str());
-        pBtn = mpRotationMenu->SVGButton("show_manage_menu", sAppPath + "/res/rotate.svg", sMessage);
+//        Sprintf(sMessage, "show_manage_menu;target=%s", GetTargetName().c_str());
+//        pBtn = mpRotationMenu->SVGButton("show_manage_menu", sAppPath + "/res/rotate.svg", sMessage);
 
-        mpManageMenu = new ZWinControlPanel();
+/*        mpManageMenu = new ZWinControlPanel();
         pBtn = mpManageMenu->Button("undo", "undo", ZMessage("undo", this));
         pBtn->msWinGroup = "Manage";
 
@@ -1340,7 +1358,7 @@ bool ImageViewer::Init()
         
         mpManageMenu->mbHideOnMouseExit = true;
         ChildAdd(mpManageMenu, false);
-
+        */
 
 
 
@@ -1483,36 +1501,35 @@ void ImageViewer::UpdateControlPanel()
 
 
     // Management
-/*    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-    rButton.right = rButton.left + (int64_t) (rButton.Width() * 2.5);     // wider buttons for management
+/*        mpManageMenu = new ZWinControlPanel();
+        pBtn = mpManageMenu->Button("undo", "undo", ZMessage("undo", this));
+        pBtn->msWinGroup = "Manage";
 
-    pBtn = mpPanel->Button("undo", "undo", ZMessage("undo", this));
-    pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = (int64_t) (nGroupSide / 1.5);
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "Manage";
+//        pBtn = mpManageMenu->Button("move", "move", ZMessage("set_move_folder", this));
+        pBtn = mpManageMenu->SVGButton("move", sAppPath + "/res/movefile.svg", ZMessage("set_move_folder", this));
+        pBtn->msWinGroup = "Manage";
 
-    rButton.OffsetRect(rButton.Width(), 0);
-
-    pBtn = mpPanel->Button("move", "move", ZMessage("set_move_folder", this));
-    pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = (int64_t) (nGroupSide / 1.5);
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "Manage";
-
-    rButton.OffsetRect(rButton.Width(), 0);
-
-    pBtn = mpPanel->Button("copy", "copy", ZMessage("set_copy_folder", this));
-    pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = (int64_t)(nGroupSide / 1.5);
-    pBtn->mCaption.style.pos = ZGUI::C;
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "Manage";
-
+//        pBtn = mpManageMenu->Button("copy", "copy", ZMessage("set_copy_folder", this));
+        pBtn = mpManageMenu->SVGButton("copy", sAppPath + "/res/copyfile.svg", ZMessage("set_copy_folder", this));
+        pBtn->msWinGroup = "Manage";
+        
+        mpManageMenu->mbHideOnMouseExit = true;
+        ChildAdd(mpManageMenu, false);
     */
 
+    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
+    rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
+
+    string sPanelLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1>";
+    sPanelLayout += "<row><button    id=undo caption=undo msg=undo;target=" + GetTargetName() + " tooltip=\"Undo last move or copy command.\"/></row>";
+    sPanelLayout += "<row><svgbutton id=move svgpath=%apppath%/res/movefile.svg msg=set_move_folder;target=" + GetTargetName() + " tooltip=\"Select a Move Folder for quick-move with 'M'\"/></row>";
+    sPanelLayout += "<row><svgbutton id=copy svgpath=%apppath%/res/copyfile.svg msg=set_copy_folder;target=" + GetTargetName() + " tooltip=\"Select a Copy Folder for quick-copy with 'C'\"/></row>";
+    sPanelLayout += "</panel>";
+
+    ZRect rPopupPanel(rButton.left, rButton.bottom, rButton.right, rButton.bottom + rButton.Height() * 3);
+    ZWinPopupPanelBtn* pPopupBtn = mpPanel->PopupPanelButton("manage_menu", sAppPath + "/res/manage.svg", sPanelLayout, rPopupPanel);
+    pPopupBtn->msWinGroup = "Manage";
+    pPopupBtn->SetArea(rButton);
 
 
 
@@ -1522,20 +1539,23 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = mpPanel->SVGButton("show_rotation_menu", sAppPath + "/res/rotate.svg");
     rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-    rButton.right = rButton.left + (int64_t)(rButton.Width()*1.25 );     // wider buttons for management
+    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.25);     // wider buttons for management
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "show_rotation_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
     pBtn->msButtonMessage = sMessage;
     pBtn->msWinGroup = "Rotate";
 
 
-    pBtn = mpPanel->Button("show_manage_menu", "Manage", "show_manage_menu");
+
+
+
+/*    pBtn = mpPanel->Button("show_manage_menu", "Manage", "show_manage_menu");
     rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
     rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.25);     // wider buttons for management
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "show_manage_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
     pBtn->msButtonMessage = sMessage;
-    pBtn->msWinGroup = "Manage";
+    pBtn->msWinGroup = "Manage";*/
 
 
 
@@ -2602,22 +2622,25 @@ void ImageViewer::UpdateCaptions()
                         bShow = true;
                     }
 
-                    ImageMetaEntry& meta = mImageArray[mViewingIndex.absoluteIndex]->mMeta;
-//                    if (meta.elo > 1000)
+                    if (mFilterState == kRanked)
                     {
-                        int64_t nRank = GetRank(meta.filename);
-                        if (nRank > 0)
+                        ImageMetaEntry& meta = mImageArray[mViewingIndex.absoluteIndex]->mMeta;
+                        //                    if (meta.elo > 1000)
                         {
-                            ZGUI::Style eloStyle(gStyleCaption);
-                            eloStyle.fp.nHeight = gM * 2;
-                            eloStyle.look.colTop = 0xffffd800;
-                            eloStyle.look.colBottom = 0xff9d8500;
-                            eloStyle.look.decoration = ZGUI::ZTextLook::kShadowed;
-                            eloStyle.pos = ZGUI::RT;
-                            eloStyle.paddingH += (int32_t)eloStyle.fp.nHeight;
-                            Sprintf(mpWinImage->mCaptionMap["rank"].sText, "#%d\n%d", nRank, meta.elo);
-                            mpWinImage->mCaptionMap["rank"].visible = true;
-                            mpWinImage->mCaptionMap["rank"].style = eloStyle;
+                            int64_t nRank = GetRank(meta.filename);
+                            if (nRank > 0)
+                            {
+                                ZGUI::Style eloStyle(gStyleCaption);
+                                eloStyle.fp.nHeight = gM * 2;
+                                eloStyle.look.colTop = 0xffffd800;
+                                eloStyle.look.colBottom = 0xff9d8500;
+                                eloStyle.look.decoration = ZGUI::ZTextLook::kShadowed;
+                                eloStyle.pos = ZGUI::RT;
+                                eloStyle.paddingH += (int32_t)eloStyle.fp.nHeight;
+                                Sprintf(mpWinImage->mCaptionMap["rank"].sText, "#%d\n%d", nRank, meta.elo);
+                                mpWinImage->mCaptionMap["rank"].visible = true;
+                                mpWinImage->mCaptionMap["rank"].style = eloStyle;
+                            }
                         }
                     }
                 }

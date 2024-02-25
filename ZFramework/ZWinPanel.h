@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_set>
 #include "ZMessageSystem.h"
+#include "ZWinBtn.H"
 #include "helpers/Registry.h"   // for resolving environment tokens like %apppath%
 
 
@@ -28,8 +29,9 @@ public:
     enum eBehavior : uint32_t
     {
         kNone               = 0,
-        kHideOnMouseExit    = 1,      // 1
-        kCloseOnButton      = 1 << 1, // 2
+        kHideOnMouseExit    = 1,        // 1
+        kHideOnButton       = 1 << 1,   // 2
+        kCloseOnButton      = 1 << 2,   // 4
     };
 
     ZWinPanel();
@@ -37,10 +39,11 @@ public:
 
    bool         Init(); 
    bool         Shutdown();
+   void         SetVisible(bool bVisible = true);
 
    bool         HandleMessage(const ZMessage& message);
 
-   void         SetRelativeArea(const ZRect& ref, ZGUI::ePosition pos, const ZRect& area); // sets up relative area to automatically adjust when parent area changes
+   void         SetRelativeArea(const ZRect& area, const ZRect& ref, ZGUI::ePosition pos); // sets up relative area to automatically adjust when parent area changes
 
 
    std::string  mPanelLayout;
@@ -52,9 +55,9 @@ public:
 
    bool         OnParentAreaChange();
 
-
 protected:
    bool         Paint();
+   bool         Process();
 
    bool         Registered(const std::string& name);
    tWinList     GetRowWins(int32_t row);
@@ -68,5 +71,29 @@ protected:
 
    tRegisteredWins mRegistered;
    int32_t      mRows;
+   bool         mbMouseWasOver;
 };
 
+
+class ZWinPopupPanelBtn : public ZWinSizablePushBtn
+{
+public:
+    ZWinPopupPanelBtn();
+    ~ZWinPopupPanelBtn();
+
+    bool        Init();
+    bool        Shutdown();
+
+    bool        OnMouseUpL(int64_t x, int64_t y);
+
+
+    bool        OnParentAreaChange();
+
+    std::string mPanelLayout;
+    ZRect       mPanelArea;
+
+protected:
+    void        TogglePanel();
+
+    ZWinPanel* mpWinPanel;
+};

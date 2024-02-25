@@ -218,12 +218,13 @@ protected:
     bool                    ImageMatchesCurFilter(const ViewingIndex& vi);
 
     void                    ShowHelpDialog();
+    void                    ShowTooltipMessage(const std::string& msg, uint32_t col);
 
     ZWinControlPanel*       mpPanel;
     std::recursive_mutex    mPanelMutex;
 
     ZWinControlPanel*       mpRotationMenu;
-    ZWinControlPanel*       mpManageMenu;
+    //ZWinControlPanel*       mpManageMenu;
 
     ZWinImage*              mpWinImage;  
 

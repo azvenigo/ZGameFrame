@@ -120,6 +120,9 @@ namespace ZGUI
             {
                 sizeratio = (double)area.Height() / (double)ref.Height();
 
+                assert(sizeratio < 1.0);
+
+
                 anchorPos = _anchorpos;
                 if ((anchorPos & ZGUI::ePosition::R) != 0)
                     offset.x = (double)(ref.right - area.right) / (double)ref.Width();

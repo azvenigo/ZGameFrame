@@ -34,11 +34,14 @@ using namespace std;
 ZWinPanel::ZWinPanel() : mBehavior(kNone)
 {
     mRows = 0;
+    mIdleSleepMS = 250;
+
     if (msWinName.empty())
         msWinName = "ZWinPanel_" + gMessageSystem.GenerateUniqueTargetName();
 
     mStyle = gDefaultPanelStyle;
     mbAcceptsCursorMessages = true;
+    mbMouseWasOver = false;
 }
 
 ZWinPanel::~ZWinPanel()
@@ -77,6 +80,36 @@ bool ZWinPanel::Paint()
 }
 
 
+bool ZWinPanel::Process()
+{
+    if ((mBehavior & kHideOnMouseExit) != 0)
+    {
+        if (gInput.captureWin == nullptr)   // only process this if no window has capture
+        {
+            if (mbVisible)
+            {
+                ZRect rOverArea(mAreaAbsolute);
+                if (rOverArea.PtInRect(gInput.lastMouseMove))
+                {
+                    mbMouseWasOver = true;
+                }
+                else
+                {
+                    if (mbMouseWasOver)
+                    {
+                        SetVisible(false);
+                        if (mpParentWin)
+                            mpParentWin->InvalidateChildren();
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return ZWin::Process();
+}
+
 bool ZWinPanel::ParseLayout()
 {
 	string sElement;
@@ -92,8 +125,8 @@ bool ZWinPanel::ParseLayout()
     //      Behavior
     if (SH::ToBool(pPanel->GetAttribute("hide_on_mouse_exit")))
         mBehavior |= kHideOnMouseExit;
-    if (SH::ToBool(pPanel->GetAttribute("close_on_button")))
-        mBehavior |= kCloseOnButton;
+    if (SH::ToBool(pPanel->GetAttribute("hide_on_button")))
+        mBehavior |= kHideOnButton;
 
     //      Style?
     
@@ -154,10 +187,10 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
 
         string msgPrefix;
         string msgSuffix;
-        if ((mBehavior & kCloseOnButton) != 0)
+        if ((mBehavior & kHideOnButton) != 0)
         {
             msgPrefix = "{";
-            msgSuffix = "}{closepanel;target=" + GetTargetName() + "}";
+            msgSuffix = "}{set_visible;visible=0;target=" + GetTargetName() + "}";
         }
 
         if (id.empty() || Registered(id))
@@ -210,6 +243,7 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
 
         // Common attributes
         pWin->msWinGroup = control->GetAttribute("group");
+        pWin->msTooltip = control->GetAttribute("tooltip");
         pWin->msWinName = id;
         ChildAdd(pWin);
 
@@ -237,7 +271,7 @@ void ZWinPanel::UpdateUI()
 {
     if (mRows > 0)
     {
-        ZRect rLocal = mRelativeArea.Area(grFullArea);
+        ZRect rLocal = mRelativeArea.Area(mpParentWin->GetArea());
 
         ZRect controlArea = mAreaLocal;
         controlArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
@@ -264,10 +298,11 @@ void ZWinPanel::UpdateUI()
     }
 }
 
-void ZWinPanel::SetRelativeArea(const ZRect& ref, ZGUI::ePosition pos, const ZRect& area)
+void ZWinPanel::SetRelativeArea(const ZRect& area, const ZRect& ref, ZGUI::ePosition pos)
 {
     mRelativeArea = ZGUI::RelativeArea(area, ref, pos);
     SetArea(area);
+    UpdateUI();
 }
 
 
@@ -289,6 +324,20 @@ bool ZWinPanel::OnParentAreaChange()
     return true;
 }
 
+void ZWinPanel::SetVisible(bool bVisible)
+{
+    if (bVisible)
+    {
+        mIdleSleepMS = 250;
+    }
+    else
+    {
+        mIdleSleepMS = 30000;
+        mbMouseWasOver = false;
+    }
+
+    return ZWin::SetVisible(bVisible);
+}
 
 bool ZWinPanel::ResolveLayoutTokens()
 {
@@ -346,3 +395,91 @@ string ZWinPanel::ResolveToken(std::string token)
     return sValue;
 }
 
+
+ZWinPopupPanelBtn::ZWinPopupPanelBtn()
+{
+    mpWinPanel = nullptr;
+}
+
+ZWinPopupPanelBtn::~ZWinPopupPanelBtn()
+{
+    Shutdown();
+}
+
+bool ZWinPopupPanelBtn::Init()
+{
+    return ZWinSizablePushBtn::Init();
+}
+
+bool ZWinPopupPanelBtn::Shutdown()
+{
+    mpWinPanel = nullptr;
+
+    return ZWinSizablePushBtn::Shutdown();
+}
+
+bool ZWinPopupPanelBtn::OnMouseUpL(int64_t x, int64_t y)
+{
+    if (AmCapturing())
+    {
+        ReleaseCapture();
+        if (x > 0 && x < mAreaInParent.Width() && y > 0 && y < mAreaInParent.Height())
+        {
+            TogglePanel();
+        }
+
+        mDrawState = kUp;
+        Invalidate();
+
+        return true;
+    }
+
+    return ZWin::OnMouseUpL(x, y);
+}
+
+void ZWinPopupPanelBtn::TogglePanel()
+{
+    ZWin* pTop = GetTopWindow();
+    assert(pTop);
+    assert(!mPanelLayout.empty());
+
+    if (!mpWinPanel)
+    {
+        mpWinPanel = new ZWinPanel();
+        mpWinPanel->mPanelLayout = mPanelLayout;
+        mpWinPanel->SetRelativeArea(mPanelArea, pTop->GetArea(), ZGUI::C);
+        pTop->ChildAdd(mpWinPanel, false);
+    }
+
+/*    ZRect rArea(mAreaInParent);
+    rArea.left -= mAreaLocal.Width()/2;
+    rArea.right += mAreaLocal.Height()/2;
+    rArea.bottom += mAreaLocal.Height() * 3;
+    rArea.OffsetRect(0, mAreaLocal.Height());
+
+    mpWinPanel->SetRelativeArea(rArea, pTop->GetArea(), ZGUI::C);*/
+    mpWinPanel->SetRelativeArea(mPanelArea, pTop->GetArea(), ZGUI::C);
+    mpWinPanel->SetVisible(!mpWinPanel->mbVisible);
+}
+
+bool ZWinPopupPanelBtn::OnParentAreaChange()
+{
+    if (!mpSurface)
+        return false;
+
+    if (mpWinPanel)
+    {
+        ZWin* pTop = GetTopWindow();
+        ZRect rNewParent(pTop->GetArea());
+
+        ZRect rArea(mAreaInParent);
+        rArea.left -= gM;
+        rArea.right += gM;
+        rArea.bottom += gM * 4;
+
+        mpWinPanel->SetRelativeArea(rArea, pTop->GetArea(), ZGUI::C);
+//        mpWinPanel->SetVisible(mpWinPanel->mbVisible);
+    }
+
+    ZWin::OnParentAreaChange();
+}

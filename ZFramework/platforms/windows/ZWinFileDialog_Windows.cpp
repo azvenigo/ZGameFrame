@@ -173,7 +173,7 @@ namespace ZWinFileDialog
         return bSuccess;
     }
 
-    bool ShowSelectFolderDialog(std::string& sFilenameResult, std::string sDefaultFolder)
+    bool ShowSelectFolderDialog(std::string& sFilenameResult, std::string sDefaultFolder, const std::string& sTitle)
     {
         bool bSuccess = false;
 
@@ -193,6 +193,8 @@ namespace ZWinFileDialog
                 };
 
                 pFileOpen->SetFileTypes(1, rgSpec);
+                if (!sTitle.empty())
+                    pFileOpen->SetTitle(SH::string2wstring(sTitle).c_str());
 
                 DWORD dwOptions;
                 hr = pFileOpen->GetOptions(&dwOptions);

@@ -272,7 +272,7 @@ void Sprintf(string& sOut, const char* lpszFormat, ...)
 
 bool StartsWith(const string& sConsider, const string& starts)
 {
-	return sConsider.substr(0, sConsider.length()) == starts;
+	return sConsider.substr(0, starts.length()) == starts;
 }
 
 bool EndsWith(const string& sConsider, const string& ends)

@@ -2,6 +2,7 @@
 #include "ZWinBtn.H"
 #include "ZWinText.H"
 #include "ZWinSlider.h"
+#include "ZWinPanel.h"
 #include "Resources.h"
 #include "ZInput.h"
 
@@ -98,6 +99,30 @@ ZWinSizablePushBtn* ZWinControlPanel::SVGButton(const std::string& sID, const st
     return pBtn;
 }
 
+ZWinPopupPanelBtn* ZWinControlPanel::PopupPanelButton(const std::string& sID, const string& sSVGFilepath, const string& sPanelLayout, const ZRect& rPanelArea)
+{
+    ZWinPopupPanelBtn* pBtn = mPopupPanelButtons[sID];
+    if (!pBtn)
+    {
+        pBtn = new ZWinPopupPanelBtn();
+        mPopupPanelButtons[sID] = pBtn;
+        pBtn->mPanelLayout = sPanelLayout;
+        pBtn->mPanelArea = rPanelArea;
+        ChildAdd(pBtn);
+
+
+        if (mrNextControl.Area() > 0)
+        {
+            pBtn->SetArea(mrNextControl);
+            mrNextControl.OffsetRect(0, mrNextControl.Height());
+        }
+    }
+
+    if (!sSVGFilepath.empty())
+        pBtn->mSVGImage.Load(sSVGFilepath);
+
+    return pBtn;
+}
 
 
 ZWinLabel* ZWinControlPanel::Caption(const std::string& sID, const std::string& sCaption)
