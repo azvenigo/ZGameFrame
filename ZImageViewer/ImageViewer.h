@@ -223,7 +223,7 @@ protected:
     ZWinControlPanel*       mpPanel;
     std::recursive_mutex    mPanelMutex;
 
-    ZWinControlPanel*       mpRotationMenu;
+    //ZWinControlPanel*       mpRotationMenu;
     //ZWinControlPanel*       mpManageMenu;
 
     ZWinImage*              mpWinImage;  

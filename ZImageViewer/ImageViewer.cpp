@@ -57,7 +57,7 @@ ImageViewer::ImageViewer()
     mLastAction = kNone;
     msWinName = "ZWinImageViewer";
     mpPanel = nullptr;
-    mpRotationMenu = nullptr;
+    //mpRotationMenu = nullptr;
     //mpManageMenu = nullptr;
     //mpSymbolicFont = nullptr;
     mpFavoritesFont = nullptr;
@@ -566,7 +566,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             InvalidateChildren();
             return true;
         }
-        else if (sType == "show_rotation_menu")
+/*        else if (sType == "show_rotation_menu")
         {
             if (mpRotationMenu)
             {
@@ -590,7 +590,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                 }
             }
             return true;
-        }
+        }*/
 /*        else if (sType == "show_manage_menu")
         {
             if (mpManageMenu)
@@ -1309,59 +1309,7 @@ bool ImageViewer::Init()
         }
 
 
-        string sMessage;
-        mpRotationMenu = new ZWinControlPanel();
-
-        string sAppPath = gRegistry["apppath"];
-        Sprintf(sMessage, "show_rotation_menu;target=%s", GetTargetName().c_str());
-        ZWinSizablePushBtn* pBtn = mpRotationMenu->SVGButton("show_rotation_menu", sAppPath + "/res/rotate.svg", sMessage);
-        pBtn->msWinGroup = "Rotate";
-
-        Sprintf(sMessage, "rotate_left;target=%s", GetTargetName().c_str());
-        pBtn = mpRotationMenu->Button("<", "<", sMessage);
-        pBtn->mCaption.style = mSymbolicStyle;
-        pBtn->msWinGroup = "Rotate";
-
-        Sprintf(sMessage, "rotate_right;target=%s", GetTargetName().c_str());
-        pBtn = mpRotationMenu->Button(">", ">", sMessage);
-        pBtn->mCaption.style = mSymbolicStyle;
-        pBtn->msWinGroup = "Rotate";
-
-        Sprintf(sMessage, "flipH;target=%s", GetTargetName().c_str());
-        pBtn = mpRotationMenu->Button("-", "-", sMessage);
-        pBtn->mCaption.style = mSymbolicStyle;
-        pBtn->msWinGroup = "Rotate";
-
-        Sprintf(sMessage, "flipV;target=%s", GetTargetName().c_str());
-        pBtn = mpRotationMenu->Button("|", "|", sMessage);
-        pBtn->mCaption.style = mSymbolicStyle;
-        pBtn->msWinGroup = "Rotate";
-
-        mpRotationMenu->mbHideOnMouseExit = true;
-        ChildAdd(mpRotationMenu, false);
-
-
-//        Sprintf(sMessage, "show_manage_menu;target=%s", GetTargetName().c_str());
-//        pBtn = mpRotationMenu->SVGButton("show_manage_menu", sAppPath + "/res/rotate.svg", sMessage);
-
-/*        mpManageMenu = new ZWinControlPanel();
-        pBtn = mpManageMenu->Button("undo", "undo", ZMessage("undo", this));
-        pBtn->msWinGroup = "Manage";
-
-//        pBtn = mpManageMenu->Button("move", "move", ZMessage("set_move_folder", this));
-        pBtn = mpManageMenu->SVGButton("move", sAppPath + "/res/movefile.svg", ZMessage("set_move_folder", this));
-        pBtn->msWinGroup = "Manage";
-
-//        pBtn = mpManageMenu->Button("copy", "copy", ZMessage("set_copy_folder", this));
-        pBtn = mpManageMenu->SVGButton("copy", sAppPath + "/res/copyfile.svg", ZMessage("set_copy_folder", this));
-        pBtn->msWinGroup = "Manage";
         
-        mpManageMenu->mbHideOnMouseExit = true;
-        ChildAdd(mpManageMenu, false);
-        */
-
-
-
         mpFolderLabel = new ZWinFolderLabel();
         mpFolderLabel->mBehavior = ZWinFolderLabel::kCollapsable;
         mpFolderLabel->mCurPath = mCurrentFolder;
@@ -1450,7 +1398,7 @@ void ImageViewer::UpdateControlPanel()
 
     ZWinSizablePushBtn* pBtn;
 
-    ZRect rButton((int64_t)(nGroupSide*1.5), nGroupSide);
+    ZRect rButton((int64_t)(nGroupSide*1.25), nGroupSide);
     rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
 
     string sAppPath = gRegistry["apppath"];
@@ -1494,31 +1442,13 @@ void ImageViewer::UpdateControlPanel()
     pBtn->mbEnabled = ValidIndex(mViewingIndex);
     pBtn->msWinGroup = "File";
 
-    rButton.OffsetRect(rButton.Width(), 0);
+//    rButton.OffsetRect(rButton.Width(), 0);
 
 
     string sMessage;
 
-
-    // Management
-/*        mpManageMenu = new ZWinControlPanel();
-        pBtn = mpManageMenu->Button("undo", "undo", ZMessage("undo", this));
-        pBtn->msWinGroup = "Manage";
-
-//        pBtn = mpManageMenu->Button("move", "move", ZMessage("set_move_folder", this));
-        pBtn = mpManageMenu->SVGButton("move", sAppPath + "/res/movefile.svg", ZMessage("set_move_folder", this));
-        pBtn->msWinGroup = "Manage";
-
-//        pBtn = mpManageMenu->Button("copy", "copy", ZMessage("set_copy_folder", this));
-        pBtn = mpManageMenu->SVGButton("copy", sAppPath + "/res/copyfile.svg", ZMessage("set_copy_folder", this));
-        pBtn->msWinGroup = "Manage";
-        
-        mpManageMenu->mbHideOnMouseExit = true;
-        ChildAdd(mpManageMenu, false);
-    */
-
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
-    rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
+    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.0);     // wider buttons for management
+    rButton.OffsetRect(rButton.Width() + gSpacer, 0);
 
     string sPanelLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
     sPanelLayout += "<row><button    id=undo caption=undo msg=undo;target=" + GetTargetName() + " tooltip=\"Undo last move or copy command.\"/></row>";
@@ -1526,24 +1456,36 @@ void ImageViewer::UpdateControlPanel()
     sPanelLayout += "<row><svgbutton id=copy svgpath=%apppath%/res/copyfile.svg msg=set_copy_folder;target=" + GetTargetName() + " tooltip=\"Select a Copy Folder for quick-copy with 'C'\"/></row>";
     sPanelLayout += "</panel>";
 
-    ZRect rPopupPanel(rButton.left-gSpacer, rButton.bottom+gSpacer, rButton.right+gSpacer, rButton.bottom + (rButton.Height()+gSpacer) * 3);
     ZWinPopupPanelBtn* pPopupBtn = mpPanel->PopupPanelButton("manage_menu", sAppPath + "/res/manage.svg", sPanelLayout, ZFPoint(1.0, 3.0),  ZGUI::ePosition::ICOB);
-    pPopupBtn->msWinGroup = "Manage";
+    pPopupBtn->msWinGroup = "File";
+    pPopupBtn->SetArea(rButton);
+
+    // Transformation (rotation, flip, etc.)
+    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
+
+
+    sPanelLayout = "<panel hide_on_mouse_exit=1 border=1 spacers=1>";
+    sPanelLayout += "<row><svgbutton id=rot_left svgpath=%apppath%/res/rot_left.svg msg=rotate_left;target=" + GetTargetName() + " tooltip=\"90º Left\"/></row>";
+    sPanelLayout += "<row><svgbutton id=rot_right svgpath=%apppath%/res/rot_right.svg msg=rotate_right;target=" + GetTargetName() + " tooltip=\"90º Right\"/></row>";
+    sPanelLayout += "<row><svgbutton id=flip_h svgpath=%apppath%/res/fliph.svg msg=flipH;target=" + GetTargetName() + " tooltip=\"Flip Horizontal\"/></row>";
+    sPanelLayout += "<row><svgbutton id=flip_v svgpath=%apppath%/res/flipv.svg msg=flipV;target=" + GetTargetName() + " tooltip=\"Flip Vertical\"/></row>";
+    sPanelLayout += "</panel>";
+
+    pPopupBtn = mpPanel->PopupPanelButton("rotate_menu", sAppPath + "/res/rotate.svg", sPanelLayout, ZFPoint(1.0, 4.0), ZGUI::ePosition::ICOB);
     pPopupBtn->SetArea(rButton);
 
 
 
-    // Transformation (rotation, flip, etc.)
-    rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
-    rButton.right = rButton.left + rButton.Height();    // square button
-
-    pBtn = mpPanel->SVGButton("show_rotation_menu", sAppPath + "/res/rotate.svg");
+/*    pBtn = mpPanel->SVGButton("show_rotation_menu", sAppPath + "/res/rotate.svg");
     rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
     rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.25);     // wider buttons for management
     pBtn->SetArea(rButton);
     Sprintf(sMessage, "show_rotation_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
     pBtn->msButtonMessage = sMessage;
-    pBtn->msWinGroup = "Rotate";
+    pBtn->msWinGroup = "Rotate";*/
+
+
+
 
 
 
@@ -1560,7 +1502,7 @@ void ImageViewer::UpdateControlPanel()
 
 
 
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for management
+    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for filter
 
     rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
 
