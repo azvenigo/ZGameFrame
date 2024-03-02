@@ -5,7 +5,7 @@
 #include <map>
 #include <set>
 #include <mutex>
-
+#include <assert.h>
 
 
 
@@ -14,11 +14,13 @@
 // ZMessage
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Format:
-// type = type	(required)
+// {
+// [type=]type	(required)
 // target = target	(optional)
 // key1 = value1	(optional)
 // ...
 // keyn = valuen	(optional)
+// }
 //
 // As a packed string:
 // type=type;key1=val1...keyn=valn
@@ -90,18 +92,18 @@ public:
 	ZMessageSystem();
 	~ZMessageSystem();
 
-	void							Process();
+	void    Process();
 
-	void							RegisterTarget(IMessageTarget* pTarget);
-	void							UnregisterTarget(IMessageTarget* pTarget);
-    bool                            IsRegistered(const std::string& sTargetName);
+	void    RegisterTarget(IMessageTarget* pTarget);
+	void    UnregisterTarget(IMessageTarget* pTarget);
+    bool    IsRegistered(const std::string& sTargetName);
 
-	void							AddNotification(const std::string& sMessageType, IMessageTarget* pTarget);
-	void							RemoveNotification(const std::string& sMessageType, IMessageTarget* pTarget);
-	void							RemoveAllNotifications(IMessageTarget* pTarget);
+	void    AddNotification(const std::string& sMessageType, IMessageTarget* pTarget);
+	void    RemoveNotification(const std::string& sMessageType, IMessageTarget* pTarget);
+	void    RemoveAllNotifications(IMessageTarget* pTarget);
 
-	void                            Post(std::string sType, class IMessageTarget* pTarget = nullptr);
-    void                            Post(ZMessage& message, class IMessageTarget* pTarget = nullptr);
+	void    Post(std::string sType, class IMessageTarget* pTarget = nullptr);
+    void    Post(ZMessage& message, class IMessageTarget* pTarget = nullptr);
 
 
 
@@ -111,8 +113,10 @@ public:
     template <typename T, typename...Types>
     void Post(std::string type, std::string key, T val, Types...more)
     {
+        assert(type[0] == '{' && type[type.length() - 1] == '}');
+
         ZMessage m;
-        m.mType = type;
+        m.mType = type.substr(1, type.length() - 2);
         ToMessage(m, key, val, more...);
 
         const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
@@ -123,8 +127,11 @@ public:
     template <typename T, typename...Types>
     void Post(std::string type, IMessageTarget* pTarget, std::string key, T val, Types...more)
     {
+        assert(type[0] == '{' && type[type.length()-1] == '}');
+
         ZMessage m;
-        m.mType = type;
+        m.mType = type.substr(1,type.length()-2);
+
         if (pTarget)
             m.mTarget = pTarget->GetTargetName();
         ToMessage(m, key, val, more...);
@@ -157,18 +164,20 @@ public:
 
 
 	// utility functions
-    std::string                     GenerateUniqueTargetName();
+    std::string                 GenerateUniqueTargetName();
+    static size_t               FindMatching(const std::string& s, size_t i);   // given a character in s at i, find the accomanying closing. for example '"' -> '"' or '{' -> '}'
 
 private:
-	tMessageList					mMessageQueue;
-    std::mutex			            mMessageQueueMutex;
 
-	tMessageToMessageTargetsMap		mMessageToMessageTargetsMap;
+	tMessageList                mMessageQueue;
+    std::mutex                  mMessageQueueMutex;
 
-	tNameToMessageTargetMap			mNameToMessageTargetMap;
+	tMessageToMessageTargetsMap mMessageToMessageTargetsMap;
 
-	bool    						mbProccessing;
-	std::atomic<int64_t>            mnUniqueTargetNameCount;
+	tNameToMessageTargetMap     mNameToMessageTargetMap;
+
+	bool                        mbProccessing;
+	std::atomic<int64_t>        mnUniqueTargetNameCount;
 };
 
-extern ZMessageSystem				gMessageSystem;
+extern ZMessageSystem           gMessageSystem;

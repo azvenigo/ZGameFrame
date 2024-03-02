@@ -102,11 +102,10 @@ int processFolder(const fs::path& folderPath)
     return nCount;
 }
 
+
+
 int main(int argc, char* argv[])
 {
-     
-    int nCount = processFolder("c:\\");
-    cout << "nCount:" << nCount << "\n";
 
 
     // Enable exception handling
@@ -635,7 +634,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         else if (wParam == VK_OEM_3)    // ~
         {
-            gMessageSystem.Post("toggleconsole");
+            gMessageSystem.Post("{toggleconsole}");
         }
         else if (wParam == 'f' || wParam == 'F')
         {
@@ -699,19 +698,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //            gpMainWin->InvalidateChildren();
         gbPaused = false;
         gTimer.Start();
-        gMessageSystem.Post("pause;set=0");
+        gMessageSystem.Post("{pause;set=0}");
     }
 		break;
 	case WM_ACTIVATE:
 		if (LOWORD(wParam) == WA_INACTIVE)
 		{
-			gMessageSystem.Post("pause;set=1");
+			gMessageSystem.Post("{pause;set=1}");
             gbPaused = true;
 			gTimer.Stop();
 		}
 		else
 		{
-            gMessageSystem.Post("pause;set=0");
+            gMessageSystem.Post("{pause;set=0}");
             gbPaused = false;
 			gTimer.Start();
 		}

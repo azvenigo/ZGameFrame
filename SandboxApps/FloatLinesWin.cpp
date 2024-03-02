@@ -484,7 +484,7 @@ bool cFloatLinesWin::OnKeyDown(uint32_t key)
 #ifdef _WIN64
     if (key == VK_ESCAPE)
     {
-        gMessageSystem.Post("quit_app_confirmed");
+        gMessageSystem.Post("{quit_app_confirmed}");
     }
 #endif
 

@@ -409,7 +409,7 @@ void ZWinPaletteDialog::ComputeAreas()
         rEdit = ZGUI::Arrange(rEdit, mrSVArea, ZGUI::ILOB, 0, gM);
         mpRGBEdit->SetArea(rEdit);
         mpRGBEdit->mnCharacterLimit = 8;
-        mpRGBEdit->msOnChangeMessage = ZMessage("rgb_edit", this);
+        mpRGBEdit->msOnChangeMessage = ZMessage("{rgb_edit}", this);
     }
 
     ZWin::ComputeAreas();

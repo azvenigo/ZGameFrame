@@ -1171,7 +1171,7 @@ bool ZWinDialog::Init()
         ZWinSizablePushBtn* pBtn(new ZWinSizablePushBtn());
         pBtn->mCaption.sText = "Cancel";
         pBtn->mCaption.style = gStyleButton;
-        pBtn->msButtonMessage = ZMessage("dlg_cancel", this);
+        pBtn->msButtonMessage = ZMessage("{dlg_cancel}", this);
 //        pBtn->SetArea(rButton);
         ChildAdd(pBtn);
         arrangeList.push_back(pBtn);
@@ -1182,7 +1182,7 @@ bool ZWinDialog::Init()
     if (mBehavior & eBehavior::OKButton)
     {
         ZWinSizablePushBtn* pBtn(new ZWinSizablePushBtn());
-        pBtn->msButtonMessage = ZMessage("dlg_ok", this);
+        pBtn->msButtonMessage = ZMessage("{dlg_ok}", this);
         pBtn->mCaption.sText = "OK";
         pBtn->mCaption.style = gStyleButton;
         arrangeList.push_back(pBtn);
@@ -1325,7 +1325,7 @@ void ZWinDialog::OnOK()
         mpParentWin->SetFocus();
     // post close
 
-    gMessageSystem.Post("kill_child", "name", msWinName);
+    gMessageSystem.Post("{kill_child}", "name", msWinName);
 
 }
 
@@ -1333,7 +1333,7 @@ void ZWinDialog::OnCancel()
 {
     if (mpParentWin)
         mpParentWin->SetFocus();
-    gMessageSystem.Post("kill_child", "name", msWinName);
+    gMessageSystem.Post("{kill_child}", "name", msWinName);
 }
 
 

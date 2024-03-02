@@ -71,7 +71,7 @@ bool ConfirmDeleteDialog::Init()
 
         ZWinSizablePushBtn* pBtn;
         pBtn = new ZWinSizablePushBtn();
-        pBtn->msButtonMessage = ZMessage("deleteconfirm", this);
+        pBtn->msButtonMessage = ZMessage("{deleteconfirm}", this);
         pBtn->mCaption.sText = "Confirm Delete";
         pBtn->mCaption.style = style;
         pBtn->mCaption.style.look.colTop = 0xffff0000;
@@ -82,7 +82,7 @@ bool ConfirmDeleteDialog::Init()
         arrangeList.push_back(pBtn);
 
         pBtn = new ZWinSizablePushBtn();
-        pBtn->msButtonMessage = ZMessage("goback", this);
+        pBtn->msButtonMessage = ZMessage("{goback}", this);
         pBtn->mCaption.sText = "Go Back";
         pBtn->mCaption.style = style;
 
@@ -170,21 +170,21 @@ bool ConfirmDeleteDialog::HandleMessage(const ZMessage& message)
 void ConfirmDeleteDialog::OnConfirmDelete()
 {
     gMessageSystem.Post(msOnConfirmDelete);
-    gMessageSystem.Post("kill_child", "name", msWinName);
+    gMessageSystem.Post("{kill_child}", "name", msWinName);
 }
 
 
 void ConfirmDeleteDialog::OnGoBack()
 {
     gMessageSystem.Post(msOnGoBack);
-    gMessageSystem.Post("kill_child", "name", msWinName);
+    gMessageSystem.Post("{kill_child}", "name", msWinName);
 }
 
 
 void ConfirmDeleteDialog::OnCancel()
 {
     gMessageSystem.Post(msOnCancel);
-    gMessageSystem.Post("kill_child", "name", msWinName);
+    gMessageSystem.Post("{kill_child}", "name", msWinName);
 }
 
 bool ConfirmDeleteDialog::Paint()

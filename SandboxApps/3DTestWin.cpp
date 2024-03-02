@@ -1027,7 +1027,7 @@ bool Z3DTestWin::Init()
 
         pCP->Init();
 
-        string sUpdateSphereCountMsg(ZMessage("updatespherecount", this));
+        string sUpdateSphereCountMsg(ZMessage("{updatespherecount}", this));
 
         pCP->Caption("Sphere Count");
         pCP->Slider("spherecount", &mnTargetSphereCount, 1, 50, 1, 0.25, sUpdateSphereCountMsg, true, false);
@@ -1049,7 +1049,7 @@ bool Z3DTestWin::Init()
 
         pCP->AddSpace(16);
         pCP->Caption("rendersize", "Render Size");
-        pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("updaterendersize", this), true);
+        pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("{updaterendersize}", this), true);
 
         ZGUI::ZTextLook toggleLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
@@ -1136,7 +1136,7 @@ bool Z3DTestWin::OnChar(char key)
     switch (key)
     {
     case VK_ESCAPE:
-        gMessageSystem.Post("quit_app_confirmed");
+        gMessageSystem.Post("{quit_app_confirmed}");
         break;
     }
 #endif

@@ -119,7 +119,7 @@ bool WinTopWinners::OnMouseDownL(int64_t x, int64_t y)
             rScreen.OffsetRect(mAreaAbsolute.TL());
 
             // post
-            string sLink("select;filename=" + SH::URL_Encode((*it).filename) + ";target=" + mpParentWin->GetTargetName() + ";area=" + RectToString(rScreen));
+            string sLink("{select;filename=" + SH::URL_Encode((*it).filename) + ";target=" + mpParentWin->GetTargetName() + ";area=" + RectToString(rScreen) + "}");
             gMessageSystem.Post(sLink);
             ZDEBUG_OUT("Posted\n");
             break;

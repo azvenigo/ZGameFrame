@@ -27,7 +27,7 @@ void ZInput::OnKeyDown(uint32_t key)
     if (!pTarget)
         pTarget = gpMainWin;
 
-    gMessageSystem.Post("keydown", pTarget, "code", key);
+    gMessageSystem.Post("{keydown}", pTarget, "code", key);
 }
 
 void ZInput::OnKeyUp(uint32_t key)
@@ -38,7 +38,7 @@ void ZInput::OnKeyUp(uint32_t key)
     if (!pTarget)
         pTarget = gpMainWin;
 
-    gMessageSystem.Post("keyup", pTarget, "code", key);
+    gMessageSystem.Post("{keyup}", pTarget, "code", key);
 }
 
 void ZInput::OnChar(uint32_t key)
@@ -47,7 +47,7 @@ void ZInput::OnChar(uint32_t key)
     if (!pTarget)
         pTarget = gpMainWin;
 
-    gMessageSystem.Post("chardown", pTarget, "code", key);
+    gMessageSystem.Post("{chardown}", pTarget, "code", key);
 }
 
 void ZInput::OnLButtonUp(int64_t x, int64_t y)
@@ -303,7 +303,7 @@ string ZInput::GetClipboard()
     return mClipboardText;
 }
 
-void ZInput::SetClipboard(const std::string& text)
+bool ZInput::SetClipboard(const std::string& text)
 {
     mClipboardText = text;
     ZOUT("Set Clipboard to:", text);
@@ -324,13 +324,70 @@ void ZInput::SetClipboard(const std::string& text)
             CloseClipboard();
 
             ZOUT("Copied to clipboard\n");
+            return true;
         }
         else
         {
             std::cerr << "Failed to allocate memory." << std::endl;
+            return false;
         }
     }
 #endif
+    return true;
 }
 
+bool ZInput::SetClipboard(ZBuffer* pBuffer)
+{
+#ifdef _WIN64
+    if (!OpenClipboard(nullptr)) 
+        return false;
+
+    if (!EmptyClipboard()) 
+    {
+        CloseClipboard();
+        return false;
+    }
+
+    ZRect r(pBuffer->GetArea());
+
+    BITMAPINFO bmi;
+    ZeroMemory(&bmi, sizeof(BITMAPINFO));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = (LONG)r.Width();
+    bmi.bmiHeader.biHeight = (LONG)-r.Height();
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+
+    size_t dataSize = sizeof(BITMAPINFOHEADER) + r.Area() * 4;
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, dataSize);
+    if (hMem == NULL)
+        return false;
+
+    void* lpMem = GlobalLock(hMem);
+    if (lpMem == NULL)
+    {
+        GlobalFree(hMem);
+        return false;
+    }
+
+    memcpy(lpMem, &bmi, sizeof(bmi));
+    memcpy((uint8_t*)lpMem+sizeof(bmi), pBuffer->mpPixels, r.Area() * 4);
+
+    GlobalUnlock(hMem);
+
+    if (!SetClipboardData(CF_DIB, hMem))
+{
+        CloseClipboard();
+        return false;
+    }
+
+    CloseClipboard();
+    return true;
+#else
+    return false;
+#endif
+    
+}
 

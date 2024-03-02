@@ -62,6 +62,10 @@ public:
     bool        LoadImage(const std::string& sName);
     void        SetImage(tZBufferPtr pImage);
 
+    ZRect       GetSelection();   // in window
+    void        ClearSelection();
+
+
     void        SetArea(const ZRect& newArea);
     bool        OnParentAreaChange();
 
@@ -86,7 +90,6 @@ public:
 
 protected:
     bool HandleMessage(const ZMessage& message);
-    ZRect GetSelection();   // in window
     void ToImageCoords(ZRect& r);   // compute image coords
 
 
@@ -94,6 +97,6 @@ private:
     double              mfZoom;
     double              mfPerfectFitZoom;
     ZRect               mImageArea;
+    ZRect               mrSelection;
     eViewState          mViewState;
-
 };

@@ -1332,7 +1332,7 @@ bool cProcessImageWin::OnKeyDown(uint32_t key)
 {
 	if (key == VK_ESCAPE)
 	{
-		gMessageSystem.Post("quit_app_confirmed");
+		gMessageSystem.Post("{quit_app_confirmed}");
 	}
 
 	return true;

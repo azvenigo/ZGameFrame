@@ -392,32 +392,35 @@ bool ZWinFormattedDoc::Paint()
                 }
                 else
                 {
-                    tZFontPtr pFont(entry.style.Font());
-                    ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.text.data(), entry.text.length(), entry.style.pos);
-
-                    int64_t nShadowOffset = max((int)pFont->Height() / 16, (int)1);
-
-                    pFont->DrawText(mpSurface.get(), entry.text, rText, &entry.style.look, &rClip);
-
-                    if (IsSet(kUnderlineLinks) && !entry.link.empty())
+                    if (!entry.text.empty())
                     {
-                        ZRect rUnderline(rText);
-                        rUnderline.top = rUnderline.bottom - nShadowOffset;
-                        rUnderline.IntersectRect(&rClip);
-                        mpSurface.get()->Fill(entry.style.look.colBottom, &rUnderline);
+                        tZFontPtr pFont(entry.style.Font());
+                        ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.text.data(), entry.text.length(), entry.style.pos);
 
-                        if (entry.style.look.decoration == ZGUI::ZTextLook::kShadowed)
+                        int64_t nShadowOffset = max((int)pFont->Height() / 16, (int)1);
+
+                        pFont->DrawText(mpSurface.get(), entry.text, rText, &entry.style.look, &rClip);
+
+                        if (IsSet(kUnderlineLinks) && !entry.link.empty())
                         {
-                            rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
+                            ZRect rUnderline(rText);
+                            rUnderline.top = rUnderline.bottom - nShadowOffset;
                             rUnderline.IntersectRect(&rClip);
-                            mpSurface.get()->Fill(0xff000000, &rUnderline);
-                        }
-                    }
+                            mpSurface.get()->Fill(entry.style.look.colBottom, &rUnderline);
 
-                    if (IsSet(kEvenColumns))
-                        rLine.left += mColumnWidths[col];
-                    else
-                        rLine.left += rText.Width();
+                            if (entry.style.look.decoration == ZGUI::ZTextLook::kShadowed)
+                            {
+                                rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
+                                rUnderline.IntersectRect(&rClip);
+                                mpSurface.get()->Fill(0xff000000, &rUnderline);
+                            }
+                        }
+
+                        if (IsSet(kEvenColumns))
+                            rLine.left += mColumnWidths[col];
+                        else
+                            rLine.left += rText.Width();
+                    }
                 }
                 col++;
                 rLine.left += mStyle.paddingH;

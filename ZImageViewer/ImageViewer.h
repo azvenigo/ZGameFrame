@@ -219,6 +219,9 @@ protected:
 
     void                    ShowHelpDialog();
     void                    ShowTooltipMessage(const std::string& msg, uint32_t col);
+    void                    ShowImageSelectionPanel(ZRect rSelection);
+    void                    SaveSelection(ZRect rSelection);
+    void                    CopySelection(ZRect rSelection);
 
     ZWinControlPanel*       mpPanel;
     std::recursive_mutex    mPanelMutex;

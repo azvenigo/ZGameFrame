@@ -71,6 +71,8 @@ protected:
    bool                 ResolveLayoutTokens();
    std::string          ResolveToken(std::string token);
 
+   std::string          AppendBehaviorMessages(const std::string& sMsg);
+
    inline bool          IsSet(uint32_t flag) { return (mBehavior & flag) != 0; }
 
 

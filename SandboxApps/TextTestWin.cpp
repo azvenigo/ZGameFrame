@@ -188,34 +188,34 @@ bool TextTestWin::Init()
 
     ZGUI::ZTextLook captionLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
 
-    pCP->Button("choosecolor", "Color", ZMessage("choosecolor", this));
+    pCP->Button("choosecolor", "Color", ZMessage("{choosecolor}", this));
 
     pCP->Caption("heightlabel", "Height");
 
-    pCP->Slider("fontheight", &mCustomFontParams.nHeight, 8, 200, 2, 0.1, "setcustomfont;target=TextTestWin", true, false);
+    pCP->Slider("fontheight", &mCustomFontParams.nHeight, 8, 200, 2, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
 
     pCP->Caption("weight", "Weight");
-    pCP->Slider("fontweight", &mCustomFontParams.nWeight, 2, 9, 100, 0.1, "setcustomfont;target=TextTestWin", true, false);
+    pCP->Slider("fontweight", &mCustomFontParams.nWeight, 2, 9, 100, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
 
     pCP->Caption("Tracking");
-    pCP->Slider("fonttracking", &mCustomFontParams.nTracking, -20, 20, 1, 0.1, "setfonttracking;target=TextTestWin", true, false);
+    pCP->Slider("fonttracking", &mCustomFontParams.nTracking, -20, 20, 1, 0.1, "{setfonttracking;target=TextTestWin}", true, false);
 
     pCP->Caption("Fixed Width");
-    pCP->Slider("fontfixedwidth", &mCustomFontParams.nFixedWidth, 0, 200, 1, 0.1, "setcustomfont;target=TextTestWin", true, false);
+    pCP->Slider("fontfixedwidth", &mCustomFontParams.nFixedWidth, 0, 200, 1, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
 
-    pCP->Toggle("fontitalic", &mCustomFontParams.bItalic, "Italic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin");
+    pCP->Toggle("fontitalic", &mCustomFontParams.bItalic, "Italic", "{setcustomfont;target=TextTestWin}", "{setcustomfont;target=TextTestWin}");
 
-    pCP->Toggle("fontsymbolic", &mCustomFontParams.bSymbolic, "Symbolic", "setcustomfont;target=TextTestWin", "setcustomfont;target=TextTestWin");
+    pCP->Toggle("fontsymbolic", &mCustomFontParams.bSymbolic, "Symbolic", "{setcustomfont;target=TextTestWin}", "{setcustomfont;target=TextTestWin}");
 
 
 
     pCP->AddSpace(16);
 
-    pCP->Toggle("viewkerning", &mbEnableKerning, "View Kerning", "togglekerning;enable=1;target=TextTestWin", "togglekerning;enable=0;target=TextTestWin");
+    pCP->Toggle("viewkerning", &mbEnableKerning, "View Kerning", "{togglekerning;enable=1;target=TextTestWin}", "{togglekerning;enable=0;target=TextTestWin}");
     pCP->AddSpace(16);
 
-    pCP->Button("loadfont", "Load Font", "loadfont;target=TextTestWin");
-    pCP->Button("savefont", "Save Font", "savefont;target=TextTestWin");
+    pCP->Button("loadfont", "Load Font", "{loadfont;target=TextTestWin}");
+    pCP->Button("savefont", "Save Font", "{savefont;target=TextTestWin}");
 
     ChildAdd(pCP);
 
@@ -321,7 +321,7 @@ bool TextTestWin::OnChar(char key)
         break;
 
     case VK_ESCAPE:
-        gMessageSystem.Post("quit_app_confirmed");
+        gMessageSystem.Post("{quit_app_confirmed}");
         break;
     default:
         msText += key;

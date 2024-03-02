@@ -20,7 +20,7 @@ bool TestWin::OnKeyDown(uint32_t key)
 #ifdef _WIN64
     if (key == VK_ESCAPE)
     {
-        gMessageSystem.Post("quit_app_confirmed");
+        gMessageSystem.Post("{quit_app_confirmed}");
     }
 #endif
     else if (key == ' ')
@@ -59,7 +59,7 @@ bool TestWin::Init()
     //panel->SetArea(ZRect(10, 200, 510, 300));
     //panel->SetRelativeArea(grFullArea, ZGUI::ePosition::IRIB, ZGUI::Arrange(ZRect(600, 800), grFullArea, ZGUI::ePosition::C, 200, 10));
     pBtn->SetArea(ZRect(100, 200, 132, 232));
-    pBtn->mPanelScaleVsBtn.Set(5.0, 2.0);
+    pBtn->mPanelScaleVsBtn.Set(20.0, 20.0);
     ChildAdd(pBtn);
 
 

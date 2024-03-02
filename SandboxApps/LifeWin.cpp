@@ -193,7 +193,7 @@ bool cLifeWin::OnKeyDown(uint32_t key)
 		break;
 
     case VK_ESCAPE:
-        gMessageSystem.Post("quit_app_confirmed");
+        gMessageSystem.Post("{quit_app_confirmed}");
         break;
 	case '+':
 		if (mbPaused)

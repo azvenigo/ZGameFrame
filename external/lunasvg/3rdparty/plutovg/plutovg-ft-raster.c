@@ -1617,14 +1617,14 @@ PVG_FT_END_STMNT
       TWorker worker;
       worker.skip_spans = 0;
       int rendered_spans = 0;
-      int error = gray_raster_render(&worker, stack, length, params);
+      int error = gray_raster_render(&worker, stack, (long)length, params);
       while(error == ErrRaster_OutOfMemory) {
           if(worker.skip_spans < 0)
               rendered_spans += -worker.skip_spans;
           worker.skip_spans = rendered_spans;
           length *= 2;
           void* heap = malloc(length);
-          error = gray_raster_render(&worker, heap, length, params);
+          error = gray_raster_render(&worker, heap, (long)length, params);
           free(heap);
       }
   }

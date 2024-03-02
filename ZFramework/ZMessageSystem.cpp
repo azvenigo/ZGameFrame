@@ -23,6 +23,8 @@ ZMessage::ZMessage()
 ZMessage::ZMessage(const string& sType, const string& sRawMessage, IMessageTarget* pTarget)
 {
     mType = sType;
+    assert(mType[0] != '{');
+
     gTotalMessageCount++;
     FromString(sRawMessage);
     if (pTarget)
@@ -31,14 +33,22 @@ ZMessage::ZMessage(const string& sType, const string& sRawMessage, IMessageTarge
 
 ZMessage::ZMessage(const std::string& sRaw, class IMessageTarget* pTarget)
 {
+    // new format requires all messages are enclosed with curly braces {}
+    assert(!sRaw.empty() && sRaw[0] == '{' && sRaw[sRaw.length() - 1] == '}');
+
     if (sRaw.find(";") != string::npos)
     {
         FromString(sRaw);
     }
     else
-        mType = sRaw;
+    {
+        mType = sRaw.substr(1, sRaw.length() - 2); // remove curlies
+        assert(mType[0] != '{');
+    }
+
     if (pTarget)
         mTarget = pTarget->GetTargetName();
+
     gTotalMessageCount++;
 }
 
@@ -91,10 +101,14 @@ void ZMessage::SetParam(const string& sKey, const string& sVal)
 
 void ZMessage::FromString(const string& sMessage)
 {
+    assert(!sMessage.empty() && sMessage[0] == '{' && sMessage[sMessage.length() - 1] == '}');
+
 	mKeyValueMap.clear();
 
-	string sParse(sMessage);
+	string sParse(sMessage.substr(1, sMessage.length()-2)); // strip curlies
+
     SH::SplitToken(mType, sParse, ";");  // first element
+    assert(mType[0] != '{');
 
 	bool bDone = false;
 	while (!bDone)
@@ -110,7 +124,10 @@ void ZMessage::FromString(const string& sMessage)
             if (sKey == "target")
                 mTarget = sPair;
             else if (sKey == "type")
+            {
                 mType = sPair;
+                assert(mType[0] != '{');
+            }
             else
                 mKeyValueMap[sKey] = SH::URL_Decode(sPair);	// sParse now contains the value;
         }
@@ -128,7 +145,10 @@ void ZMessage::FromString(const string& sMessage)
         if (sKey == "target")
             mTarget = sParse;
         else if (sKey == "type")
+        {
             mType = sParse;
+            assert(mType[0] != '{');
+        }
         else
 			mKeyValueMap[sKey] = SH::URL_Decode(sParse);	// sParse now contains the value;
 	}
@@ -136,7 +156,7 @@ void ZMessage::FromString(const string& sMessage)
 
 string ZMessage::ToString() const
 {
-    string sRaw(mType + ";");
+    string sRaw( "{" + mType + ";");
     if (!mTarget.empty())
         sRaw += "target=" + mTarget + ";";
 
@@ -145,7 +165,7 @@ string ZMessage::ToString() const
 		sRaw += (*it).first + "=" + SH::URL_Encode((*it).second) + ";";
 	}
 
-	return sRaw.substr(0, sRaw.length()-1);	// return everything but the final ';'
+	return sRaw.substr(0, sRaw.length()-1) + "}";	// remove final ';' and add curly
 }
 
 
@@ -275,28 +295,34 @@ bool ZMessageSystem::IsRegistered(const std::string& sTargetName)
 
 void ZMessageSystem::Post(string sRaw, IMessageTarget* pTarget)
 {
-    const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
+    if (sRaw.empty())
+        return;
 
-    if (sRaw[0] == '{')
+    if (sRaw[0] != '{')
     {
-        // multiple messages to parse
-        size_t start = 0;
-        while (start != string::npos)
-        {
-            start++;    // skip the '{'
-            size_t end = sRaw.find('}', start);
-            if (end != string::npos)
-            {
-                string s(sRaw.substr(start, end - start));
-                mMessageQueue.push_back(std::move(ZMessage(s, pTarget)));
-                start = end;
-            }
-
-            start = sRaw.find('{', start+1);
-        }
+        assert(false);  // message must be enclosed with {}
+        return;
     }
-    else
-        mMessageQueue.push_back(std::move(ZMessage(sRaw, pTarget)));
+
+
+
+    // multiple messages to parse
+    size_t messageStart = 0;
+    size_t messageEnd = FindMatching(sRaw, messageStart);
+    while (messageStart != string::npos && messageEnd != string::npos)
+    {
+        string s(sRaw.substr(messageStart, messageEnd - messageStart+1));
+
+
+        mMessageQueueMutex.lock();
+        mMessageQueue.push_back(std::move(ZMessage(s, pTarget)));
+        mMessageQueueMutex.unlock();
+
+        messageStart = messageEnd;
+
+        messageStart = sRaw.find('{', messageStart +1); // find a next message if there is one
+        messageEnd = FindMatching(sRaw, messageStart);
+    }
 }
 
 
@@ -316,3 +342,102 @@ string ZMessageSystem::GenerateUniqueTargetName()
 {
 	return "target_" + SH::FromInt(mnUniqueTargetNameCount++);
 }
+
+size_t ZMessageSystem::FindMatching(const std::string& s, size_t i)
+{
+    // any enclosing pairs should be accounted for......
+    // for example <"blah" [blah] "<<<<" >
+
+    if (i == string::npos || i+1 > s.length())
+        return string::npos;
+
+    char start = s[i];
+    char end;
+    switch (start)
+    {
+    case '\"':          // ""
+        end = '\"'; 
+        break;
+    case '\'':          // ''
+        end = '\''; 
+        break;
+    case  '{':          // {}
+        end = '}';
+        break;
+    case '[':           // []
+        end = ']';
+        break;
+    case '<':           // <>
+        end = '>';
+        break;
+    default:
+        return string::npos;
+    }
+
+    do
+    {
+        i++;
+
+        if (i < s.length() && s[i] == end)
+            return i;
+
+        if (s[i] == '\"' || s[i] == '\'' || s[i] == '{' || s[i] == '[' || s[i] == '[' || s[i] == '<')   // another enclosure?
+        {
+            i = FindMatching(s, i); // find that enclosure
+            if (i == string::npos)
+            {
+                // couldn't find enclosing message
+                ZASSERT(false);
+                return string::npos;
+            }
+        }
+    } while (i < s.length());
+
+    return string::npos;
+}
+
+#ifdef _DEBUG
+class FindMatchingUnitTest
+{
+public:
+    FindMatchingUnitTest()
+    {
+        // empty
+        string s1("");
+        assert(ZMessageSystem::FindMatching(s1, 0) == string::npos);
+        assert(ZMessageSystem::FindMatching(s1, 6) == string::npos);
+
+        string s2("<>");
+        assert(ZMessageSystem::FindMatching(s2, 0) == 1);
+        assert(ZMessageSystem::FindMatching(s2, 1) == string::npos);
+
+        string s3("<test>");
+        assert(ZMessageSystem::FindMatching(s3, 0) == 5);
+        assert(ZMessageSystem::FindMatching(s3, 1) == string::npos);
+
+        string s4("[enclose<>enclose]");
+        assert(ZMessageSystem::FindMatching(s4, 0) == 17);
+
+        string s5("[< <<>><<<>>> >]");
+        assert(ZMessageSystem::FindMatching(s5, 0) == 15);
+        assert(ZMessageSystem::FindMatching(s5, 1) == 14);
+
+
+
+        // malformed tests
+        string m1("<"); 
+        assert(ZMessageSystem::FindMatching(m1, 0) == string::npos);
+
+        string m2("<<blah>");   // malformed
+        assert(ZMessageSystem::FindMatching(m2, 0) == string::npos);
+        assert(ZMessageSystem::FindMatching(m2, 1) == 6);   // however if we look for enclosure starting with second, that should work
+
+        string m3("{}\"\'blah\'<>");    // no closing '"'
+        assert(ZMessageSystem::FindMatching(m3, 1) == string::npos);    // starting on a '}' is not correct
+        assert(ZMessageSystem::FindMatching(m3, 2) == string::npos);
+    }
+};
+
+FindMatchingUnitTest gFindMatchingUnitTestInstance;
+
+#endif

@@ -155,11 +155,14 @@ bool ZWinPanel::ParseLayout()
     //      Behavior
     if (SH::ToBool(pPanel->GetAttribute("hide_on_mouse_exit")))
         mBehavior |= kHideOnMouseExit;
+
     if (SH::ToBool(pPanel->GetAttribute("hide_on_button")))
         mBehavior |= kHideOnButton;
+    else if (SH::ToBool(pPanel->GetAttribute("close_on_button")))
+        mBehavior |= kCloseOnButton;
 
     if (pPanel->HasAttribute("spacers"))
-        mSpacers = SH::ToInt(pPanel->GetAttribute("spacers"));
+        mSpacers = (int32_t)SH::ToInt(pPanel->GetAttribute("spacers"));
     mDrawBorder = SH::ToBool(pPanel->GetAttribute("border"));
 
 
@@ -220,12 +223,14 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
         string type = control->GetName();
         string id = control->GetAttribute("id");
 
-        string msgPrefix;
         string msgSuffix;
         if (IsSet(kHideOnButton))
         {
-            msgPrefix = "{";
-            msgSuffix = "}{set_visible;visible=0;target=" + GetTargetName() + "}";
+            msgSuffix = "{set_visible;visible=0;target=" + GetTargetName() + "}";
+        }
+        else if (IsSet(kCloseOnButton))
+        {
+            msgSuffix = "{kill_child;name=" + msWinName + "}";
         }
 
         if (id.empty() || Registered(id))
@@ -243,7 +248,7 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             ZWinSizablePushBtn* pBtn = (ZWinSizablePushBtn*)pWin;
             pBtn->mCaption.sText = control->GetAttribute("caption");
             pBtn->mCaption.autoSizeFont = true;
-            pBtn->msButtonMessage = msgPrefix+control->GetAttribute("msg") + msgSuffix;
+            pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
         }
         else if (type == "svgbutton")
         {
@@ -251,15 +256,15 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             pWin = new ZWinSizablePushBtn();
             ZWinSizablePushBtn* pBtn = (ZWinSizablePushBtn*)pWin;
             pBtn->mSVGImage.Load(control->GetAttribute("svgpath"));
-            pBtn->msButtonMessage = msgPrefix+control->GetAttribute("msg") + msgSuffix;
+            pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
         }
         else if (type == "toggle")
         {
             // add toggle
             pWin = new ZWinCheck();
             ZWinCheck* pCheck = (ZWinCheck*)pWin;
-            pCheck->msButtonMessage = msgPrefix+control->GetAttribute("checkmsg") + msgSuffix;
-            pCheck->msUncheckMessage = msgPrefix+control->GetAttribute("uncheckmsg") + msgSuffix;
+            pCheck->msButtonMessage = control->GetAttribute("checkmsg") + msgSuffix;
+            pCheck->msUncheckMessage = control->GetAttribute("uncheckmsg") + msgSuffix;
         }
         else if (type == "label")
         {
@@ -295,7 +300,7 @@ bool ZWinPanel::HandleMessage(const ZMessage& message)
     {
         if (mpParentWin)
             mpParentWin->SetFocus();
-        gMessageSystem.Post("kill_child", "name", msWinName);
+        gMessageSystem.Post("{kill_child}", "name", msWinName);
         return true;
     }
 
@@ -309,17 +314,17 @@ void ZWinPanel::UpdateUI()
         ZRect controlArea = mAreaLocal;
         controlArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
 
-        int32_t spaceBetweenRows = mSpacers * gSpacer;
-        int32_t totalSpaceBetweenRows = (mRows - 1) * spaceBetweenRows;
+        int64_t spaceBetweenRows = mSpacers * gSpacer;
+        int64_t totalSpaceBetweenRows = (mRows - 1) * spaceBetweenRows;
 
-        int32_t rowh = (controlArea.Height()-totalSpaceBetweenRows)/mRows;
+        int64_t rowh = (controlArea.Height()-totalSpaceBetweenRows)/mRows;
 
         for (int32_t row = 0; row < mRows; row++)
         {
             tWinList rowWins = GetRowWins(row);
             if (!rowWins.empty())
             {
-                int32_t w = controlArea.Width() / rowWins.size();
+                int64_t w = controlArea.Width() / rowWins.size();
 
                 int col = 0;
                 for (auto pWin : rowWins)
@@ -510,7 +515,7 @@ bool ZWinPopupPanelBtn::OnParentAreaChange()
         return false;
 
     UpdateUI();
-    ZWin::OnParentAreaChange();
+    return ZWin::OnParentAreaChange();
 }
 
 void ZWinPopupPanelBtn::UpdateUI()
@@ -518,7 +523,7 @@ void ZWinPopupPanelBtn::UpdateUI()
     if (mpWinPanel)
     {
         
-        ZRect rArea(mAreaLocal.Width()*mPanelScaleVsBtn.x, mAreaLocal.Height()*mPanelScaleVsBtn.y);
+        ZRect rArea((int64_t)(mAreaLocal.Width()*mPanelScaleVsBtn.x), (int64_t)(mAreaLocal.Height()*mPanelScaleVsBtn.y));
         rArea.InflateRect(mBtnStyle.paddingH, mBtnStyle.paddingV);
         rArea = ZGUI::Arrange(rArea, mAreaAbsolute, mPanelPos, mBtnStyle.paddingH, mBtnStyle.paddingV);
 

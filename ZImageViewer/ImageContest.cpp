@@ -68,9 +68,9 @@ bool ImageContest::ShowOpenFolderDialog()
 
 void ImageContest::HandleQuitCommand()
 {
-    gMessageSystem.Post("set_visible", GetTopWindow()->GetChildWindowByWinName("ZWinImageViewer"), "visible", "1");
-    gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
-    gMessageSystem.Post("set_focus", "target", "ZWinImageViewer");
+    gMessageSystem.Post("{set_visible}", GetTopWindow()->GetChildWindowByWinName("ZWinImageViewer"), "visible", "1");
+    gMessageSystem.Post("{kill_child}", GetTopWindow(), "name", GetTargetName());
+    gMessageSystem.Post("{set_focus}", "target", "ZWinImageViewer");
 
 //    gMessageSystem.Post("quit_app_confirmed");
 }
@@ -456,13 +456,13 @@ bool ImageContest::Init()
         mpChooseBtn[kLeft] = new ZWinSizablePushBtn();
         mpChooseBtn[kLeft]->mSVGImage.Load(sAppPath + "/res/left.svg");
         mpChooseBtn[kLeft]->msTooltip = "Choose Left";
-        mpChooseBtn[kLeft]->msButtonMessage = ZMessage("select_winner;side=left", this);
+        mpChooseBtn[kLeft]->msButtonMessage = ZMessage("{select_winner;side=left}", this);
         ChildAdd(mpChooseBtn[kLeft]);
 
         mpChooseBtn[kRight] = new ZWinSizablePushBtn();
         mpChooseBtn[kRight]->mSVGImage.Load(sAppPath + "/res/right.svg");
         mpChooseBtn[kRight]->msTooltip = "Choose Right";
-        mpChooseBtn[kRight]->msButtonMessage = ZMessage("select_winner;side=right", this);
+        mpChooseBtn[kRight]->msButtonMessage = ZMessage("{select_winner;side=right}", this);
         ChildAdd(mpChooseBtn[kRight]);
 
         ZGUI::Style style = gStyleCaption;
@@ -553,7 +553,7 @@ void ImageContest::UpdateControlPanel()
 
     string sAppPath = gRegistry["apppath"];
 
-    pBtn = mpPanel->SVGButton("back", sAppPath + "/res/return.svg", ZMessage("return", this));
+    pBtn = mpPanel->SVGButton("back", sAppPath + "/res/return.svg", ZMessage("{return}", this));
     pBtn->msTooltip = "Back to viewer";
     pBtn->SetArea(rButton);
 
@@ -562,7 +562,7 @@ void ImageContest::UpdateControlPanel()
 
     int64_t nButtonPadding = rButton.Width() / 8;
 
-    pBtn = mpPanel->SVGButton("openfolder", sAppPath + "/res/openfolder.svg", ZMessage("selectfolder", this));
+    pBtn = mpPanel->SVGButton("openfolder", sAppPath + "/res/openfolder.svg", ZMessage("{selectfolder}", this));
     pBtn->msTooltip = "Choose Folder";
     pBtn->mSVGImage.style.paddingH = (int32_t)nButtonPadding;
     pBtn->mSVGImage.style.paddingV = (int32_t)nButtonPadding;
@@ -579,7 +579,7 @@ void ImageContest::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
     rButton.right = rButton.left + (int64_t) (rButton.Width() * 2);     // wider buttons for management
 
-    pBtn = mpPanel->Button("reset", "Reset", ZMessage("reset_contest", this));
+    pBtn = mpPanel->Button("reset", "Reset", ZMessage("{reset_contest}", this));
     pBtn->msTooltip = "Resets all of the ratings for images in this folder";
     pBtn->mCaption.style = gDefaultGroupingStyle;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
@@ -600,7 +600,7 @@ void ImageContest::UpdateControlPanel()
 
     rButton.OffsetRect(-gSpacer/2, 0);
 
-    pBtn = mpPanel->SVGButton("fullscreen", sAppPath + "/res/fullscreen.svg", ZMessage("toggle_fullscreen"));
+    pBtn = mpPanel->SVGButton("fullscreen", sAppPath + "/res/fullscreen.svg", ZMessage("{toggle_fullscreen}"));
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "View";
 
@@ -615,7 +615,7 @@ void ImageContest::UpdateControlPanel()
 
 
     rButton.OffsetRect(-rButton.Width(), 0);
-    pBtn = mpPanel->Button("help", "?", ZMessage("show_help", this));
+    pBtn = mpPanel->Button("help", "?", ZMessage("{show_help}", this));
     pBtn->mCaption.style = filterButtonStyle;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->SetArea(rButton);

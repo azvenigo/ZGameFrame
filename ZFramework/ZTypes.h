@@ -405,6 +405,8 @@ public:
     // Operations that fill '*this' with result
     bool IntersectRect(const tRect& rhs)
 	{
+        NormalizeRect();
+
 		if (left < rhs.left)
 			left = rhs.left;
 

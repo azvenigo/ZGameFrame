@@ -66,9 +66,14 @@ ZWinSizablePushBtn* ZWinControlPanel::Button(const std::string& sID, const strin
     }
 
     if (!sCaption.empty())
+    {
         pBtn->mCaption.sText = sCaption;
+    }
     if (!sMessage.empty())
+    {
+        assert(sMessage[0] == '{');
         pBtn->msButtonMessage = sMessage;
+    }
 
 
     return pBtn;
@@ -92,8 +97,12 @@ ZWinSizablePushBtn* ZWinControlPanel::SVGButton(const std::string& sID, const st
 
     if (!sSVGFilepath.empty())
         pBtn->mSVGImage.Load(sSVGFilepath);
+    
     if (!sMessage.empty())
+    {
+        assert(sMessage[0] == '{');
         pBtn->msButtonMessage = sMessage;
+    }
 
 
     return pBtn;
@@ -155,11 +164,18 @@ ZWinCheck* ZWinControlPanel::Toggle(const std::string& sID, bool* pbValue, const
     {
         pCheck = new ZWinCheck(pbValue);
         mChecks[sID] = pCheck;
-        if (!sCheckMessage.empty() || !sUncheckMessage.empty())
+        if (!sCheckMessage.empty())
         {
+            assert(sCheckMessage[0] == '{');
             pCheck->msButtonMessage = sCheckMessage;
+        }
+        if (!sUncheckMessage.empty())
+        {
+            assert(sUncheckMessage[0] == '{');
             pCheck->msUncheckMessage = sUncheckMessage;
         }
+
+
         if (!sCaption.empty())
             pCheck->mCaption.sText = sCaption;
 
@@ -199,7 +215,10 @@ ZWinSlider* ZWinControlPanel::Slider(const std::string& sID, int64_t* pnSliderVa
 
 
     if (!sMessage.empty())
+    {
+        assert(sMessage[0] == '{');
         pSlider->SetSliderSetMessage(sMessage);
+    }
 
     return pSlider;
 }

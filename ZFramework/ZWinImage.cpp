@@ -90,9 +90,10 @@ bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
     {
         if ((mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
         {
-            ZRect rSelection = GetSelection();
-            ToImageCoords(rSelection);
-            gMessageSystem.Post("image_selection", mpParentWin, "r", RectToString(rSelection));
+            mrSelection = GetSelection();
+            ZRect rImageCoords(mrSelection);
+            ToImageCoords(rImageCoords);
+            gMessageSystem.Post("{image_selection}", mpParentWin, "r", RectToString(rImageCoords));
         }
 
         Invalidate();
@@ -105,6 +106,7 @@ bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
 
 bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
 {
+    ClearSelection();
     if (mpImage)
     {
         if ((mBehavior & kNotifyOnClick) != 0 && mpParentWin)
@@ -213,6 +215,7 @@ bool ZWinImage::OnMouseMove(int64_t x, int64_t y)
     {
         if ((mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
         {
+            mrSelection = GetSelection();
             Invalidate();   // paint function to show highlight
             return true;
         }
@@ -538,9 +541,10 @@ bool ZWinImage::Paint()
         }
     }
 
-    if (AmCapturing() && (mBehavior & kSelectableArea) != 0 && gInput.IsKeyDown(VK_SHIFT))
+    if (mrSelection.Area())
     {
-        mpSurface->FillAlpha(0x88555588, &GetSelection());
+        mpSurface->FillAlpha(0x88555588, &mrSelection);
+        mpSurface->DrawRectAlpha(0xff555588, &mrSelection);
     }
 
 
@@ -560,28 +564,42 @@ bool ZWinImage::Paint()
 	return ZWin::Paint();
 }
 
+void ZWinImage::ClearSelection()
+{
+    mrSelection.SetRect(-1, -1, -1, -1);
+    Invalidate();
+}
+
 ZRect ZWinImage::GetSelection()
 {
-    int64_t nW = gInput.lastMouseMove.x- mMouseDownOffset.x;
-    int64_t nH = gInput.lastMouseMove.y- mMouseDownOffset.y;
+    ZPoint lastMoveWinCoord(gInput.lastMouseMove);
+    lastMoveWinCoord.Offset(-mAreaAbsolute.left, -mAreaAbsolute.top);
+    int64_t nW = lastMoveWinCoord.x - mMouseDownOffset.x;
+    int64_t nH = lastMoveWinCoord.y - mMouseDownOffset.y;
 
-    if (abs(nW) > abs(nH))
-        nW = (int64_t)((double)nW / (double)abs(nW) * (double)abs(nH));
+    ZRect rSelection;
+
+    if (gInput.IsKeyDown(VK_CONTROL))
+    {
+        if (abs(nW) > abs(nH))
+            nW = (int64_t)((double)nW / (double)abs(nW) * (double)abs(nH));
+        else
+            nH = (int64_t)((double)nH / (double)abs(nH) * (double)abs(nW));
+
+        rSelection.SetRect(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x+nW, mMouseDownOffset.y+nH);
+        rSelection.NormalizeRect();
+
+        if (rSelection.Width() > rSelection.Height())
+            rSelection.right = rSelection.left + rSelection.Height();
+        else
+            rSelection.bottom = rSelection.top + rSelection.Width();
+    }
     else
-        nH = (int64_t)((double)nH / (double)abs(nH) * (double)abs(nW));
+    {
+        rSelection.SetRect(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x + nW, mMouseDownOffset.y + nH);
+    }
 
-    ZRect rSelection(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x+nW, mMouseDownOffset.y+nH);
-    rSelection.NormalizeRect();
-
-    if (rSelection.Width() > rSelection.Height())
-        rSelection.right = rSelection.left + rSelection.Height();
-    else
-        rSelection.bottom = rSelection.top + rSelection.Width();
-
-    limit<int64_t>(rSelection.left, mImageArea.left, mImageArea.right);
-    limit<int64_t>(rSelection.right, mImageArea.left, mImageArea.right);
-    limit<int64_t>(rSelection.top, mImageArea.top, mImageArea.bottom);
-    limit<int64_t>(rSelection.bottom, mImageArea.top, mImageArea.bottom);
+    rSelection.IntersectRect(mImageArea);   // clip
 
     return rSelection;
 }
@@ -603,7 +621,11 @@ void ZWinImage::ToImageCoords(ZRect& r)
 bool ZWinImage::HandleMessage(const ZMessage& message)
 {
     string sType = message.GetType();
-
+    if (sType == "clear_selection")
+    {
+        ClearSelection();
+        return true;
+    }
 
     return ZWin::HandleMessage(message);
 }

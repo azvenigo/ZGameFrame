@@ -122,7 +122,7 @@ void ImageViewer::HandleQuitCommand()
     delete mpMetadataLoaderPool;
     mpMetadataLoaderPool = nullptr;
 
-    gMessageSystem.Post("quit_app_confirmed");
+    gMessageSystem.Post("{quit_app_confirmed}");
 }
 
 void ImageViewer::UpdateUI()
@@ -271,7 +271,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
         break;
     case 'p':
     case 'P':
-        gMessageSystem.Post(ZMessage("show_app_palette"));
+        gMessageSystem.Post(ZMessage("{show_app_palette}"));
         return true;
     case 'r':
     case 'R':
@@ -285,7 +285,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     case 'C':
         if (gInput.IsKeyDown(VK_CONTROL))
         {
-            gMessageSystem.Post("copylink", this);
+            gMessageSystem.Post("{copylink}", this);
             return true;
         }
         if (mCopyToFolder.empty())
@@ -398,9 +398,9 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             for (auto& i : mToBeDeletedImageArray)
                 deletionList.push_back(i->filename);
             ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", deletionList);
-            pDialog->msOnConfirmDelete = ZMessage("delete_confirm", this);
-            pDialog->msOnCancel = ZMessage("delete_cancel_and_quit", this);
-            pDialog->msOnGoBack = ZMessage("delete_goback", this);
+            pDialog->msOnConfirmDelete = ZMessage("{delete_confirm}", this);
+            pDialog->msOnCancel = ZMessage("{delete_cancel_and_quit}", this);
+            pDialog->msOnGoBack = ZMessage("{delete_goback}", this);
         }
         return true;
     }
@@ -473,43 +473,19 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     else if (sType == "image_selection")
     {
         ZRect rSelection = StringToRect(message.GetParam("r"));
-
         ZOUT("Rect Selected:", message.GetParam("r"), "\n");
-        string sFolder;
-        gRegistry.Get("ZImageViewer", "selectionsave", sFolder);
+        ShowImageSelectionPanel(rSelection);
 
-        filesystem::path fileName(EntryFromIndex(mViewingIndex)->filename.filename());
-        fileName.replace_extension(".png");
-        string sFilename = fileName.string();
-
-        if (ZWinFileDialog::ShowSaveDialog("Images", "*.png;*.jpg;*.jpeg;*.tga;*.bmp;*.hdr", sFilename, sFolder))
-        {
-            ZRect rSourceImage(mpWinImage->mpImage->GetArea());
-
-            ZBuffer imageSelection;
-            imageSelection.Init(rSelection.Width(), rSelection.Height());
-            imageSelection.Blt(mpWinImage->mpImage.get(), rSelection, imageSelection.GetArea(), 0, ZBuffer::kAlphaSource);
-
-#define RESIZE
-#ifdef RESIZE
-
-            const int kSize = 1024;
-
-            ZBuffer resizedimage;
-            resizedimage.Init(kSize, kSize);
-            resizedimage.Fill(0xff000000, &resizedimage.GetArea());
-
-            resizedimage.BltScaled(&imageSelection);
-
-            resizedimage.SaveBuffer(sFilename);
-#else
-            imageSelection.SaveBuffer(sFilename);
-#endif
-            filesystem::path folder(sFilename);
-            gRegistry.Set("ZImageViewer", "selectionsave", folder.parent_path().string());
-        }
-
-        InvalidateChildren();
+        return true;
+    }
+    else if (sType == "save_selection")
+    {
+        SaveSelection(StringToRect(message.GetParam("r")));
+        return true;
+    }
+    else if (sType == "copy_selection")
+    {
+        CopySelection(StringToRect(message.GetParam("r")));
         return true;
     }
     else if (sType == "show_help")
@@ -640,6 +616,84 @@ void ImageViewer::ShowTooltipMessage(const string& msg, uint32_t col)
     messageStyle.paddingH = (int32_t)gM;
 
     gInput.ShowTooltip(msg, messageStyle);
+}
+
+void ImageViewer::ShowImageSelectionPanel(ZRect rSelection)
+{
+
+    ZWin* pTop = GetTopWindow();
+    assert(pTop);
+
+    ZWinPanel* pWinPanel = (ZWinPanel*)pTop->GetChildWindowByWinName("image_selection_panel");
+    if (pWinPanel)
+    {
+        pTop->ChildDelete(pWinPanel);
+    }
+
+    string sClearMsg = "{clear_selection;target=" + mpWinImage->GetTargetName() + "}";
+    string sPanelLayout;
+    sPanelLayout = "<panel close_on_button=1 border=1 spacers=1>";
+    sPanelLayout += "<row><svgbutton id=cancel svgpath=%apppath%/res/exit.svg msg=" + sClearMsg + "/>";
+    sPanelLayout += "<svgbutton id=save svgpath=%apppath%/res/save.svg msg=\"{save_selection;r=" + RectToString(rSelection) + ";target=" + GetTargetName() + "}" + sClearMsg + "\" tooltip=\"Save selection\"/>";
+    sPanelLayout += "<svgbutton id=copy svgpath=%apppath%/res/copy.svg msg=\"{copy_selection;r=" + RectToString(rSelection) + ";target=" + GetTargetName() + "}" + sClearMsg + "\" tooltip=\"Copy selection to clipboard\"/></row>";
+    sPanelLayout += "</panel>";
+
+    pWinPanel = new ZWinPanel();
+    pWinPanel->msWinName = "image_selection_panel";
+    pWinPanel->mPanelLayout = sPanelLayout;
+    ZRect rPanel(gM * 6, gM * 2);
+    rPanel.OffsetRect(gInput.lastMouseMove);
+    rPanel.OffsetRect(-rPanel.Width(), 0);
+    pWinPanel->SetArea(rPanel);
+
+    pTop->ChildAdd(pWinPanel);
+}
+
+
+void ImageViewer::CopySelection(ZRect rSelection)
+{
+    ZBuffer imageSelection;
+    imageSelection.Init(rSelection.Width(), rSelection.Height());
+    imageSelection.Blt(mpWinImage->mpImage.get(), rSelection, imageSelection.GetArea(), 0, ZBuffer::kAlphaSource);
+    if (gInput.SetClipboard(&imageSelection))
+        ShowTooltipMessage("Copied", 0x88008800);
+}
+
+void ImageViewer::SaveSelection(ZRect rSelection)
+{
+    string sFolder;
+    gRegistry.Get("ZImageViewer", "selectionsave", sFolder);
+
+    filesystem::path fileName(EntryFromIndex(mViewingIndex)->filename.filename());
+    fileName.replace_extension(".png");
+    string sFilename = fileName.string();
+
+    if (ZWinFileDialog::ShowSaveDialog("Images", "*.png;*.jpg;*.jpeg;*.tga;*.bmp;*.hdr", sFilename, sFolder))
+    {
+        ZBuffer imageSelection;
+        imageSelection.Init(rSelection.Width(), rSelection.Height());
+        imageSelection.Blt(mpWinImage->mpImage.get(), rSelection, imageSelection.GetArea(), 0, ZBuffer::kAlphaSource);
+
+//#define RESIZE
+#ifdef RESIZE
+
+        const int kSize = 1024;
+
+        ZBuffer resizedimage;
+        resizedimage.Init(kSize, kSize);
+        resizedimage.Fill(0xff000000, &resizedimage.GetArea());
+
+        resizedimage.BltScaled(&imageSelection);
+
+        resizedimage.SaveBuffer(sFilename);
+#else
+        imageSelection.SaveBuffer(sFilename);
+#endif
+        filesystem::path folder(sFilename);
+        gRegistry.Set("ZImageViewer", "selectionsave", folder.parent_path().string());
+    }
+
+    InvalidateChildren();
 }
 
 void ImageViewer::ShowHelpDialog()
@@ -1305,7 +1359,7 @@ bool ImageViewer::Init()
         }
         else
         {
-            gMessageSystem.Post("show_help", this);
+            gMessageSystem.Post("{show_help}", this);
         }
 
 
@@ -1405,7 +1459,7 @@ void ImageViewer::UpdateControlPanel()
 
     int32_t nButtonPadding = (int32_t)(rButton.Width() / 8);
     
-    pBtn = mpPanel->SVGButton("loadimg", sAppPath + "/res/openfile.svg", ZMessage("loadimg", this));
+    pBtn = mpPanel->SVGButton("loadimg", sAppPath + "/res/openfile.svg", ZMessage("{loadimg}", this));
     pBtn->msTooltip = "Load Image";
     pBtn->msWinGroup = "File";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
@@ -1414,7 +1468,7 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.OffsetRect(rButton.Width(), 0);
 
-    pBtn = mpPanel->SVGButton("saveimg", sAppPath + "/res/save.svg", ZMessage("saveimg", this));
+    pBtn = mpPanel->SVGButton("saveimg", sAppPath + "/res/save.svg", ZMessage("{saveimg}", this));
     pBtn->msWinGroup = "File";
     pBtn->msTooltip = "Save Image";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
@@ -1424,7 +1478,7 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.OffsetRect(rButton.Width(), 0);
 
-    pBtn = mpPanel->SVGButton("gotofolder", sAppPath + "/res/gotofolder.svg", ZMessage("gotofolder", this));
+    pBtn = mpPanel->SVGButton("gotofolder", sAppPath + "/res/gotofolder.svg", ZMessage("{gotofolder}", this));
     pBtn->msTooltip = "Browse folder with current image";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
@@ -1434,7 +1488,7 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width(), 0);
 
 
-    pBtn = mpPanel->SVGButton("copylink", sAppPath + "/res/linkcopy.svg", ZMessage("copylink", this));
+    pBtn = mpPanel->SVGButton("copylink", sAppPath + "/res/linkcopy.svg", ZMessage("{copylink}", this));
     pBtn->msTooltip = "Copy path to image to clipboard";
     pBtn->mSVGImage.style.paddingH = nButtonPadding;
     pBtn->mSVGImage.style.paddingV = nButtonPadding;
@@ -1451,9 +1505,9 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(rButton.Width() + gSpacer, 0);
 
     string sPanelLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
-    sPanelLayout += "<row><button    id=undo caption=undo msg=undo;target=" + GetTargetName() + " tooltip=\"Undo last move or copy command.\"/></row>";
-    sPanelLayout += "<row><svgbutton id=move svgpath=%apppath%/res/movefile.svg msg=set_move_folder;target=" + GetTargetName() + " tooltip=\"Select a Move Folder for quick-move with 'M'\"/></row>";
-    sPanelLayout += "<row><svgbutton id=copy svgpath=%apppath%/res/copyfile.svg msg=set_copy_folder;target=" + GetTargetName() + " tooltip=\"Select a Copy Folder for quick-copy with 'C'\"/></row>";
+    sPanelLayout += "<row><button    id=undo caption=undo msg={undo;target=" + GetTargetName() + "} tooltip=\"Undo last move or copy command.\"/></row>";
+    sPanelLayout += "<row><svgbutton id=move svgpath=%apppath%/res/movefile.svg msg={set_move_folder;target=" + GetTargetName() + "} tooltip=\"Select a Move Folder for quick-move with 'M'\"/></row>";
+    sPanelLayout += "<row><svgbutton id=copy svgpath=%apppath%/res/copyfile.svg msg={set_copy_folder;target=" + GetTargetName() + "} tooltip=\"Select a Copy Folder for quick-copy with 'C'\"/></row>";
     sPanelLayout += "</panel>";
 
     ZWinPopupPanelBtn* pPopupBtn = mpPanel->PopupPanelButton("manage_menu", sAppPath + "/res/manage.svg", sPanelLayout, ZFPoint(1.0, 3.0),  ZGUI::ePosition::ICOB);
@@ -1465,10 +1519,10 @@ void ImageViewer::UpdateControlPanel()
 
 
     sPanelLayout = "<panel hide_on_mouse_exit=1 border=1 spacers=1>";
-    sPanelLayout += "<row><svgbutton id=rot_left svgpath=%apppath%/res/rot_left.svg msg=rotate_left;target=" + GetTargetName() + " tooltip=\"90º Left\"/></row>";
-    sPanelLayout += "<row><svgbutton id=rot_right svgpath=%apppath%/res/rot_right.svg msg=rotate_right;target=" + GetTargetName() + " tooltip=\"90º Right\"/></row>";
-    sPanelLayout += "<row><svgbutton id=flip_h svgpath=%apppath%/res/fliph.svg msg=flipH;target=" + GetTargetName() + " tooltip=\"Flip Horizontal\"/></row>";
-    sPanelLayout += "<row><svgbutton id=flip_v svgpath=%apppath%/res/flipv.svg msg=flipV;target=" + GetTargetName() + " tooltip=\"Flip Vertical\"/></row>";
+    sPanelLayout += "<row><svgbutton id=rot_left svgpath=%apppath%/res/rot_left.svg msg={rotate_left;target=" + GetTargetName() + "} tooltip=\"90º Left\"/></row>";
+    sPanelLayout += "<row><svgbutton id=rot_right svgpath=%apppath%/res/rot_right.svg msg={rotate_right;target=" + GetTargetName() + "} tooltip=\"90º Right\"/></row>";
+    sPanelLayout += "<row><svgbutton id=flip_h svgpath=%apppath%/res/fliph.svg msg={flipH;target=" + GetTargetName() + "} tooltip=\"Flip Horizontal\"/></row>";
+    sPanelLayout += "<row><svgbutton id=flip_v svgpath=%apppath%/res/flipv.svg msg={flipV;target=" + GetTargetName() + "} tooltip=\"Flip Vertical\"/></row>";
     sPanelLayout += "</panel>";
 
     pPopupBtn = mpPanel->PopupPanelButton("rotate_menu", sAppPath + "/res/rotate.svg", sPanelLayout, ZFPoint(1.0, 4.0), ZGUI::ePosition::ICOB);
@@ -1518,7 +1572,7 @@ void ImageViewer::UpdateControlPanel()
     string sCaption;
 
     // All
-    ZWinCheck* pCheck = mpPanel->Toggle("filterall", nullptr, "", ZMessage("filter_all", this), "");
+    ZWinCheck* pCheck = mpPanel->Toggle("filterall", nullptr, "", ZMessage("{filter_all}", this), "");
     pCheck->SetState(mFilterState == kAll, false);
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mCheckedStyle.look.colTop = 0xffffffff;
@@ -1536,7 +1590,7 @@ void ImageViewer::UpdateControlPanel()
     // Favorites
     rButton.OffsetRect(rButton.Width(), 0);
 
-    pCheck = mpPanel->Toggle("filterfavs", nullptr, "", ZMessage("filter_favs", this), "");
+    pCheck = mpPanel->Toggle("filterfavs", nullptr, "", ZMessage("{filter_favs}", this), "");
     pCheck->mbEnabled = !mFavImageArray.empty();
     pCheck->SetState(mFilterState == kFavs, false);
     pCheck->mCheckedStyle = filterButtonStyle;
@@ -1555,7 +1609,7 @@ void ImageViewer::UpdateControlPanel()
     // Ranked
     rButton.OffsetRect(rButton.Width(), 0);
 
-    pCheck = mpPanel->Toggle("filterranked", nullptr, "ranked", ZMessage("filter_ranked", this), "");
+    pCheck = mpPanel->Toggle("filterranked", nullptr, "ranked", ZMessage("{filter_ranked}", this), "");
     pCheck->mCheckedStyle = filterButtonStyle;
     pCheck->mbEnabled = !mRankedArray.empty();
     pCheck->mCheckedStyle.look.colTop = 0xffe1b131;
@@ -1571,7 +1625,7 @@ void ImageViewer::UpdateControlPanel()
 
     // ToBeDeleted
     rButton.OffsetRect(rButton.Width(), 0);
-    pCheck = mpPanel->Toggle("filterdel", nullptr, "", ZMessage("filter_del", this), "");
+    pCheck = mpPanel->Toggle("filterdel", nullptr, "", ZMessage("{filter_del}", this), "");
     pCheck->mbEnabled = !mToBeDeletedImageArray.empty();
     pCheck->SetState(mFilterState == kToBeDeleted, false);
     pCheck->mCheckedStyle = filterButtonStyle;
@@ -1589,7 +1643,7 @@ void ImageViewer::UpdateControlPanel()
 
     rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
     rButton.right = rButton.left + rButton.Width() * 3;
-    mpDeleteMarkedButton = mpPanel->Button("show_confirm", "delete marked", ZMessage("show_confirm", this));
+    mpDeleteMarkedButton = mpPanel->Button("show_confirm", "delete marked", ZMessage("{show_confirm}", this));
     mpDeleteMarkedButton->SetVisible(mFilterState == kToBeDeleted);
     mpDeleteMarkedButton->mCaption.sText = "delete marked";
     mpDeleteMarkedButton->msTooltip = "Show confirmation of images marked for deleted.";
@@ -1610,7 +1664,7 @@ void ImageViewer::UpdateControlPanel()
 
     ZRect rExit(nControlPanelSide, nControlPanelSide);
     rExit = ZGUI::Arrange(rExit, mAreaLocal, ZGUI::RT);
-    pBtn = mpPanel->SVGButton("quit", sAppPath + "/res/exit.svg", ZMessage("quit", this));
+    pBtn = mpPanel->SVGButton("quit", sAppPath + "/res/exit.svg", ZMessage("{quit}", this));
     pBtn->msTooltip = "Exit";
     pBtn->SetArea(rExit);
     pBtn->SetVisible(!gGraphicSystem.mbFullScreen);
@@ -1622,14 +1676,14 @@ void ImageViewer::UpdateControlPanel()
     rButton.OffsetRect(-nControlPanelSide, 0);
 
 
-    pBtn = mpPanel->SVGButton("toggle_fullscreen", sAppPath + "/res/fullscreen.svg", ZMessage("toggle_fullscreen"));
+    pBtn = mpPanel->SVGButton("toggle_fullscreen", sAppPath + "/res/fullscreen.svg", ZMessage("{toggle_fullscreen}"));
     pBtn->msWinGroup = "View";
     pBtn->SetArea(rButton);
     pBtn->msTooltip = "Toggle Fullscreen";
 
     rButton.OffsetRect(-rButton.Width(), 0);
 
-    pCheck = mpPanel->Toggle("qualityrender", &mbSubsample, "", ZMessage("invalidate", this), ZMessage("invalidate", this));
+    pCheck = mpPanel->Toggle("qualityrender", &mbSubsample, "", ZMessage("{invalidate}", this), ZMessage("{invalidate}", this));
     pCheck->mSVGImage.Load(sAppPath + "/res/subpixel.svg");
     pCheck->SetArea(rButton);
     pCheck->msTooltip = "Quality Render";
@@ -1637,7 +1691,7 @@ void ImageViewer::UpdateControlPanel()
 
 
     rButton.OffsetRect(-rButton.Width(), 0);
-    pBtn = mpPanel->Button("show_help", "?", ZMessage("show_help", this));
+    pBtn = mpPanel->Button("show_help", "?", ZMessage("{show_help}", this));
     pBtn->mCaption.style = filterButtonStyle;
     pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
     pBtn->SetArea(rButton);
@@ -1648,7 +1702,7 @@ void ImageViewer::UpdateControlPanel()
     // Contest Button
     rButton.right = rButton.left + rButton.Width() * 4;
     rButton.OffsetRect(-rButton.Width()-gSpacer*2, 0);
-    mpShowContestButton = mpPanel->Button("show_contest", "Rank Photos", ZMessage("show_contest", this));
+    mpShowContestButton = mpPanel->Button("show_contest", "Rank Photos", ZMessage("{show_contest}", this));
     mpShowContestButton->mCaption.style = gStyleButton;
     mpShowContestButton->mCaption.style.pos = ZGUI::C;
     mpShowContestButton->SetArea(rButton);
@@ -1673,7 +1727,7 @@ void ImageViewer::UpdateControlPanel()
     if (sCurVersion != sAvailVersion)
     {
         rButton.OffsetRect(-rButton.Width() - gSpacer * 2, 0);
-        pBtn = mpPanel->Button("download", "New Version", ZMessage("download", this));
+        pBtn = mpPanel->Button("download", "New Version", ZMessage("{download}", this));
         pBtn->mCaption.style = gStyleButton;
         pBtn->mCaption.style.look.colTop = 0xffff0088;
         pBtn->mCaption.style.look.colTop = 0xff8800ff;
@@ -2183,7 +2237,7 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
 
     if (bErrors)
     {
-        gMessageSystem.Post("toggleconsole");
+        gMessageSystem.Post("{toggleconsole}");
         return false;
     }
 

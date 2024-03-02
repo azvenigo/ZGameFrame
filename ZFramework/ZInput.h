@@ -35,7 +35,9 @@ public:
 
     bool        ShowTooltip(const std::string& tooltip, const ZGUI::Style& style);
 
-    void        SetClipboard(const std::string& text);
+    bool        SetClipboard(const std::string& text);
+    bool        SetClipboard(class ZBuffer* pBuffer);
+
     std::string GetClipboard();
 
     uint8_t     keyState[256];

@@ -107,7 +107,7 @@ bool ZWinFolderLabel::OnMouseOut()
 bool ZWinFolderLabel::OnMouseDownL(int64_t x, int64_t y)
 {
     if ((mBehavior&kSelectable)!=0)
-        gMessageSystem.Post("scan", this, "folder", mMouseOverSubpath.string());
+        gMessageSystem.Post("{scan}", this, "folder", mMouseOverSubpath.string());
 
     return ZWin::OnMouseDownL(x, y);
 }
@@ -246,7 +246,7 @@ bool ZWinFolderSelector::Init()
 
         mpOpenFolderBtn = new ZWinSizablePushBtn();
         mpOpenFolderBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
-        mpOpenFolderBtn->msButtonMessage = ZMessage("openfolder", this);
+        mpOpenFolderBtn->msButtonMessage = ZMessage("{openfolder}", this);
         mpOpenFolderBtn->msTooltip = "Open Folder";
         ChildAdd(mpOpenFolderBtn);
         int64_t nSide = gM;
@@ -279,7 +279,7 @@ bool ZWinFolderSelector::Paint()
 
 bool ZWinFolderSelector::OnMouseDownL(int64_t x, int64_t y)
 {
-    gMessageSystem.Post("kill_child", "name", msWinName);
+    gMessageSystem.Post("{kill_child}", "name", msWinName);
     return ZWin::OnMouseDownL(x, y);
 }
 
@@ -330,7 +330,7 @@ bool ZWinFolderSelector::ScanFolder(const std::filesystem::path& folder)
             if (drives & 1)
             {
 //                std::cout << "Drive: " << letter << ":\\" << std::endl;
-                sLine += "<text link=" + ZMessage("scan;folder=" + string(1, letter) + ":\\", mpLabel).ToString() + "> [" + string(1, letter) + ":]</text>";
+                sLine += "<text link=" + ZMessage("{scan;folder=" + string(1, letter) + ":\\", mpLabel).ToString() + "}> [" + string(1, letter) + ":]</text>";
                 //mpFolderList->AddMultiLine(string(1, letter) + ":\\" , mStyle, );
             }
             drives >>= 1;
@@ -349,7 +349,7 @@ bool ZWinFolderSelector::ScanFolder(const std::filesystem::path& folder)
             if (std::filesystem::is_directory(entry.status()))
             {
                 std::cout << entry.path() << std::endl;
-                sLine = "<line><text link=" + ZMessage("scan;folder=" + entry.path().string(), this).ToString() + ">" + entry.path().filename().string() + "</text></line>";
+                sLine = "<line><text link=" + ZMessage("{scan;folder=" + entry.path().string(), this).ToString() + "}>" + entry.path().filename().string() + "</text></line>";
                 mpFolderList->AddLineNode(sLine);
             }
         }
