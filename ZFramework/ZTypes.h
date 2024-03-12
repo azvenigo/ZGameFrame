@@ -379,7 +379,7 @@ public:
 		top += y;
 		bottom += y;
 	}
-    void OffsetRect(ZPoint& p)
+    void OffsetRect(const ZPoint& p)
 	{
 		OffsetRect(p.x, p.y);
 	}

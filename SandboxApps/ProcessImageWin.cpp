@@ -961,8 +961,8 @@ bool cProcessImageWin::Init()
 
     pCP->Init();
 
-    pCP->Button("loadimages", "Load Image", "loadimages;target=imageprocesswin");
-    pCP->Button("clearall", "Close All Images", "clearall;target=imageprocesswin");
+    pCP->Button("loadimages", "Load Image", "{loadimages;target=imageprocesswin}");
+    pCP->Button("clearall", "Close All Images", "{clearall;target=imageprocesswin}");
 
     pCP->AddSpace(32);
 
@@ -972,26 +972,26 @@ bool cProcessImageWin::Init()
 
     pCP->Slider("processpixelradius", &mnProcessPixelRadius, 1, 50, 1, 0.25, "", true, false);
 
-    pCP->Button("radiusblur", "Blur", "radiusblur;target=imageprocesswin");
-    pCP->Button("stackimages", "Stack", "stackimages;target=imageprocesswin");
-    pCP->Button("computecontrast", "Contrast", "computecontrast;target=imageprocesswin");
+    pCP->Button("radiusblur", "Blur", "{radiusblur;target=imageprocesswin}");
+    pCP->Button("stackimages", "Stack", "{stackimages;target=imageprocesswin}");
+    pCP->Button("computecontrast", "Contrast", "{computecontrast;target=imageprocesswin}");
 
     pCP->AddSpace(32);
     pCP->Caption("ops","Ops");
-    pCP->Button("negative", "Negative", "negative;target=imageprocesswin");
-    pCP->Button("mono", "Monochrome", "mono;target=imageprocesswin");
-    pCP->Button("resize", "resize_256x256", "resize;target=imageprocesswin");
+    pCP->Button("negative", "Negative", "{negative;target=imageprocesswin}");
+    pCP->Button("mono", "Monochrome", "{mono;target=imageprocesswin}");
+    pCP->Button("resize", "resize_256x256", "{resize;target=imageprocesswin}");
 
 
     pCP->AddSpace(64);
 
     pCP->Caption("experiments","Experiments");
-    pCP->Button("computegradients", "compute gradients", "computegradients;target=imageprocesswin");
+    pCP->Button("computegradients", "compute gradients", "{computegradients;target=imageprocesswin}");
     pCP->Slider("gradientlevels", &mnGradientLevels, 1, 50, 1, 0.25, "", true, false);
 
     pCP->AddSpace(16);
 
-    pCP->Button("floatcolorsandbox", "float color sandbox", "floatcolorsandbox;target=imageprocesswin");
+    pCP->Button("floatcolorsandbox", "float color sandbox", "{floatcolorsandbox;target=imageprocesswin}");
     pCP->Slider("subdivisionlevels", &mnSubdivisionLevels, 1, 512, 1, 0.25, "", true, false);
 
 

@@ -213,8 +213,8 @@ void ZChoosePGNWin::RefreshList()
     size_t nCount = 0;
     for (auto entry : mPGNEntries)
     {
-        //string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(gDefaultTextFont) + " position=lb link=selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
-        string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(fp) + " position=lb link=selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
+        //string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(gDefaultTextFont) + " position=lb link={selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
+        string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(fp) + " position=lb link={selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
         nCount++;
 
         if ( msFilter.empty() ||  SH::Contains(entry.first, msFilter, false) || SH::Contains(entry.second, msFilter, false)) // if empty filter or either caption or pgn contents include filter text (case insensitive)
@@ -446,8 +446,8 @@ void ZPGNWin::UpdateView()
             if ((mCurrentHalfMoveNumber+1) % 2 == 0)
             {
                 // highlight white
-                sMoveLine = "<line wrap=0><text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=lb link=setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove - 1) + ">" + SH::FromInt(nMove) + ". [" + move.whiteAction + "]</text>";
-                sMoveLine += "<text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff000000 color2=0xff000000 position=rb link=setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove) + ">" + move.blackAction + "</text></line>";
+                sMoveLine = "<line wrap=0><text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=lb link={setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove - 1) + "}>" + SH::FromInt(nMove) + ". [" + move.whiteAction + "]</text>";
+                sMoveLine += "<text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff000000 color2=0xff000000 position=rb link={setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove) + "}>" + move.blackAction + "</text></line>";
 
                 if (!move.whiteComment.empty())
                     gMessageSystem.Post("{statusmessage}", mpParentWin, "message", SH::FromInt(nMove) + ". [" + move.whiteAction + "] " + move.whiteComment, "col", 0xff0066aa);
@@ -456,8 +456,8 @@ void ZPGNWin::UpdateView()
             else
             {
                 // highlight black
-                sMoveLine = "<line wrap=0><text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xffffffff color2=0xffffffff position=lb link=setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove - 1) + ">" + SH::FromInt(nMove) + ". " + move.whiteAction + "</text>";
-                sMoveLine += "<text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=rb link=setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove) + ">[" + move.blackAction + "]</text></line>";
+                sMoveLine = "<line wrap=0><text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xffffffff color2=0xffffffff position=lb link={setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove - 1) + "}>" + SH::FromInt(nMove) + ". " + move.whiteAction + "</text>";
+                sMoveLine += "<text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=rb link={setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove) + "}>[" + move.blackAction + "]</text></line>";
 
                 if (!move.blackComment.empty())
                     gMessageSystem.Post("{statusmessage}", mpParentWin, "message", SH::FromInt(nMove) + "... [" + move.blackAction + "] " + move.blackComment, "col", 0xff0066aa);
@@ -468,8 +468,8 @@ void ZPGNWin::UpdateView()
         else
         {
 
-            sMoveLine = "<line wrap=0><text fontparams=" + SH::URL_Encode(mMoveFont) + " color=0xffffffff color2=0xffffffff position=lb link=setmove;target=pgnwin;halfmove="+ SH::FromInt(nHalfMove-1) +">" + SH::FromInt(nMove) + ". " + move.whiteAction + "</text>";
-            sMoveLine += "<text fontparams=" + SH::URL_Encode(mMoveFont) + " color=0xff000000 color2=0xff000000 position=rb link=setmove;target=pgnwin;halfmove="+SH::FromInt(nHalfMove)+">" + move.blackAction + "</text></line>";
+            sMoveLine = "<line wrap=0><text fontparams=" + SH::URL_Encode(mMoveFont) + " color=0xffffffff color2=0xffffffff position=lb link={setmove;target=pgnwin;halfmove="+ SH::FromInt(nHalfMove-1) +"}>" + SH::FromInt(nMove) + ". " + move.whiteAction + "</text>";
+            sMoveLine += "<text fontparams=" + SH::URL_Encode(mMoveFont) + " color=0xff000000 color2=0xff000000 position=rb link={setmove;target=pgnwin;halfmove="+SH::FromInt(nHalfMove)+"}>" + move.blackAction + "</text></line>";
             mpMovesWin->AddLineNode(sMoveLine);
         }
 
@@ -966,7 +966,8 @@ bool ZChessWin::Paint()
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gSpacer, gSpacer);
 
             mpSurface->Fill(0xffffffff, &rMoveLabel);
-            pLabelFont->DrawTextParagraph(mpSurface.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center));
+            ZGUI::Style style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Center);
+            pLabelFont->DrawTextParagraph(mpSurface.get(), sLabel, rMoveLabel, &style);
         }
         else
         {
@@ -982,7 +983,8 @@ bool ZChessWin::Paint()
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gSpacer, gSpacer);
             mpSurface->Fill(0xff000000, &rMoveLabel);
-            pLabelFont->DrawTextParagraph(mpSurface.get(), sLabel, rMoveLabel, &ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::Center));
+            ZGUI::Style style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::Center);
+            pLabelFont->DrawTextParagraph(mpSurface.get(), sLabel, rMoveLabel, &style);
         }
     }
 
@@ -1090,7 +1092,8 @@ void ZChessWin::DrawBoard()
                 nSquareColor = COL::AlphaBlend_BlendAlpha(nSquareColor, 0xff0088ff, 128);
 
 
-            mpSurface->Fill(nSquareColor, &SquareArea(grid));
+            ZRect r(SquareArea(grid));
+            mpSurface->Fill(nSquareColor, &r);
 
             if (mbShowAttackCount)
             {
@@ -1114,10 +1117,11 @@ void ZChessWin::DrawBoard()
 
             if (c)
             {
+                ZRect rSquare(SquareArea(grid));
                 if (mDraggingPiece && mDraggingSourceGrid == grid)
-                    mpSurface->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), SquareArea(grid), 64);
+                    mpSurface->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), rSquare, 64);
                 else
-                    mpSurface->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), SquareArea(grid), 255);
+                    mpSurface->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), rSquare, 255);
             }
         }
     }

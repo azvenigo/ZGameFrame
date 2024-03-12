@@ -95,7 +95,7 @@ namespace ZGUI
         if (row > mRows.size())
             return;
 
-        auto& rowIterator = mRows.begin();
+        auto&& rowIterator = mRows.begin();
         int32_t r = 0;
         for (r = 0; r < row; r++)
         {
@@ -103,7 +103,7 @@ namespace ZGUI
         }
 
         tCellArray& rowArray = *rowIterator;
-        for (auto& cell : rowArray)
+        for (auto&& cell : rowArray)
         {
             cell.style = style;
         }
@@ -228,7 +228,7 @@ namespace ZGUI
         if (row > mRows.size() || col > mColumns)
             return nullptr;
 
-        auto& rowIterator = mRows.begin();
+        auto&& rowIterator = mRows.begin();
         int32_t r = 0;
         for (r = 0; r < row; r++)
         {

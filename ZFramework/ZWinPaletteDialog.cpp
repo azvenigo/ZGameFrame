@@ -335,9 +335,12 @@ bool ZWinPaletteDialog::Paint()
             ZGUI::EditableColor& col = (*mpColorMap)[i];
             ZGUI::EditableColor& originalCol = mOriginalColorMap[i];
 
-            mpSurface->Fill(col.col, &PaletteRect(i, kEdited)); // cur color
-            mpSurface->Fill(originalCol.col, &PaletteRect(i, kOriginal)); // original.col
-            mpSurface->Fill(originalCol.default_color, &PaletteRect(i, kDefault)); // default color
+            ZRect re = PaletteRect(i, kEdited);
+            ZRect ro = PaletteRect(i, kOriginal);
+            ZRect rd = PaletteRect(i, kDefault);
+            mpSurface->Fill(col.col, &re); // cur color
+            mpSurface->Fill(originalCol.col, &ro); // original.col
+            mpSurface->Fill(originalCol.default_color, &rd); // default color
 
             mpSurface->DrawRectAlpha(0x88000000, PaletteRect(i, kEdited));
             mpSurface->DrawRectAlpha(0x88000000, PaletteRect(i, kOriginal));

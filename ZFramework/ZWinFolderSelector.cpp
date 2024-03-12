@@ -48,7 +48,8 @@ bool ZWinFolderLabel::Paint()
     if (mrMouseOver.Area() > 0)
     {
         mpSurface->FillAlpha(0x88FFFFFF, &mrMouseOver);
-        mStyle.Font()->DrawText(mpSurface.get(), mMouseOverSubpath.string(), r, &ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, gDefaultHighlight, gDefaultHighlight));
+        ZGUI::ZTextLook look(ZGUI::ZTextLook::kShadowed, gDefaultHighlight, gDefaultHighlight);
+        mStyle.Font()->DrawText(mpSurface.get(), mMouseOverSubpath.string(), r, &look);
         //        mpSurface->DrawRectAlpha(0x88ffffff, mrMouseOver);
     }
 

@@ -162,7 +162,7 @@ bool TextTestWin::Init()
     for (int i = 0; i < gWindowsFontFacenames.size(); i++)
     {
         string sMessage;
-        Sprintf(sMessage, "link=setcustomfont;fontindex=%d;target=TextTestWin", i);
+        Sprintf(sMessage, "link={setcustomfont;fontindex=%d;target=TextTestWin}", i);
 
         string sLine("<line wrap=0><text color=0xffffffff color2=0xffffffff deco=normal ");
 //        sLine += sEncodedFontParams;

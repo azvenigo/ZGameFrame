@@ -75,7 +75,7 @@ private:
 #ifdef RENDER_SPHERES
     tZBufferPtr mpSpheresRender;
     void UpdateSphereCount();
-    void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface);
+    void RenderSpheres(tZBufferPtr pSurface);
 //    static Z3D::Vec3d   TraceSpheres(const Z3D::Vec3d& rayorig, const Z3D::Vec3d& raydir, const int& depth, const std::vector<class Sphere>& spheres);
 
     std::vector<class Sphere> mSpheres;

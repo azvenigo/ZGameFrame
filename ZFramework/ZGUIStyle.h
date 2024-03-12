@@ -71,7 +71,7 @@ namespace ZGUI
     {
     public:
         Style(const ZFontParams& _fp = {}, const ZTextLook& _look = {}, ePosition _pos = ePosition::Unknown, int32_t _paddingH = 0, int32_t _paddingV = 0, uint32_t _bgCol = 0, bool _wrap = false);
-        Style::Style(const std::string& s);
+        Style(const std::string& s);
 
         tZFontPtr Font();
 

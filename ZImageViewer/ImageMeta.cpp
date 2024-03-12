@@ -273,7 +273,8 @@ tZBufferPtr ImageMetaEntry::Thumbnail()
         mpThumb->Init(256, 256);
         mpThumb->Fill(0xff000000 | rand());
 
-        gDefaultGroupingStyle.Font()->DrawTextA(mpThumb.get(), std::filesystem::path(filename).filename().string(), mpThumb->GetArea(), &ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff));
+        ZGUI::ZTextLook look(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff);
+        gDefaultGroupingStyle.Font()->DrawTextA(mpThumb.get(), std::filesystem::path(filename).filename().string(), mpThumb->GetArea(), &look);
     }
 
     return mpThumb;

@@ -43,7 +43,7 @@ ZTransformation& ZTransformation::operator=(const ZTransformation& trans)
 	return *this;
 }
 
-bool ZTransformation::operator==(const ZTransformation& trans)
+bool ZTransformation::operator==(const ZTransformation& trans) const
 {
 	return (mPosition 	== trans.mPosition &&
 			mScale    	== trans.mScale &&

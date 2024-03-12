@@ -816,7 +816,7 @@ Vec3d TraceSpheres(
 
 
 
-void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest, int64_t nDepth)
+void ThreadTrace(ZRect rArea, std::vector<Sphere>& spheres, ZBuffer* pDest, int64_t nDepth)
 {
     ZRect rFullArea(pDest->GetArea());
     double invWidth = 1 / double(rFullArea.Width()), invHeight = 1 / double(rFullArea.Height());
@@ -844,11 +844,11 @@ void ThreadTrace(ZRect rArea, std::vector<class Sphere>& spheres, ZBuffer* pDest
 // trace it and return a color. If the ray hits a sphere, we return the color of the
 // sphere at the intersection point, else we return the background color.
 //[/comment]
-void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface)
+void Z3DTestWin::RenderSpheres(tZBufferPtr pSurface)
 {
     int64_t width = mnRenderSize;
     int64_t height = mnRenderSize;
-    mpSurface->Init(width, height);
+    pSurface->Init(width, height);
 
 
     size_t nThreadCount = std::thread::hardware_concurrency();
@@ -866,7 +866,8 @@ void Z3DTestWin::RenderSpheres(tZBufferPtr mpSurface)
         if (i == nThreadCount - 1)
             nBottom = height;
 
-        workers.emplace_back(std::thread(ThreadTrace, ZRect(0, nTop, width, nBottom), mSpheres, mpSurface.get(), mnRayDepth));
+        ZRect r(0, nTop, width, nBottom);
+        workers.emplace_back(std::thread(ThreadTrace, (ZRect)r, std::ref(mSpheres), (ZBuffer*)mpSurface.get(), mnRayDepth));
 
         nTop += nLines;
     }

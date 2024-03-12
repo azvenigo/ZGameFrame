@@ -12,7 +12,7 @@ public:
 	ZTransformation(const ZTransformation& transform);
 
 	ZTransformation&	operator=(const ZTransformation& trans);
-	bool				operator==(const ZTransformation& trans);
+	bool				operator==(const ZTransformation& trans) const;
 
     std::string         ToString();
 	void				FromString(std::string sRaw);
