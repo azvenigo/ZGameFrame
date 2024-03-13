@@ -10,34 +10,34 @@ using namespace std;
 
 extern shared_ptr<ZBuffer>  gSliderThumbVertical;
 extern shared_ptr<ZBuffer>  gSliderBackground;
-extern ZRect            	grSliderBgEdge;
-extern ZRect				grSliderThumbEdge;
+extern ZRect                grSliderBgEdge;
+extern ZRect                grSliderThumbEdge;
 extern shared_ptr <ZBuffer> gDimRectBackground;
 extern shared_ptr<ZBuffer>  gDimRectBackground;
-extern ZRect				grDimRectEdge;
+extern ZRect                grDimRectEdge;
 
 const int64_t               kSliderWidth = 20;
 const ZGUI::ePosition       kDefaultTextPosition = ZGUI::LB; // we use bottom left by default in case there are multiple size fonts per text line
 const ZGUI::ZTextLook       kDefaultLook = { ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000 };
 
 
-const string				ksLineTag("line");
-const string				ksTextTag("text");
-const string				ksCaptionTag("caption");
-const string				ksFontParamsTag("fontparams");
-const string				ksColorTag("color");
-const string				ksColor2Tag("color2");
-const string				ksPositionTag("position");
-const string				ksDecoTag("deco");
-const string				ksWrapTag("wrap");
-const string				ksLinkTag("link");
+const string                ksLineTag("line");
+const string                ksTextTag("text");
+const string                ksCaptionTag("caption");
+const string                ksFontParamsTag("fontparams");
+const string                ksColorTag("color");
+const string                ksColor2Tag("color2");
+const string                ksPositionTag("position");
+const string                ksDecoTag("deco");
+const string                ksWrapTag("wrap");
+const string                ksLinkTag("link");
 const string                ksImageTag("img");
 
-const string				ksUnderlineLinksTag("underline_links");
-const string				ksTextFillColor("text_fill_color");
-const string				ksScrollable("text_scrollable");
-const string				ksTextEdgeTag("text_edge_blt");
-const string				ksTextScrollToBottom("text_scroll_to_bottom");
+const string                ksUnderlineLinksTag("underline_links");
+const string                ksTextFillColor("text_fill_color");
+const string                ksScrollable("text_scrollable");
+const string                ksTextEdgeTag("text_edge_blt");
+const string                ksTextScrollToBottom("text_scroll_to_bottom");
 const string                ksEvenColumns("even_columns");  // columns sized to widest element in that column 
 
 
@@ -271,6 +271,9 @@ void ZWinFormattedDoc::UpdateScrollbar()
     mrDocumentBorderArea.SetRect(mAreaLocal);
 
     mrDocumentArea.SetRect(mrDocumentBorderArea);
+//    mrDocumentArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+
+
     if (IsSet(kDrawBorder))
         mrDocumentArea.DeflateRect(6, 6);
 
@@ -307,6 +310,7 @@ void ZWinFormattedDoc::UpdateScrollbar()
 			}
 
             mpWinSlider->SetSliderValue(nHeight);
+
 		}
 	}
 	else
@@ -334,7 +338,6 @@ bool ZWinFormattedDoc::Paint()
 	//   rLocalTextBorderArea.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
 	ZRect rLocalDocArea(mrDocumentArea);
-    rLocalDocArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
@@ -725,7 +728,9 @@ bool ZWinFormattedDoc::ProcessLineNode(ZXMLNode* pTextNode)
 
 void ZWinFormattedDoc::ScrollTo(int64_t nSliderValue)
 {
-	if (mpWinSlider)
+    if (mpWinSlider)
+    {
         mpWinSlider->SetSliderValue(nSliderValue);
+    }
     Invalidate();
 }

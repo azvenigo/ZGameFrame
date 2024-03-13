@@ -42,7 +42,7 @@ bool TestWin::Init()
     ChildAdd(pWin);*/
 
     pWin = new ZWinSlider(&mnSliderVal);
-    pWin->SetArea(ZRect(2000, 100, 2060, 1150));
+    pWin->SetArea(ZRect(100, 100, 2000, 150));
     pWin->SetSliderRange(10, 20000, 1, 0.2);
     pWin->mBehavior = ZWinSlider::kDrawSliderValueAlways;
     ChildAdd(pWin);
