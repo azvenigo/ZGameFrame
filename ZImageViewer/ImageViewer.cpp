@@ -815,7 +815,7 @@ void ImageViewer::ShowHelpDialog()
     pForm->SetArea(rForm);
     pForm->SetScrollable();
 //    pForm->mDialogStyle = text;
-    pForm->Set(ZWinFormattedDoc::kBackgroundFill, true);
+    pForm->SetBehavior(ZWinFormattedDoc::kBackgroundFill, true);
     pForm->mStyle.look.colTop = 0xffffffff;
     pForm->mStyle.look.colBottom = 0xffffffff;
     pHelp->ChildAdd(pForm);
@@ -823,7 +823,7 @@ void ImageViewer::ShowHelpDialog()
 
 
     pForm->AddMultiLine("\nQuick Reference\n\n", sectionText);
-    pForm->Set(ZWinFormattedDoc::kEvenColumns|ZWinFormattedDoc::kBackgroundFill, true);
+    pForm->SetBehavior(ZWinFormattedDoc::kEvenColumns|ZWinFormattedDoc::kBackgroundFill, true);
     pForm->AddLineNode("<line><text>TAB</text><text>Toggle UI</text></line>");
 
     string sFormat = "<line wrap=0><text position=lb>%s</text><text position=lb>%s</text></line>";
@@ -1407,7 +1407,7 @@ void ImageViewer::UpdateControlPanel()
     
     if (mpPanel && mpPanel->GetArea().Width() == mAreaLocal.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
     {
-        bool bShow = mbShowUI;
+/*        bool bShow = mbShowUI;
         
         if (bShow && !mpPanel->mbVisible)
         {
@@ -1420,7 +1420,10 @@ void ImageViewer::UpdateControlPanel()
             mpPanel->mTransformOut = kSlideUp;
             mpPanel->TransformOut();
             return;
-        }
+        }*/
+
+        mpPanel->SetVisible(mbShowUI);
+        return;
     }
 
     // panel needs to be created or is wrong dimensions

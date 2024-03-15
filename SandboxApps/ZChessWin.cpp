@@ -88,8 +88,8 @@ bool ZChoosePGNWin::Init()
     mpGamesList = new ZWinFormattedDoc();
     mpGamesList->SetArea(rListbox);
     mpGamesList->mStyle.bgCol = gDefaultTextAreaFill;
-    mpGamesList->Set(ZWinFormattedDoc::kBackgroundFill, true);
-    mpGamesList->Set(ZWinFormattedDoc::kDrawBorder, true);
+    mpGamesList->SetBehavior(ZWinFormattedDoc::kBackgroundFill, true);
+    mpGamesList->SetBehavior(ZWinFormattedDoc::kDrawBorder, true);
     ChildAdd(mpGamesList);
 
     return ZWin::Init();
@@ -255,7 +255,7 @@ bool ZPGNWin::Init()
     mpGameTagsWin = new ZWinFormattedDoc();
     mpGameTagsWin->SetArea(rGameTags);
     mpGameTagsWin->mStyle.bgCol = gDefaultTextAreaFill;
-    mpGameTagsWin->Set(ZWinFormattedDoc::kDrawBorder|ZWinFormattedDoc::kBackgroundFill, true);
+    mpGameTagsWin->SetBehavior(ZWinFormattedDoc::kDrawBorder|ZWinFormattedDoc::kBackgroundFill, true);
 
     ChildAdd(mpGameTagsWin); 
 
@@ -335,7 +335,7 @@ bool ZPGNWin::Init()
     mpMovesWin = new ZWinFormattedDoc();
     mpMovesWin->SetArea(rMoves);
     mpMovesWin->mStyle.bgCol = 0xff444444;
-    mpMovesWin->Set(ZWinFormattedDoc::kDrawBorder| ZWinFormattedDoc::kBackgroundFill, true);
+    mpMovesWin->SetBehavior(ZWinFormattedDoc::kDrawBorder| ZWinFormattedDoc::kBackgroundFill, true);
 
     ChildAdd(mpMovesWin);
 
@@ -477,7 +477,7 @@ void ZPGNWin::UpdateView()
     }
 //    mpMovesWin->InvalidateChildren();
     mpMovesWin->SetScrollable();
-    mpMovesWin->Set(ZWinFormattedDoc::kUnderlineLinks, false);
+    mpMovesWin->SetBehavior(ZWinFormattedDoc::kUnderlineLinks, false);
     mpMovesWin->ScrollTo(mMoveFont.nHeight * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
 
     InvalidateChildren();

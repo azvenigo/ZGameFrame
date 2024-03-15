@@ -238,7 +238,7 @@ bool ZWinFolderSelector::Init()
 
         mpFolderList = new ZWinFormattedDoc();
         mpFolderList->mStyle = mStyle;
-        mpFolderList->Set(ZWinFormattedDoc::kBackgroundFromParent|ZWinFormattedDoc::kScrollable, true);
+        mpFolderList->SetBehavior(ZWinFormattedDoc::kBackgroundFromParent|ZWinFormattedDoc::kScrollable, true);
 //        mpFolderList->mStyle.bgCol = 0x88550000;
 //        ZRect rList(gM, grFullArea.Height() / 2, grFullArea.right - gM, grFullArea.bottom - gM);
         mpFolderList->SetArea(mrList);

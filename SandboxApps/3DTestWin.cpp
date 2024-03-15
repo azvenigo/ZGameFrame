@@ -848,8 +848,9 @@ void Z3DTestWin::RenderSpheres(tZBufferPtr pSurface)
 {
     int64_t width = mnRenderSize;
     int64_t height = mnRenderSize;
-    pSurface->Init(width, height);
 
+    if (pSurface->GetArea().Width() != width || pSurface->GetArea().Height() != height)
+        pSurface->Init(width, height);
 
     size_t nThreadCount = std::thread::hardware_concurrency();
 
@@ -867,7 +868,7 @@ void Z3DTestWin::RenderSpheres(tZBufferPtr pSurface)
             nBottom = height;
 
         ZRect r(0, nTop, width, nBottom);
-        workers.emplace_back(std::thread(ThreadTrace, (ZRect)r, std::ref(mSpheres), (ZBuffer*)mpSurface.get(), mnRayDepth));
+        workers.emplace_back(std::thread(ThreadTrace, (ZRect)r, std::ref(mSpheres), (ZBuffer*)pSurface.get(), mnRayDepth));
 
         nTop += nLines;
     }

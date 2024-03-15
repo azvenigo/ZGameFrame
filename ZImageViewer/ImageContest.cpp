@@ -505,7 +505,7 @@ void ImageContest::UpdateControlPanel()
     
     if (mpPanel && mpPanel->GetArea().Width() == mAreaLocal.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
     {
-        bool bShow = mbShowUI;
+/*        bool bShow = mbShowUI;
 
         if (bShow && !mpPanel->mbVisible)
         {
@@ -516,8 +516,9 @@ void ImageContest::UpdateControlPanel()
         {
             mpPanel->mTransformOut = kSlideUp;
             mpPanel->TransformOut();
-        }
+        }*/
 
+        mpPanel->SetVisible(mbShowUI);
         return;
     }
 

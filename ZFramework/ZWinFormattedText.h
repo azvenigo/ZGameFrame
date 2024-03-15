@@ -71,14 +71,14 @@ public:
 
     void                SetScrollable(bool enable = true) 
     { 
-        Set(kScrollable, enable);
+        SetBehavior(kScrollable, enable);
         mbAcceptsCursorMessages |= enable; 
         UpdateScrollbar(); 
     }
     void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
 	void				UpdateScrollbar();					// Creates a scrollbar if one is needed
 
-    void                Set(uint32_t flag, bool set)
+    void                SetBehavior(uint32_t flag, bool set)
     {
         if (set)
             mBehavior |= flag;
@@ -86,7 +86,7 @@ public:
             mBehavior &= ~flag;
     }
 
-    bool                IsSet(uint32_t flag) { return (mBehavior & flag) > 0; }
+    bool                IsBehaviorSet(uint32_t flag) { return (mBehavior & flag) > 0; }
 
 	virtual void		SetArea(const ZRect& newArea);
 	virtual bool		OnMouseDownL(int64_t x, int64_t y);
@@ -102,7 +102,6 @@ public:
 /*    bool  				mbDrawBorder;
     bool				mbUnderlineLinks;
     bool                mbEvenColumns;*/
-    uint32_t            mBehavior;
     int64_t				mnScrollToOnInit;
     ZGUI::Style         mStyle;
 
@@ -119,6 +118,7 @@ private:
 
 	ZWinSlider*         mpWinSlider;
 	int64_t				mnSliderVal;
+    uint32_t            mBehavior;
 
 	ZRect        		mrDocumentArea;
 	ZRect        		mrDocumentBorderArea;

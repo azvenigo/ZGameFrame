@@ -9,9 +9,6 @@ uint32_t        gDefaultTooltipFill(0xaa000088);
 uint32_t        gDefaultHighlight(0xff008800);
 uint32_t        gDefaultButtonUnchecked(0xff888888);
 
-ZRect           grDefaultDialogBackgroundEdgeRect(3, 3, 53, 52);
-
-
 int64_t         gM; // default measure defined by window diagonal ( diagonal / 100 )... all scaled GUI elements should be based off of this measure
 int64_t         gSpacer;
 

@@ -5,6 +5,7 @@
 #include "Resources.h"
 #include "ZWinBtn.H"
 #include "ZWinPanel.h"
+#include "ZWinFormattedText.h"
 
 using namespace std;
 
@@ -61,6 +62,18 @@ bool TestWin::Init()
     pBtn->SetArea(ZRect(100, 200, 132, 232));
     pBtn->mPanelScaleVsBtn.Set(20.0, 20.0);
     ChildAdd(pBtn);
+
+
+    ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
+    pForm->SetArea(ZRect(1010, 500, 1610, 2000));
+    pForm->mStyle = gDefaultFormattedDocStyle;
+    pForm->SetBehavior(ZWinFormattedDoc::kBackgroundFill | ZWinFormattedDoc::kScrollable | ZWinFormattedDoc::kDrawBorder, true);
+    pForm->AddMultiLine("Test text\nMore text\nStill more and more and more and more text...\nHow much is there\n");
+
+    for (int i = 0; i < 100; i++)
+        pForm->AddMultiLine(std::format("This is line number {}", i));
+
+    ChildAdd(pForm);
 
 
 

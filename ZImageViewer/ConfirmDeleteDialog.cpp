@@ -100,7 +100,7 @@ bool ConfirmDeleteDialog::Init()
         mpFilesList = new ZWinFormattedDoc();
         mpFilesList->SetArea(rFileList);
         mpFilesList->mStyle.bgCol = gDefaultTextAreaFill;
-        mpFilesList->Set(ZWinFormattedDoc::kDrawBorder|ZWinFormattedDoc::kBackgroundFill, true);
+        mpFilesList->SetBehavior(ZWinFormattedDoc::kDrawBorder|ZWinFormattedDoc::kBackgroundFill, true);
         mpFilesList->Clear();
 
         ZFontParams font;
@@ -118,7 +118,7 @@ bool ConfirmDeleteDialog::Init()
         mpFilesList->mStyle.paddingH = (int32_t)gM;
         mpFilesList->mStyle.paddingV = (int32_t)gSpacer;
         mpFilesList->SetScrollable();
-        mpFilesList->Set(ZWinFormattedDoc::kUnderlineLinks, false);
+        mpFilesList->SetBehavior(ZWinFormattedDoc::kUnderlineLinks, false);
 
         ChildAdd(mpFilesList);
 

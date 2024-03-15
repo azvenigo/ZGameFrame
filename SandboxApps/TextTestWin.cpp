@@ -148,7 +148,7 @@ bool TextTestWin::Init()
     pWin->SetArea(rFontSelectionWin);
     pWin->mStyle = gDefaultFormattedDocStyle;
     pWin->mStyle.bgCol = 0xff444444;
-    pWin->mBehavior |= (ZWinFormattedDoc::kScrollable | ZWinFormattedDoc::kBackgroundFill);
+    pWin->SetBehavior(ZWinFormattedDoc::kScrollable | ZWinFormattedDoc::kBackgroundFill, true);
 
     mpBackground.get()->LoadBuffer("res/paper.jpg");
 

@@ -180,7 +180,7 @@ bool ZWinFormattedDoc::OnMouseDownL(int64_t x, int64_t y)
                         return true;
                     }
 
-                    if (IsSet(kEvenColumns))
+                    if (IsBehaviorSet(kEvenColumns))
                         rLine.left += mColumnWidths[col];
                     else
                         rLine.left += rDst.Width();
@@ -194,7 +194,7 @@ bool ZWinFormattedDoc::OnMouseDownL(int64_t x, int64_t y)
                         gMessageSystem.Post(entry.link);
                         return true;
                     }
-                    if (IsSet(kEvenColumns))
+                    if (IsBehaviorSet(kEvenColumns))
                         rLine.left += mColumnWidths[col];
                     else
                         rLine.left += rText.Width();
@@ -274,24 +274,29 @@ void ZWinFormattedDoc::UpdateScrollbar()
 //    mrDocumentArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
 
 
-    if (IsSet(kDrawBorder))
-        mrDocumentArea.DeflateRect(6, 6);
+    if (IsBehaviorSet(kDrawBorder))
+    {
+        mrDocumentArea.left += grDimRectEdge.left;
+        mrDocumentArea.top += grDimRectEdge.top;
+        mrDocumentArea.right -= (gDimRectBackground->GetArea().Width() - grDimRectEdge.right);
+        mrDocumentArea.bottom -= (gDimRectBackground->GetArea().Height() - grDimRectEdge.bottom);
+    }
 
 
-	if (IsSet(kScrollable) && nFullTextHeight > mrDocumentArea.Height())
+	if (IsBehaviorSet(kScrollable) && nFullTextHeight > mrDocumentArea.Height())
 	{
-        mrDocumentBorderArea.right -= kSliderWidth;
-        mrDocumentArea.right -= kSliderWidth;
-
-
         if (!mpWinSlider)
         {
             mpWinSlider = new ZWinSlider(&mnSliderVal);
             mpWinSlider->mBehavior = ZWinSlider::kInvalidateOnMove;
             mpWinSlider->Init();
-            mpWinSlider->SetArea(ZRect(mAreaInParent.Width() - kSliderWidth, mrDocumentArea.top, mAreaInParent.Width(), mrDocumentArea.bottom));
             ChildAdd(mpWinSlider);
         }
+
+        mrDocumentBorderArea.right -= kSliderWidth;
+        mrDocumentArea.right -= kSliderWidth;
+
+        mpWinSlider->SetArea(ZRect(mrDocumentArea.right, mrDocumentArea.top, mrDocumentArea.right+kSliderWidth, mrDocumentArea.bottom));
 
         double fThumbRatio = (double)mrDocumentArea.Height()/(double)nFullTextHeight;
         mpWinSlider->SetSliderRange(0, nFullTextHeight-mrDocumentArea.Height(), 1, fThumbRatio);
@@ -328,31 +333,30 @@ bool ZWinFormattedDoc::Paint()
     if (!PrePaintCheck())
         return false;
 
-    if (IsSet(kEvenColumns) && mColumnWidths.empty())
+    if (IsBehaviorSet(kEvenColumns) && mColumnWidths.empty())
         ComputeColumnWidths();
 
 
 	// Get a local rect
 	ZRect rLocalDocBorderArea(mrDocumentArea);
-	rLocalDocBorderArea.InflateRect(6,6);
 	//   rLocalTextBorderArea.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
 	ZRect rLocalDocArea(mrDocumentArea);
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
-    if (IsSet(kBackgroundFromParent))
+    if (IsBehaviorSet(kBackgroundFromParent))
     {
         //PaintFromParent();
         GetTopWindow()->RenderToBuffer(mpSurface, mAreaAbsolute, mAreaLocal, this);
     }
-    if (IsSet(kBackgroundFill))
+    if (IsBehaviorSet(kBackgroundFill))
     {
-        mpSurface.get()->FillAlpha(mStyle.bgCol, &rLocalDocBorderArea);
+        mpSurface.get()->FillAlpha(mStyle.bgCol, &mrDocumentArea);
     }
-    if (IsSet(kDrawBorder))
+    if (IsBehaviorSet(kDrawBorder))
     {
-        mpSurface.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, rLocalDocBorderArea, ZBuffer::kEdgeBltMiddle_Tile, &mAreaInParent);
+        mpSurface.get()->BltEdge(gDimRectBackground.get(), grDimRectEdge, mAreaLocal, ZBuffer::kEdgeBltMiddle_None);
     }
 
 	ZRect rClip(rLocalDocArea);
@@ -388,7 +392,7 @@ bool ZWinFormattedDoc::Paint()
                     rDst = ZGUI::Arrange(rDst, rLine, entry.style.pos);
                     mpSurface->Blt(entry.Buffer().get(), rSrc, rDst);
 
-                    if (IsSet(kEvenColumns))
+                    if (IsBehaviorSet(kEvenColumns))
                         rLine.left += mColumnWidths[col];
                     else
                         rLine.left += rDst.Width();
@@ -404,7 +408,7 @@ bool ZWinFormattedDoc::Paint()
 
                         pFont->DrawText(mpSurface.get(), entry.text, rText, &entry.style.look, &rClip);
 
-                        if (IsSet(kUnderlineLinks) && !entry.link.empty())
+                        if (IsBehaviorSet(kUnderlineLinks) && !entry.link.empty())
                         {
                             ZRect rUnderline(rText);
                             rUnderline.top = rUnderline.bottom - nShadowOffset;
@@ -419,7 +423,7 @@ bool ZWinFormattedDoc::Paint()
                             }
                         }
 
-                        if (IsSet(kEvenColumns))
+                        if (IsBehaviorSet(kEvenColumns))
                             rLine.left += mColumnWidths[col];
                         else
                             rLine.left += rText.Width();
@@ -482,7 +486,7 @@ bool ZWinFormattedDoc::ParseDocument(ZXMLNode* pNode)
 	string sAttribute;
 	sAttribute = pNode->GetAttribute(ksTextEdgeTag);
     if (!sAttribute.empty())
-        Set(kDrawBorder, SH::ToBool(sAttribute));
+        SetBehavior(kDrawBorder, SH::ToBool(sAttribute));
 
 	sAttribute = pNode->GetAttribute(ksTextFillColor);
 	if (!sAttribute.empty())
@@ -494,15 +498,15 @@ bool ZWinFormattedDoc::ParseDocument(ZXMLNode* pNode)
 
 	sAttribute = pNode->GetAttribute(ksScrollable);
 	if (!sAttribute.empty())
-		Set(kScrollable, SH::ToBool(sAttribute));
+		SetBehavior(kScrollable, SH::ToBool(sAttribute));
 
 	sAttribute = pNode->GetAttribute(ksUnderlineLinksTag);
 	if (!sAttribute.empty())
-		Set(kUnderlineLinks, SH::ToBool(sAttribute));
+		SetBehavior(kUnderlineLinks, SH::ToBool(sAttribute));
 
         sAttribute = pNode->GetAttribute(ksEvenColumns);
     if (!sAttribute.empty())
-        Set(kEvenColumns, SH::ToBool(sAttribute));
+        SetBehavior(kEvenColumns, SH::ToBool(sAttribute));
 
 
 	tXMLNodeList elementNodeList;
@@ -562,11 +566,14 @@ void ZWinFormattedDoc::AddLineNode(string sLine)
 
 void ZWinFormattedDoc::AddMultiLine(string sLine, ZGUI::Style style, const string& sLink)
 {
-    tFormattedLine line;
+    if (style.Uninitialized())
+        style = gDefaultFormattedDocStyle;
+
     tZFontPtr pFont(style.Font());
     assert(pFont);
 
     // Insert as much text on each line as will fit
+    tFormattedLine line;
     while (sLine.length() > 0)
     {
         int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrDocumentArea.Width(), (uint8_t*)sLine.data(), sLine.length());

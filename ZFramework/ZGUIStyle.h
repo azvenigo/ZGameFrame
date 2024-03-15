@@ -74,6 +74,7 @@ namespace ZGUI
         Style(const std::string& s);
 
         tZFontPtr Font();
+        bool Uninitialized() { return fp.sFacename.empty() || fp.nHeight == 0; }
 
         operator std::string() const;
         void operator = (const Style& rhs);

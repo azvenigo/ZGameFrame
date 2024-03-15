@@ -1011,7 +1011,7 @@ bool cProcessImageWin::Init()
     mpImageProps = new ZWinFormattedDoc();
     mpImageProps->SetArea(rImageProps);
     mpImageProps->mStyle.bgCol = gDefaultTextAreaFill;
-    mpImageProps->Set(ZWinFormattedDoc::kBackgroundFill, true);
+    mpImageProps->SetBehavior(ZWinFormattedDoc::kBackgroundFill, true);
     mpImageProps->SetScrollable();
 
     pWP->ChildAdd(mpImageProps);

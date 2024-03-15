@@ -37,8 +37,10 @@ ZRect           grDefaultDialogBackgroundEdgeRect(3,3,53,52);
 ZRect			grSliderBgEdge(16, 16, 16 *3, 16 *3);
 ZRect			grSliderThumbEdge(9, 8, 43, 44);
 //ZRect			grDimRectEdge(4, 4, 102, 103);
-ZRect			grDimRectEdge(16, 16, 16 *3, 16 *3);
+ZRect			grDimRectEdge(4, 4, 60, 60);
 ZRect			grStandardButtonEdge(5, 5, 50, 50);
+ZRect           grDefaultDialogBackgroundEdgeRect(3, 3, 53, 52);
+
 
 ZRect           grControlPanelArea;
 ZRect           grControlPanelTrigger;
