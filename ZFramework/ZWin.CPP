@@ -753,9 +753,11 @@ bool ZWin::ComputeVisibility()
    
     if (mbPaints)
 	{
+//        mpSurface->mMutex.lock();
 		ZScreenRect sr(mpSurface, mAreaAbsolute, ZPoint(0, 0));
         gpGraphicSystem->GetScreenBuffer()->AddScreenRectAndComputeVisibility(sr);
-	}
+//        mpSurface->mMutex.unlock();
+    }
 
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)
 	{

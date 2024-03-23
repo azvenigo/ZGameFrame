@@ -166,8 +166,16 @@ bool ZWinPanel::ParseLayout()
     mDrawBorder = SH::ToBool(pPanel->GetAttribute("border"));
 
 
-    //      Style?
-    
+    if (pPanel->HasAttribute("style"))
+        mStyle = ZGUI::Style(pPanel->GetAttribute("style"));
+
+    if (pPanel->HasAttribute("rel_area_desc"))
+    {
+        ZGUI::RA_Descriptor rad(pPanel->GetAttribute("rel_area_desc"));
+        mBehavior |= kRelativeScale;
+        SetRelativeArea(rad);
+    }
+
 
 
 	// Rows
@@ -339,11 +347,11 @@ void ZWinPanel::UpdateUI()
     }
 }
 
-void ZWinPanel::SetRelativeArea(const ZRect& area, const ZRect& ref, ZGUI::ePosition pos)
+void ZWinPanel::SetRelativeArea(const ZGUI::RA_Descriptor& rad)
 {
     assert(IsSet(kRelativeScale));
-    mRelativeArea = ZGUI::RelativeArea(area, ref, pos);
-    SetArea(area);
+    mRelativeArea = ZGUI::RelativeArea(rad);
+    SetArea(rad.area);
     UpdateUI();
 }
 

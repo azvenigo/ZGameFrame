@@ -531,15 +531,15 @@ void ImageContest::UpdateControlPanel()
     }
 
     int64_t nGroupSide = nControlPanelSide - gSpacer * 4;
-
+    
 
     mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     ZDynamicFont* pFont = (ZDynamicFont*)mSymbolicStyle.Font().get();
-
+    
     pFont->GenerateSymbolicGlyph('F', 0x2750);
     pFont->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
 
-
+    
     ZRect rPanelArea(mAreaLocal.left, mAreaLocal.top, mAreaLocal.right, mAreaLocal.top + nControlPanelSide);
     //mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out
     mpPanel->SetArea(rPanelArea);
@@ -553,7 +553,7 @@ void ImageContest::UpdateControlPanel()
     rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
 
     string sAppPath = gRegistry["apppath"];
-
+    
     pBtn = mpPanel->SVGButton("back", sAppPath + "/res/return.svg", ZMessage("{return}", this));
     pBtn->msTooltip = "Back to viewer";
     pBtn->SetArea(rButton);

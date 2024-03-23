@@ -45,7 +45,7 @@ public:
 
    bool                 HandleMessage(const ZMessage& message);
 
-   void                 SetRelativeArea(const ZRect& area, const ZRect& ref, ZGUI::ePosition pos); // sets up relative area to automatically adjust when parent area changes
+   void                 SetRelativeArea(const ZGUI::RA_Descriptor& rad); // sets up relative area to automatically adjust when parent area changes
 
 
    std::string          mPanelLayout;
@@ -92,11 +92,10 @@ public:
 
     bool            Init();
     bool            Shutdown();
-
     bool            OnMouseUpL(int64_t x, int64_t y);
-
-
     bool            OnParentAreaChange();
+
+    void            TogglePanel();
 
     std::string     mPanelLayout;
     ZGUI::ePosition mPanelPos;
@@ -104,7 +103,6 @@ public:
 
 
 protected:
-    void            TogglePanel();
     void            UpdateUI();
 
     ZWinPanel* mpWinPanel;

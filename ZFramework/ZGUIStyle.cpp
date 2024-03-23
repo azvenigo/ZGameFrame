@@ -154,7 +154,7 @@ namespace ZGUI
             paddingH = j["padH"];
 
         if (j.contains("padV"))
-            paddingH = j["padV"];
+            paddingV = j["padV"];
 
         if (j.contains("bg"))
             bgCol = j["bg"];

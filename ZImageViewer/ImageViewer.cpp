@@ -1455,27 +1455,21 @@ void ImageViewer::UpdateControlPanel()
 
     ZWinSizablePushBtn* pBtn;
 
-    ZRect rButton((int64_t)(nGroupSide*1.25), nGroupSide);
+    ZRect rButton(nGroupSide, nGroupSide);
     rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
 
     string sAppPath = gRegistry["apppath"];
 
-    int32_t nButtonPadding = (int32_t)(rButton.Width() / 8);
-    
     pBtn = mpPanel->SVGButton("loadimg", sAppPath + "/res/openfile.svg", ZMessage("{loadimg}", this));
     pBtn->msTooltip = "Load Image";
     pBtn->msWinGroup = "File";
-    pBtn->mSVGImage.style.paddingH = nButtonPadding;
-    pBtn->mSVGImage.style.paddingV = nButtonPadding;
     pBtn->SetArea(rButton);
-
+    
     rButton.OffsetRect(rButton.Width(), 0);
 
     pBtn = mpPanel->SVGButton("saveimg", sAppPath + "/res/save.svg", ZMessage("{saveimg}", this));
     pBtn->msWinGroup = "File";
     pBtn->msTooltip = "Save Image";
-    pBtn->mSVGImage.style.paddingH = nButtonPadding;
-    pBtn->mSVGImage.style.paddingV = nButtonPadding;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "File";
 
@@ -1483,8 +1477,6 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = mpPanel->SVGButton("gotofolder", sAppPath + "/res/gotofolder.svg", ZMessage("{gotofolder}", this));
     pBtn->msTooltip = "Browse folder with current image";
-    pBtn->mSVGImage.style.paddingH = nButtonPadding;
-    pBtn->mSVGImage.style.paddingV = nButtonPadding;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "File";
 
@@ -1493,8 +1485,6 @@ void ImageViewer::UpdateControlPanel()
 
     pBtn = mpPanel->SVGButton("copylink", sAppPath + "/res/linkcopy.svg", ZMessage("{copylink}", this));
     pBtn->msTooltip = "Copy path to image to clipboard";
-    pBtn->mSVGImage.style.paddingH = nButtonPadding;
-    pBtn->mSVGImage.style.paddingV = nButtonPadding;
     pBtn->SetArea(rButton);
     pBtn->mbEnabled = ValidIndex(mViewingIndex);
     pBtn->msWinGroup = "File";
@@ -1503,20 +1493,20 @@ void ImageViewer::UpdateControlPanel()
 
 
     string sMessage;
-
+    
     rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.0);     // wider buttons for management
     rButton.OffsetRect(rButton.Width() + gSpacer, 0);
 
     string sPanelLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
     sPanelLayout += "<row><button    id=undo caption=undo msg={undo;target=" + GetTargetName() + "} tooltip=\"Undo last move or copy command.\"/></row>";
-    sPanelLayout += "<row><svgbutton id=move svgpath=%apppath%/res/movefile.svg msg={set_move_folder;target=" + GetTargetName() + "} tooltip=\"Select a Move Folder for quick-move with 'M'\"/></row>";
-    sPanelLayout += "<row><svgbutton id=copy svgpath=%apppath%/res/copyfile.svg msg={set_copy_folder;target=" + GetTargetName() + "} tooltip=\"Select a Copy Folder for quick-copy with 'C'\"/></row>";
+    sPanelLayout += "<row><svgbutton id=move svgpath=%apppath%/res/move.svg msg={set_move_folder;target=" + GetTargetName() + "} tooltip=\"Select a Move Folder for quick-move with 'M'\"/></row>";
+    sPanelLayout += "<row><svgbutton id=copy svgpath=%apppath%/res/copy.svg msg={set_copy_folder;target=" + GetTargetName() + "} tooltip=\"Select a Copy Folder for quick-copy with 'C'\"/></row>";
     sPanelLayout += "</panel>";
 
     ZWinPopupPanelBtn* pPopupBtn = mpPanel->PopupPanelButton("manage_menu", sAppPath + "/res/manage.svg", sPanelLayout, ZFPoint(1.0, 3.0),  ZGUI::ePosition::ICOB);
     pPopupBtn->msWinGroup = "File";
     pPopupBtn->SetArea(rButton);
-
+    
     // Transformation (rotation, flip, etc.)
     rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
 

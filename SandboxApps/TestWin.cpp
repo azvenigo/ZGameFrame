@@ -47,24 +47,35 @@ bool TestWin::Init()
     pWin->SetSliderRange(10, 20000, 1, 0.2);
     pWin->mBehavior = ZWinSlider::kDrawSliderValueAlways;
     ChildAdd(pWin);
+    
 
+    ZGUI::Style style(gDefaultPanelStyle);
+    style.pos = ZGUI::CT;
+    style.paddingH = 0;
+    style.paddingV = 0;
 
-    ZWinPopupPanelBtn* pBtn = new ZWinPopupPanelBtn();
-    pBtn->mPanelLayout = "<panel close_on_button=1>";
-    pBtn->mPanelLayout += "<row><svgbutton id=test1 group=group1 svgpath=%apppath%/res/test.svg></svgbutton><button id=test2 group=group1 caption=hello></button></row>";
-    pBtn->mPanelLayout += "<row><label id=label1 caption=\"A label\"></label></row>";
-    pBtn->mPanelLayout += "<row><button id=test3 group=group1 caption=hello></button><svgbutton id=test4 group=group1 svgpath=%apppath%/res/test.svg></svgbutton></row>";
-    pBtn->mPanelLayout += "</panel>";
+    ZGUI::RA_Descriptor rad(ZRect(0, 0, grFullArea.right, gM * 2), grFullArea, ZGUI::ICIT);
 
-
-    //panel->SetArea(ZRect(10, 200, 510, 300));
-    //panel->SetRelativeArea(grFullArea, ZGUI::ePosition::IRIB, ZGUI::Arrange(ZRect(600, 800), grFullArea, ZGUI::ePosition::C, 200, 10));
-    pBtn->SetArea(ZRect(100, 200, 132, 232));
-    pBtn->mPanelScaleVsBtn.Set(20.0, 20.0);
-    ChildAdd(pBtn);
-
-
-    ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
+    ZWinPanel* pPanel = new ZWinPanel();
+    
+    pPanel->mPanelLayout = "<panel close_on_button=1 show_init=1 style=" + SH::URL_Encode((string)style) + " rel_area_desc=" + SH::URL_Encode((string)rad) + "><row>";
+    pPanel->mPanelLayout += "<svgbutton id=test1 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/openfile.svg\"></svgbutton>";
+    pPanel->mPanelLayout += "<svgbutton id=test2 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/copy.svg\"></svgbutton>";
+    pPanel->mPanelLayout += "<svgbutton id=test3 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/exit.svg\"></svgbutton>";
+    pPanel->mPanelLayout += "<svgbutton id=test4 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/move.svg\"></svgbutton>";
+    pPanel->mPanelLayout += "<svgbutton id=test5 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipH.svg\"></svgbutton>";
+    pPanel->mPanelLayout += "<svgbutton id=test6 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipV.svg\"></svgbutton>";
+    pPanel->mPanelLayout += "<svgbutton id=test7 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/return.svg\"></svgbutton>";
+    pPanel->mPanelLayout += "<svgbutton id=test8 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/fullscreen.svg\"></svgbutton>";
+    //    pPanel->mPanelLayout += "<button id=test8 group=group1 caption=hello></button>";
+    pPanel->mPanelLayout += "</row>";
+//    sPanelLayout += "<row><svgbutton id=test1 group=group1 svgpath=%apppath%/res/test.svg></svgbutton><button id=test2 group=group1 caption=hello></button></row>";
+//    sPanelLayout += "<row><label id=label1 caption=\"A label\"></label></row>";
+//    sPanelLayout += "<row><button id=test9 group=group1 caption=hello></button><svgbutton id=test10 group=group1 svgpath=%apppath%/res/test.svg></svgbutton></row>";
+    pPanel->mPanelLayout += "</panel>";
+    ChildAdd(pPanel);
+    
+/*    ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
     pForm->SetArea(ZRect(1010, 500, 1610, 2000));
     pForm->mStyle = gDefaultFormattedDocStyle;
     pForm->SetBehavior(ZWinFormattedDoc::kBackgroundFill | ZWinFormattedDoc::kScrollable | ZWinFormattedDoc::kDrawBorder, true);
@@ -73,7 +84,7 @@ bool TestWin::Init()
     for (int i = 0; i < 100; i++)
         pForm->AddMultiLine(std::format("This is line number {}", i));
 
-    ChildAdd(pForm);
+    ChildAdd(pForm);*/
 
 
 

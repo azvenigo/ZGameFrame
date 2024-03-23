@@ -62,7 +62,7 @@ string ZXMLNode::GetAttribute(const string& sKey) const
 {
 	tKeyValueMap::const_iterator it = mAttributes.find(sKey);
 	if (it != mAttributes.end())
-		return (*it).second;
+		return SH::URL_Decode((*it).second);
 
 	return "";
 }
@@ -87,11 +87,11 @@ void ZXMLNode::SetAttribute(const string& sKey, const string& sVal)
 			return;
 		}
 
-		mAttributes[sKey] = sVal.substr(1, sVal.length()-2);
+		mAttributes[sKey] = SH::URL_Encode(sVal.substr(1, sVal.length()-2));
 		return;
 	}
 
-	mAttributes[sKey] = sVal;
+	mAttributes[sKey] = SH::URL_Encode(sVal);
 }
 
 ZXMLNode* ZXMLNode::GetChild(const string& sName) const

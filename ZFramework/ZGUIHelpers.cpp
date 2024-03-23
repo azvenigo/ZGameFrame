@@ -1,5 +1,6 @@
 #include "ZGUIHelpers.h"
 #include "helpers/StringHelpers.h"
+#include "ZStringHelpers.h"
 #include "ZDebug.h"
 #include "json.hpp"
 
@@ -274,29 +275,29 @@ namespace ZGUI
         double x;
         double y;
 
-        if ((anchorPos & ZGUI::ePosition::R) != 0)
+        if (Set(ePosition::R))
         {
             x = (double)ref.right - ((double)ref.Width()) * offset.x;
-            if ((anchorPos & ZGUI::ePosition::HInside) != 0)    // if inside the rect, shift left
+            if (Set(ePosition::HInside))    // if inside the rect, shift left
                 x -= w;
         }
         else
         {
             x = (double)ref.left + ((double)ref.Width() * offset.x);
-            if ((anchorPos & ZGUI::ePosition::HOutside) != 0)    // if outside the rect, shift left
+            if (Set(ePosition::HOutside))    // if outside the rect, shift left
                 x -= w;
         }
 
-        if ((anchorPos & ZGUI::ePosition::B) != 0)
+        if (Set(ZGUI::ePosition::B))
         {
             y = (double)ref.bottom - ((double)ref.Height()) * offset.y;
-            if ((anchorPos & ZGUI::ePosition::VInside) != 0)    // if outside the rect, shift up
+            if (Set(ePosition::VInside))    // if outside the rect, shift up
                 y -= h;
         }
         else
         {
             y = (double)ref.top + ((double)ref.Height() * offset.y);
-            if ((anchorPos & ZGUI::ePosition::VOutside) != 0)    // if outside the rect, shift up
+            if (Set(ePosition::VOutside))    // if outside the rect, shift up
                 y -= h;
         }
 
@@ -308,7 +309,7 @@ namespace ZGUI
 
 
 
-    ePosition   anchorPos;
+    ePosition   anchorpos;
     ZFPoint     offset; // normalized % offset from anchor 0.0-1.0
     double      aspectratio;
     double      sizeratio;  // normalized % of size based on parent (my_height / parent_height)
@@ -316,7 +317,7 @@ namespace ZGUI
     RelativeArea::operator std::string() const
     {
         nlohmann::json j;
-        j["p"] = (uint32_t)anchorPos;
+        j["p"] = (uint32_t)anchorpos;
         j["ox"] = offset.x;
         j["oy"] = offset.y;
         j["a"] = aspectratio;
@@ -329,11 +330,47 @@ namespace ZGUI
     {
         nlohmann::json j = nlohmann::json::parse(s);
 
-        if (j.contains("p")) anchorPos = (ePosition)j["p"];
+        if (j.contains("p")) anchorpos = (ePosition)j["p"];
         if (j.contains("ox")) offset.x = j["ox"];
         if (j.contains("oy")) offset.y = j["oy"];
         if (j.contains("a")) aspectratio = j["a"];
         if (j.contains("s")) sizeratio = j["s"];
+    }
+
+
+    RA_Descriptor::RA_Descriptor(std::string s)
+    {
+        nlohmann::json j = nlohmann::json::parse(s);
+
+        j.at("al").get_to(area.left);
+        j.at("at").get_to(area.top);
+        j.at("ar").get_to(area.right);
+        j.at("ab").get_to(area.bottom);
+
+        j.at("rl").get_to(ref.left);
+        j.at("rt").get_to(ref.top);
+        j.at("rr").get_to(ref.right);
+        j.at("rb").get_to(ref.bottom);
+
+        j.at("pos").get_to(anchorpos);
+    }
+
+    RA_Descriptor::operator std::string() const
+    {
+        nlohmann::json j;
+        j["al"] = area.left;
+        j["at"] = area.top;
+        j["ar"] = area.right;
+        j["ab"] = area.bottom;
+
+        j["rl"] = ref.left;
+        j["rt"] = ref.top;
+        j["rr"] = ref.right;
+        j["rb"] = ref.bottom;
+
+        j["pos"] = (uint32_t)anchorpos;
+
+        return j.dump();
     }
 
 };

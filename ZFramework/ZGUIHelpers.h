@@ -108,11 +108,33 @@ namespace ZGUI
     /// RelativeArea - convenient method for child to maintain aspect ratio, size and position relative to a parent.
     /// Once constructed, Area() function returns the computed area
     /// </summary>
+
+    class RA_Descriptor
+    {
+    public:
+        RA_Descriptor(const ZRect& _area = {}, const ZRect& _ref = {}, ePosition _anchorpos = ILIT) : area(_area), ref(_ref), anchorpos(_anchorpos) 
+        {
+            assert(anchorpos < 1024);   // all possible legal flags set
+        }
+
+        // serialization
+        RA_Descriptor(std::string s);       // from string
+        operator std::string() const;       // to string
+
+
+        ZRect area;
+        ZRect ref;
+        ePosition anchorpos;
+    };
+
     class RelativeArea
     {
     public:
+        RelativeArea(const RA_Descriptor& rad) : RelativeArea(rad.area, rad.ref, rad.anchorpos){}
         RelativeArea(const ZRect& area = {}, const ZRect& ref = {}, ePosition _anchorpos = ILIT)
         {
+            anchorpos = _anchorpos;
+
             if (area.Area() > 0)
                 aspectratio = (double)area.Width() / (double)area.Height();
 
@@ -120,13 +142,12 @@ namespace ZGUI
             {
                 sizeratio = (double)area.Height() / (double)ref.Height();
 
-                anchorPos = _anchorpos;
-                if ((anchorPos & ZGUI::ePosition::R) != 0)
+                if (Set(ZGUI::ePosition::R))
                     offset.x = (double)(ref.right - area.right) / (double)ref.Width();
                 else
                     offset.x = (double)(area.left - ref.left) / (double)ref.Width();
 
-                if ((anchorPos & ZGUI::ePosition::B) != 0)
+                if (Set(ZGUI::ePosition::B))
                     offset.y = (double)(ref.bottom - area.bottom) / (double)ref.Height();
                 else
                     offset.y = (double)(area.top - ref.top) / (double)ref.Height();
@@ -139,8 +160,10 @@ namespace ZGUI
 
         ZRect Area(const ZRect& ref) const;
 
+        bool Set(ePosition pos) const { return (anchorpos & pos) != 0; }
 
-        ePosition   anchorPos;
+
+        ePosition   anchorpos;
         ZFPoint     offset; // normalized % offset from anchor 0.0-1.0
         double      aspectratio;  
         double      sizeratio;  // normalized % of size based on parent (my_height / parent_height)
