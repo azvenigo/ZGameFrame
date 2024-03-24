@@ -60,7 +60,6 @@ public:
 	~ZWinFormattedDoc();
 
 	virtual bool		Init();
-	virtual bool		InitFromXML(ZXMLNode* pNode);
 	virtual bool 		Paint();
 
 	virtual void		Clear();

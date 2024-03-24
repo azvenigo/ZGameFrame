@@ -111,8 +111,6 @@ public:
 	virtual bool            Init();
 	virtual bool            Shutdown();
 
-	virtual bool            InitFromXML(ZXMLNode* pNode);
-
 public:
 	virtual bool            OnMouseDownL(int64_t x, int64_t y);
 	virtual bool            OnMouseUpL(int64_t x, int64_t y);

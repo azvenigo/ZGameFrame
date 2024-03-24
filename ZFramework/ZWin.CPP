@@ -138,18 +138,6 @@ void ZWin::SignalShutdown()
     mWorkToDoCV.notify_one(); 
 }
 
-
-bool ZWin::InitFromXML(ZXMLNode* pNode)
-{
-	ZASSERT(pNode);
-	msWinName = pNode->GetAttribute("winname");
-	
-	if (pNode->HasAttribute("area"))
-		SetArea(StringToRect(pNode->GetAttribute("area")));
-
-	return true;
-}
-
 void ZWin::TransformIn()
 {
 	if (mTransformIn != kNone)

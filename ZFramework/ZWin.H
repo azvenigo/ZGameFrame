@@ -48,7 +48,6 @@ public:
 	virtual ~ZWin();
 	
 	virtual	bool        Init();
-	virtual	bool        InitFromXML(ZXMLNode* pNode);
 	virtual	bool        Shutdown();
 	virtual void        SignalShutdown();
 	

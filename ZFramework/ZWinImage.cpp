@@ -629,28 +629,3 @@ bool ZWinImage::HandleMessage(const ZMessage& message)
 
     return ZWin::HandleMessage(message);
 }
-
-
-bool ZWinImage::InitFromXML(ZXMLNode* pNode)
-{
-	string sName;
-
-	sName = pNode->GetAttribute("name");
-	LoadImage(sName);
-
-	if (!ZWin::InitFromXML(pNode))
-		return false;
-
-	ZXMLNode* pTransform = pNode->GetChild("trans");
-	if (pTransform)
-	{
-		DoTransformation(pTransform->GetText());
-	}
-	else if (pNode->HasAttribute("pos"))
-	{
-		ZTransformation trans(StringToPoint(pNode->GetAttribute("pos")));
-		SetTransform(trans);
-	}
-
-	return true;
-}

@@ -40,7 +40,6 @@ public:
     void        Clear();
 
     bool        Paint();
-    bool        InitFromXML(ZXMLNode* pNode);
     bool        OnMouseUpL(int64_t x, int64_t y);
     bool        OnMouseDownL(int64_t x, int64_t y);
     bool        OnMouseDownR(int64_t x, int64_t y);

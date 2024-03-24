@@ -92,21 +92,6 @@ ZWinFormattedDoc::~ZWinFormattedDoc()
 {
 }
 
-bool ZWinFormattedDoc::InitFromXML(ZXMLNode* pNode)
-{
-	ZASSERT(pNode);
-
-	if (ZWin::InitFromXML(pNode))
-	{
-		ParseDocument(pNode);
-		UpdateScrollbar();
-
-		return true;
-	}
-
-	return false;
-}
-
 bool ZWinFormattedDoc::Init()
 {
 	if (ZWin::Init())
