@@ -107,7 +107,7 @@ namespace ZGUI
 
         if (s.size() == 4)
         {
-            uint32_t pos;
+            uint32_t pos = 0;
 
             if (s[0] == 'i')
             {

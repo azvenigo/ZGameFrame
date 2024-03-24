@@ -753,6 +753,7 @@ bool ZWin::ComputeVisibility()
    
     if (mbPaints)
 	{
+        assert(mpSurface);
 //        mpSurface->mMutex.lock();
 		ZScreenRect sr(mpSurface, mAreaAbsolute, ZPoint(0, 0));
         gpGraphicSystem->GetScreenBuffer()->AddScreenRectAndComputeVisibility(sr);
@@ -996,6 +997,10 @@ void ZWin::SetVisible(bool bVisible)
 {
     if (bVisible != mbVisible)
     {
+        if (bVisible)
+        {
+            assert(mAreaLocal.Area());  
+        }
         mbVisible = bVisible;
         InvalidateChildren();
         gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);

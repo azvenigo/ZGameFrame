@@ -9,6 +9,9 @@ class ZTextLook;
 
 namespace ZGUI
 {
+
+
+
     enum ePosition : uint32_t
     {
         Unknown    = 0,
@@ -22,7 +25,6 @@ namespace ZGUI
         HOutside   = 1 << 7, // 128
         VInside    = 1 << 8, // 256
         VOutside   = 1 << 9, // 512
-
 
         // Aliases
         L = Left,
@@ -170,6 +172,8 @@ namespace ZGUI
     };
 
 
+    inline bool ValidPos(ePosition pos) { return pos < (1 << 10); }    // simple validation that flags do not exceed all set. May want to check that invalid combinations like (Left & Right) don't exits
+    
     ZRect       Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t paddingH = 0, int64_t paddingV = 0);  // moves r relative to ref based on position flags
 
     ZRect       ScaledFit(const ZRect& r, const ZRect& ref);    // scales r to fit inside ref maintaining r's aspect ratio

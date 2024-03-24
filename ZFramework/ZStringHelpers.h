@@ -9,11 +9,18 @@
 ZPoint      StringToPoint(const std::string& sVal);
 std::string PointToString(const ZPoint& pointValue);
 
+ZFPoint     StringToFPoint(const std::string& sVal);
+std::string FPointToString(const ZFPoint& pointValue);
+
 ZRect       StringToRect(const std::string& sVal);
 std::string RectToString(const ZRect& rectValue);
 
 void        StringToInt64Array(const std::string& sVal, std::vector<int64_t>& intArray);
 std::string Int64ArrayToString(std::vector<int64_t>& intArray);
+
+void        StringToFloatArray(const std::string& sVal, std::vector<float>& floatArray);
+std::string FloatArrayToString(std::vector<float>& floatArray);
+
 
 std::string StringMapToString(tKeyValueMap& stringMap);
 void        StringToStringMap(std::string sVal, tKeyValueMap& stringMap);

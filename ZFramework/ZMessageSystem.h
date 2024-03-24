@@ -165,7 +165,6 @@ public:
 
 	// utility functions
     std::string                 GenerateUniqueTargetName();
-    static size_t               FindMatching(const std::string& s, size_t i);   // given a character in s at i, find the accomanying closing. for example '"' -> '"' or '{' -> '}'
 
 private:
 

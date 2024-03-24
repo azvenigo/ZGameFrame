@@ -249,7 +249,21 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
 
         ZWin* pWin = nullptr;
 
-        if (type == "button")
+        if (type == "panelbutton")
+        {
+            pWin = new ZWinPopupPanelBtn();
+            ZWinPopupPanelBtn* pBtn = (ZWinPopupPanelBtn*)pWin;
+            pBtn->mPanelLayout = control->GetAttribute("layout");
+            pBtn->mSVGImage.Load(control->GetAttribute("svgpath"));
+            if (control->HasAttribute("scale"))
+                pBtn->mPanelScaleVsBtn = StringToFPoint(control->GetAttribute("scale"));
+            if (control->HasAttribute("pos"))
+                pBtn->mPanelPos = ZGUI::FromString(control->GetAttribute("pos"));
+
+            assert(ZGUI::ValidPos(pBtn->mPanelPos));
+
+        }
+        else if (type == "button")
         {
             // add a button
             pWin = new ZWinSizablePushBtn();
@@ -394,7 +408,11 @@ bool ZWinPanel::ResolveLayoutTokens()
 {
     for (size_t i = 0; i < mPanelLayout.size(); i++)
     {
-        if (mPanelLayout[i] == '%')
+        if (mPanelLayout[i] == '\'' || mPanelLayout[i] == '\"')
+        {
+            i = SH::FindMatching(mPanelLayout, i);  // skip enclosed
+        }
+        else if (mPanelLayout[i] == '%')
         {
             for (size_t j = i+1; j < mPanelLayout.size(); j++)
             {
@@ -501,18 +519,9 @@ void ZWinPopupPanelBtn::TogglePanel()
         mpWinPanel = new ZWinPanel();
         mpWinPanel->mPanelLayout = mPanelLayout;
         pTop->ChildAdd(mpWinPanel, false);
+        assert(!mpWinPanel->IsSet(ZWinPanel::kCloseOnButton));
     }
 
-/*    ZRect rArea(mAreaInParent);
-    rArea.left -= mAreaLocal.Width()/2;
-    rArea.right += mAreaLocal.Height()/2;
-    rArea.bottom += mAreaLocal.Height() * 3;
-    rArea.OffsetRect(0, mAreaLocal.Height());
-
-    mpWinPanel->SetRelativeArea(rArea, pTop->GetArea(), ZGUI::C);*/
-
-
-//    mpWinPanel->SetRelativeArea(mPanelArea, pTop->GetArea(), ZGUI::C);
     UpdateUI();
     mpWinPanel->SetVisible(!mpWinPanel->mbVisible);
 }
@@ -530,9 +539,9 @@ void ZWinPopupPanelBtn::UpdateUI()
 {
     if (mpWinPanel)
     {
-        
         ZRect rArea((int64_t)(mAreaLocal.Width()*mPanelScaleVsBtn.x), (int64_t)(mAreaLocal.Height()*mPanelScaleVsBtn.y));
         rArea.InflateRect(mBtnStyle.paddingH, mBtnStyle.paddingV);
+        assert(ZGUI::ValidPos(mPanelPos));
         rArea = ZGUI::Arrange(rArea, mAreaAbsolute, mPanelPos, mBtnStyle.paddingH, mBtnStyle.paddingV);
 
         mpWinPanel->SetArea(rArea);

@@ -56,10 +56,20 @@ bool TestWin::Init()
 
     ZGUI::RA_Descriptor rad(ZRect(0, 0, grFullArea.right, gM * 2), grFullArea, ZGUI::ICIT);
 
+
+//    ZGUI::RA_Descriptor subpanelRad(ZRect(0, 0, gM * 2, gM*4), grFullArea, ZGUI::ILIC);
+
+    std::string subPanelLayout = "<panel hide_on_mouse_exit=1 show_init=1 style=" + SH::URL_Encode((string)style) + ">";
+    subPanelLayout += "<row><svgbutton id=subtest1 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipH.svg\"></svgbutton></row>";
+    subPanelLayout += "<row><svgbutton id=subtest2 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipV.svg\"></svgbutton></row>";
+    subPanelLayout += "</panel>";
+
+
+
     ZWinPanel* pPanel = new ZWinPanel();
-    
-    pPanel->mPanelLayout = "<panel close_on_button=1 show_init=1 style=" + SH::URL_Encode((string)style) + " rel_area_desc=" + SH::URL_Encode((string)rad) + "><row>";
-    pPanel->mPanelLayout += "<svgbutton id=test1 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/openfile.svg\"></svgbutton>";
+    pPanel->mPanelLayout = "<panel close_on_button=1 show_init=1 style=\"" + SH::URL_Encode((string)style) + "\" rel_area_desc=\"" + SH::URL_Encode((string)rad) + "\"><row>";
+
+    pPanel->mPanelLayout += "<panelbutton id=test1 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/openfile.svg\" layout=" + SH::URL_Encode(subPanelLayout) + " pos=ICOB scale=" + FPointToString(ZFPoint(1.0,4.0)) + "></panelbutton>";
     pPanel->mPanelLayout += "<svgbutton id=test2 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/copy.svg\"></svgbutton>";
     pPanel->mPanelLayout += "<svgbutton id=test3 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/exit.svg\"></svgbutton>";
     pPanel->mPanelLayout += "<svgbutton id=test4 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/move.svg\"></svgbutton>";

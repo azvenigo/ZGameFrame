@@ -37,6 +37,26 @@ string PointToString(const ZPoint& pointValue)
 	return Int64ArrayToString(intArray);
 }
 
+ZFPoint StringToFPoint(const std::string& sVal)
+{
+    std::vector<float> floatArray;
+    StringToFloatArray(sVal, floatArray);
+    ZASSERT_MESSAGE(floatArray.size() == 2, string("Can't extract exactly 2 values from:\"" + sVal + "\"").c_str());
+
+    return ZFPoint(floatArray[0], floatArray[1]);
+}
+
+std::string FPointToString(const ZFPoint& pointValue)
+{
+    std::vector<float> floatArray;
+    floatArray.resize(2);
+    floatArray[0] = pointValue.x;
+    floatArray[1] = pointValue.y;
+
+    return FloatArrayToString(floatArray);
+}
+
+
 ZRect StringToRect(const string& sVal)
 {
 	std::vector<int64_t> intArray;
@@ -98,6 +118,48 @@ string Int64ArrayToString(std::vector<int64_t>& intArray)
 
 	return sValue;
 }
+
+void StringToFloatArray(const std::string& sVal, std::vector<float>& floatArray)
+{
+    char* pNext;
+
+#ifdef _WIN64
+    char* pVal = strtok_s((char*)sVal.c_str(), &SH::kCharSplitToken, &pNext);
+    while (pVal)
+    {
+        floatArray.push_back(strtof(pVal, nullptr));
+        pVal = strtok_s(nullptr, &SH::kCharSplitToken, &pNext);
+    }
+#else
+    rsize_t nRemainingChars = sVal.length();
+    char* pVal = strtok_s((char*)sVal.data(), &nRemainingChars, &SH::kCharSplitToken, &pNext);
+    while (pVal)
+    {
+        floatArray.push_back(strtof(pVal, nullptr));
+        pVal = strtok_s(nullptr, 0, &SH::kCharSplitToken, &pNext);
+    }
+#endif
+}
+
+
+std::string FloatArrayToString(std::vector<float>& floatArray)
+{
+    string sValue;
+    char buf[32];
+
+    for (uint32_t i = 0; i < floatArray.size(); i++)
+    {
+        sprintf_s(buf, "%f%c", floatArray[i], SH::kCharSplitToken);
+
+        sValue.append(buf);
+    }
+
+    if (!sValue.empty())
+        sValue = sValue.substr(0, sValue.length() - 1);	// remove the trailing kCharSplitToken
+
+    return sValue;
+}
+
 
 bool StringToBinary(const string& sString, void* pDest)
 {

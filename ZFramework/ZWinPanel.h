@@ -54,6 +54,7 @@ public:
    uint32_t             mBehavior;
    ZGUI::RelativeArea   mRelativeArea;
 
+   inline bool          IsSet(uint32_t flag) { return (mBehavior & flag) != 0; }
 
    bool                 OnParentAreaChange();
 
@@ -72,9 +73,6 @@ protected:
    std::string          ResolveToken(std::string token);
 
    std::string          AppendBehaviorMessages(const std::string& sMsg);
-
-   inline bool          IsSet(uint32_t flag) { return (mBehavior & flag) != 0; }
-
 
    tRegisteredWins      mRegistered;
    int32_t              mRows;
