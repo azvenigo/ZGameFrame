@@ -82,7 +82,7 @@ protected:
 };
 
 
-class ZWinPopupPanelBtn : public ZWinSizablePushBtn
+class ZWinPopupPanelBtn : public ZWinBtn
 {
 public:
     ZWinPopupPanelBtn();

@@ -51,7 +51,7 @@ bool ZChoosePGNWin::Init()
     ChildAdd(pEdit);
     pEdit->SetFocus();
 
-    ZWinSizablePushBtn* pBtn;
+    ZWinBtn* pBtn;
 
     ZRect rButton(0, 0, nButtonWidth, nButtonHeight);
     rButton.OffsetRect(gSpacer, mAreaLocal.Height() - gSpacer - rButton.Height());
@@ -62,7 +62,7 @@ bool ZChoosePGNWin::Init()
     btnStyle.fp.nHeight = gM / 2;
 
 
-    pBtn = new ZWinSizablePushBtn();
+    pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "Random Game";
     pBtn->mCaption.style = btnStyle;
     pBtn->SetArea(rButton);
@@ -74,7 +74,7 @@ bool ZChoosePGNWin::Init()
 
 
 
-    pBtn = new ZWinSizablePushBtn();
+    pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "Cancel";
     pBtn->mCaption.style = btnStyle;
     rButton.OffsetRect(rButton.Width(), 0);
@@ -261,7 +261,7 @@ bool ZPGNWin::Init()
 
 
 
-    ZWinSizablePushBtn* pBtn;
+    ZWinBtn* pBtn;
 
     ZGUI::Style wd = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.nHeight, 200, 0, 0, false, true), {}, ZGUI::C);
     ZGUI::Style wd3 = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nHeight, 200, 0, 0, false, true), {}, ZGUI::C);
@@ -273,14 +273,14 @@ bool ZPGNWin::Init()
     ZRect rButton(0, 0, nButtonSize, nButtonSize);
     rButton.OffsetRect(gSpacer, mAreaLocal.Height() - gSpacer - rButton.Height());
 
-    pBtn = new ZWinSizablePushBtn();
+    pBtn = new ZWinBtn();
     pBtn->mCaption.sText = ")"; // wingdings 3 to the beggining
     pBtn->mCaption.style = wd3;
     pBtn->SetArea(rButton);
     pBtn->msButtonMessage = ZMessage("{beginning}", this);
     ChildAdd(pBtn);
 
-    pBtn = new ZWinSizablePushBtn();
+    pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "v"; // back one
     pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
@@ -288,7 +288,7 @@ bool ZPGNWin::Init()
     pBtn->msButtonMessage = ZMessage("{backone}", this);
     ChildAdd(pBtn);
 
-    pBtn = new ZWinSizablePushBtn();
+    pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "w"; // forward one
     pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
@@ -296,7 +296,7 @@ bool ZPGNWin::Init()
     pBtn->msButtonMessage = ZMessage("{forwardone}", this);
     ChildAdd(pBtn);
 
-    pBtn = new ZWinSizablePushBtn();
+    pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "*"; // to end
     pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
@@ -304,7 +304,7 @@ bool ZPGNWin::Init()
     pBtn->msButtonMessage = ZMessage("{end}", this);
     ChildAdd(pBtn);
 
-    pBtn = new ZWinSizablePushBtn();
+    pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "5"; // file cabinet
     pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width() * 2, 0);
@@ -313,7 +313,7 @@ bool ZPGNWin::Init()
     ChildAdd(pBtn);
 
 
-    pBtn = new ZWinSizablePushBtn();
+    pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "1"; // open file
     pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width() *2, 0);
@@ -322,7 +322,7 @@ bool ZPGNWin::Init()
     ChildAdd(pBtn);
 
 
-    pBtn = new ZWinSizablePushBtn();
+    pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "<"; // save file
     pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width(), 0);

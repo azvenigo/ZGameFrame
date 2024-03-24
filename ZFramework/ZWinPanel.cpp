@@ -266,8 +266,8 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
         else if (type == "button")
         {
             // add a button
-            pWin = new ZWinSizablePushBtn();
-            ZWinSizablePushBtn* pBtn = (ZWinSizablePushBtn*)pWin;
+            pWin = new ZWinBtn();
+            ZWinBtn* pBtn = (ZWinBtn*)pWin;
             pBtn->mCaption.sText = control->GetAttribute("caption");
             pBtn->mCaption.autoSizeFont = true;
             pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
@@ -275,8 +275,8 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
         else if (type == "svgbutton")
         {
             // add svg button
-            pWin = new ZWinSizablePushBtn();
-            ZWinSizablePushBtn* pBtn = (ZWinSizablePushBtn*)pWin;
+            pWin = new ZWinBtn();
+            ZWinBtn* pBtn = (ZWinBtn*)pWin;
             pBtn->mSVGImage.Load(control->GetAttribute("svgpath"));
             pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
         }
@@ -479,14 +479,14 @@ ZWinPopupPanelBtn::~ZWinPopupPanelBtn()
 
 bool ZWinPopupPanelBtn::Init()
 {
-    return ZWinSizablePushBtn::Init();
+    return ZWinBtn::Init();
 }
 
 bool ZWinPopupPanelBtn::Shutdown()
 {
     mpWinPanel = nullptr;
 
-    return ZWinSizablePushBtn::Shutdown();
+    return ZWinBtn::Shutdown();
 }
 
 bool ZWinPopupPanelBtn::OnMouseUpL(int64_t x, int64_t y)

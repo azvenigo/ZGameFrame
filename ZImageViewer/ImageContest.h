@@ -11,7 +11,7 @@
 
 class ZWinImage;
 class ZWinCheck;
-class ZWinSizablePushBtn;
+class ZWinBtn;
 class ZWinControlPanel;
 class WinTopWinners;
 
@@ -92,7 +92,7 @@ protected:
     bool                    mbShowUI;
 //    ImageMeta               mMeta;
     tImageMetaList          mCurrentFolderImageMeta;
-    ZWinSizablePushBtn*     mpChooseBtn[2];
+    ZWinBtn*                mpChooseBtn[2];
 
     State                   mState;
 };

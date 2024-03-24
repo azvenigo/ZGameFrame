@@ -1453,7 +1453,7 @@ void ImageViewer::UpdateControlPanel()
     mpPanel->mrTrigger = rPanelArea;
     mpPanel->mrTrigger.bottom = mpPanel->mrTrigger.top + mpPanel->mrTrigger.Height() / 4;
 
-    ZWinSizablePushBtn* pBtn;
+    ZWinBtn* pBtn;
 
     ZRect rButton(nGroupSide, nGroupSide);
     rButton.OffsetRect(gSpacer * 2, gSpacer * 2);

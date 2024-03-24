@@ -48,13 +48,13 @@ void ZWinControlPanel::FitToControls()
 
 
 
-ZWinSizablePushBtn* ZWinControlPanel::Button(const std::string& sID, const string& sCaption, const std::string& sMessage)
+ZWinBtn* ZWinControlPanel::Button(const std::string& sID, const string& sCaption, const std::string& sMessage)
 {
 //    ZASSERT(mbInitted);
-    ZWinSizablePushBtn* pBtn = mButtons[sID];
+    ZWinBtn* pBtn = mButtons[sID];
     if (!pBtn)
     {
-        pBtn = new ZWinSizablePushBtn();
+        pBtn = new ZWinBtn();
         mButtons[sID] = pBtn;
         ChildAdd(pBtn);
 
@@ -79,12 +79,12 @@ ZWinSizablePushBtn* ZWinControlPanel::Button(const std::string& sID, const strin
     return pBtn;
 }
 
-ZWinSizablePushBtn* ZWinControlPanel::SVGButton(const std::string& sID, const string& sSVGFilepath, const std::string& sMessage)
+ZWinBtn* ZWinControlPanel::SVGButton(const std::string& sID, const string& sSVGFilepath, const std::string& sMessage)
 {
-    ZWinSizablePushBtn* pBtn = mButtons[sID];
+    ZWinBtn* pBtn = mButtons[sID];
     if (!pBtn)
     {
-        pBtn = new ZWinSizablePushBtn();
+        pBtn = new ZWinBtn();
         mButtons[sID] = pBtn;
         ChildAdd(pBtn);
 

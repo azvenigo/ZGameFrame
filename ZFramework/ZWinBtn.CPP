@@ -45,7 +45,7 @@ bool ZWinCheck::Init()
 {  
 	// Important note!
 	// Init must be called after image, font, and captions are set.
-	ZWinSizablePushBtn::Init();
+	ZWinBtn::Init();
     gMessageSystem.AddNotification("radio_check", this);
 
 	ZASSERT(!msWinName.empty())
@@ -69,7 +69,7 @@ bool ZWinCheck::Paint()
         mCaption.style = mUncheckedStyle;
     }
 
-	ZWinSizablePushBtn::Paint();
+	ZWinBtn::Paint();
 
     if (mbEnabled && mDrawState == kDown)
     {
@@ -100,7 +100,7 @@ bool ZWinCheck::HandleMessage(const ZMessage& message)
         return true;
     }
 
-	return ZWinSizablePushBtn::HandleMessage(message);
+	return ZWinBtn::HandleMessage(message);
 }
 
 
@@ -150,7 +150,7 @@ bool ZWinCheck::OnMouseDownL(int64_t, int64_t)
 }
 
 
-ZWinSizablePushBtn::ZWinSizablePushBtn()
+ZWinBtn::ZWinBtn()
 {
 	mpUpEdgeImage       = NULL;
 	mpDownEdgeImage     = NULL;
@@ -172,11 +172,11 @@ ZWinSizablePushBtn::ZWinSizablePushBtn()
 //	mbTransformable     = false;
 }
 
-ZWinSizablePushBtn::~ZWinSizablePushBtn()
+ZWinBtn::~ZWinBtn()
 {
 }
 
-bool ZWinSizablePushBtn::Init()
+bool ZWinBtn::Init()
 { 
 	mbAcceptsCursorMessages = true;
     mIdleSleepMS = 30000;
@@ -184,12 +184,12 @@ bool ZWinSizablePushBtn::Init()
 	return ZWin::Init();
 }
 
-bool ZWinSizablePushBtn::Shutdown()
+bool ZWinBtn::Shutdown()
 {
 	return ZWin::Shutdown();
 }
 
-bool ZWinSizablePushBtn::Paint()
+bool ZWinBtn::Paint()
 {
     if (!PrePaintCheck())
         return false;
@@ -246,7 +246,7 @@ bool ZWinSizablePushBtn::Paint()
 	return ZWin::Paint();
 }
 
-bool ZWinSizablePushBtn::OnMouseDownL(int64_t /*x*/, int64_t /*y*/)
+bool ZWinBtn::OnMouseDownL(int64_t /*x*/, int64_t /*y*/)
 {
     if (mbEnabled)
     {
@@ -258,7 +258,7 @@ bool ZWinSizablePushBtn::OnMouseDownL(int64_t /*x*/, int64_t /*y*/)
 	return true;
 }
 
-bool ZWinSizablePushBtn::OnMouseUpL(int64_t x, int64_t y)
+bool ZWinBtn::OnMouseUpL(int64_t x, int64_t y)
 {
 	if (AmCapturing())
 	{
@@ -277,7 +277,7 @@ bool ZWinSizablePushBtn::OnMouseUpL(int64_t x, int64_t y)
 	return ZWin::OnMouseUpL(x, y);
 }
 
-bool ZWinSizablePushBtn::OnMouseMove(int64_t x, int64_t y)
+bool ZWinBtn::OnMouseMove(int64_t x, int64_t y)
 {
 	if (AmCapturing())
 	{
@@ -308,7 +308,7 @@ bool ZWinSizablePushBtn::OnMouseMove(int64_t x, int64_t y)
 	return ZWin::OnMouseMove(x, y);
 }
 
-string ZWinSizablePushBtn::FitCaptionInWidth(int64_t nWidth, const string& sCaption, tZFontPtr pFont)
+string ZWinBtn::FitCaptionInWidth(int64_t nWidth, const string& sCaption, tZFontPtr pFont)
 {
 	int64_t nFrontChars = 0;
 	int64_t nBackChars = 0;

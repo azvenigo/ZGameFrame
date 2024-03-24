@@ -9,13 +9,13 @@
 /////////////////////////////////////////////////////////////////////////
 // 
 class ZWinFormattedDoc;
-class ZWinSizablePushBtn;
+class ZWinBtn;
 class ZWinCheck;
 class ZWinSlider;
 class ZWinLabel;
 class ZWinPopupPanelBtn;
 
-typedef std::map<std::string, ZWinSizablePushBtn*>  tIDToButtonMap;
+typedef std::map<std::string, ZWinBtn*>  tIDToButtonMap;
 typedef std::map<std::string, ZWinCheck*>           tIDToCheckMap;
 typedef std::map<std::string, ZWinSlider*>          tIDToSliderMap;
 typedef std::map<std::string, ZWinLabel*>           tIDToLabelMap;
@@ -33,11 +33,11 @@ public:
     ZWinLabel*              Caption(    const std::string& sID, 
                                         const std::string& sCaption = "");
 
-    ZWinSizablePushBtn*     Button(     const std::string& sID, 
+    ZWinBtn*     Button(     const std::string& sID, 
                                         const std::string& sCaption = "", 
                                         const std::string& sMessage = "");
 
-    ZWinSizablePushBtn*     SVGButton(  const std::string& sID, 
+    ZWinBtn*     SVGButton(  const std::string& sID, 
                                         const std::string& sSVGFilepath = "", 
                                         const std::string& sMessage = "");
 

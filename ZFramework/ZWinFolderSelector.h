@@ -6,7 +6,7 @@
 #include <string>
 #include <filesystem>
 
-class ZWinSizablePushBtn;
+class ZWinBtn;
 class ZWinFormattedDoc;
 
 class ZWinFolderLabel : public ZWin
@@ -86,7 +86,7 @@ private:
 
     tZBufferPtr mBackground;
 
-    ZWinSizablePushBtn* mpOpenFolderBtn;
+    ZWinBtn* mpOpenFolderBtn;
     ZWinFormattedDoc* mpFolderList;
     ZWinFolderLabel* mpLabel;
 };

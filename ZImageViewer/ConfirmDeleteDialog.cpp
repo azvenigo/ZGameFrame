@@ -69,8 +69,8 @@ bool ConfirmDeleteDialog::Init()
 
 
 
-        ZWinSizablePushBtn* pBtn;
-        pBtn = new ZWinSizablePushBtn();
+        ZWinBtn* pBtn;
+        pBtn = new ZWinBtn();
         pBtn->msButtonMessage = ZMessage("{deleteconfirm}", this);
         pBtn->mCaption.sText = "Confirm Delete";
         pBtn->mCaption.style = style;
@@ -81,7 +81,7 @@ bool ConfirmDeleteDialog::Init()
         ChildAdd(pBtn);
         arrangeList.push_back(pBtn);
 
-        pBtn = new ZWinSizablePushBtn();
+        pBtn = new ZWinBtn();
         pBtn->msButtonMessage = ZMessage("{goback}", this);
         pBtn->mCaption.sText = "Go Back";
         pBtn->mCaption.style = style;

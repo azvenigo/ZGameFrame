@@ -95,7 +95,7 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 // Sizable push button
 ///////////////////////////////////////////////////////////////////////////////
-class ZWinSizablePushBtn : public ZWin
+class ZWinBtn : public ZWin
 {
 public:
 	enum eSizablePushBtnState
@@ -105,8 +105,8 @@ public:
 	};
 
 public:
-	ZWinSizablePushBtn();
-	~ZWinSizablePushBtn();
+	ZWinBtn();
+	~ZWinBtn();
 
 	virtual bool            Init();
 	virtual bool            Shutdown();
@@ -141,7 +141,7 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 //Check box button
 ///////////////////////////////////////////////////////////////////////////////
-class ZWinCheck : public ZWinSizablePushBtn
+class ZWinCheck : public ZWinBtn
 {
 public:
 	ZWinCheck(bool* pbChecked = nullptr);

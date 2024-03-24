@@ -114,7 +114,7 @@ private:
 };
 
 
-class ZWinSizablePushBtn;
+class ZWinBtn;
 
 class ZChessWin : public ZWin
 {

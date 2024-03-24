@@ -1163,7 +1163,7 @@ bool ZWinDialog::Init()
 
     if (mBehavior & eBehavior::CancelButton)
     {
-        ZWinSizablePushBtn* pBtn(new ZWinSizablePushBtn());
+        ZWinBtn* pBtn(new ZWinBtn());
         pBtn->mCaption.sText = "Cancel";
         pBtn->mCaption.style = gStyleButton;
         pBtn->msButtonMessage = ZMessage("{dlg_cancel}", this);
@@ -1176,7 +1176,7 @@ bool ZWinDialog::Init()
 
     if (mBehavior & eBehavior::OKButton)
     {
-        ZWinSizablePushBtn* pBtn(new ZWinSizablePushBtn());
+        ZWinBtn* pBtn(new ZWinBtn());
         pBtn->msButtonMessage = ZMessage("{dlg_ok}", this);
         pBtn->mCaption.sText = "OK";
         pBtn->mCaption.style = gStyleButton;

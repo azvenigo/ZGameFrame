@@ -453,13 +453,13 @@ bool ImageContest::Init()
 
         string sAppPath = gRegistry["apppath"];
 
-        mpChooseBtn[kLeft] = new ZWinSizablePushBtn();
+        mpChooseBtn[kLeft] = new ZWinBtn();
         mpChooseBtn[kLeft]->mSVGImage.Load(sAppPath + "/res/left.svg");
         mpChooseBtn[kLeft]->msTooltip = "Choose Left";
         mpChooseBtn[kLeft]->msButtonMessage = ZMessage("{select_winner;side=left}", this);
         ChildAdd(mpChooseBtn[kLeft]);
 
-        mpChooseBtn[kRight] = new ZWinSizablePushBtn();
+        mpChooseBtn[kRight] = new ZWinBtn();
         mpChooseBtn[kRight]->mSVGImage.Load(sAppPath + "/res/right.svg");
         mpChooseBtn[kRight]->msTooltip = "Choose Right";
         mpChooseBtn[kRight]->msButtonMessage = ZMessage("{select_winner;side=right}", this);
@@ -547,7 +547,7 @@ void ImageContest::UpdateControlPanel()
     mpPanel->mrTrigger.bottom = mpPanel->mrTrigger.top + mpPanel->mrTrigger.Height() / 4;
     //mpPanel->mbHideOnMouseExit = !mbShowUI;
 
-    ZWinSizablePushBtn* pBtn;
+    ZWinBtn* pBtn;
 
     ZRect rButton((int64_t)(nGroupSide * 1.5), nGroupSide);
     rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
