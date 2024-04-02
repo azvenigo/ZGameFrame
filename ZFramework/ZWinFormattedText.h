@@ -109,9 +109,9 @@ private:
 	void				CalculateFullDocumentHeight();
 	int64_t   			GetLineHeight(tFormattedLine& line);     // returns the font height of the largest font on the line
 
-	bool 				ParseDocument(ZXMLNode* pNode);
-	bool 				ProcessLineNode(ZXMLNode* pLineNode);
-	void				ExtractParameters(ZXMLNode* pNode);
+	bool 				ParseDocument(ZXML* pNode);
+	bool 				ProcessLineNode(ZXML* pLineNode);
+	void				ExtractParameters(ZXML* pNode);
     void                ComputeColumnWidths();
 
 

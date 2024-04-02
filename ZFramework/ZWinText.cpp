@@ -22,7 +22,7 @@ bool ZWinLabel::OnMouseDownL(int64_t x, int64_t y)
 {
     if (mBehavior & CloseOnClick)
     {
-        gMessageSystem.Post("{kill_child}", GetTopWindow(), "name", GetTargetName());
+        gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
     }
 
     return ZWin::OnMouseDownL(x, y);
@@ -66,7 +66,7 @@ bool ZWinLabel::Process()
         {
             SetVisible(false);
             mBehavior = None;   // no further actions
-            gMessageSystem.Post("{kill_child}", GetTopWindow(), "name", GetTargetName());
+            gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
         }
     }
 
@@ -92,7 +92,7 @@ bool ZWinLabel::Paint()
 //        gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(mpSurface.get(), mAreaAbsolute);
 
 //        ZDEBUG_OUT("x:", mAreaAbsolute.left, "y:", mAreaAbsolute.top, "\n");
-        mpSurface->Blur(3);
+//        mpSurface->Blur(3);
         mpSurface->FillAlpha(mStyle.bgCol);
         mpSurface->DrawRectAlpha(0xff000000 | mStyle.bgCol, mpSurface->GetArea());
     }

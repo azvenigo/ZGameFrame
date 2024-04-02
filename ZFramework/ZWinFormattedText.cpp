@@ -463,7 +463,7 @@ void ZWinFormattedDoc::Clear()
 	mnFullDocumentHeight = 0;
 }
 
-bool ZWinFormattedDoc::ParseDocument(ZXMLNode* pNode)
+bool ZWinFormattedDoc::ParseDocument(ZXML* pNode)
 {
 	Clear();
 
@@ -499,7 +499,7 @@ bool ZWinFormattedDoc::ParseDocument(ZXMLNode* pNode)
 
 	for (tXMLNodeList::iterator it = elementNodeList.begin(); it != elementNodeList.end(); it++)
 	{
-		ZXMLNode* pChild = *it;
+		ZXML* pChild = *it;
 		ProcessLineNode(pChild);
 	}
 
@@ -541,7 +541,7 @@ void ZWinFormattedDoc::ComputeColumnWidths()
 void ZWinFormattedDoc::AddLineNode(string sLine)
 {
     // Treat the line as a line node
-    ZXMLNode lineNode;
+    ZXML lineNode;
     lineNode.Init(sLine);
     ProcessLineNode(lineNode.GetChild("line"));
     mnFullDocumentHeight = 0;
@@ -582,7 +582,7 @@ void ZWinFormattedDoc::AddMultiLine(string sLine, ZGUI::Style style, const strin
     UpdateScrollbar();
 }
 
-bool ZWinFormattedDoc::ProcessLineNode(ZXMLNode* pTextNode)
+bool ZWinFormattedDoc::ProcessLineNode(ZXML* pTextNode)
 {
     if (!pTextNode)
         return false;

@@ -33,7 +33,7 @@ namespace ZGUI
         else if (pos&VC)
             val += "C";
         else
-            val += "R";
+            val += "B";
 
         return val;
     }
@@ -240,6 +240,146 @@ namespace ZGUI
         return ZRect(newX, newY, newX + w, newY + h);
     }
 
+    ZRect Align(const ZRect& ralign, const ZRect& ref, uint32_t alignmentflags, int64_t paddingH, int64_t paddingV, float fWidthRatio, float fHeightRatio, int64_t minWidth , int64_t minHeight, int64_t maxWidth, int64_t maxHeight)
+    {
+
+
+#ifdef _DEBUG
+        ZDEBUG_OUT("Align:");
+        if (alignmentflags & L)
+            ZDEBUG_OUT_LOCKLESS("L");
+        if (alignmentflags & T)
+            ZDEBUG_OUT_LOCKLESS("T");
+        if (alignmentflags & R)
+            ZDEBUG_OUT_LOCKLESS("R");
+        if (alignmentflags & B)
+            ZDEBUG_OUT_LOCKLESS("B");
+        if (alignmentflags & VInside)
+            ZDEBUG_OUT_LOCKLESS("Vinside");
+        if (alignmentflags & VOutside)
+            ZDEBUG_OUT_LOCKLESS("VOutside");
+        if (alignmentflags & HInside)
+            ZDEBUG_OUT_LOCKLESS("Hinside");
+        if (alignmentflags & HOutside)
+            ZDEBUG_OUT_LOCKLESS("HOutside");
+
+#endif
+
+
+
+        ZRect r = ralign;
+
+
+
+
+
+
+        bool freeT = (alignmentflags & T) == 0;
+        bool freeB = (alignmentflags & B) == 0;
+        bool freeL = (alignmentflags & L) == 0;
+        bool freeR = (alignmentflags & R) == 0;
+
+        int64_t w = (int64_t) (ref.Width() * fWidthRatio);
+        int64_t h = (int64_t) (ref.Height() * fHeightRatio);
+
+        if (minWidth > 0)
+            w = std::max<int64_t>(w, minWidth);
+        if (maxWidth > 0)
+            w = std::min<int64_t>(w, maxWidth);
+
+        if (minHeight > 0)
+            h = std::max<int64_t>(h, minHeight);
+        if (maxHeight > 0)
+            h = std::min<int64_t>(h, maxHeight);
+
+
+
+
+
+        // align top of r
+        if (alignmentflags & T)
+        {
+            if (alignmentflags & VOutside)
+            {
+                // align top of r to bottom of ref
+                r.top = ref.bottom + paddingV;
+            }
+            else
+            {
+                // align top of r to top of ref
+                r.top = ref.top + paddingV;
+            }
+            if (freeB)
+                r.bottom = r.top + h;
+        }
+
+        // align bottom of r
+        if (alignmentflags & B)
+        {
+            if (alignmentflags & VOutside)
+            {
+                // align bottom of r to top of ref
+                r.bottom = ref.top - paddingV;
+            }
+            else
+            {
+                // align bottom of r to bottom of ref
+                r.bottom = ref.bottom - paddingV;
+            }
+            if (freeT)
+                r.top = r.bottom - h;
+        }
+
+        // align left of r
+        if (alignmentflags & L)
+        {
+            if (alignmentflags & HOutside)
+            {
+                // align right of r to left of ref
+                r.left = ref.right + paddingH;
+            }
+            else
+            {
+                // align left or r to left of ref
+                r.left = ref.left + paddingH;
+            }
+                if (freeR)
+                    r.right = r.left + w;
+        }
+
+        // align right of r
+        if (alignmentflags & R)
+        {
+            if (alignmentflags & HOutside)
+            {
+                // align left of r to right of ref
+                r.right = ref.left - paddingH;
+            }
+            else
+            {
+                // align right of r to right of ref
+                r.right = ref.right - paddingH;
+            }
+            if (freeL)
+                r.left = r.right - w;
+        }
+
+        if (alignmentflags & HC)
+        {
+            int64_t newX = (ref.left + ref.right) / 2 - w / 2;
+            r.SetRect(newX, r.top, newX + w, r.top + h);
+        }
+
+        if (alignmentflags & VC)
+        {
+            int64_t newY = (ref.top + ref.bottom) / 2 - h / 2;
+            r.SetRect(r.left, newY, r.left + w, newY + h);
+        }
+
+        return r;
+    }
+
+
     ZRect ScaledFit(const ZRect& r, const ZRect& ref)
     {
         double fRatio = (double)r.Height() / (double)r.Width();
@@ -261,7 +401,7 @@ namespace ZGUI
     }
 
 
-    ZRect RelativeArea::Area(const ZRect& ref) const
+/*    ZRect RelativeArea::Area(const ZRect& ref) const
     {
         // compute area from reference
 
@@ -336,7 +476,7 @@ namespace ZGUI
         if (j.contains("a")) aspectratio = j["a"];
         if (j.contains("s")) sizeratio = j["s"];
     }
-
+    */
 
     RA_Descriptor::RA_Descriptor(std::string s)
     {
@@ -347,12 +487,18 @@ namespace ZGUI
         j.at("ar").get_to(area.right);
         j.at("ab").get_to(area.bottom);
 
-        j.at("rl").get_to(ref.left);
-        j.at("rt").get_to(ref.top);
-        j.at("rr").get_to(ref.right);
-        j.at("rb").get_to(ref.bottom);
+        j.at("refwin").get_to(referenceWindow);
 
-        j.at("pos").get_to(anchorpos);
+        j.at("wr").get_to(wRatio);
+        j.at("hr").get_to(hRatio);
+
+        j.at("minw").get_to(minWidth);
+        j.at("minh").get_to(minHeight);
+
+        j.at("maxw").get_to(maxWidth);
+        j.at("maxh").get_to(maxHeight);
+
+        j.at("align").get_to(alignment);
     }
 
     RA_Descriptor::operator std::string() const
@@ -363,12 +509,19 @@ namespace ZGUI
         j["ar"] = area.right;
         j["ab"] = area.bottom;
 
-        j["rl"] = ref.left;
-        j["rt"] = ref.top;
-        j["rr"] = ref.right;
-        j["rb"] = ref.bottom;
+        j["refwin"] = referenceWindow;
 
-        j["pos"] = (uint32_t)anchorpos;
+        j["wr"] = wRatio;
+        j["hr"] = hRatio;
+
+        j["minw"] = minWidth;
+        j["minh"] = minHeight;
+
+        j["maxw"] = maxWidth;
+        j["maxh"] = maxHeight;
+
+
+        j["align"] = alignment;
 
         return j.dump();
     }

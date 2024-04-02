@@ -113,10 +113,8 @@ public:
     template <typename T, typename...Types>
     void Post(std::string type, std::string key, T val, Types...more)
     {
-        assert(type[0] == '{' && type[type.length() - 1] == '}');
-
         ZMessage m;
-        m.mType = type.substr(1, type.length() - 2);
+        m.mType = type;
         ToMessage(m, key, val, more...);
 
         const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
@@ -127,10 +125,8 @@ public:
     template <typename T, typename...Types>
     void Post(std::string type, IMessageTarget* pTarget, std::string key, T val, Types...more)
     {
-        assert(type[0] == '{' && type[type.length()-1] == '}');
-
         ZMessage m;
-        m.mType = type.substr(1,type.length()-2);
+        m.mType = type;
 
         if (pTarget)
             m.mTarget = pTarget->GetTargetName();

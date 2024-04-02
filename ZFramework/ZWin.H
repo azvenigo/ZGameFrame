@@ -16,7 +16,7 @@
 // Forward decl
 class ZWin;
 class ZBuffer;
-class ZXMLNode;
+class ZXML;
 class ZScreenBuffer;
 class ZMainWin;
 

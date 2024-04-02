@@ -54,14 +54,14 @@ bool TestWin::Init()
     style.paddingH = 0;
     style.paddingV = 0;
 
-    ZGUI::RA_Descriptor rad(ZRect(0, 0, grFullArea.right, gM * 2), grFullArea, ZGUI::ICIT);
+    ZGUI::RA_Descriptor rad(ZRect(0, 0, grFullArea.right, gM * 2), msWinName, ZGUI::ICIT, 0.5, 0.1);
 
 
 //    ZGUI::RA_Descriptor subpanelRad(ZRect(0, 0, gM * 2, gM*4), grFullArea, ZGUI::ILIC);
 
     std::string subPanelLayout = "<panel hide_on_mouse_exit=1 show_init=1 style=" + SH::URL_Encode((string)style) + ">";
-    subPanelLayout += "<row><svgbutton id=subtest1 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipH.svg\"></svgbutton></row>";
-    subPanelLayout += "<row><svgbutton id=subtest2 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipV.svg\"></svgbutton></row>";
+    subPanelLayout += "<row><button id=subtest1 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipH.svg\"></button></row>";
+    subPanelLayout += "<row><button id=subtest2 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipV.svg\"></button></row>";
     subPanelLayout += "</panel>";
 
 
@@ -70,18 +70,18 @@ bool TestWin::Init()
     pPanel->mPanelLayout = "<panel close_on_button=1 show_init=1 style=\"" + SH::URL_Encode((string)style) + "\" rel_area_desc=\"" + SH::URL_Encode((string)rad) + "\"><row>";
 
     pPanel->mPanelLayout += "<panelbutton id=test1 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/openfile.svg\" layout=" + SH::URL_Encode(subPanelLayout) + " pos=ICOB scale=" + FPointToString(ZFPoint(1.0,4.0)) + "></panelbutton>";
-    pPanel->mPanelLayout += "<svgbutton id=test2 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/copy.svg\"></svgbutton>";
-    pPanel->mPanelLayout += "<svgbutton id=test3 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/exit.svg\"></svgbutton>";
-    pPanel->mPanelLayout += "<svgbutton id=test4 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/move.svg\"></svgbutton>";
-    pPanel->mPanelLayout += "<svgbutton id=test5 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipH.svg\"></svgbutton>";
-    pPanel->mPanelLayout += "<svgbutton id=test6 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipV.svg\"></svgbutton>";
-    pPanel->mPanelLayout += "<svgbutton id=test7 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/return.svg\"></svgbutton>";
-    pPanel->mPanelLayout += "<svgbutton id=test8 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/fullscreen.svg\"></svgbutton>";
+    pPanel->mPanelLayout += "<button id=test2 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/copy.svg\"></button>";
+    pPanel->mPanelLayout += "<button id=test3 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/exit.svg\"></button>";
+    pPanel->mPanelLayout += "<button id=test4 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/move.svg\"></button>";
+    pPanel->mPanelLayout += "<button id=test5 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipH.svg\"></button>";
+    pPanel->mPanelLayout += "<button id=test6 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/flipV.svg\"></button>";
+    pPanel->mPanelLayout += "<button id=test7 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/return.svg\"></button>";
+    pPanel->mPanelLayout += "<button id=test8 group=group1 svgpath=\"D:/dev/git/ZGameFrame/build/ZImageViewer/Debug/res/fullscreen.svg\"></button>";
     //    pPanel->mPanelLayout += "<button id=test8 group=group1 caption=hello></button>";
     pPanel->mPanelLayout += "</row>";
-//    sPanelLayout += "<row><svgbutton id=test1 group=group1 svgpath=%apppath%/res/test.svg></svgbutton><button id=test2 group=group1 caption=hello></button></row>";
+//    sPanelLayout += "<row><button id=test1 group=group1 svgpath=%apppath%/res/test.svg></button><button id=test2 group=group1 caption=hello></button></row>";
 //    sPanelLayout += "<row><label id=label1 caption=\"A label\"></label></row>";
-//    sPanelLayout += "<row><button id=test9 group=group1 caption=hello></button><svgbutton id=test10 group=group1 svgpath=%apppath%/res/test.svg></svgbutton></row>";
+//    sPanelLayout += "<row><button id=test9 group=group1 caption=hello></button><button id=test10 group=group1 svgpath=%apppath%/res/test.svg></button></row>";
     pPanel->mPanelLayout += "</panel>";
     ChildAdd(pPanel);
     

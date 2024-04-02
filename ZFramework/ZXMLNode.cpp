@@ -10,24 +10,24 @@ static char THIS_FILE[] = __FILE__;
 using namespace std;
 
 
-ZXMLNode::ZXMLNode()
+ZXML::ZXML()
 {
 }
 
-ZXMLNode::~ZXMLNode()
+ZXML::~ZXML()
 {
 	for (tXMLNodeList::iterator it = mChildren.begin(); it != mChildren.end(); it++)
 	{
-		ZXMLNode* pChild = *it;
+		ZXML* pChild = *it;
 		delete pChild;
 	}
 }
 
-bool ZXMLNode::Init(const string& sRaw)
+bool ZXML::Init(const string& sRaw)
 {
 	for (tXMLNodeList::iterator it = mChildren.begin(); it != mChildren.end(); it++)
 	{
-		ZXMLNode* pChild = *it;
+		ZXML* pChild = *it;
 		delete pChild;
 	}
 	mChildren.clear();
@@ -38,7 +38,7 @@ bool ZXMLNode::Init(const string& sRaw)
 	return bParsed;
 }
 
-void ZXMLNode::SetName(const string& sName)
+void ZXML::SetName(const string& sName)
 {
 	if (sName[0] == '\"' || sName[0] == '\'')
 	{
@@ -58,7 +58,7 @@ void ZXMLNode::SetName(const string& sName)
 }
 
 
-string ZXMLNode::GetAttribute(const string& sKey) const
+string ZXML::GetAttribute(const string& sKey) const
 {
 	tKeyValueMap::const_iterator it = mAttributes.find(sKey);
 	if (it != mAttributes.end())
@@ -67,7 +67,7 @@ string ZXMLNode::GetAttribute(const string& sKey) const
 	return "";
 }
 
-bool ZXMLNode::HasAttribute(const string& sKey) const
+bool ZXML::HasAttribute(const string& sKey) const
 {
 	tKeyValueMap::const_iterator it = mAttributes.find(sKey);
 	if (it != mAttributes.end())
@@ -77,7 +77,7 @@ bool ZXMLNode::HasAttribute(const string& sKey) const
 }
 
 
-void ZXMLNode::SetAttribute(const string& sKey, const string& sVal)
+void ZXML::SetAttribute(const string& sKey, const string& sVal)
 {
 	if (sVal[0] == '\"' || sVal[0] == '\'')
 	{
@@ -94,11 +94,11 @@ void ZXMLNode::SetAttribute(const string& sKey, const string& sVal)
 	mAttributes[sKey] = SH::URL_Encode(sVal);
 }
 
-ZXMLNode* ZXMLNode::GetChild(const string& sName) const
+ZXML* ZXML::GetChild(const string& sName) const
 {
 	for (tXMLNodeList::const_iterator it = mChildren.begin(); it != mChildren.end(); it++)
 	{
-		ZXMLNode* pChild = *it;
+		ZXML* pChild = *it;
 		if (pChild->GetName() == sName)
 			return pChild;
 	}
@@ -106,9 +106,9 @@ ZXMLNode* ZXMLNode::GetChild(const string& sName) const
 	return NULL;
 }
 
-ZXMLNode* ZXMLNode::AddChild(const string& sName, bool bUnique)
+ZXML* ZXML::AddChild(const string& sName, bool bUnique)
 {
-	ZXMLNode* pChild = NULL;
+	ZXML* pChild = NULL;
 	if (bUnique)
 	{
 		pChild = GetChild(sName);
@@ -116,7 +116,7 @@ ZXMLNode* ZXMLNode::AddChild(const string& sName, bool bUnique)
 			return pChild;
 	}
 
-	pChild = new ZXMLNode();
+	pChild = new ZXML();
 	pChild->SetName(sName);
 	mChildren.push_back(pChild);
 
@@ -124,11 +124,11 @@ ZXMLNode* ZXMLNode::AddChild(const string& sName, bool bUnique)
 }
 
 
-bool ZXMLNode::DeleteChild(ZXMLNode* pNode)
+bool ZXML::DeleteChild(ZXML* pNode)
 {
 	for (tXMLNodeList::iterator it = mChildren.begin(); it != mChildren.end(); it++)
 	{
-		ZXMLNode* pChild = *it;
+		ZXML* pChild = *it;
 		if (pChild == pNode)
 		{
 			mChildren.erase(it);
@@ -140,24 +140,24 @@ bool ZXMLNode::DeleteChild(ZXMLNode* pNode)
 	return false;
 }
 
-void ZXMLNode::GetChildren(const string& sName, tXMLNodeList& nodeList)
+void ZXML::GetChildren(const string& sName, tXMLNodeList& nodeList)
 {
 	nodeList.clear();
 	for (tXMLNodeList::iterator it = mChildren.begin(); it != mChildren.end(); it++)
 	{
-		ZXMLNode* pChild = *it;
+		ZXML* pChild = *it;
 		if (pChild->GetName() == sName)
 			nodeList.push_back(pChild);
 	}
 }
 
-void ZXMLNode::GetChildren(tXMLNodeList& nodeList)
+void ZXML::GetChildren(tXMLNodeList& nodeList)
 {
 	nodeList = mChildren;
 }
 
 
-bool ZXMLNode::Parse(const string& sRaw)
+bool ZXML::Parse(const string& sRaw)
 {
 	// Find first non whitespace char.
 	int64_t nFindOffset = 0;
@@ -179,7 +179,7 @@ bool ZXMLNode::Parse(const string& sRaw)
 		int64_t nEndStartTag = FindSubstring(sRaw, ">", nFindOffset, true);		// find the '>' ignoring quoted sections
 		ZASSERT_MESSAGE(nEndStartTag >= 0, string("Couldn't find end of the start tag: " + sRaw).c_str());
 
-		ZXMLNode* pNewChild = new ZXMLNode();
+		ZXML* pNewChild = new ZXML();
 
 		string sStartTag = sRaw.substr(nFindOffset+1, nEndStartTag-nFindOffset-1);		// skip the initial '<'
 		if (sStartTag.substr(sStartTag.length()-1) == "/")
@@ -226,7 +226,7 @@ bool ZXMLNode::Parse(const string& sRaw)
 	return true;
 }
 
-std::list<string> ZXMLNode::SplitAttributes(string sAttributes)
+std::list<string> ZXML::SplitAttributes(string sAttributes)
 {
 	std::list<string> attributeList;
 
@@ -297,7 +297,7 @@ std::list<string> ZXMLNode::SplitAttributes(string sAttributes)
 	return attributeList;
 }
 
-void ZXMLNode::ParseStartTag(const string& sStartTag)
+void ZXML::ParseStartTag(const string& sStartTag)
 {
 	std::list<string> attributeList = SplitAttributes(sStartTag);
 
@@ -312,7 +312,7 @@ void ZXMLNode::ParseStartTag(const string& sStartTag)
 	}
 }
 
-void ZXMLNode::ParseKeyValuePair(const string& sKeyValuePair)
+void ZXML::ParseKeyValuePair(const string& sKeyValuePair)
 {
 	int64_t nEquals = sKeyValuePair.find('=');
 	ZASSERT_MESSAGE(nEquals > 0, string("Parsing Key/Value pair failed to find '=': " + sKeyValuePair).c_str());
@@ -346,7 +346,7 @@ string MakeTabs(int64_t nTabs)
 	return sReturned;
 }
 
-string ZXMLNode::ToString(int64_t nDepth)
+string ZXML::ToString(int64_t nDepth)
 {
 	string sReturned;
 
@@ -425,7 +425,7 @@ string ZXMLNode::ToString(int64_t nDepth)
 	return sReturned;
 }
 
-int64_t ZXMLNode::FindSubstring(const string& sStringToSearch, const string& sSubstring, int64_t nStartOffset, bool bIgnoreQuotedPortions)
+int64_t ZXML::FindSubstring(const string& sStringToSearch, const string& sSubstring, int64_t nStartOffset, bool bIgnoreQuotedPortions)
 {
     const char* pSearch = sStringToSearch.data() + nStartOffset;
     const char* pSub = sSubstring.data();
@@ -468,7 +468,7 @@ int64_t ZXMLNode::FindSubstring(const string& sStringToSearch, const string& sSu
     return -1;
 }
 
-bool ZXMLNode::GetField(const string& sText, const string& sKey, string& sOutput)
+bool ZXML::GetField(const string& sText, const string& sKey, string& sOutput)
 {
     string sStartKey("<" + sKey + ">");
     string sEndKey("</" + sKey + ">");

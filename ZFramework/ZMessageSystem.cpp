@@ -35,6 +35,18 @@ ZMessage::ZMessage(const std::string& sRaw, class IMessageTarget* pTarget)
 {
     // new format requires all messages are enclosed with curly braces {}
     assert(!sRaw.empty() && sRaw[0] == '{' && sRaw[sRaw.length() - 1] == '}');
+    
+#ifdef _DEBUG
+    size_t count = 0;
+    for (auto c : sRaw)
+        if (c == '{')
+            count++;
+    if (count > 1)
+    {
+        assert(false);  // Should not instantiate multi-message object.... needs to be posted to message system
+    }
+#endif
+
 
     if (sRaw.find(";") != string::npos)
     {
@@ -207,6 +219,7 @@ void ZMessageSystem::Process()
 			tNameToMessageTargetMap::iterator it = mNameToMessageTargetMap.find(sTarget);
 			if (it != mNameToMessageTargetMap.end())
 			{
+                assert(!message.mType.empty());
 				((*it).second)->ReceiveMessage(message);
 			}
 		}

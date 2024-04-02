@@ -5,22 +5,25 @@
 #include <unordered_set>
 #include "ZMessageSystem.h"
 #include "ZWinBtn.H"
-#include "helpers/Registry.h"   // for resolving environment tokens like %apppath%
+#include "helpers/Registry.h"   // for resolving environment tokens like $apppath$
 
 
-class ZXMLNode;
+class ZXML;
 
-class RegisteredWin
+class RowElement
 {
 public:
-    RegisteredWin(int32_t _row = 0) : row(_row)
+    RowElement(const std::string& _winname, const std::string& _groupname, int32_t _row = 0, ZGUI::Style _style = {}, float _aspectratio = 1.0) : winname(_winname), groupname(_groupname), row(_row), style(_style), aspectratio(_aspectratio)
     {
     }
-    // tbd....what attributes for this window?  sizing, grouping
-    int32_t row;
+    std::string     winname;    
+    std::string     groupname; 
+    int32_t         row;
+    float           aspectratio; 
+    ZGUI::Style     style;
 };
 
-typedef std::map<std::string, RegisteredWin> tRegisteredWins;
+typedef std::vector<RowElement> tRowElements;
 
 class ZWinPanel : public ZWin
 {
@@ -30,10 +33,11 @@ public:
     {
         kNone               = 0,
         kDrawBorder         = 1,        // 1
-        kRelativeScale      = 1 << 1,   // 2
+        kRelativeArea       = 1 << 1,   // 2
         kHideOnMouseExit    = 1 << 2,   // 4
         kHideOnButton       = 1 << 3,   // 8
-        kCloseOnButton      = 1 << 4    // 16
+        kCloseOnButton      = 1 << 4,   // 16
+        kDrawGroupFrames    = 1 << 5,   // 32
     };
 
     ZWinPanel();
@@ -50,11 +54,14 @@ public:
 
    std::string          mPanelLayout;
    ZGUI::Style          mStyle;
-   ZGUI::Style          mGroupingStyle;
    uint32_t             mBehavior;
-   ZGUI::RelativeArea   mRelativeArea;
+   ZGUI::RA_Descriptor  mRAD;
 
    inline bool          IsSet(uint32_t flag) { return (mBehavior & flag) != 0; }
+
+   static std::string   MakeButton(const std::string& id, const std::string& group, const std::string& caption, const std::string& svgpath, const std::string& tooltip, const std::string& message, float aspect, ZGUI::Style style);
+   static std::string   MakeSubmenu(const std::string& id, const std::string& group, const std::string& caption, const std::string& svgpath, const std::string& tooltip, const std::string& panellayout, ZGUI::RA_Descriptor rad, float aspect, ZGUI::Style style);
+   static std::string   MakeRadio(const std::string& id, const std::string& group, const std::string& radiogroup, const std::string& caption, const std::string& svgpath, const std::string& tooltip, const std::string& checkmessage, const std::string& uncheckmessage, float aspect, ZGUI::Style checkedStyle, ZGUI::Style uncheckedStyle);
 
    bool                 OnParentAreaChange();
 
@@ -63,18 +70,18 @@ protected:
    bool                 Process();
 
    bool                 Registered(const std::string& name);
-   tWinList             GetRowWins(int32_t row);
+   tRowElements         GetRowElements(int32_t row, ZGUI::ePosition alignment = ZGUI::Unknown);
 
    void                 UpdateUI();
 
    bool                 ParseLayout();
-   bool                 ParseRow(ZXMLNode* pRow);
-   bool                 ResolveLayoutTokens();
+   bool                 ParseRow(ZXML* pRow);
+   std::string          ResolveTokens(std::string full);
    std::string          ResolveToken(std::string token);
 
    std::string          AppendBehaviorMessages(const std::string& sMsg);
 
-   tRegisteredWins      mRegistered;
+   tRowElements         mRegistered;
    int32_t              mRows;
    int32_t              mSpacers;            // number of gSpacers between controls
    int32_t              mDrawBorder;
@@ -88,20 +95,18 @@ public:
     ZWinPopupPanelBtn();
     ~ZWinPopupPanelBtn();
 
-    bool            Init();
-    bool            Shutdown();
-    bool            OnMouseUpL(int64_t x, int64_t y);
-    bool            OnParentAreaChange();
+    bool                Init();
+    bool                Shutdown();
+    bool                OnMouseUpL(int64_t x, int64_t y);
+    bool                OnParentAreaChange();
 
-    void            TogglePanel();
+    void                TogglePanel();
 
-    std::string     mPanelLayout;
-    ZGUI::ePosition mPanelPos;
-    ZFPoint         mPanelScaleVsBtn;
-
+    std::string         mPanelLayout;
+    ZGUI::RA_Descriptor panelRAD;
 
 protected:
-    void            UpdateUI();
+    void                UpdateUI();
 
     ZWinPanel* mpWinPanel;
 };

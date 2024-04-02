@@ -6,21 +6,7 @@
 #include "ZDebug.h"
 #include "ZBuffer.h"
 
-//#ifdef _WIN64
-//#include <windows.h>
-//struct IDirectDraw7;
-//struct IDirect3DDevice7;
-//#endif
-#include "ZFont.h"
-
-
 class ZScreenBuffer;
-
-const int64_t kBitDepth = 32;		
-
-
-///////////////////////////////////////////////////////////////////////////////
-// class ZGraphicSystem
 
 class ZGraphicSystem
 {
@@ -43,11 +29,6 @@ public:
     // GDI+
     ULONG_PTR				mpGDIPlusToken;
     HWND                    mhWnd;
-#endif
-
-#ifdef USE_D3D 
-	IDirect3D9*				GetD3D()          				{ return mpD3D; }
-	IDirect3DDevice9*		GetD3DDevice()					{ return mpD3DDevice; }
 #endif
 
 	bool					HandleModeChanges();

@@ -454,6 +454,40 @@ public:
         return tRect(tempX, tempY, tempX + Width(), tempY + Height());
     }
 
+    tRect LimitToOuter(const tRect& outerRect)
+    {
+        // cannot limit if outer rect is smaller
+        if (Width() > outerRect.Width() || Height() > outerRect.Height())
+            return *this;
+
+        if (left < outerRect.left)
+        {
+            T xoffset = outerRect.left - left;
+            left += xoffset;
+            right += xoffset;
+        }
+        else if (right > outerRect.right)
+        {
+            T xoffset = right - outerRect.right;
+            right -= xoffset;
+            left -= xoffset;
+        }
+
+        if (top < outerRect.top)
+        {
+            T yoffset = outerRect.top - top;
+            top += yoffset;
+            bottom += yoffset;
+        }
+        else if (bottom > outerRect.bottom)
+        {
+            T yoffset = bottom - outerRect.bottom;
+            top -= yoffset;
+            bottom -= yoffset;
+        }           
+
+        return *this;
+    }
 
     // Additional Operations
     void operator=(const tRect& r)

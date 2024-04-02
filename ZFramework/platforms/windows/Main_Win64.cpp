@@ -698,19 +698,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //            gpMainWin->InvalidateChildren();
         gbPaused = false;
         gTimer.Start();
-        gMessageSystem.Post("{pause;set=0}");
+        gMessageSystem.Post("pause", "set", "0");
     }
 		break;
 	case WM_ACTIVATE:
 		if (LOWORD(wParam) == WA_INACTIVE)
 		{
-			gMessageSystem.Post("{pause;set=1}");
+			gMessageSystem.Post("pause", "set", "1");
             gbPaused = true;
 			gTimer.Stop();
 		}
 		else
 		{
-            gMessageSystem.Post("{pause;set=0}");
+            gMessageSystem.Post("pause", "set", "0");
             gbPaused = false;
 			gTimer.Start();
 		}

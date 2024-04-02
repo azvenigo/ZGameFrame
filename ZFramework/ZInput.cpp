@@ -27,7 +27,7 @@ void ZInput::OnKeyDown(uint32_t key)
     if (!pTarget)
         pTarget = gpMainWin;
 
-    gMessageSystem.Post("{keydown}", pTarget, "code", key);
+    gMessageSystem.Post("keydown", pTarget, "code", key);
 }
 
 void ZInput::OnKeyUp(uint32_t key)
@@ -38,7 +38,7 @@ void ZInput::OnKeyUp(uint32_t key)
     if (!pTarget)
         pTarget = gpMainWin;
 
-    gMessageSystem.Post("{keyup}", pTarget, "code", key);
+    gMessageSystem.Post("keyup", pTarget, "code", key);
 }
 
 void ZInput::OnChar(uint32_t key)
@@ -47,7 +47,7 @@ void ZInput::OnChar(uint32_t key)
     if (!pTarget)
         pTarget = gpMainWin;
 
-    gMessageSystem.Post("{chardown}", pTarget, "code", key);
+    gMessageSystem.Post("chardown", pTarget, "code", key);
 }
 
 void ZInput::OnLButtonUp(int64_t x, int64_t y)
@@ -119,6 +119,8 @@ void ZInput::OnRButtonDown(int64_t x, int64_t y)
 
 void ZInput::OnMouseMove(int64_t x, int64_t y)
 {
+    ZDEBUG_OUT("mouse move:", x, y, "\n");
+
     if (lastMouseMove != ZPoint(x,y))
     {
         lastMouseMove.Set(x, y);
@@ -139,7 +141,9 @@ void ZInput::OnMouseMove(int64_t x, int64_t y)
         CheckForMouseOverNewWindow();
 
         if (mpTooltipWin->mbVisible)
+        {
             UpdateTooltipLocation(lastMouseMove);
+        }
     }
 }
 
@@ -221,7 +225,7 @@ void ZInput::CheckMouseForHover()
 bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
 {
     if (!mpTooltipWin->mbInitted)
-        gpMainWin->ChildAdd(mpTooltipWin);
+        gpMainWin->ChildAdd(mpTooltipWin, false);
     if (mpTooltipWin->Init())
     {
         mpTooltipWin->mIdleSleepMS = 100;
@@ -234,6 +238,7 @@ bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
     rTooltip.InflateRect(style.paddingH, style.paddingV);
     mpTooltipWin->SetArea(rTooltip);
     mpTooltipWin->SetVisible();
+    gpMainWin->ChildToFront(mpTooltipWin);
     toolTipAppear = lastMouseMove;
     UpdateTooltipLocation(lastMouseMove);
     bMouseHoverPosted = true;   // set true so that it's not replaced by other hover

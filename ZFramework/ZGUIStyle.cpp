@@ -24,7 +24,7 @@ ZGUI::Style gStyleToggleUnchecked(ZFontParams("Verdana", 30, 600), ZGUI::ZTextLo
 ZGUI::Style gStyleGeneralText(ZFontParams("Verdana", 30), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, 0, 0, 0, true);
 ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultDialogFill, true);
 ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill);
-ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 16, -2);
+ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 16, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 8, 8);
 ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, (int32_t)gSpacer, (int32_t)gSpacer, 0, false);
 ZGUI::Style gDefaultPanelStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Unknown, (int32_t)gSpacer, (int32_t)gSpacer);
 
@@ -52,9 +52,9 @@ namespace ZGUI
         gStyleButton.paddingH = (int32_t)gSpacer;
         gStyleButton.paddingV = (int32_t)gSpacer;
 
-        gStyleToggleChecked.fp.nHeight = std::max<int64_t>(gM, 14);
-        gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>(gM, 14);
-        gStyleTooltip.fp.nHeight = std::max<int64_t>((int32_t)(gM/1.5), 14);
+        gStyleToggleChecked.fp.nHeight = std::max<int64_t>((int64_t)(gM / 1.5), 14);
+        gStyleToggleUnchecked.fp.nHeight = std::max<int64_t>((int64_t)(gM / 1.5), 14);
+        gStyleTooltip.fp.nHeight = std::max<int64_t>((int32_t)((int64_t)(gM/1.5)/1.5), 14);
         gStyleTooltip.paddingH = (int32_t)gSpacer;
         gStyleTooltip.paddingV = (int32_t)gSpacer;
 
@@ -63,9 +63,9 @@ namespace ZGUI
 
 
         gStyleGeneralText.fp.nHeight = std::max<int64_t>(gM/2, 14);
-        gDefaultGroupingStyle.fp.nHeight = (int32_t)(gM*2/5);
-        gDefaultGroupingStyle.paddingH = (int32_t)(gM*2/7);
-        gDefaultGroupingStyle.paddingV = (int32_t)std::min<int64_t>(-2, (int64_t)(-gM / 5));
+        gDefaultGroupingStyle.fp.nHeight = (int32_t)(gM/2.5);
+        gDefaultGroupingStyle.paddingH = (int32_t)std::max<int64_t>(4, (int64_t)(gM / 4));
+        gDefaultGroupingStyle.paddingV = (int32_t)std::max<int64_t>(4, (int64_t)(gM / 4));
 
         gDefaultTitleFont.nHeight = std::max<int64_t>(gM, 14);
         gDefaultTextFont.nHeight = std::max<int64_t>(gM/4, 10);

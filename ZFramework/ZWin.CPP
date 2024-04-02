@@ -1320,7 +1320,7 @@ void ZWinDialog::OnOK()
         mpParentWin->SetFocus();
     // post close
 
-    gMessageSystem.Post("{kill_child}", "name", msWinName);
+    gMessageSystem.Post("kill_child", "name", msWinName);
 
 }
 
@@ -1328,7 +1328,7 @@ void ZWinDialog::OnCancel()
 {
     if (mpParentWin)
         mpParentWin->SetFocus();
-    gMessageSystem.Post("{kill_child}", "name", msWinName);
+    gMessageSystem.Post("kill_child", "name", msWinName);
 }
 
 

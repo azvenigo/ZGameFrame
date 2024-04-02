@@ -1,6 +1,6 @@
 #include "ZBuffer.h"
 #include <algorithm>
-//#include "ZStringHelpers.h"
+#include <filesystem>
 #include "ZMemBuffer.h"
 #include "ZColor.h"
 #include "helpers/StringHelpers.h"

@@ -116,8 +116,6 @@ ZWinPopupPanelBtn* ZWinControlPanel::PopupPanelButton(const std::string& sID, co
         pBtn = new ZWinPopupPanelBtn();
         mPopupPanelButtons[sID] = pBtn;
         pBtn->mPanelLayout = sPanelLayout;
-        pBtn->mPanelScaleVsBtn = panelScaleVsBtn;
-        pBtn->mPanelPos = panelPos;
         ChildAdd(pBtn);
 
 

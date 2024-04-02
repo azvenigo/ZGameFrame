@@ -170,21 +170,21 @@ bool ConfirmDeleteDialog::HandleMessage(const ZMessage& message)
 void ConfirmDeleteDialog::OnConfirmDelete()
 {
     gMessageSystem.Post(msOnConfirmDelete);
-    gMessageSystem.Post("{kill_child}", "name", msWinName);
+    gMessageSystem.Post("kill_child", "name", msWinName);
 }
 
 
 void ConfirmDeleteDialog::OnGoBack()
 {
     gMessageSystem.Post(msOnGoBack);
-    gMessageSystem.Post("{kill_child}", "name", msWinName);
+    gMessageSystem.Post("kill_child", "name", msWinName);
 }
 
 
 void ConfirmDeleteDialog::OnCancel()
 {
     gMessageSystem.Post(msOnCancel);
-    gMessageSystem.Post("{kill_child}", "name", msWinName);
+    gMessageSystem.Post("kill_child", "name", msWinName);
 }
 
 bool ConfirmDeleteDialog::Paint()

@@ -106,7 +106,6 @@ public:
 
 public:
 	ZWinBtn();
-	~ZWinBtn();
 
 	virtual bool            Init();
 	virtual bool            Shutdown();
@@ -130,6 +129,7 @@ public:
 
 
 protected:
+    virtual bool            HandleMessage(const ZMessage& message);
     virtual bool            Paint();
     std::string             FitCaptionInWidth(int64_t nWidth, const std::string& sCaption, tZFontPtr pFont);		// Calculates an equal number of starting/ending chars with "..." in the middle
 

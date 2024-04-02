@@ -37,7 +37,6 @@ ZWinPanel::ZWinPanel() : mBehavior(kNone)
         msWinName = "ZWinPanel_" + gMessageSystem.GenerateUniqueTargetName();
 
     mStyle = gDefaultPanelStyle;
-    mGroupingStyle = gDefaultGroupingStyle;
     mbAcceptsCursorMessages = true;
     mbMouseWasOver = false;
     mDrawBorder = false;
@@ -54,7 +53,6 @@ bool ZWinPanel::Init()
     if (mbInitted)
         return true;
 
-    ResolveLayoutTokens();
     if (!ParseLayout())
         return false;
 
@@ -90,7 +88,9 @@ bool ZWinPanel::Paint()
     {
         // draw embossed rect
         ZRect rBounds(GetBounds(group.second));
-        rBounds.InflateRect(gSpacer, gSpacer);
+        ZRect rCaption(rBounds);
+
+        rBounds.InflateRect(gDefaultGroupingStyle.paddingH, gDefaultGroupingStyle.paddingV);
         rBounds.right--;
         rBounds.bottom--;
 
@@ -98,7 +98,10 @@ bool ZWinPanel::Paint()
         rBounds.OffsetRect(1, 1);
         mpSurface->DrawRectAlpha(0x88ffffff, rBounds);
 
-        mGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rBounds, &mGroupingStyle);
+
+
+        rCaption.OffsetRect(gDefaultGroupingStyle.paddingH, -gDefaultGroupingStyle.fp.nHeight);
+        gDefaultGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rCaption);
 
 
 
@@ -144,10 +147,10 @@ bool ZWinPanel::ParseLayout()
 {
 	string sElement;
 
-	ZXMLNode tree;
+	ZXML tree;
     tree.Init(mPanelLayout);
 
-    ZXMLNode* pPanel = tree.GetChild("panel");
+    ZXML* pPanel = tree.GetChild("panel");
 	if (!pPanel)
 		return false;
 
@@ -165,14 +168,13 @@ bool ZWinPanel::ParseLayout()
         mSpacers = (int32_t)SH::ToInt(pPanel->GetAttribute("spacers"));
     mDrawBorder = SH::ToBool(pPanel->GetAttribute("border"));
 
-
     if (pPanel->HasAttribute("style"))
         mStyle = ZGUI::Style(pPanel->GetAttribute("style"));
 
     if (pPanel->HasAttribute("rel_area_desc"))
     {
         ZGUI::RA_Descriptor rad(pPanel->GetAttribute("rel_area_desc"));
-        mBehavior |= kRelativeScale;
+        mBehavior |= kRelativeArea;
         SetRelativeArea(rad);
     }
 
@@ -196,30 +198,110 @@ bool ZWinPanel::Registered(const std::string& _name)
 {
     for (auto& r : mRegistered)
     {
-        if (r.first == _name)
+        if (r.winname == _name)
             return true;
     }
 
     return false;
 }
 
-tWinList ZWinPanel::GetRowWins(int32_t row)
+tRowElements ZWinPanel::GetRowElements(int32_t row, ZGUI::ePosition alignment)
 {
-    tWinList wins;
+    tRowElements wins;
     if (row >= 0 && row < mRows)
     {
         for (auto& r : mRegistered)
         {
-            if (r.second.row == row)
-                wins.push_back(GetChildWindowByWinName(r.first));
+            if (r.row == row)
+            {
+                if ((alignment & ZGUI::R) && ((r.style.pos & ZGUI::R) == 0))  // if asking for right alignment but element alignment isn't right aligned skip
+                    continue;
+                wins.push_back(r);
+            }
         }
     }
 
     return wins;
 }
 
+string ZWinPanel::MakeButton(const string& id, const string& group, const string& caption, const string& svgpath, const string& tooltip, const string& message, float aspect, ZGUI::Style style)
+{
+    string s = "<button id=\"" + id + "\"";
+    if (!group.empty())
+        s += " group=\"" + group + "\"";
+    if (!caption.empty())
+        s += " caption=\"" + caption + "\" ";
+    if (!svgpath.empty())
+        s += " svgpath=\"" + svgpath + "\"";
+    if (aspect != 1.0)
+        s += " aspect=" + SH::FromDouble(aspect);
+    if (!tooltip.empty())
+        s += " tooltip=\"" + tooltip + "\"";
+    if (!message.empty())
+        s += " msg=\"" + ZXML::Encode(message) + "\"";
+    if (!style.Uninitialized())
+        s += " style=" + ZXML::Encode((string)style);
 
-bool ZWinPanel::ParseRow(ZXMLNode* pRow)
+    s += "/>";
+
+    return s;
+}
+
+string ZWinPanel::MakeSubmenu(const string& id, const string& group, const string& caption, const string& svgpath, const string& tooltip, const string& panellayout, ZGUI::RA_Descriptor rad, float aspect, ZGUI::Style style)
+{
+    string s = "<panelbutton id=\"" + id + "\"";
+    if (!group.empty())
+        s += " group=\"" + group + "\"";
+    if (!caption.empty())
+        s += " caption=\"" + caption + "\" ";
+    if (!svgpath.empty())
+        s += " svgpath=\"" + svgpath + "\"";
+    if (aspect != 1.0)
+        s += " aspect=" + SH::FromDouble(aspect);
+    if (!tooltip.empty())
+        s += " tooltip=\"" + tooltip + "\"";
+    assert(!panellayout.empty());
+    s += " layout=\"" + ZXML::Encode(panellayout) + "\"";
+    s += " rad=\"" + ZXML::Encode((string) rad) + "\"";
+    if (!style.Uninitialized())
+        s += " style=" + ZXML::Encode((string)style);
+    s += "/>";
+
+    return s;
+}
+
+string ZWinPanel::MakeRadio(const string& id, const string& group, const string& radiogroup, const string& caption, const string& svgpath, const string& tooltip, const string& checkmessage, const string& uncheckmessage, float aspect, ZGUI::Style checkedStyle, ZGUI::Style uncheckedStyle)
+{
+    string s = "<radio id=\"" + id + "\"";
+    if (!group.empty())
+        s += " group=\"" + group + "\"";
+    if (!radiogroup.empty())
+        s += " radiogroup=\"" + radiogroup + "\"";
+    if (!caption.empty())
+        s += " caption=\"" + caption + "\" ";
+    if (!svgpath.empty())
+        s += " svgpath=\"" + svgpath + "\"";
+    if (aspect != 1.0)
+        s += " aspect=" + SH::FromDouble(aspect);
+    if (!tooltip.empty())
+        s += " tooltip=\"" + tooltip + "\"";
+    if (!checkmessage.empty())
+        s += " checkmsg=\"" + ZXML::Encode(checkmessage) + "\"";
+    if (!uncheckmessage.empty())
+        s += " uncheckmsg=\"" + ZXML::Encode(uncheckmessage) + "\"";
+    if (!checkedStyle.Uninitialized())
+        s += " checkedstyle=" + ZXML::Encode((string)checkedStyle);
+    if (!uncheckedStyle.Uninitialized())
+        s += " uncheckedstyle=" + ZXML::Encode((string)uncheckedStyle);
+
+    s += "/>";
+
+    return s;
+}
+
+
+
+bool ZWinPanel::ParseRow(ZXML* pRow)
 {
 	ZASSERT(pRow);
     tXMLNodeList controls;
@@ -228,8 +310,18 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
     // for each 
     for (auto control : controls)
     {
+
         string type = control->GetName();
         string id = control->GetAttribute("id");
+        string groupname = control->GetAttribute("group");
+
+
+        RowElement reg(id, groupname, mRows);
+        if (control->HasAttribute("aspect"))
+            reg.aspectratio = (float)SH::ToDouble(control->GetAttribute("aspect"));
+        if (control->HasAttribute("style"))
+            reg.style = ZGUI::Style(control->GetAttribute("style"));
+
 
         string msgSuffix;
         if (IsSet(kHideOnButton))
@@ -241,12 +333,6 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             msgSuffix = "{kill_child;name=" + msWinName + "}";
         }
 
-        if (id.empty() || Registered(id))
-        {
-            ZERROR("ID:", id, " invalid. Must have unique IDs for each registered window.");
-            return false;
-        }
-
         ZWin* pWin = nullptr;
 
         if (type == "panelbutton")
@@ -254,39 +340,43 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             pWin = new ZWinPopupPanelBtn();
             ZWinPopupPanelBtn* pBtn = (ZWinPopupPanelBtn*)pWin;
             pBtn->mPanelLayout = control->GetAttribute("layout");
-            pBtn->mSVGImage.Load(control->GetAttribute("svgpath"));
-            if (control->HasAttribute("scale"))
-                pBtn->mPanelScaleVsBtn = StringToFPoint(control->GetAttribute("scale"));
-            if (control->HasAttribute("pos"))
-                pBtn->mPanelPos = ZGUI::FromString(control->GetAttribute("pos"));
-
-            assert(ZGUI::ValidPos(pBtn->mPanelPos));
-
+            pBtn->mSVGImage.Load(ResolveTokens(control->GetAttribute("svgpath")));
+            assert(control->HasAttribute("rad"));
+            pBtn->panelRAD = control->GetAttribute("rad");
         }
         else if (type == "button")
         {
             // add a button
             pWin = new ZWinBtn();
             ZWinBtn* pBtn = (ZWinBtn*)pWin;
-            pBtn->mCaption.sText = control->GetAttribute("caption");
-            pBtn->mCaption.autoSizeFont = true;
+
+            if (control->HasAttribute("caption"))
+            {
+                pBtn->mCaption.sText = control->GetAttribute("caption");
+                pBtn->mCaption.autoSizeFont = true;
+            }
+            if (control->HasAttribute("svgpath"))
+            {
+                pBtn->mSVGImage.Load(ResolveTokens(control->GetAttribute("svgpath")));
+            }
+
             pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
         }
-        else if (type == "svgbutton")
+        else if (type == "radio")
         {
-            // add svg button
-            pWin = new ZWinBtn();
-            ZWinBtn* pBtn = (ZWinBtn*)pWin;
-            pBtn->mSVGImage.Load(control->GetAttribute("svgpath"));
-            pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;
-        }
-        else if (type == "toggle")
-        {
-            // add toggle
+            // add radio button
             pWin = new ZWinCheck();
             ZWinCheck* pCheck = (ZWinCheck*)pWin;
             pCheck->msButtonMessage = control->GetAttribute("checkmsg") + msgSuffix;
             pCheck->msUncheckMessage = control->GetAttribute("uncheckmsg") + msgSuffix;
+            pCheck->msRadioGroup = control->GetAttribute("radiogroup") + msgSuffix;
+
+            if (control->HasAttribute("checkedstyle"))
+                pCheck->mCheckedStyle = ZGUI::Style(control->GetAttribute("checkedstyle"));
+            if (control->HasAttribute("uncheckedstyle"))
+                pCheck->mUncheckedStyle = ZGUI::Style(control->GetAttribute("uncheckedstyle"));
+
+
         }
         else if (type == "label")
         {
@@ -296,6 +386,9 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             pLabel->msText = control->GetAttribute("caption");
             pLabel->mBehavior |= ZWinLabel::eBehavior::AutoSizeText;
         }
+        else if (type == "space")
+        {
+        }
         else
         {
             ZASSERT(false);
@@ -303,13 +396,31 @@ bool ZWinPanel::ParseRow(ZXMLNode* pRow)
             return false;
         }
 
-        // Common attributes
-        pWin->msWinGroup = control->GetAttribute("group");
-        pWin->msTooltip = control->GetAttribute("tooltip");
-        pWin->msWinName = id;
-        ChildAdd(pWin);
+        // Common attributes for windows
+        if (pWin)
+        {
+            if (id.empty() || Registered(id))
+            {
+                ZERROR("ID:", id, " invalid. Must have unique IDs for each registered element.");
+                assert(false);
+                return false;
+            }
 
-        mRegistered[id].row = mRows;
+
+            pWin->msWinGroup = reg.groupname;
+            pWin->msTooltip = control->GetAttribute("tooltip");
+            pWin->msWinName = id;
+            ChildAdd(pWin);
+
+            // if any windows are part of draw groups, enable the flag
+            if (!pWin->msWinGroup.empty())
+            {
+                mBehavior |= kDrawGroupFrames;
+            }
+        }
+
+
+        mRegistered.emplace_back(std::move(reg));
     }
 
     return true;
@@ -322,7 +433,7 @@ bool ZWinPanel::HandleMessage(const ZMessage& message)
     {
         if (mpParentWin)
             mpParentWin->SetFocus();
-        gMessageSystem.Post("{kill_child}", "name", msWinName);
+        gMessageSystem.Post("kill_child", "name", msWinName);
         return true;
     }
 
@@ -331,30 +442,107 @@ bool ZWinPanel::HandleMessage(const ZMessage& message)
 
 void ZWinPanel::UpdateUI()
 {
-    if (mRows > 0 && mAreaLocal.Area())
-    {
-        ZRect controlArea = mAreaLocal;
-        controlArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+    ZRect ref = mAreaLocal;
+    ZGUI::Style style = mStyle;
 
-        int64_t spaceBetweenRows = mSpacers * gSpacer;
+    if (mBehavior&kRelativeArea)
+    {
+        if (mRAD.referenceWindow == "full")
+            ref = grFullArea;
+        else
+        {
+            ZWin* pWin = GetTopWindow()->GetChildWindowByWinNameRecursive(mRAD.referenceWindow);
+            assert(pWin);
+            if (pWin)
+            {
+                ZRect ref = pWin->mAreaAbsolute;
+            }
+        }
+
+        //float fScale = 
+
+        //style.fp.nHeight
+
+        SetArea(ZGUI::Align(mAreaAbsolute, ref, (ZGUI::ePosition)mRAD.alignment, mStyle.paddingH, mStyle.paddingV, mRAD.wRatio, mRAD.hRatio, mRAD.minWidth, mRAD.minHeight, mRAD.maxWidth, mRAD.maxHeight));
+        ref = mAreaLocal;
+    }
+
+    if (mRows > 0 && ref.Area())
+    {
+        ZRect controlArea = ref;
+
+//        if (mDrawBorder)
+//            controlArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+
+        int64_t spaceBetweenRows = mSpacers * mStyle.paddingV;
         int64_t totalSpaceBetweenRows = (mRows - 1) * spaceBetweenRows;
 
         int64_t rowh = (controlArea.Height()-totalSpaceBetweenRows)/mRows;
 
         for (int32_t row = 0; row < mRows; row++)
         {
-            tWinList rowWins = GetRowWins(row);
-            if (!rowWins.empty())
-            {
-                int64_t w = controlArea.Width() / rowWins.size();
+            ZRect rRowArea(controlArea.left, controlArea.top + row * (rowh + spaceBetweenRows), controlArea.right, controlArea.top + (row + 1) * (rowh + spaceBetweenRows));
 
-                int col = 0;
-                for (auto pWin : rowWins)
+            if (IsSet(kDrawGroupFrames))
+            {
+                rRowArea.DeflateRect(gDefaultGroupingStyle.paddingH * 2, gDefaultGroupingStyle.paddingV * 2);
+            }
+
+            tRowElements leftElements = GetRowElements(row, ZGUI::L);
+            if (!leftElements.empty())
+            {
+                string lastSeenGroupName;
+                for (int i = 0; i < leftElements.size(); i++)
                 {
-                    ZPoint tl(controlArea.left + col*w, controlArea.top + row*(rowh + spaceBetweenRows));
-                    ZRect r(tl.x, tl.y, tl.x+w, tl.y+rowh);
-                    pWin->SetArea(r);
-                    col++;
+                    RowElement& element = leftElements[i];
+                    
+                    bool bAddSpaceBetweenGroups = (i > 0) && leftElements[i - 1].groupname != element.groupname;    // if group name has changed from last element to current, add gap
+                    if (bAddSpaceBetweenGroups)
+                        rRowArea.left += gDefaultGroupingStyle.paddingH * 4;
+
+                    assert(rRowArea.Width() > 0);
+                    int64_t h = rRowArea.Height();
+                    int64_t w = h * element.aspectratio;
+                    int64_t x = rRowArea.left;
+                    int64_t y = rRowArea.top;
+
+                    ZRect r(x, y, x + w, y + h);
+                    if (!element.winname.empty())
+                    {
+                        ZWin* pWin = GetChildWindowByWinName(element.winname);
+                        if (pWin)
+                            pWin->SetArea(r);
+                    }
+
+                    rRowArea.left += w + mStyle.paddingH;
+                }
+            }
+
+
+            tRowElements rightElements = GetRowElements(row, ZGUI::R);
+            if (!rightElements.empty())
+            {
+                // walk over the rows backward for any windows right aligned
+                for (int i = rightElements.size()-1; i >= 0; i--)
+                {
+                    RowElement& element = rightElements[i];
+
+                    bool bAddSpaceBetweenGroups = (i < (rightElements.size()-1) && (leftElements[i + 1].groupname != element.groupname));    // if group name has changed from last element to current, add gap
+                    if (bAddSpaceBetweenGroups)
+                        rRowArea.left -= gDefaultGroupingStyle.paddingH * 4;
+
+                    assert(rRowArea.Width() > 0);
+                    int64_t h = rRowArea.Height();
+                    int64_t w = h * element.aspectratio;
+                    int64_t x = rRowArea.right - mStyle.paddingH - w;
+                    int64_t y = rRowArea.top;
+
+                    ZRect r(x, y, x + w, y + h);
+                    ZWin* pWin = GetChildWindowByWinName(element.winname);
+                    if (pWin)
+                        pWin->SetArea(r);
+
+                    rRowArea.right -= (w + mStyle.paddingH);
                 }
             }
         }
@@ -363,9 +551,11 @@ void ZWinPanel::UpdateUI()
 
 void ZWinPanel::SetRelativeArea(const ZGUI::RA_Descriptor& rad)
 {
-    assert(IsSet(kRelativeScale));
-    mRelativeArea = ZGUI::RelativeArea(rad);
-    SetArea(rad.area);
+//    assert(IsSet(kRelativeScale));
+//    mRelativeArea = ZGUI::RelativeArea(rad);
+//    SetArea(rad.area);
+
+    mRAD = rad;
     UpdateUI();
 }
 
@@ -374,13 +564,6 @@ bool ZWinPanel::OnParentAreaChange()
 {
     if (!mpSurface)
         return false;
-
-    if (IsSet(kRelativeScale))
-    {
-        ZRect rNewParent(mpParentWin->GetArea());
-        SetArea(mRelativeArea.Area(rNewParent));
-    }
-
 
     ZWin::OnParentAreaChange();
     UpdateUI();
@@ -404,30 +587,30 @@ void ZWinPanel::SetVisible(bool bVisible)
     return ZWin::SetVisible(bVisible);
 }
 
-bool ZWinPanel::ResolveLayoutTokens()
+string ZWinPanel::ResolveTokens(std::string full)
 {
-    for (size_t i = 0; i < mPanelLayout.size(); i++)
+    for (size_t i = 0; i < full.size(); i++)
     {
-        if (mPanelLayout[i] == '\'' || mPanelLayout[i] == '\"')
+        if (full[i] == '\'' || full[i] == '\"')
         {
             i = SH::FindMatching(mPanelLayout, i);  // skip enclosed
         }
-        else if (mPanelLayout[i] == '%')
+        else if (full[i] == '$')
         {
-            for (size_t j = i+1; j < mPanelLayout.size(); j++)
+            for (size_t j = i+1; j < full.size(); j++)
             {
-                if (mPanelLayout[j] == '%')
+                if (full[j] == '$')
                 {
-                    string sToken = mPanelLayout.substr(i+1, j - i - 1);    // pull token name
+                    string sToken = full.substr(i+1, j - i - 1);    // pull token name
                     if (!sToken.empty())
                     {
                         string sValue = ResolveToken(sToken);
                         if (!sValue.empty())
                         {
-                            string sNew = mPanelLayout.substr(0, i);
+                            string sNew = full.substr(0, i);
                             sNew += sValue;
-                            sNew += mPanelLayout.substr(j + 1);
-                            mPanelLayout = sNew;
+                            sNew += full.substr(j + 1);
+                            full = sNew;
                             i += sValue.length() - sToken.length() + 2;         // adjust the iterator to skip the replaced token. +2 to skip the leading and end '%'
                             break;
                         }
@@ -437,7 +620,7 @@ bool ZWinPanel::ResolveLayoutTokens()
         }
     }
 
-    return true;
+    return full;
 }
 
 
@@ -468,8 +651,6 @@ string ZWinPanel::ResolveToken(std::string token)
 ZWinPopupPanelBtn::ZWinPopupPanelBtn()
 {
     mpWinPanel = nullptr;
-    mPanelScaleVsBtn = { 2.0, 2.0 };
-    mPanelPos = ZGUI::ePosition::ICOB;      // beneath
 }
 
 ZWinPopupPanelBtn::~ZWinPopupPanelBtn()
@@ -518,6 +699,7 @@ void ZWinPopupPanelBtn::TogglePanel()
     {
         mpWinPanel = new ZWinPanel();
         mpWinPanel->mPanelLayout = mPanelLayout;
+        mpWinPanel->mRAD = panelRAD;
         pTop->ChildAdd(mpWinPanel, false);
         assert(!mpWinPanel->IsSet(ZWinPanel::kCloseOnButton));
     }
@@ -539,11 +721,13 @@ void ZWinPopupPanelBtn::UpdateUI()
 {
     if (mpWinPanel)
     {
-        ZRect rArea((int64_t)(mAreaLocal.Width()*mPanelScaleVsBtn.x), (int64_t)(mAreaLocal.Height()*mPanelScaleVsBtn.y));
-        rArea.InflateRect(mBtnStyle.paddingH, mBtnStyle.paddingV);
-        assert(ZGUI::ValidPos(mPanelPos));
-        rArea = ZGUI::Arrange(rArea, mAreaAbsolute, mPanelPos, mBtnStyle.paddingH, mBtnStyle.paddingV);
-
-        mpWinPanel->SetArea(rArea);
+        ZWin* pWin = GetTopWindow()->GetChildWindowByWinNameRecursive(panelRAD.referenceWindow);
+        assert(pWin);
+        if (pWin)
+        {
+            ZRect ref = pWin->mAreaAbsolute;
+            ZRect r = ZGUI::Align(mpWinPanel->mAreaAbsolute, ref, (ZGUI::ePosition)panelRAD.alignment, 0, 0, panelRAD.wRatio, panelRAD.hRatio);
+            mpWinPanel->SetArea(r);
+        }
     }
 }

@@ -3,7 +3,7 @@
 #include "ZWin.h"
 #include "ZAnimator.h"
 
-class ZXMLNode;
+class ZXML;
 
 class ZFloatVertex
 {

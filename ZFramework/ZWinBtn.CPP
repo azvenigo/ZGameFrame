@@ -123,7 +123,7 @@ void ZWinCheck::SetState(bool bChecked, bool bPostNotifications)
         if (bChecked && !msRadioGroup.empty())
         {
             // If we're part of a radio group and we're being checked, send out a message to uncheck all others in the group
-            gMessageSystem.Post("{radio_check}", "group", msRadioGroup, "checked", msWinName);
+            gMessageSystem.Post("radio_check", "group", msRadioGroup, "checked", msWinName);
         }
     }
 
@@ -167,13 +167,37 @@ ZWinBtn::ZWinBtn()
     mrEdge = grStandardButtonEdge;
 
     if (msWinName.empty())
-        msWinName = "ZWinSizablePushBtn_" + gMessageSystem.GenerateUniqueTargetName();
+        msWinName = "ZWinBtn_" + gMessageSystem.GenerateUniqueTargetName();
 
-//	mbTransformable     = false;
+    gMessageSystem.AddNotification("set_caption", this);
+    gMessageSystem.AddNotification("set_enabled", this);
 }
 
-ZWinBtn::~ZWinBtn()
+bool ZWinBtn::HandleMessage(const ZMessage& message)
 {
+    string sType = message.GetType();
+    if (sType == "set_caption")
+    {
+        string sNew = message.GetParam("text");
+        if (sNew != mCaption.sText)
+        {
+            mCaption.sText = sNew;
+            Invalidate();
+        }
+        return true;
+    }
+    else if (sType == "set_enabled")
+    {
+        bool bNew = SH::ToBool(message.GetParam("enabled"));
+        if (bNew != mbEnabled)
+        {
+            mbEnabled = bNew;
+            Invalidate();
+        }
+        return true;
+    }
+
+    return ZWin::HandleMessage(message);
 }
 
 bool ZWinBtn::Init()
@@ -202,8 +226,6 @@ bool ZWinBtn::Paint()
     if (mpParentWin && !mpParentWin->mbVisible)
         return true;
 
-    PaintFromParent();
-   
 	// Draw the button image
     tZBufferPtr pBufferToUse;
 
@@ -211,10 +233,11 @@ bool ZWinBtn::Paint()
 		pBufferToUse = mpUpEdgeImage;
 	else
 		pBufferToUse = mpDownEdgeImage;
+    ZASSERT(pBufferToUse);
 
+    if (pBufferToUse->mbHasAlphaPixels)
+        PaintFromParent();
     
-	ZASSERT(pBufferToUse);
-
     mpSurface.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaLocal, ZBuffer::kEdgeBltMiddle_Stretch|ZBuffer::kEdgeBltSides_Stretch);
 
     int64_t nOffset = max((int)mCaption.style.fp.nHeight / 16, (int)1);
@@ -240,7 +263,6 @@ bool ZWinBtn::Paint()
     {
         mpSurface->FillAlpha(0x88333333); 
         mpSurface->FillAlpha(0x88888888);     
-//        mpSurface->Colorize(0, 0);             // gray
     }
 
 	return ZWin::Paint();

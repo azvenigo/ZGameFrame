@@ -93,7 +93,7 @@ bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
             mrSelection = GetSelection();
             ZRect rImageCoords(mrSelection);
             ToImageCoords(rImageCoords);
-            gMessageSystem.Post("{image_selection}", mpParentWin, "r", RectToString(rImageCoords));
+            gMessageSystem.Post("image_selection", mpParentWin, "r", RectToString(rImageCoords));
         }
 
         Invalidate();

@@ -12,6 +12,7 @@
 #include "ZWinText.H"
 #include "ZGUIStyle.h"
 #include <algorithm>
+#include "ZXMLNode.h"
 #include "ZWinBtn.H"
 #include "ZWinPanel.h"
 #include "helpers/Registry.h"
@@ -69,12 +70,12 @@ ImageViewer::ImageViewer()
     mbSubsample = true;
     mbShowUI = true;
     mFilterState = kAll;
-    mpAllFilterButton = nullptr;
+/*    mpAllFilterButton = nullptr;
     mpFavsFilterButton = nullptr;
     mpDelFilterButton = nullptr;
     mpRankedFilterButton = nullptr;
     mpDeleteMarkedButton = nullptr;
-    mpShowContestButton = nullptr;
+    mpShowContestButton = nullptr;*/
     mOutstandingMetadataCount = 0;
     mpRatedImagesStrip = nullptr;
     mpFolderLabel = nullptr;
@@ -285,7 +286,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     case 'C':
         if (gInput.IsKeyDown(VK_CONTROL))
         {
-            gMessageSystem.Post("{copylink}", this);
+            gMessageSystem.Post("copylink", this);
             return true;
         }
         if (mCopyToFolder.empty())
@@ -633,9 +634,9 @@ void ImageViewer::ShowImageSelectionPanel(ZRect rSelection)
     string sClearMsg = "{clear_selection;target=" + mpWinImage->GetTargetName() + "}";
     string sPanelLayout;
     sPanelLayout = "<panel close_on_button=1 border=1 spacers=1>";
-    sPanelLayout += "<row><svgbutton id=cancel svgpath=%apppath%/res/exit.svg msg=" + sClearMsg + "/>";
-    sPanelLayout += "<svgbutton id=save svgpath=%apppath%/res/save.svg msg=\"{save_selection;r=" + RectToString(rSelection) + ";target=" + GetTargetName() + "}" + sClearMsg + "\" tooltip=\"Save selection\"/>";
-    sPanelLayout += "<svgbutton id=copy svgpath=%apppath%/res/copy.svg msg=\"{copy_selection;r=" + RectToString(rSelection) + ";target=" + GetTargetName() + "}" + sClearMsg + "\" tooltip=\"Copy selection to clipboard\"/></row>";
+    sPanelLayout += "<row><button id=cancel svgpath=$apppath$/res/exit.svg msg=" + sClearMsg + "/>";
+    sPanelLayout += "<button id=save svgpath=$apppath$/res/save.svg msg=\"{save_selection;r=" + RectToString(rSelection) + ";target=" + GetTargetName() + "}" + sClearMsg + "\" tooltip=\"Save selection\"/>";
+    sPanelLayout += "<button id=copy svgpath=$apppath$/res/copy.svg msg=\"{copy_selection;r=" + RectToString(rSelection) + ";target=" + GetTargetName() + "}" + sClearMsg + "\" tooltip=\"Copy selection to clipboard\"/></row>";
     sPanelLayout += "</panel>";
 
     pWinPanel = new ZWinPanel();
@@ -1359,7 +1360,7 @@ bool ImageViewer::Init()
         }
         else
         {
-            gMessageSystem.Post("{show_help}", this);
+            gMessageSystem.Post("show_help", this);
         }
 
 
@@ -1375,6 +1376,83 @@ bool ImageViewer::Init()
         mpFolderLabel->SetArea(ZRect(0, 0, mAreaLocal.Width() / 4, gM));
         ChildAdd(mpFolderLabel, !mCurrentFolder.empty());
 
+
+        ZGUI::Style style(gDefaultPanelStyle);
+        style.pos = ZGUI::CT;
+        style.paddingH = gSpacer/2;
+        style.paddingV = gSpacer/2;
+
+        ZGUI::Style spacestyle(gDefaultPanelStyle);
+        spacestyle.pos = ZGUI::CT;
+        spacestyle.paddingH = gSpacer;
+        spacestyle.paddingV = gSpacer;
+
+
+        ZGUI::RA_Descriptor rad(ZRect(0, 0, grFullArea.right, gM * 2), "full", ZGUI::L|ZGUI::T|ZGUI::R, 1.0, 0.05, -1, 64, -1, 128);
+
+
+        mpPanel = new ZWinPanel();
+        mpPanel->mPanelLayout = "<panel show_init=1 style=\"" + SH::URL_Encode((string)style) + "\" rel_area_desc=\"" + SH::URL_Encode((string)rad) + "\"><row>";
+
+        // file group
+        string sFileGroupLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("openfile", "", "", "$apppath$/res/openfile.svg", "Load Image", ZMessage("{loadimg}", this), 1.0, style) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("savefile", "", "", "$apppath$/res/save.svg", "Save Image", ZMessage("{saveimg}", this), 1.0, style) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("copyfile", "", "", "$apppath$/res/copy.svg", "Select a Copy Folder for quick-move with 'C'", ZMessage("{set_copy_folder}", this), 1.0, style) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("{set_move_folder}", this), 1.0, style) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("{deletemarked}", this), 1.0, style) + "</row>";
+        sFileGroupLayout += "</panel>";
+
+        ZGUI::RA_Descriptor fileManageRAD({}, "file_manage_menu", ZGUI::VOutside | ZGUI::HC | ZGUI::T, 1.25, 6.0);
+        mpPanel->mPanelLayout += ZWinPanel::MakeSubmenu("file_manage_menu", "File", "", "$apppath$/res/manage.svg", "Manage File", sFileGroupLayout, fileManageRAD, 1.0, style);
+
+
+
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("gotofolder", "File", "", "$apppath$/res/gotofolder.svg", "Copy path to image to clipboard", ZMessage("{gotofolder}", this), 1.0, style);
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("copylink", "File", "", "$apppath$/res/linkcopy.svg", "Copy path to image to clipboard", ZMessage("{copylink}", this), 1.0, style);
+
+        string sRotateGroupLayout = "<panel hide_on_mouse_exit=1 border=1 spacers=0>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_left", "", "", "$apppath$/res/rot_left.svg", "90º Left", ZMessage("{rotate_left}", this), 1.0, style) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_right", "", "", "$apppath$/res/rot_right.svg", "90º Right", ZMessage("{rotate_right}", this), 1.0, style) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_h", "", "", "$apppath$/res/fliph.svg", "Flip Horizontal", ZMessage("{flipH}", this), 1.0, style) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_v", "", "", "$apppath$/res/flipv.svg", "Flip Vertical", ZMessage("{flipV}", this), 1.0, style) + "</row>";
+        sRotateGroupLayout += "</panel>";
+
+        
+        ZGUI::RA_Descriptor rotateRAD({}, "rotate_menu", ZGUI::VOutside | ZGUI::HC | ZGUI::T, 1.0, 4.0);
+        mpPanel->mPanelLayout += ZWinPanel::MakeSubmenu("rotate_menu", "Transform", "", "$apppath$/res/rotate.svg", "Transform", sRotateGroupLayout, rotateRAD, 1.0, style);
+
+        mpPanel->mPanelLayout += "<space style=\"" + ZXML::Encode((string)spacestyle) + "\"/>";
+
+        // Filter group
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterall", "Filter", "FilterGroup", "All", "", "All images", ZMessage("{filter_all}", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterfavs", "Filter", "FilterGroup", "Favorites", "", "Favorites (hit '1' to toggle current image)", ZMessage("{filter_favs}", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterranked", "Filter", "FilterGroup", "Ranked", "", "Images that have been ranked", ZMessage("{filter_ranked}", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterdel", "Filter", "FilterGroup", "To Be Deleted", "", "Flagged for deletion", ZMessage("{filter_del}", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
+
+
+
+
+
+        // Window Controls
+        ZGUI::Style rightAligned(style);
+        rightAligned.pos = ZGUI::R;
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("show_contest", "", "Rank Favorites", "", "Rank favorites", ZMessage("{show_contest}", this), 3.0, rightAligned);
+        mpPanel->mPanelLayout += "<space style=\"" + ZXML::Encode((string)spacestyle) + "\"/>";
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("show_help", "", "?", "", "Help", ZMessage("{show_help}", this), 1.0, rightAligned);
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("toggle_fullscreen", "", "", "$apppath$/res/fullscreen.svg", "Fullscreen/Windowed", ZMessage("{toggle_fullscreen}"), true, rightAligned);
+
+        // Context
+
+
+        mpPanel->mPanelLayout += "</row></panel>";
+        
+//        mpPanel->mRAD = ZGUI::RA_Descriptor(ZRect(0, 0, grFullArea.Width(), grFullArea.Height()), "full", ZGUI::L | ZGUI::T | ZGUI::R | ZGUI::VInside, 1.0, 0.025);
+        
+//        ZRect rPanel = ZGUI::Align(mpPanel->mRAD.area, grFullArea, mpPanel->mRAD.alignment, 0, 0, 1.0, 0.05);
+//        mpPanel->SetArea(rPanel);
+
+        GetTopWindow()->ChildAdd(mpPanel);
     }
 
     if (!ValidIndex(mViewingIndex))
@@ -1399,339 +1477,30 @@ void ImageViewer::LimitIndex()
 
 void ImageViewer::UpdateControlPanel()
 {
-    int64_t nControlPanelSide = (int64_t)(gM * 2.5);
-    limit<int64_t>(nControlPanelSide, 48, 88);
-
-
-    const std::lock_guard<std::recursive_mutex> panelLock(mPanelMutex);
-    
-    if (mpPanel && mpPanel->GetArea().Width() == mAreaLocal.Width() && mpPanel->GetArea().Height() == nControlPanelSide)
+    if (mbShowUI && mpPanel)
     {
-/*        bool bShow = mbShowUI;
-        
-        if (bShow && !mpPanel->mbVisible)
-        {
-            mpPanel->mTransformIn = kSlideDown;
-            mpPanel->TransformIn();
-            return;
-        }
-        else if (!bShow && mpPanel->mbVisible)
-        {
-            mpPanel->mTransformOut = kSlideUp;
-            mpPanel->TransformOut();
-            return;
-        }*/
+        ZMessage m;
 
+        gMessageSystem.Post("set_enabled", "target", "copylink", "enabled", SH::FromInt((int)ValidIndex(mViewingIndex)));
+
+        gMessageSystem.Post("set_caption", "target", "filterall", "text", std::format("All ({})", mImageArray.size()));
+//        gMessageSystem.Post("set_enabled", "target", "filterall", "enabled", SH::FromInt((int)mFilterState == kAll));
+
+
+        gMessageSystem.Post("set_caption", "target", "filterfavs", "text", std::format("Favorites ({})", mFavImageArray.size()));
+        gMessageSystem.Post("set_enabled", "target", "filterfavs", "enabled", SH::FromInt((int)!mFavImageArray.empty()));
+
+        gMessageSystem.Post("set_caption", "target", "filterranked", "text", "Ranked");
+        gMessageSystem.Post("set_enabled", "enabled", SH::FromInt((int)!mRankedArray.empty()), "target", "filterranked");
+
+        gMessageSystem.Post("set_caption", "text", std::format("To Be Deleted ({})", mToBeDeletedImageArray.size()), "target", "filterdel");
+        gMessageSystem.Post("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel");
+
+        gMessageSystem.Post("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel");
+    }
+
+    if (mpPanel)
         mpPanel->SetVisible(mbShowUI);
-        return;
-    }
-
-    // panel needs to be created or is wrong dimensions
-    if (!mpPanel)
-    {
-        //ZDEBUG_OUT("Deleting Control Panel\n");
-        mpPanel = new ZWinControlPanel();
-        mpPanel->msWinName = "ImageViewer_CP";
-        ChildAdd(mpPanel, mbShowUI);
-    }
-        
-    int64_t nGroupSide = nControlPanelSide - gSpacer * 4;
-
-
-    ZGUI::Style wingdingsStyle = ZGUI::Style(ZFontParams("Wingdings", nGroupSide /2, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C);
-    ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", nGroupSide*4, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
-    if (!mpFavoritesFont)
-    {
-        mpFavoritesFont = gpFontSystem->CreateFont(favorites.fp);
-        ((ZDynamicFont*)mpFavoritesFont.get())->GenerateSymbolicGlyph('C', 0x2655);  // crown
-    }
-    mpPanel->mGroupingStyle = gDefaultGroupingStyle;
-
-
-    ZRect rPanelArea(mAreaLocal.left, mAreaLocal.top, mAreaLocal.right, mAreaLocal.top + nControlPanelSide);
-    mpPanel->SetArea(rPanelArea);
-    mpPanel->mrTrigger = rPanelArea;
-    mpPanel->mrTrigger.bottom = mpPanel->mrTrigger.top + mpPanel->mrTrigger.Height() / 4;
-
-    ZWinBtn* pBtn;
-
-    ZRect rButton(nGroupSide, nGroupSide);
-    rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
-
-    string sAppPath = gRegistry["apppath"];
-
-    pBtn = mpPanel->SVGButton("loadimg", sAppPath + "/res/openfile.svg", ZMessage("{loadimg}", this));
-    pBtn->msTooltip = "Load Image";
-    pBtn->msWinGroup = "File";
-    pBtn->SetArea(rButton);
-    
-    rButton.OffsetRect(rButton.Width(), 0);
-
-    pBtn = mpPanel->SVGButton("saveimg", sAppPath + "/res/save.svg", ZMessage("{saveimg}", this));
-    pBtn->msWinGroup = "File";
-    pBtn->msTooltip = "Save Image";
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "File";
-
-    rButton.OffsetRect(rButton.Width(), 0);
-
-    pBtn = mpPanel->SVGButton("gotofolder", sAppPath + "/res/gotofolder.svg", ZMessage("{gotofolder}", this));
-    pBtn->msTooltip = "Browse folder with current image";
-    pBtn->SetArea(rButton);
-    pBtn->msWinGroup = "File";
-
-    rButton.OffsetRect(rButton.Width(), 0);
-
-
-    pBtn = mpPanel->SVGButton("copylink", sAppPath + "/res/linkcopy.svg", ZMessage("{copylink}", this));
-    pBtn->msTooltip = "Copy path to image to clipboard";
-    pBtn->SetArea(rButton);
-    pBtn->mbEnabled = ValidIndex(mViewingIndex);
-    pBtn->msWinGroup = "File";
-
-//    rButton.OffsetRect(rButton.Width(), 0);
-
-
-    string sMessage;
-    
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.0);     // wider buttons for management
-    rButton.OffsetRect(rButton.Width() + gSpacer, 0);
-
-    string sPanelLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
-    sPanelLayout += "<row><button    id=undo caption=undo msg={undo;target=" + GetTargetName() + "} tooltip=\"Undo last move or copy command.\"/></row>";
-    sPanelLayout += "<row><svgbutton id=move svgpath=%apppath%/res/move.svg msg={set_move_folder;target=" + GetTargetName() + "} tooltip=\"Select a Move Folder for quick-move with 'M'\"/></row>";
-    sPanelLayout += "<row><svgbutton id=copy svgpath=%apppath%/res/copy.svg msg={set_copy_folder;target=" + GetTargetName() + "} tooltip=\"Select a Copy Folder for quick-copy with 'C'\"/></row>";
-    sPanelLayout += "</panel>";
-
-    ZWinPopupPanelBtn* pPopupBtn = mpPanel->PopupPanelButton("manage_menu", sAppPath + "/res/manage.svg", sPanelLayout, ZFPoint(1.0, 3.0),  ZGUI::ePosition::ICOB);
-    pPopupBtn->msWinGroup = "File";
-    pPopupBtn->SetArea(rButton);
-    
-    // Transformation (rotation, flip, etc.)
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-
-
-    sPanelLayout = "<panel hide_on_mouse_exit=1 border=1 spacers=1>";
-    sPanelLayout += "<row><svgbutton id=rot_left svgpath=%apppath%/res/rot_left.svg msg={rotate_left;target=" + GetTargetName() + "} tooltip=\"90º Left\"/></row>";
-    sPanelLayout += "<row><svgbutton id=rot_right svgpath=%apppath%/res/rot_right.svg msg={rotate_right;target=" + GetTargetName() + "} tooltip=\"90º Right\"/></row>";
-    sPanelLayout += "<row><svgbutton id=flip_h svgpath=%apppath%/res/fliph.svg msg={flipH;target=" + GetTargetName() + "} tooltip=\"Flip Horizontal\"/></row>";
-    sPanelLayout += "<row><svgbutton id=flip_v svgpath=%apppath%/res/flipv.svg msg={flipV;target=" + GetTargetName() + "} tooltip=\"Flip Vertical\"/></row>";
-    sPanelLayout += "</panel>";
-
-    pPopupBtn = mpPanel->PopupPanelButton("rotate_menu", sAppPath + "/res/rotate.svg", sPanelLayout, ZFPoint(1.0, 4.0), ZGUI::ePosition::ICOB);
-    pPopupBtn->SetArea(rButton);
-
-
-
-/*    pBtn = mpPanel->SVGButton("show_rotation_menu", sAppPath + "/res/rotate.svg");
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.25);     // wider buttons for management
-    pBtn->SetArea(rButton);
-    Sprintf(sMessage, "show_rotation_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
-    pBtn->msButtonMessage = sMessage;
-    pBtn->msWinGroup = "Rotate";*/
-
-
-
-
-
-
-
-
-/*    pBtn = mpPanel->Button("show_manage_menu", "Manage", "show_manage_menu");
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.25);     // wider buttons for management
-    pBtn->SetArea(rButton);
-    Sprintf(sMessage, "show_manage_menu;target=%s;r=%s", GetTargetName().c_str(), RectToString(rButton).c_str());
-    pBtn->msButtonMessage = sMessage;
-    pBtn->msWinGroup = "Manage";*/
-
-
-
-
-    rButton.right = rButton.left + (int64_t)(rButton.Width() * 1.5);     // wider buttons for filter
-
-    rButton.OffsetRect(rButton.Width() + gSpacer * 2, 0);
-
-    // Filter group
-    ZGUI::Style filterButtonStyle = gDefaultGroupingStyle;
-    filterButtonStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
-    filterButtonStyle.fp.nHeight = nGroupSide / 3;
-    filterButtonStyle.pos = ZGUI::C;
-    filterButtonStyle.wrap = true;
-    filterButtonStyle.look.colTop = 0xff888888;
-    filterButtonStyle.look.colBottom = 0xff888888;
-
-    string sCaption;
-
-    // All
-    ZWinCheck* pCheck = mpPanel->Toggle("filterall", nullptr, "", ZMessage("{filter_all}", this), "");
-    pCheck->SetState(mFilterState == kAll, false);
-    pCheck->mCheckedStyle = filterButtonStyle;
-    pCheck->mCheckedStyle.look.colTop = 0xffffffff;
-    pCheck->mCheckedStyle.look.colBottom = 0xffffffff;
-    pCheck->mUncheckedStyle = filterButtonStyle;
-    pCheck->SetArea(rButton);
-    Sprintf(sCaption, "All\n(%d)", mImageArray.size());
-    pCheck->mCaption.sText = sCaption;
-    pCheck->msTooltip = "All images";
-    pCheck->msWinGroup = "Filter";
-    pCheck->msRadioGroup = "FilterGroup";
-    mpAllFilterButton = pCheck;
-
-
-    // Favorites
-    rButton.OffsetRect(rButton.Width(), 0);
-
-    pCheck = mpPanel->Toggle("filterfavs", nullptr, "", ZMessage("{filter_favs}", this), "");
-    pCheck->mbEnabled = !mFavImageArray.empty();
-    pCheck->SetState(mFilterState == kFavs, false);
-    pCheck->mCheckedStyle = filterButtonStyle;
-    pCheck->mCheckedStyle.look.colTop = 0xffe1b131;
-    pCheck->mCheckedStyle.look.colBottom = 0xffe1b131;
-    pCheck->mUncheckedStyle = filterButtonStyle;
-    pCheck->SetArea(rButton);
-    Sprintf(sCaption, "Favorites\n(%d)", mFavImageArray.size());
-    pCheck->mCaption.sText = sCaption;
-    pCheck->msTooltip = "Favorites (hit '1' to toggle current image)";
-    pCheck->msWinGroup = "Filter";
-    pCheck->msRadioGroup = "FilterGroup";
-    mpFavsFilterButton = pCheck;
-
-
-    // Ranked
-    rButton.OffsetRect(rButton.Width(), 0);
-
-    pCheck = mpPanel->Toggle("filterranked", nullptr, "ranked", ZMessage("{filter_ranked}", this), "");
-    pCheck->mCheckedStyle = filterButtonStyle;
-    pCheck->mbEnabled = !mRankedArray.empty();
-    pCheck->mCheckedStyle.look.colTop = 0xffe1b131;
-    pCheck->mCheckedStyle.look.colBottom = 0xffe1b131;
-    pCheck->mUncheckedStyle = filterButtonStyle;
-    pCheck->SetArea(rButton);
-    pCheck->msTooltip = "Images that have been ranked (button to the right)";
-    pCheck->msWinGroup = "Filter";
-    pCheck->msRadioGroup = "FilterGroup";
-    pCheck->SetState(mFilterState == kRanked, false);
-    mpRankedFilterButton = pCheck;
-
-
-    // ToBeDeleted
-    rButton.OffsetRect(rButton.Width(), 0);
-    pCheck = mpPanel->Toggle("filterdel", nullptr, "", ZMessage("{filter_del}", this), "");
-    pCheck->mbEnabled = !mToBeDeletedImageArray.empty();
-    pCheck->SetState(mFilterState == kToBeDeleted, false);
-    pCheck->mCheckedStyle = filterButtonStyle;
-    pCheck->mCheckedStyle.look.colTop = 0xffff4444;
-    pCheck->mCheckedStyle.look.colBottom = 0xffff4444;
-    pCheck->mUncheckedStyle = filterButtonStyle;
-    pCheck->SetArea(rButton);
-    Sprintf(sCaption, "To Be Del\n(%d)", mToBeDeletedImageArray.size());
-    pCheck->mCaption.sText = sCaption;
-    pCheck->msTooltip = "Images marked for deletion (hit del to toggle current image)";
-    pCheck->msWinGroup = "Filter";
-    pCheck->msRadioGroup = "FilterGroup";
-    mpDelFilterButton = pCheck;
-
-
-    rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
-    rButton.right = rButton.left + rButton.Width() * 3;
-    mpDeleteMarkedButton = mpPanel->Button("show_confirm", "delete marked", ZMessage("{show_confirm}", this));
-    mpDeleteMarkedButton->SetVisible(mFilterState == kToBeDeleted);
-    mpDeleteMarkedButton->mCaption.sText = "delete marked";
-    mpDeleteMarkedButton->msTooltip = "Show confirmation of images marked for deleted.";
-    mpDeleteMarkedButton->mCaption.style = gDefaultGroupingStyle;
-    mpDeleteMarkedButton->mCaption.style.look.colTop = 0xffff0000;
-    mpDeleteMarkedButton->mCaption.style.look.colBottom = 0xffff0000;
-    mpDeleteMarkedButton->mCaption.style.fp.nHeight = nGroupSide / 2;
-    mpDeleteMarkedButton->mCaption.style.wrap = true;
-    mpDeleteMarkedButton->mCaption.style.pos = ZGUI::C;
-    mpDeleteMarkedButton->SetArea(rButton);
-
-
-
-
-
-
-
-
-    ZRect rExit(nControlPanelSide, nControlPanelSide);
-    rExit = ZGUI::Arrange(rExit, mAreaLocal, ZGUI::RT);
-    pBtn = mpPanel->SVGButton("quit", sAppPath + "/res/exit.svg", ZMessage("{quit}", this));
-    pBtn->msTooltip = "Exit";
-    pBtn->SetArea(rExit);
-    pBtn->SetVisible(!gGraphicSystem.mbFullScreen);
-        
-
-    rButton.SetRect(0, 0, nGroupSide, nGroupSide);
-    rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gSpacer / 2);
-    rButton.OffsetRect(-gSpacer * 2, 0);
-    rButton.OffsetRect(-nControlPanelSide, 0);
-
-
-    pBtn = mpPanel->SVGButton("toggle_fullscreen", sAppPath + "/res/fullscreen.svg", ZMessage("{toggle_fullscreen}"));
-    pBtn->msWinGroup = "View";
-    pBtn->SetArea(rButton);
-    pBtn->msTooltip = "Toggle Fullscreen";
-
-    rButton.OffsetRect(-rButton.Width(), 0);
-
-    pCheck = mpPanel->Toggle("qualityrender", &mbSubsample, "", ZMessage("{invalidate}", this), ZMessage("{invalidate}", this));
-    pCheck->mSVGImage.Load(sAppPath + "/res/subpixel.svg");
-    pCheck->SetArea(rButton);
-    pCheck->msTooltip = "Quality Render";
-    pCheck->msWinGroup = "View";
-
-
-    rButton.OffsetRect(-rButton.Width(), 0);
-    pBtn = mpPanel->Button("show_help", "?", ZMessage("{show_help}", this));
-    pBtn->mCaption.style = filterButtonStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
-    pBtn->SetArea(rButton);
-    pBtn->msTooltip = "View Help and Quick Reference";
-    pBtn->msWinGroup = "View";
-
-
-    // Contest Button
-    rButton.right = rButton.left + rButton.Width() * 4;
-    rButton.OffsetRect(-rButton.Width()-gSpacer*2, 0);
-    mpShowContestButton = mpPanel->Button("show_contest", "Rank Photos", ZMessage("{show_contest}", this));
-    mpShowContestButton->mCaption.style = gStyleButton;
-    mpShowContestButton->mCaption.style.pos = ZGUI::C;
-    mpShowContestButton->SetArea(rButton);
-    if (mFavImageArray.size() < 5)
-    {
-        mpShowContestButton->msTooltip = "Choose at least five favorites to enable ranking";
-        mpShowContestButton->mbEnabled = false;
-    }
-    else
-    {
-        Sprintf(mpShowContestButton->msTooltip, "Rank the %u favorites in pairs", mFavImageArray.size());
-        mpShowContestButton->mbEnabled = true;
-    }
-
-
-    string sCurVersion;
-    string sAvailVersion;
-    gRegistry.Get("app", "version", sCurVersion);
-    gRegistry.Get("app", "newversion", sAvailVersion);
-
-    #ifndef _DEBUG
-    if (sCurVersion != sAvailVersion)
-    {
-        rButton.OffsetRect(-rButton.Width() - gSpacer * 2, 0);
-        pBtn = mpPanel->Button("download", "New Version", ZMessage("{download}", this));
-        pBtn->mCaption.style = gStyleButton;
-        pBtn->mCaption.style.look.colTop = 0xffff0088;
-        pBtn->mCaption.style.look.colTop = 0xff8800ff;
-        pBtn->mCaption.style.pos = ZGUI::C;
-        pBtn->msTooltip = "New version \"" + sAvailVersion + "\" is available for download.";
-        pBtn->SetArea(rButton);
-    }
-#endif
-
-
-    mpPanel->Invalidate();
 }
 
 bool ImageViewer::OnParentAreaChange()

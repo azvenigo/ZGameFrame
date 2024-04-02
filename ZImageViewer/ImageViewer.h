@@ -13,7 +13,7 @@
 class ZWinImage;
 class ZWinCheck;
 class ZWinBtn;
-class ZWinControlPanel;
+class ZWinPanel;
 class ZWinFolderLabel;
 class WinTopWinners;
 
@@ -223,8 +223,8 @@ protected:
     void                    SaveSelection(ZRect rSelection);
     void                    CopySelection(ZRect rSelection);
 
-    ZWinControlPanel*       mpPanel;
-    std::recursive_mutex    mPanelMutex;
+    ZWinPanel*              mpPanel;
+//    std::recursive_mutex    mPanelMutex;
 
     //ZWinControlPanel*       mpRotationMenu;
     //ZWinControlPanel*       mpManageMenu;
@@ -269,12 +269,12 @@ protected:
     ZGUI::Style             mSymbolicStyle;
     tZFontPtr               mpFavoritesFont;
 
-    ZWinCheck*              mpAllFilterButton;
+/*    ZWinCheck*              mpAllFilterButton;
     ZWinCheck*              mpFavsFilterButton;
     ZWinCheck*              mpDelFilterButton;
     ZWinCheck*              mpRankedFilterButton;
     ZWinBtn*                mpDeleteMarkedButton;
-    ZWinBtn*                mpShowContestButton;
+    ZWinBtn*                mpShowContestButton;*/
     ZWinFolderLabel*        mpFolderLabel;
 
     WinTopWinners*          mpRatedImagesStrip;

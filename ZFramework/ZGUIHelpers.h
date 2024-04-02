@@ -114,9 +114,17 @@ namespace ZGUI
     class RA_Descriptor
     {
     public:
-        RA_Descriptor(const ZRect& _area = {}, const ZRect& _ref = {}, ePosition _anchorpos = ILIT) : area(_area), ref(_ref), anchorpos(_anchorpos) 
+        RA_Descriptor(const ZRect& _area = {}, 
+            const std::string& _referenceWindow = "", 
+            uint32_t _alignment = (Left|Right|Top|Bottom), 
+            float _wRatio = 1.0, 
+            float _hRatio = 1.0, 
+            int64_t _minWidth = -1, 
+            int64_t _minHeight = -1,
+            int64_t _maxWidth = -1,
+            int64_t _maxHeight = -1) : referenceWindow(_referenceWindow), alignment(_alignment), wRatio(_wRatio), hRatio(_hRatio), minWidth(_minWidth), minHeight(_minHeight), maxWidth(_maxWidth), maxHeight(_maxHeight)
         {
-            assert(anchorpos < 1024);   // all possible legal flags set
+            assert(alignment < 1024);   // all possible legal flags set
         }
 
         // serialization
@@ -125,56 +133,21 @@ namespace ZGUI
 
 
         ZRect area;
-        ZRect ref;
-        ePosition anchorpos;
-    };
-
-    class RelativeArea
-    {
-    public:
-        RelativeArea(const RA_Descriptor& rad) : RelativeArea(rad.area, rad.ref, rad.anchorpos){}
-        RelativeArea(const ZRect& area = {}, const ZRect& ref = {}, ePosition _anchorpos = ILIT)
-        {
-            anchorpos = _anchorpos;
-
-            if (area.Area() > 0)
-                aspectratio = (double)area.Width() / (double)area.Height();
-
-            if (ref.Area() > 0)
-            {
-                sizeratio = (double)area.Height() / (double)ref.Height();
-
-                if (Set(ZGUI::ePosition::R))
-                    offset.x = (double)(ref.right - area.right) / (double)ref.Width();
-                else
-                    offset.x = (double)(area.left - ref.left) / (double)ref.Width();
-
-                if (Set(ZGUI::ePosition::B))
-                    offset.y = (double)(ref.bottom - area.bottom) / (double)ref.Height();
-                else
-                    offset.y = (double)(area.top - ref.top) / (double)ref.Height();
-            }
-        }
-
-        // serialization
-        RelativeArea(std::string s);    // from string
-        operator std::string() const;   // to string
-
-        ZRect Area(const ZRect& ref) const;
-
-        bool Set(ePosition pos) const { return (anchorpos & pos) != 0; }
-
-
-        ePosition   anchorpos;
-        ZFPoint     offset; // normalized % offset from anchor 0.0-1.0
-        double      aspectratio;  
-        double      sizeratio;  // normalized % of size based on parent (my_height / parent_height)
+        std::string referenceWindow;
+        uint32_t alignment;
+        float wRatio;
+        float hRatio;
+        int64_t minWidth;
+        int64_t minHeight;
+        int64_t maxWidth;
+        int64_t maxHeight;
     };
 
 
     inline bool ValidPos(ePosition pos) { return pos < (1 << 10); }    // simple validation that flags do not exceed all set. May want to check that invalid combinations like (Left & Right) don't exits
     
     ZRect       Arrange(const ZRect& r, const ZRect& ref, ePosition pos, int64_t paddingH = 0, int64_t paddingV = 0);  // moves r relative to ref based on position flags
+    ZRect       Align(const ZRect& r, const ZRect& ref, uint32_t alignmentflags, int64_t paddingH = 0, int64_t paddingV = 0, float fWidthRatio = 1.0, float fHeightRatio = 1.0, int64_t minWidth = -1, int64_t minHeight = -1, int64_t maxWidth = -1, int64_t maxHeight = -1);  // aligns sides of r to ref depending on flags. 
 
     ZRect       ScaledFit(const ZRect& r, const ZRect& ref);    // scales r to fit inside ref maintaining r's aspect ratio
 
