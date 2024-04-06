@@ -381,7 +381,7 @@ void ImageContest::ShowHelpDialog()
     pLabel->SetArea(rCaption);
     pLabel->mStyle = gStyleCaption;
     pLabel->mStyle.pos = ZGUI::CT;
-    pLabel->mStyle.fp.nHeight = 72;
+    pLabel->mStyle.fp.fScale = 2.0;
     pLabel->mStyle.fp.nWeight = 500;
     pLabel->mStyle.look = ZGUI::ZTextLook::kEmbossed;
     pLabel->mStyle.look.colTop = 0xff999999;
@@ -454,19 +454,19 @@ bool ImageContest::Init()
         string sAppPath = gRegistry["apppath"];
 
         mpChooseBtn[kLeft] = new ZWinBtn();
-        mpChooseBtn[kLeft]->mSVGImage.Load(sAppPath + "/res/left.svg");
+        mpChooseBtn[kLeft]->mSVGImage.Load(sAppPath + "/res/left2.svg");
         mpChooseBtn[kLeft]->msTooltip = "Choose Left";
         mpChooseBtn[kLeft]->msButtonMessage = ZMessage("{select_winner;side=left}", this);
         ChildAdd(mpChooseBtn[kLeft]);
 
         mpChooseBtn[kRight] = new ZWinBtn();
-        mpChooseBtn[kRight]->mSVGImage.Load(sAppPath + "/res/right.svg");
+        mpChooseBtn[kRight]->mSVGImage.Load(sAppPath + "/res/right2.svg");
         mpChooseBtn[kRight]->msTooltip = "Choose Right";
         mpChooseBtn[kRight]->msButtonMessage = ZMessage("{select_winner;side=right}", this);
         ChildAdd(mpChooseBtn[kRight]);
 
         ZGUI::Style style = gStyleCaption;
-        style.fp.nHeight = gM * 3;
+        style.fp.fScale = 3.0;
         style.look.decoration = ZGUI::ZTextLook::kShadowed;
         style.pos = ZGUI::CB;
 
@@ -533,7 +533,7 @@ void ImageContest::UpdateControlPanel()
     int64_t nGroupSide = nControlPanelSide - gSpacer * 4;
     
 
-    mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+    mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", 1.0, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     ZDynamicFont* pFont = (ZDynamicFont*)mSymbolicStyle.Font().get();
     
     pFont->GenerateSymbolicGlyph('F', 0x2750);
@@ -583,7 +583,7 @@ void ImageContest::UpdateControlPanel()
     pBtn = mpPanel->Button("reset", "Reset", ZMessage("{reset_contest}", this));
     pBtn->msTooltip = "Resets all of the ratings for images in this folder";
     pBtn->mCaption.style = gDefaultGroupingStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
+    pBtn->mCaption.style.fp.fScale = ZFontParams::Scale(nGroupSide / 2);
     pBtn->mCaption.style.pos = ZGUI::C;
     pBtn->mCaption.style.look.colTop = 0xffff8800;
     pBtn->mCaption.style.look.colBottom = 0xffffff00;
@@ -608,7 +608,7 @@ void ImageContest::UpdateControlPanel()
 
     ZGUI::Style filterButtonStyle = gDefaultGroupingStyle;
     filterButtonStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
-    filterButtonStyle.fp.nHeight = nGroupSide / 3;
+    filterButtonStyle.fp.fScale = ZFontParams::Scale(nGroupSide / 3);
     filterButtonStyle.pos = ZGUI::C;
     filterButtonStyle.look.colTop = 0xff888888;
     filterButtonStyle.look.colBottom = 0xff888888;
@@ -618,7 +618,7 @@ void ImageContest::UpdateControlPanel()
     rButton.OffsetRect(-rButton.Width(), 0);
     pBtn = mpPanel->Button("help", "?", ZMessage("{show_help}", this));
     pBtn->mCaption.style = filterButtonStyle;
-    pBtn->mCaption.style.fp.nHeight = nGroupSide / 2;
+    pBtn->mCaption.style.fp.fScale = ZFontParams::Scale( nGroupSide / 2);
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "View";
 

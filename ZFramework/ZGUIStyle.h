@@ -33,6 +33,7 @@ extern ZTextLook   gDefaultToolitipLook;
 extern ZGUI::Style gStyleTooltip;
 extern ZGUI::Style gStyleCaption;
 extern ZGUI::Style gStyleButton;
+extern ZGUI::Style gStyleSlider;
 extern ZGUI::Style gStyleToggleChecked;
 extern ZGUI::Style gStyleToggleUnchecked;
 extern ZGUI::Style gStyleGeneralText;
@@ -41,6 +42,7 @@ extern ZGUI::Style gDefaultWinTextEditStyle;
 extern ZGUI::Style gDefaultGroupingStyle;
 extern ZGUI::Style gDefaultFormattedDocStyle;
 extern ZGUI::Style gDefaultPanelStyle;
+extern ZGUI::RA_Descriptor gDefaultRAD;
 
 namespace ZGUI
 {
@@ -74,7 +76,7 @@ namespace ZGUI
         Style(const std::string& s);
 
         tZFontPtr Font();
-        bool Uninitialized() { return fp.sFacename.empty() || fp.nHeight == 0; }
+        bool Uninitialized() { return fp.sFacename.empty() || fp.fScale == 0; }
 
         operator std::string() const;
         void operator = (const Style& rhs);

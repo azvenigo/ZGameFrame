@@ -43,7 +43,7 @@ bool ConfirmDeleteDialog::Init()
 //        rLabel = gStyleButton.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sFolder.c_str(), sFolder.length(), ZGUI::LT, gDefaultSpacer);
 
         ZGUI::Style labelstyle(gStyleCaption);
-        labelstyle.fp.nHeight = (int64_t) (gM * 0.5);
+        labelstyle.fp.fScale = 0.5;
         labelstyle.bgCol = 0;
         labelstyle.look.colTop = 0xffffff00;
         labelstyle.look.colBottom = 0xffffff00;
@@ -60,7 +60,7 @@ bool ConfirmDeleteDialog::Init()
 
 
         ZGUI::Style style(gStyleButton);
-        style.fp.nHeight = gM;
+        style.fp.fScale = 1.0;
         style.paddingH = (int32_t)gSpacer;
         style.paddingV = (int32_t)gSpacer;
         style.pos = ZGUI::C;
@@ -105,7 +105,7 @@ bool ConfirmDeleteDialog::Init()
 
         ZFontParams font;
         font.sFacename = "Verdana";
-        font.nHeight = (gM*2)/3;
+        font.fScale = 0.66;
 
         size_t nCount = 1;
         for (auto& entry : mFiles)

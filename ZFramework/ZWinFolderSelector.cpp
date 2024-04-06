@@ -159,7 +159,7 @@ std::string ZWinFolderLabel::VisiblePath()
 
 ZRect ZWinFolderLabel::PathRect()
 {
-    return ZRect(mStyle.paddingH*2+mStyle.Font()->StringWidth(VisiblePath()), mStyle.paddingV*2+mStyle.fp.nHeight);
+    return ZRect(mStyle.paddingH*2+mStyle.Font()->StringWidth(VisiblePath()), mStyle.paddingV*2+mStyle.fp.Height());
 }
 
 

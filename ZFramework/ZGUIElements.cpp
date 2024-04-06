@@ -17,7 +17,7 @@ namespace ZGUI
             rDraw = pDst->GetArea();
 
         if (autoSizeFont)
-            style.fp.nHeight = rDraw.Height()/2;
+            style.fp.fScale = ZFontParams::Scale(rDraw.Height()/2);
 
         return style.Font()->DrawTextParagraph(pDst, sText, rDraw, &style);
     }
@@ -137,8 +137,8 @@ namespace ZGUI
             for (auto& s : row)
             {
                 int32_t nWidth = (int32_t)s.style.Font()->StringWidth(s.val);
-                if (s.style.fp.nHeight > nTallestCell)
-                    nTallestCell = (int32_t)s.style.fp.nHeight;
+                if (s.style.fp.Height() > nTallestCell)
+                    nTallestCell = (int32_t)s.style.fp.Height();
 
                 if (mColumnWidths[nCol] < nWidth)
                     mColumnWidths[nCol] = nWidth;
@@ -196,8 +196,6 @@ namespace ZGUI
                 rCellArea.OffsetRect(nX + mrAreaToDrawTo.left, nY + mrAreaToDrawTo.top);
 
                 ZRect rString = cell.style.Font()->Arrange(rCellArea, (uint8_t*)cell.val.data(), cell.val.length(), mCellStyle.pos, mCellStyle.paddingH);
-                //ZRect rString = ZGUI::Arrange(rString, rAreaToDrawTo, cell.style.pos, cell.style.paddingH, cell.style.paddingV);
-
                 cell.style.Font()->DrawText(pDest, cell.val, rString, &mCellStyle.look);
 
                 nX += nColWidth + mCellStyle.paddingH;

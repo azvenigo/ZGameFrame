@@ -436,8 +436,8 @@ int64_t ZWinFormattedDoc::GetLineHeight(tFormattedLine& line)
 	{
         if (entry.type == FormattedEntry::Image && entry.pBuffer && entry.pBuffer->GetArea().Height() > nLargest)
             nLargest = entry.pBuffer->GetArea().Height();
-		else if (entry.style.fp.nHeight > nLargest)
-            nLargest = entry.style.fp.nHeight;
+		else if (entry.style.fp.Height() > nLargest)
+            nLargest = entry.style.fp.Height();
 	}
 
     return nLargest + mStyle.paddingV;

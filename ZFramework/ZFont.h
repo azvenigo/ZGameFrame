@@ -14,6 +14,8 @@
 
 const int32_t kMaxChars = 256;
 
+extern int64_t gM;    // gMeasure as set globally 
+
 
 // Data is in this format:
 // char: nAlphaValue   0-255
@@ -41,10 +43,11 @@ public:
     ZFontParams();
     ZFontParams(const ZFontParams& rhs);
 
-    ZFontParams(const std::string name, int64_t height, int64_t weight = 200, int64_t tracking = 0, int64_t fixed = 0, bool italic = false, bool symbolic = false)
+    ZFontParams(const std::string name, float _fScale, int64_t weight = 200, int64_t tracking = 0, int64_t fixed = 0, bool italic = false, bool symbolic = false)
     {
+        assert(_fScale > 0 && _fScale < 10.0);
         sFacename = name;
-        nHeight = height;
+        fScale = _fScale;
         nWeight = weight;
         nTracking = tracking;
         nFixedWidth = fixed;
@@ -56,7 +59,7 @@ public:
     {
         nlohmann::json j = nlohmann::json::parse(sJSON);
         sFacename = j["n"];
-        nHeight = j["h"];
+        fScale = j["fs"];
         nWeight = j["w"];
         nTracking = j["t"];
         nFixedWidth = j["f"];
@@ -77,7 +80,7 @@ public:
     {
         nlohmann::json j;
         j["n"] = sFacename.c_str();
-        j["h"] = nHeight;
+        j["fs"] = fScale;
         j["w"] = nWeight;
         j["t"] = nTracking;
         j["f"] = nFixedWidth;
@@ -91,6 +94,19 @@ public:
         return j.dump();
     }
 
+    int64_t Height() const 
+    { 
+        assert(fScale > 0 && fScale < 100.0);
+        return (int64_t)(fScale * (float)gM);
+    }
+
+    static float Scale(int64_t h) 
+    { 
+        float scale = truncate<float>(((float)h / (float)gM), 3);
+        assert(scale > 0 && scale < 100.0);
+        return scale;
+    }
+
     bool operator < (const ZFontParams& rhs) const
     {
         int nNameCompare = sFacename.compare(rhs.sFacename);
@@ -99,10 +115,11 @@ public:
         else if (nNameCompare > 0)
             return false;
 
-        if (nHeight < rhs.nHeight)
+        if (fScale < rhs.fScale)
             return true;
-        else if (nHeight > rhs.nHeight)
+        else if (fScale > rhs.fScale)
             return false;
+
 
         if (nWeight < rhs.nWeight)
             return true;
@@ -112,7 +129,7 @@ public:
         return false;
     }
 
-    int64_t nHeight;
+    float  fScale; // scaled height by ZGUI::gM    measure
     int64_t nWeight;
     int64_t nTracking;
     int64_t nFixedWidth;
@@ -142,7 +159,7 @@ public:
     virtual bool    SaveFont(const std::string& sFilename);
 
     ZFontParams&    GetFontParams() { return mFontParams; }
-    int64_t         Height() { return mFontParams.nHeight; }
+    int64_t         Height() { return mFontHeight; }
 
     void            SetEnableKerning(bool bEnable) { mbEnableKerning = bEnable; }
     void            SetTracking(int64_t nTracking) { mFontParams.nTracking = nTracking; }
@@ -176,6 +193,7 @@ protected:
     void                    FindKerning(uint8_t c1, uint8_t c2);
 
     ZFontParams             mFontParams;
+    int64_t                 mFontHeight;
     bool                    mbEnableKerning;
 
 	sCharDescriptor         mCharDescriptors[kMaxChars];  // lower 128 ascii chars
@@ -192,7 +210,7 @@ extern std::vector<std::string> gWindowsFontFacenames;
 inline bool operator==(const ZFontParams& lhs, const ZFontParams& rhs)
 {
     bool bEqual = 
-        lhs.nHeight             == rhs.nHeight &&
+        lhs.fScale              == rhs.fScale &&
         lhs.nWeight             == rhs.nWeight &&
         lhs.nTracking           == rhs.nTracking &&
         lhs.bItalic             == rhs.bItalic &&
@@ -255,6 +273,7 @@ private:
 
 typedef std::shared_ptr<ZFont>              tZFontPtr;
 typedef std::map<ZFontParams, tZFontPtr>    tZFontMap;
+typedef std::map<int64_t, tZFontMap>        tFontHeightToZFontMap;
 
 class ZFontSystem
 {
@@ -274,7 +293,7 @@ public:
 //    std::vector<std::string>    GetFontNames();
 //    std::vector<int32_t>        GetAvailableSizes(const std::string& sFontName);
 
-    size_t          GetFontCount() { return mFontMap.size(); }
+    size_t          GetFontCount();
 
     bool            SetDefaultFont(const ZFontParams& params);
     ZFontParams&    GetDefaultFontParam() { return mpDefault->GetFontParams(); }
@@ -291,9 +310,9 @@ public:
 private:
 
 
-    tZFontPtr       mpDefault;
-    tZFontMap       mFontMap;
-    std::recursive_mutex mFontMapMutex;
+    tZFontPtr                   mpDefault;
+    tFontHeightToZFontMap       mHeightToFontMap;
+    std::recursive_mutex        mFontMapMutex;
 
     // caching
     std::string     msCacheFolder;

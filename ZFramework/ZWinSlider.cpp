@@ -17,7 +17,7 @@ using namespace std;
 
 ZWinSlider::ZWinSlider(int64_t* pnSliderValue)
 {
-    mStyle = gStyleButton;
+    mStyle = gStyleSlider;
 
 	mpnSliderValue = pnSliderValue;	// bound value
 	mnSliderUnscaledValMin = 0;

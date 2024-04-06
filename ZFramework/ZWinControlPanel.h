@@ -31,7 +31,7 @@ public:
     void                    FitToControls();
 
     ZWinLabel*              Caption(    const std::string& sID, 
-                                        const std::string& sCaption = "");
+                                        const std::string& sCaption);
 
     ZWinBtn*     Button(     const std::string& sID, 
                                         const std::string& sCaption = "", 

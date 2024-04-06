@@ -16,6 +16,14 @@ void limit(T& val, T min, T max)
         val = max;
 };
 
+template <typename T>
+T truncate(T number, int decimalPlaces) 
+{
+    T multiplier = (T)pow(10, decimalPlaces);
+    T numberfloor = floorf(number * multiplier);
+    return numberfloor / multiplier;
+}
+
 template <class T>
 class tPoint
 {

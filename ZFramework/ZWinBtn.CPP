@@ -240,7 +240,7 @@ bool ZWinBtn::Paint()
     
     mpSurface.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaLocal, ZBuffer::kEdgeBltMiddle_Stretch|ZBuffer::kEdgeBltSides_Stretch);
 
-    int64_t nOffset = max((int)mCaption.style.fp.nHeight / 16, (int)1);
+    int64_t nOffset = max((int)mCaption.style.fp.Height() / 16, (int)1);
     ZRect rCaption = mAreaLocal;
     if (mDrawState == kDown)
         rCaption.OffsetRect(nOffset, nOffset);

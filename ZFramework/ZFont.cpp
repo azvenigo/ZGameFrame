@@ -6,12 +6,12 @@
 #include <ZMemBuffer.h>
 #include "ZZipAPI.h"
 #include "ZGUIStyle.h"
-
+#include <assert.h>
 
 
 ZFontParams::ZFontParams()
 {
-    nHeight = 0;
+    fScale = 0;
     nWeight = 0;
     nTracking = 1;
     nFixedWidth = 0;
@@ -21,7 +21,7 @@ ZFontParams::ZFontParams()
 
 ZFontParams::ZFontParams(const ZFontParams& rhs)
 {
-    nHeight = rhs.nHeight;
+    fScale = rhs.fScale;
     nWeight = rhs.nWeight;
     nTracking = rhs.nTracking;
     nFixedWidth = rhs.nFixedWidth;
@@ -112,8 +112,11 @@ bool ZFont::LoadFont(const string& sFilename)
 
 	pData += nHeaderLength;
 
-    memcpy(&mFontParams.nHeight, pData, sizeof(mFontParams.nHeight));
-    pData += sizeof(mFontParams.nHeight);
+    memcpy(&mFontHeight, pData, sizeof(mFontHeight));
+    pData += sizeof(mFontHeight);
+
+    mFontParams.fScale = ZFontParams::Scale(mFontHeight);
+
 
     memcpy(&mFontParams.nWeight, pData,  sizeof(mFontParams.nWeight));
     pData += sizeof(mFontParams.nWeight);
@@ -177,7 +180,8 @@ bool ZFont::SaveFont(const string& sFilename)
     ZMemBufferPtr uncompBuffer( new ZMemBuffer());
 
     uncompBuffer->write((uint8_t*) sZFontHeader.data(), (uint32_t) sZFontHeader.length());
-    uncompBuffer->write((uint8_t*) &mFontParams.nHeight, sizeof(mFontParams.nHeight));
+//    uncompBuffer->write((uint8_t*) &mFontParams.fScale, sizeof(mFontParams.fScale));
+    uncompBuffer->write((uint8_t*)&mFontHeight, sizeof(mFontHeight));
     uncompBuffer->write((uint8_t*)&mFontParams.nWeight, sizeof(mFontParams.nWeight));
     uncompBuffer->write((uint8_t*)&mFontParams.nTracking, sizeof(mFontParams.nTracking));
     uncompBuffer->write((uint8_t*)&mFontParams.nFixedWidth, sizeof(mFontParams.nFixedWidth));
@@ -280,11 +284,10 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 	case ZGUI::ZTextLook::kShadowed:
 		{
 			uint32_t nShadowColor = pLook->colTop & 0xAA000000;		// draw the shadow, but only as dark as the text alpha
-			int64_t nShadowOffset = mFontParams.nHeight/20;
-            if (nShadowOffset < 1)
-                nShadowOffset = 1;
-            else if (nShadowOffset > 8)
-                nShadowOffset = 8;
+            int64_t height = mFontHeight;
+            assert(height > 0 && height < 1024);
+			int64_t nShadowOffset = height /20;
+            limit<int64_t>(nShadowOffset, 1, 32);
 
 
 			ZRect rShadowRect(rAreaToDrawTo);
@@ -304,12 +307,9 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 		{
 			uint32_t nShadowColor = pLook->colTop & 0xAA000000;		// draw the shadow, but only as dark as the text alpha
 			uint32_t nHighlightColor = (pLook->colTop & 0xAA000000) | 0x00ffffff;	// the highlight will also only be as bright as the text alpha
-
-			int64_t nShadowOffset = mFontParams.nHeight/32;
-            if (nShadowOffset < 1)
-                nShadowOffset = 1;
-            else if (nShadowOffset > 8)
-                nShadowOffset = 8;
+            int64_t height = mFontHeight;
+            int64_t nShadowOffset = height / 20;
+            limit<int64_t>(nShadowOffset, 1, 32);
 
 			ZRect rShadowRect(rAreaToDrawTo);
 			rShadowRect.OffsetRect(-nShadowOffset, -nShadowOffset);
@@ -333,9 +333,11 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 
 inline bool ZFont::DrawText_Helper(ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip)
 {
+    cout << "DrawText_Helper... height:" << mFontHeight << "\n";
+
 	int64_t nX = rAreaToDrawTo.left;
 	int64_t nY = rAreaToDrawTo.top;
-	ZRect rOutputText(nX, nY, nX + StringWidth(sText), nY + mFontParams.nHeight);
+	ZRect rOutputText(nX, nY, nX + StringWidth(sText), nY + mFontHeight);
 
 	ZRect rClip;
 	if (pClip)
@@ -391,7 +393,7 @@ inline bool ZFont::DrawText_Gradient_Helper(ZBuffer* pBuffer, const string& sTex
 {
 	int64_t nX = rAreaToDrawTo.left;
 	int64_t nY = rAreaToDrawTo.top;
-	ZRect rOutputText(nX, nY, nX + StringWidth(sText), nY + mFontParams.nHeight);
+	ZRect rOutputText(nX, nY, nX + StringWidth(sText), nY + mFontHeight);
 
 	ZRect rClip;
 	if (pClip)
@@ -445,14 +447,14 @@ void ZFont::DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t n
 	int64_t nScanlineOffset = 0;
     uint8_t* pData = mCharDescriptors[c].pixelData.data();
     uint8_t* pEnd = pData + mCharDescriptors[c].pixelData.size();
-//	for (tPixelDataList::iterator it = mCharDescriptors[c].pixelData.begin(); it != mCharDescriptors[c].pixelData.end(); it++)
+
     while (pData < pEnd)
 	{
-//		int64_t nBright = *it;
+
         int64_t nBright = (int64_t) *pData;
-//		it++;
+
         pData++;
-//		int64_t nNumPixels = *it;
+
         int64_t nNumPixels = (int64_t) *pData;
         pData++;
 
@@ -469,7 +471,7 @@ void ZFont::DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t n
 			}
 
 			pDest += nNumPixels;
-		}
+        }
 		else
 		{
 			uint32_t nAlpha = (uint32_t) nBright;
@@ -488,7 +490,7 @@ void ZFont::DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t n
 				{
 					nScanlineOffset -= nCharWidth;
 					pDest += nDestStride - nCharWidth;
-				}
+                }
 				nNumPixels--;
 			}
 		}
@@ -651,7 +653,7 @@ void ZFont::DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>&
 
 ZRect ZFont::StringRect(const std::string& sText)
 {
-    return ZRect(0, 0, StringWidth(sText), mFontParams.nHeight);
+    return ZRect(0, 0, StringWidth(sText), mFontHeight);
 }
 
 
@@ -660,7 +662,7 @@ ZRect ZFont::StringRect(const std::string& sText)
 ZRect ZFont::Arrange(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding)
 {
     assert(pChars && nNumChars > 0);
-	ZRect rText(0,0, StringWidth(string((char*)pChars,nNumChars)), mFontParams.nHeight);
+	ZRect rText(0,0, StringWidth(string((char*)pChars,nNumChars)), mFontHeight);
 	rArea.DeflateRect(nPadding, nPadding);
 
 /*	int64_t nXCenter = rArea.left + (rArea.Width()  - rText.Width())/2;
@@ -733,12 +735,12 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 	case ZGUI::LC:
 	case ZGUI::C:
 	case ZGUI::RC:
-		rTextLine.top = (rAreaToDrawTo.top + rAreaToDrawTo.bottom - (mFontParams.nHeight * nLines))/2;
+		rTextLine.top = (rAreaToDrawTo.top + rAreaToDrawTo.bottom - (mFontHeight * nLines))/2;
 		break;
 	case ZGUI::LB:
 	case ZGUI::CB:
 	case ZGUI::RB:
-		rTextLine.top = rAreaToDrawTo.bottom - (mFontParams.nHeight * nLines) - pStyle->paddingV;
+		rTextLine.top = rAreaToDrawTo.bottom - (mFontHeight * nLines) - pStyle->paddingV;
 		break;
 	}
 
@@ -756,7 +758,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 		lineStyle = ZGUI::RB;
 	}
 
-	rTextLine.bottom = rTextLine.top + mFontParams.nHeight;
+	rTextLine.bottom = rTextLine.top + mFontHeight;
 
 	int64_t nCharsDrawn = 0;
 
@@ -773,7 +775,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 
 		nCharsDrawn += nLettersToDraw;
 
-		rTextLine.OffsetRect(0, mFontParams.nHeight);
+		rTextLine.OffsetRect(0, mFontHeight);
 		pChars += nLettersToDraw;
 	}
 
@@ -887,18 +889,16 @@ int64_t ZFont::CalculateWordsThatFitOnLine(int64_t nLineWidth, const uint8_t* pC
 
 void ZFont::BuildGradient(uint32_t nColor1, uint32_t nColor2, std::vector<uint32_t>& gradient)
 {
-    ZASSERT(mFontParams.nHeight > 1);
-    gradient.resize(mFontParams.nHeight);
-    //	CEASSERT(mColorGradient.size() == mFontParams.nHeight);
-        // If the gradient is already set, don't bother
-    if (gradient[0] == nColor1 && gradient[mFontParams.nHeight - 1] == nColor2)
+    int64_t height = mFontHeight;
+    ZASSERT(height > 1);
+    gradient.resize(height);
+    if (gradient[0] == nColor1 && gradient[height - 1] == nColor2)
         return;
-    //ZDEBUG_OUT("Building gradient for colors %x - %x mFontParams.nHeight:%d", nColor1, nColor2, mFontParams.nHeight);
     gradient[0] = nColor1;
-    gradient[mFontParams.nHeight - 1] = nColor2;
-    for (int64_t i = 1; i < mFontParams.nHeight - 1; i++)
+    gradient[mFontHeight - 1] = nColor2;
+    for (int64_t i = 1; i < height - 1; i++)
     {
-        double fRange = 10.0 * (((double)(i - 1) - (double)(mFontParams.nHeight - 3) / 2.0) / (double)mFontParams.nHeight);
+        double fRange = 10.0 * (((double)(i - 1) - (double)(height - 3) / 2.0) / (double)height);
         double fArcTanTransition = 0.5 + (atan(fRange) / 3.0);
         if (fArcTanTransition < -0)
             fArcTanTransition = 0;
@@ -928,8 +928,9 @@ void ZFont::FindKerning(uint8_t c1, uint8_t c2)
     std::vector<int> C1rightmostPixel;
     std::vector<int> C2leftmostPixel;
 
-    C1rightmostPixel.resize(mFontParams.nHeight);
-    C2leftmostPixel.resize(mFontParams.nHeight);
+    int64_t height = mFontHeight;
+    C1rightmostPixel.resize(height);
+    C2leftmostPixel.resize(height);
 
 
     // Compute rightmost pixel of c1
@@ -943,7 +944,7 @@ void ZFont::FindKerning(uint8_t c1, uint8_t c2)
         it++;
         int64_t nNumPixels = *it;
 
-        if (nBright < 5 && nScanline < mFontParams.nHeight)
+        if (nBright < 5 && nScanline < height)
         {
             nScanlineOffset += nNumPixels;
 
@@ -957,7 +958,7 @@ void ZFont::FindKerning(uint8_t c1, uint8_t c2)
         }
         else
         {
-            while (nNumPixels > 0 && nScanline < mFontParams.nHeight)
+            while (nNumPixels > 0 && nScanline < height)
             {
                 // Advance the destination, wrapping around if necessary
                 nScanlineOffset++;
@@ -985,7 +986,7 @@ void ZFont::FindKerning(uint8_t c1, uint8_t c2)
         it++;
         int64_t nNumPixels = *it;
 
-        if (nBright < 5 && nScanline < mFontParams.nHeight)
+        if (nBright < 5 && nScanline < height)
         {
             nScanlineOffset += nNumPixels;
 
@@ -999,7 +1000,7 @@ void ZFont::FindKerning(uint8_t c1, uint8_t c2)
         }
         else
         {
-            while (nNumPixels > 0 && nScanline < mFontParams.nHeight)
+            while (nNumPixels > 0 && nScanline < height)
             {
                 // Advance the destination, wrapping around if necessary
                 nScanlineOffset++;
@@ -1022,7 +1023,7 @@ void ZFont::FindKerning(uint8_t c1, uint8_t c2)
 
 
     int nAvailableKern = -mCharDescriptors[c1].nCharWidth;
-    for (int i = 0; i < mFontParams.nHeight; i++)
+    for (int i = 0; i < height; i++)
     {
         if (C1rightmostPixel[i] > 0 && C2leftmostPixel[i] > 0)      // only consider for scanlines where both chars have data
         {
@@ -1081,9 +1082,14 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
     if (params.sFacename.empty())
         return false;
 
-    mFontParams = params;
+    if (params.Height() < 6)
+        return false;
 
-    mrScratchArea.SetRect(0, 0, mFontParams.nHeight * 5, mFontParams.nHeight * 2);     // may need to grow this if the font requested is ever needed to be larger
+
+    mFontParams = params;
+    mFontHeight = params.Height();
+
+    mrScratchArea.SetRect(0, 0, mFontParams.Height() * 5, mFontHeight * 2);     // may need to grow this if the font requested is ever needed to be larger
 
 
     mDIBInfo.bmiHeader.biBitCount = 32;
@@ -1120,7 +1126,7 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
 
     mhWinTargetDC = CreateCompatibleDC(mWinHDC);
     mhWinFont = CreateFontA( 
-        (int)mFontParams.nHeight,
+        (int)mFontHeight,
         0,                      /*nWidth*/
         0,                      /*nEscapement*/
         0,                      /*nOrientation*/
@@ -1416,7 +1422,7 @@ bool ZDynamicFont::GenerateGlyph(uint8_t c)
 
     if (c == ' ')
     {
-        mCharDescriptors[c].nCharWidth = (uint16_t) (mFontParams.nHeight / 4);  // 25% of the height seems good
+        mCharDescriptors[c].nCharWidth = (uint16_t) (mFontHeight / 4);  // 25% of the height seems good
 //        mCharDescriptors[c].nCharWidth = mnWidestCharacterWidth;
     }
     else
@@ -1548,7 +1554,7 @@ void ZFontSystem::Shutdown()
 #ifdef _WIN64
     gWindowsFontFacenames.clear();
 #endif
-    mFontMap.clear();
+    mHeightToFontMap.clear();
 }
 
 bool ZFontSystem::SetDefaultFont(const ZFontParams& params)
@@ -1557,6 +1563,13 @@ bool ZFontSystem::SetDefaultFont(const ZFontParams& params)
     return true;
 }
 
+size_t ZFontSystem::GetFontCount()
+{
+    size_t count = 0;
+    for (auto& sizeMap : mHeightToFontMap)
+        count += sizeMap.second.size();
+    return count;
+}
 
 bool ZFontSystem::SetCacheFolder(const std::string& sFolderPath)
 {
@@ -1583,7 +1596,7 @@ string ZFontSystem::FontCacheFilename(const ZFontParams& params)
     std::filesystem::path cachePath(msCacheFolder);
 
     string sFilename;
-    Sprintf(sFilename, "%s_%d_%d_%d", params.sFacename.c_str(), params.nHeight, params.nWeight, params.nTracking);
+    Sprintf(sFilename, "%s_%d_%d_%d", params.sFacename.c_str(), params.Height(), params.nWeight, params.nTracking);
     if (params.bItalic)
         sFilename += "_i";
     if (params.nFixedWidth > 0)
@@ -1604,9 +1617,11 @@ tZFontPtr ZFontSystem::LoadFont(const string& sFilename)
         return nullptr;
     }
     ZFontParams fp(pNewFont->GetFontParams());
-//    ZDEBUG_OUT("Loaded font:%s size:%d\n", fp.sFacename, fp.nHeight);
+    int64_t height = fp.Height();
 
-    mFontMap[pNewFont->GetFontParams()] = pNewFont;
+    tZFontMap& fontMap = mHeightToFontMap[height];
+
+    fontMap[fp] = pNewFont;
     return pNewFont;
 }
 
@@ -1620,8 +1635,9 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
         tZFontPtr pLoaded = LoadFont(FontCacheFilename(params));
         if (pLoaded)
         {
+            int64_t height = pLoaded->Height();
             const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
-            mFontMap[pLoaded->GetFontParams()] = pLoaded;
+            mHeightToFontMap[height][pLoaded->GetFontParams()] = pLoaded;
             assert(pLoaded);
             return pLoaded;
         }
@@ -1630,13 +1646,17 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
     }
 
     ZDynamicFont* pNewFont = new ZDynamicFont();
-    pNewFont->Init(params, !params.bSymbolic);
+    if (!pNewFont->Init(params, !params.bSymbolic))
+    {
+        ZASSERT(false);
+        return nullptr;
+    }
 
     ZFontParams fp(pNewFont->GetFontParams());
-    ZDEBUG_OUT("Created font:%s size:%d\n", fp.sFacename, fp.nHeight);
+    ZDEBUG_OUT("Created font:%s scale:%.3f size:%d\n", fp.sFacename, fp.fScale, pNewFont->Height());
 
     const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
-    mFontMap[pNewFont->GetFontParams()].reset(pNewFont);
+    mHeightToFontMap[fp.Height()][fp].reset(pNewFont);
 
     if (!msCacheFolder.empty())
     {
@@ -1647,41 +1667,44 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
         }
     }
 
-    return mFontMap[pNewFont->GetFontParams()];
+    return mHeightToFontMap[fp.Height()][fp];
 }
 #endif
 
 
-tZFontPtr ZFontSystem::GetFont(const std::string& sFontName, int32_t nFontSize)
+tZFontPtr ZFontSystem::GetFont(const std::string& sFontName, int32_t nHeight)
 {
     const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
 
-    for (auto findIt : mFontMap)
+    for (auto& findIt : mHeightToFontMap[nHeight])
     {
         const ZFontParams& fp = findIt.first;
-        if (fp.sFacename == sFontName && fp.nHeight == nFontSize)
-            return findIt.second;
+        tZFontPtr pFont = findIt.second;
+        if (fp.sFacename == sFontName)
+            return pFont;
     }
 
     // Not found, create one
-    return CreateFont(ZFontParams(sFontName, nFontSize));
+    return CreateFont(ZFontParams(sFontName, ZFontParams::Scale(nHeight)));
 }
 
 tZFontPtr ZFontSystem::GetFont(const ZFontParams& params)
 {
-    if (params.sFacename.empty() || params.nHeight == 0)
+    if (params.sFacename.empty() || params.fScale == 0)
     {
         ZDEBUG_OUT("Error with font params\n");
         return nullptr;
     }
 
+    int64_t height = params.Height();
+    assert(params.fScale > 0 && params.fScale < 10.0);
+
     const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
-    auto findIt = mFontMap.find(params);
+    auto findIt = mHeightToFontMap[height].find(params);
 
     // If not found
-    if (findIt == mFontMap.end())
+    if (findIt == mHeightToFontMap[height].end())
     {
-//        ZDEBUG_OUT("Uncached font requested.");
         return CreateFont(params);
     }
 

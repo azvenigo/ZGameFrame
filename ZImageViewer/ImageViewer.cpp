@@ -728,7 +728,7 @@ void ImageViewer::ShowHelpDialog()
     pLabel->mStyle = gStyleCaption;
     pLabel->mStyle.pos = ZGUI::CT;
     pLabel->mStyle.paddingV = (int32_t)gM * 2;
-    pLabel->mStyle.fp.nHeight = gM * 2;
+    pLabel->mStyle.fp.fScale = 2.0;
     pLabel->mStyle.fp.nWeight = 800;
     pLabel->mStyle.look = ZGUI::ZTextLook::kShadowed;
     pLabel->mStyle.look.colTop = 0xff999999;
@@ -740,17 +740,17 @@ void ImageViewer::ShowHelpDialog()
     ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
 
     ZGUI::Style text(gStyleGeneralText);
-    text.fp.nHeight = std::max<int64_t> (gM / 2, 16);
+    text.fp.fScale = 0.4;
     text.paddingH = (int32_t)gM;
 
     ZGUI::Style sectionText(gStyleGeneralText);
     sectionText.fp.nWeight = 800;
-    sectionText.fp.nHeight = gM;
+    sectionText.fp.fScale = 1.0;
     sectionText.look.colTop = 0xffaaaaaa;
     sectionText.look.colBottom = 0xffaaaaaa;
 
     ZRect rForm((int64_t)(r.Width() * 0.48), (int64_t)(r.Height() * 0.8));
-    rForm = ZGUI::Arrange(rForm, r, ZGUI::LT, gSpacer * 4, pLabel->mStyle.fp.nHeight + gSpacer);
+    rForm = ZGUI::Arrange(rForm, r, ZGUI::LT, gSpacer * 4, pLabel->mStyle.fp.Height() + gSpacer);
     pForm->SetArea(rForm);
     pForm->SetScrollable();
     pHelp->ChildAdd(pForm);
@@ -811,7 +811,7 @@ void ImageViewer::ShowHelpDialog()
     pForm = new ZWinFormattedDoc();
 
 //    rForm.OffsetRect(rForm.Width() + gSpacer * 4, 0);
-    rForm = ZGUI::Arrange(rForm, r, ZGUI::RT, gSpacer * 4, pLabel->mStyle.fp.nHeight + gSpacer);
+    rForm = ZGUI::Arrange(rForm, r, ZGUI::RT, gSpacer * 4, pLabel->mStyle.fp.Height() + gSpacer);
 
     pForm->SetArea(rForm);
     pForm->SetScrollable();
@@ -1314,9 +1314,9 @@ bool ImageViewer::Init()
         gRegistry.Get("ZImageViewer", "showui", mbShowUI);
 
 
-        int64_t nGroupSide = (gM * 2) - gSpacer * 4;
+//        int64_t nGroupSide = (gM * 2) - gSpacer * 4;
 
-        mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", nGroupSide, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+        mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", 1.5, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
         //        mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
         ZDynamicFont* pFont = (ZDynamicFont*)mSymbolicStyle.Font().get();
 
@@ -1372,7 +1372,7 @@ bool ImageViewer::Init()
         mpFolderLabel->mStyle.pos = ZGUI::LC;
         mpFolderLabel->mStyle.paddingH = (int32_t)gSpacer;
         mpFolderLabel->mStyle.paddingV = (int32_t)gSpacer;
-        mpFolderLabel->mStyle.fp.nHeight = gM * 4 / 5;
+        mpFolderLabel->mStyle.fp.fScale = 0.8;
         mpFolderLabel->SetArea(ZRect(0, 0, mAreaLocal.Width() / 4, gM));
         ChildAdd(mpFolderLabel, !mCurrentFolder.empty());
 
@@ -2358,7 +2358,7 @@ void ImageViewer::UpdateCaptions()
                 {
                     ZGUI::Style filenameStyle(gStyleButton);
                     filenameStyle.pos = ZGUI::LT;
-                    filenameStyle.paddingV += (int32_t)(folderStyle.fp.nHeight);
+                    filenameStyle.paddingV += (int32_t)(folderStyle.fp.Height());
                     filenameStyle.look = ZGUI::ZTextLook::kShadowed;
 /*                    mpWinImage->mCaptionMap["filename"].sText = sFilename;
                     mpWinImage->mCaptionMap["filename"].style = filenameStyle;
@@ -2368,7 +2368,7 @@ void ImageViewer::UpdateCaptions()
                     if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite() && mpFavoritesFont)
                     {
                         mpWinImage->mCaptionMap["favorite"].sText = "C";
-                        mpWinImage->mCaptionMap["favorite"].style = ZGUI::Style(mpFavoritesFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffe1b131, 0xffe1b131), ZGUI::RT, (int32_t)filenameStyle.fp.nHeight * 2, (int32_t)filenameStyle.fp.nHeight * 2, 0x88000000, true);
+                        mpWinImage->mCaptionMap["favorite"].style = ZGUI::Style(mpFavoritesFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffe1b131, 0xffe1b131), ZGUI::RT, (int32_t)filenameStyle.fp.Height() * 2, (int32_t)filenameStyle.fp.Height() * 2, 0x88000000, true);
                         mpWinImage->mCaptionMap["favorite"].visible = true;
                     }
 
@@ -2389,12 +2389,12 @@ void ImageViewer::UpdateCaptions()
                             if (nRank > 0)
                             {
                                 ZGUI::Style eloStyle(gStyleCaption);
-                                eloStyle.fp.nHeight = gM * 2;
+                                eloStyle.fp.fScale = 2.0;
                                 eloStyle.look.colTop = 0xffffd800;
                                 eloStyle.look.colBottom = 0xff9d8500;
                                 eloStyle.look.decoration = ZGUI::ZTextLook::kShadowed;
                                 eloStyle.pos = ZGUI::RT;
-                                eloStyle.paddingH += (int32_t)eloStyle.fp.nHeight;
+                                eloStyle.paddingH += (int32_t)eloStyle.fp.Height();
                                 Sprintf(mpWinImage->mCaptionMap["rank"].sText, "#%d\n%d", nRank, meta.elo);
                                 mpWinImage->mCaptionMap["rank"].visible = true;
                                 mpWinImage->mCaptionMap["rank"].style = eloStyle;
@@ -2418,7 +2418,7 @@ void ImageViewer::UpdateCaptions()
         if (!mMoveToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> move to:\n%s", mMoveToFolder.string().c_str());
-            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nHeight*8), 0x88000000, true);
+            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.fScale, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.fScale*8), 0x88000000, true);
             mpWinImage->mCaptionMap["move_to_folder"].visible = bShow;
         }
         else
@@ -2429,7 +2429,7 @@ void ImageViewer::UpdateCaptions()
         if (!mCopyToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["copy_to_folder"].sText, "'C' -> copy to:\n%s", mCopyToFolder.string().c_str());
-            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nHeight, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nHeight * 12), 0x88000000, true);
+            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.fScale, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.fScale * 12), 0x88000000, true);
             mpWinImage->mCaptionMap["copy_to_folder"].visible = bShow;
         }
         else
@@ -2483,7 +2483,7 @@ void ImageViewer::UpdateCaptions()
 
             ZGUI::Style style(mpWinImage->mpTable->mCellStyle);
             style.fp.nWeight = 800;
-            style.fp.nHeight = (int64_t) (style.fp.nHeight*1.2);
+            style.fp.fScale = style.fp.fScale*1.2;
 
             mpWinImage->mpTable->SetColStyle(0, style);
         }

@@ -171,7 +171,7 @@ void ZMainWin::ShowMessageBox(std::string caption, std::string text, std::string
     pMsgBox->SetArea(rCaption);
     pMsgBox->mStyle = gStyleCaption;
     pMsgBox->mStyle.pos = ZGUI::CT;
-    pMsgBox->mStyle.fp.nHeight = 32;
+    pMsgBox->mStyle.fp.fScale = 1.0;
     pMsgBox->mStyle.fp.nWeight = 500;
     pMsgBox->mStyle.look = ZGUI::ZTextLook::kEmbossed;
     pMsgBox->mStyle.look.colTop = 0xff999999;

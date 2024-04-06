@@ -203,29 +203,7 @@ void cProcessImageWin::UpdateImageProps(ZBuffer* pBuf)
     if (!pBuf)
         return;
 
-/*    tBufferProps& props = pBuf->GetProps();
 
-    tZFontPtr pSmallFont = gpFontSystem->GetFont(ZFontParams("System", 20, 200, 0, true));
-    ZFontParams fp(pSmallFont->GetFontParams());
-
-    for (auto prop : props)
-    {
-        string sPropLineXMLNode("<line wrap=0>");
-
-        sPropLineXMLNode += "<text color=0xffffffff color2=0xffffffff";
-        sPropLineXMLNode += " fontparams=" + SH::URL_Encode(fp);
-        sPropLineXMLNode += " position=lb>";
-        sPropLineXMLNode += prop.sName;
-        sPropLineXMLNode += "</text>";
-
-        sPropLineXMLNode += "<text color=0xff000000 color2=0xff000000";
-        sPropLineXMLNode += " fontparams=" + SH::URL_Encode(fp);
-        sPropLineXMLNode += " position=rb>";
-        sPropLineXMLNode += prop.sValue.substr(0,16);
-        sPropLineXMLNode += "</text></line>";
-
-        mpImageProps->AddLineNode(sPropLineXMLNode);
-    }*/
     mpImageProps->SetScrollable();
 }
 
@@ -1006,7 +984,7 @@ bool cProcessImageWin::Init()
     pWP->AddItem(WatchType::kLabel, "Image Props", nullptr, ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff000000, 0xff000000));
     ChildAdd(pWP);
 
-    ZRect rImageProps(gSpacer, gDefaultTextFont.nHeight*2, mrWatchPanel.Width() - gSpacer, mrWatchPanel.Height() - gSpacer);
+    ZRect rImageProps(gSpacer, gDefaultTextFont.Height()*2, mrWatchPanel.Width() - gSpacer, mrWatchPanel.Height() - gSpacer);
 
     mpImageProps = new ZWinFormattedDoc();
     mpImageProps->SetArea(rImageProps);

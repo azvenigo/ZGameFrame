@@ -351,7 +351,7 @@ bool ZWinPaletteDialog::Paint()
         }
 
 
-        ZRect rCaption(mrPaletteEntryArea.Width()/3, mStyle.fp.nHeight);
+        ZRect rCaption(mrPaletteEntryArea.Width()/3, mStyle.fp.Height());
         rCaption = ZGUI::Arrange(rCaption, mrPaletteEntryArea, ZGUI::ILOT, gSpacer, gSpacer);
 
 
@@ -380,7 +380,7 @@ void ZWinPaletteDialog::ComputeAreas()
         nHSVSide = rFull.Height();
     nHSVSide = nHSVSide * 2 / 3;
 
-    mrTitleArea = ZGUI::Arrange(ZRect(rFull.Width(), gDefaultTitleFont.nHeight + gSpacer * 2), rFull, ZGUI::ICIT, gSpacer, gSpacer);
+    mrTitleArea = ZGUI::Arrange(ZRect(rFull.Width(), gDefaultTitleFont.Height() + gSpacer * 2), rFull, ZGUI::ICIT, gSpacer, gSpacer);
 
 
     ZRect rHSVArea = ZGUI::Arrange(ZRect(nHSVSide, nHSVSide), rFull, ZGUI::IRIT, gSpacer, mrTitleArea.bottom + gM);    // top right under title area

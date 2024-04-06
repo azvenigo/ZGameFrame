@@ -105,7 +105,7 @@ bool ZWinLabel::Paint()
     if (!msText.empty())
     {
         if ((mBehavior & AutoSizeText) != 0)
-            mStyle.fp.nHeight = mAreaLocal.Height() / 2;
+            mStyle.fp.fScale = ZFontParams::Scale(mAreaLocal.Height() / 2);
 
         if (mStyle.wrap)
         {

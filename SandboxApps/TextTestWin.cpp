@@ -117,7 +117,7 @@ bool TextTestWin::Init()
 #ifdef _WIN64
     mnSelectedFontIndex = (int32_t) (RANDU64( 0, gWindowsFontFacenames.size() ));
 
-    mCustomFontParams.nHeight = 50;
+    mCustomFontParams.fScale = 1.5;
     mCustomFontParams.nWeight = 200;
     mCustomFontParams.sFacename = gWindowsFontFacenames[mnSelectedFontIndex];
 
@@ -192,15 +192,15 @@ bool TextTestWin::Init()
 
     pCP->Caption("heightlabel", "Height");
 
-    pCP->Slider("fontheight", &mCustomFontParams.nHeight, 8, 200, 2, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
+    pCP->Slider("fontheight", &mCustomFontHeight, 8, 200, 2, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
 
     pCP->Caption("weight", "Weight");
     pCP->Slider("fontweight", &mCustomFontParams.nWeight, 2, 9, 100, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
 
-    pCP->Caption("Tracking");
+    pCP->Caption("Tracking", "Tracking");
     pCP->Slider("fonttracking", &mCustomFontParams.nTracking, -20, 20, 1, 0.1, "{setfonttracking;target=TextTestWin}", true, false);
 
-    pCP->Caption("Fixed Width");
+    pCP->Caption("Fixed Width", "Fixed Width");
     pCP->Slider("fontfixedwidth", &mCustomFontParams.nFixedWidth, 0, 200, 1, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
 
     pCP->Toggle("fontitalic", &mCustomFontParams.bItalic, "Italic", "{setcustomfont;target=TextTestWin}", "{setcustomfont;target=TextTestWin}");
@@ -338,6 +338,7 @@ void TextTestWin::UpdateFontByParams()
 {
 #ifdef _WIN64
     ZDynamicFont* pNewFont = new ZDynamicFont();
+    mCustomFontParams.fScale = ZFontParams::Scale(mCustomFontHeight);
     pNewFont->Init(mCustomFontParams);
 
     if (mCustomFontParams.nFixedWidth > 0)
@@ -505,7 +506,7 @@ bool TextTestWin::SaveFont()
             hr = pFileSave->GetOptions(&dwOptions);
 
             string sFilename;
-            Sprintf(sFilename, "%s_%d.zfont", mpFont->GetFontParams().sFacename.c_str(), mpFont->GetFontParams().nHeight);
+            Sprintf(sFilename, "%s_%d.zfont", mpFont->GetFontParams().sFacename.c_str(), mpFont->GetFontParams().Height());
 
             pFileSave->SetFileName(SH::string2wstring(sFilename).c_str());
 

@@ -100,7 +100,7 @@ bool ZWinPanel::Paint()
 
 
 
-        rCaption.OffsetRect(gDefaultGroupingStyle.paddingH, -gDefaultGroupingStyle.fp.nHeight);
+        rCaption.OffsetRect(gDefaultGroupingStyle.paddingH, -gDefaultGroupingStyle.fp.Height());
         gDefaultGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rCaption);
 
 
@@ -341,8 +341,9 @@ bool ZWinPanel::ParseRow(ZXML* pRow)
             ZWinPopupPanelBtn* pBtn = (ZWinPopupPanelBtn*)pWin;
             pBtn->mPanelLayout = control->GetAttribute("layout");
             pBtn->mSVGImage.Load(ResolveTokens(control->GetAttribute("svgpath")));
-            assert(control->HasAttribute("rad"));
-            pBtn->panelRAD = control->GetAttribute("rad");
+//            assert(control->HasAttribute("rad"));
+            if (control->HasAttribute("rad"))
+                pBtn->panelRAD = control->GetAttribute("rad");
         }
         else if (type == "button")
         {
@@ -447,6 +448,8 @@ void ZWinPanel::UpdateUI()
 
     if (mBehavior&kRelativeArea)
     {
+        assert(!mRAD.referenceWindow.empty());
+
         if (mRAD.referenceWindow == "full")
             ref = grFullArea;
         else
@@ -455,13 +458,9 @@ void ZWinPanel::UpdateUI()
             assert(pWin);
             if (pWin)
             {
-                ZRect ref = pWin->mAreaAbsolute;
+                ref = pWin->mAreaAbsolute;
             }
         }
-
-        //float fScale = 
-
-        //style.fp.nHeight
 
         SetArea(ZGUI::Align(mAreaAbsolute, ref, (ZGUI::ePosition)mRAD.alignment, mStyle.paddingH, mStyle.paddingV, mRAD.wRatio, mRAD.hRatio, mRAD.minWidth, mRAD.minHeight, mRAD.maxWidth, mRAD.maxHeight));
         ref = mAreaLocal;
@@ -502,7 +501,7 @@ void ZWinPanel::UpdateUI()
 
                     assert(rRowArea.Width() > 0);
                     int64_t h = rRowArea.Height();
-                    int64_t w = h * element.aspectratio;
+                    int64_t w = (int64_t)((float)h * element.aspectratio);
                     int64_t x = rRowArea.left;
                     int64_t y = rRowArea.top;
 
@@ -523,7 +522,7 @@ void ZWinPanel::UpdateUI()
             if (!rightElements.empty())
             {
                 // walk over the rows backward for any windows right aligned
-                for (int i = rightElements.size()-1; i >= 0; i--)
+                for (int i = (int)rightElements.size()-1; i >= 0; i--)
                 {
                     RowElement& element = rightElements[i];
 
@@ -533,7 +532,7 @@ void ZWinPanel::UpdateUI()
 
                     assert(rRowArea.Width() > 0);
                     int64_t h = rRowArea.Height();
-                    int64_t w = h * element.aspectratio;
+                    int64_t w =(int64_t) ((float)h * element.aspectratio);
                     int64_t x = rRowArea.right - mStyle.paddingH - w;
                     int64_t y = rRowArea.top;
 
@@ -576,6 +575,7 @@ void ZWinPanel::SetVisible(bool bVisible)
     if (bVisible)
     {
         mIdleSleepMS = 250;
+        UpdateUI();
     }
     else
     {
@@ -583,7 +583,6 @@ void ZWinPanel::SetVisible(bool bVisible)
         mbMouseWasOver = false;
     }
 
-    UpdateUI();
     return ZWin::SetVisible(bVisible);
 }
 
@@ -651,6 +650,7 @@ string ZWinPanel::ResolveToken(std::string token)
 ZWinPopupPanelBtn::ZWinPopupPanelBtn()
 {
     mpWinPanel = nullptr;
+    panelRAD = gDefaultRAD;
 }
 
 ZWinPopupPanelBtn::~ZWinPopupPanelBtn()

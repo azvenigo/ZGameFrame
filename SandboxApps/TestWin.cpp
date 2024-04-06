@@ -14,6 +14,7 @@ TestWin::TestWin()
     mnSliderVal = 0;
     mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
+    msWinName = "TestWin";
 }
    
 bool TestWin::OnKeyDown(uint32_t key)
@@ -54,7 +55,7 @@ bool TestWin::Init()
     style.paddingH = 0;
     style.paddingV = 0;
 
-    ZGUI::RA_Descriptor rad(ZRect(0, 0, grFullArea.right, gM * 2), msWinName, ZGUI::ICIT, 0.5, 0.1);
+    ZGUI::RA_Descriptor rad(ZRect(0, 0, grFullArea.right, gM * 2), msWinName, ZGUI::ICIT, 0.5f, 0.1f);
 
 
 //    ZGUI::RA_Descriptor subpanelRad(ZRect(0, 0, gM * 2, gM*4), grFullArea, ZGUI::ILIC);

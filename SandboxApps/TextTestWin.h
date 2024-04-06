@@ -29,6 +29,7 @@ private:
     int32_t     mnSelectedFontIndex;
     bool        mbEnableKerning;
     ZFontParams mCustomFontParams;
+    int64_t     mCustomFontHeight;
     tZFontPtr   mpFont;
 
     tZBufferPtr  mpBackground;

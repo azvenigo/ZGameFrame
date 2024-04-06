@@ -1031,7 +1031,7 @@ bool Z3DTestWin::Init()
 
         string sUpdateSphereCountMsg(ZMessage("{updatespherecount}", this));
 
-        pCP->Caption("Sphere Count");
+        pCP->Caption("Sphere Count", "Sphere Count");
         pCP->Slider("spherecount", &mnTargetSphereCount, 1, 50, 1, 0.25, sUpdateSphereCountMsg, true, false);
         //    pCP->AddSpace(16);
 

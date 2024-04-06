@@ -50,8 +50,8 @@ std::string FPointToString(const ZFPoint& pointValue)
 {
     std::vector<float> floatArray;
     floatArray.resize(2);
-    floatArray[0] = pointValue.x;
-    floatArray[1] = pointValue.y;
+    floatArray[0] = (float)pointValue.x;
+    floatArray[1] = (float)pointValue.y;
 
     return FloatArrayToString(floatArray);
 }

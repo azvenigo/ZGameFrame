@@ -46,7 +46,7 @@ bool ZChoosePGNWin::Init()
     ZWinTextEdit* pEdit = new ZWinTextEdit(&msFilter);
     pEdit->SetArea(rControl);
     pEdit->mStyle = gDefaultWinTextEditStyle;
-    pEdit->mStyle.fp.nHeight = gM;
+    pEdit->mStyle.fp.fScale = 1.0;
     pEdit->mStyle.pos = ZGUI::LC;
     ChildAdd(pEdit);
     pEdit->SetFocus();
@@ -59,7 +59,7 @@ bool ZChoosePGNWin::Init()
 
 
     ZGUI::Style btnStyle(gStyleButton);
-    btnStyle.fp.nHeight = gM / 2;
+    btnStyle.fp.fScale = 0.5;
 
 
     pBtn = new ZWinBtn();
@@ -208,7 +208,7 @@ void ZChoosePGNWin::RefreshList()
     mpGamesList->Clear();
 
     ZFontParams fp = gDefaultTextFont;
-    fp.nHeight = gM / 2;
+    fp.fScale = 0.5;
 
     size_t nCount = 0;
     for (auto entry : mPGNEntries)
@@ -240,11 +240,11 @@ ZPGNWin::ZPGNWin()
 bool ZPGNWin::Init()
 {
     mMoveFont.sFacename = "Verdana";
-    mMoveFont.nHeight = 40;
+    mMoveFont.fScale = 1.2f;
     mMoveFont.nWeight = 200;
 
     mTagsFont.sFacename = "Verdana";
-    mTagsFont.nHeight = 20;
+    mTagsFont.fScale = 0.6f;
 
     mBoldFont = mMoveFont;
     mBoldFont.nWeight = 800;
@@ -263,9 +263,8 @@ bool ZPGNWin::Init()
 
     ZWinBtn* pBtn;
 
-    ZGUI::Style wd = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.nHeight, 200, 0, 0, false, true), {}, ZGUI::C);
-    ZGUI::Style wd3 = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nHeight, 200, 0, 0, false, true), {}, ZGUI::C);
-
+    ZGUI::Style wd = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.fScale, 200, 0, 0, false, true), {}, ZGUI::C);
+    ZGUI::Style wd3 = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.fScale, 200, 0, 0, false, true), {}, ZGUI::C);
 
     size_t nButtonSlots = 10;
     size_t nButtonSize = (mAreaLocal.Width() - gSpacer *2) / nButtonSlots;
@@ -478,7 +477,7 @@ void ZPGNWin::UpdateView()
 //    mpMovesWin->InvalidateChildren();
     mpMovesWin->SetScrollable();
     mpMovesWin->SetBehavior(ZWinFormattedDoc::kUnderlineLinks, false);
-    mpMovesWin->ScrollTo(mMoveFont.nHeight * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
+    mpMovesWin->ScrollTo(mMoveFont.Height() * (2*(mCurrentHalfMoveNumber/2)-10) / 2);
 
     InvalidateChildren();
 }
@@ -627,7 +626,7 @@ bool ZChessWin::Init()
         pCP->AddSpace(panelH / 30);
         pCP->Toggle("demomode", &mbDemoMode, "Demo Mode", invalidateMsg, invalidateMsg);
 
-        pCP->Caption("Animation Speed");
+        pCP->Caption("anim_speed", "Animation Speed");
         pCP->Slider("autoplay", &mAutoplayMSBetweenMoves, kAutoplayMinMSBetweenMoves, kAutoplayMaxMSBetweenMoves, 1);
 
         ChildAdd(pCP);
@@ -673,7 +672,7 @@ bool ZChessWin::Init()
         mpStatusWin = new ZWinTextEdit(&msStatus);
         //mpStatusWin->msText = "Welcome to ZChess";
         msStatus = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mAreaLocal.Height()/28, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, false);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::Scale(mAreaLocal.Height()/28), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, false);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, (int32_t)gSpacer, (int32_t)gSpacer));
         ChildAdd(mpStatusWin);
     }
@@ -695,7 +694,7 @@ void ZChessWin::UpdateSize()
     if (mpSymbolicFont)
         delete mpSymbolicFont;
     mpSymbolicFont = new ZDynamicFont();
-    mpSymbolicFont->Init(ZFontParams("MS Gothic", mnPieceHeight, 400, mnPieceHeight / 4, true), false, false);
+    mpSymbolicFont->Init(ZFontParams("MS Gothic", ZFontParams::Scale(mnPieceHeight), 400, mnPieceHeight / 4, true), false, false);
     mpSymbolicFont->GenerateSymbolicGlyph('K', 9812);
     mpSymbolicFont->GenerateSymbolicGlyph('Q', 9813);
     mpSymbolicFont->GenerateSymbolicGlyph('R', 9814);
@@ -739,7 +738,7 @@ void ZChessWin::UpdateSize()
     {
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, (int32_t)gSpacer, (int32_t)gSpacer));
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight / 2, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::Scale(mnPieceHeight / 2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, true);
     }
 
 
@@ -1157,7 +1156,7 @@ void ZChessWin::UpdateStatus(const std::string& sText, uint32_t col)
     {
         //mpStatusWin->msText = sText;
         msStatus = sText;
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", mnPieceHeight/2, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, 0, 0, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::Scale(mnPieceHeight/2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, 0, 0, gDefaultTextAreaFill, true);
         mpStatusWin->Invalidate();
     }
 }
