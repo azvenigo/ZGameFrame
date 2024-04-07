@@ -105,7 +105,7 @@ bool ConfirmDeleteDialog::Init()
 
         ZFontParams font;
         font.sFacename = "Verdana";
-        font.fScale = 0.66;
+        font.fScale = 0.66f;
 
         size_t nCount = 1;
         for (auto& entry : mFiles)

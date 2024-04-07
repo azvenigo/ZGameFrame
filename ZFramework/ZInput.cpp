@@ -188,10 +188,15 @@ void ZInput::CheckForMouseOverNewWindow()
         // Mouse In to new window
         if (pMouseOverWin)
             pMouseOverWin->OnMouseIn();
+
+        if (mpTooltipWin->mbVisible)
+        {
+            ShowTooltip(pMouseOverWin->msTooltip);
+        }
     }
 }
 
-uint32_t    kMouseHoverInitialTime = 200;
+uint32_t    kMouseHoverInitialTime = 25;
 
 void ZInput::CheckMouseForHover()
 {
@@ -205,6 +210,8 @@ void ZInput::CheckMouseForHover()
         ZWin* pMouseOverWin = gpMainWin->GetChildWindowByPoint(lastMouseMove.x, lastMouseMove.y);
         if (pMouseOverWin)
         {
+            ShowTooltip(pMouseOverWin->msTooltip);
+
             ZMessage cursorMessage;
             cursorMessage.SetType("cursor_msg");
             cursorMessage.SetParam("subtype", "hover");
@@ -225,23 +232,30 @@ void ZInput::CheckMouseForHover()
 bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
 {
     if (!mpTooltipWin->mbInitted)
-        gpMainWin->ChildAdd(mpTooltipWin, false);
-    if (mpTooltipWin->Init())
     {
+        gpMainWin->ChildAdd(mpTooltipWin, false);
+    }
+
+
+    if (tooltip.empty())
+    {
+        mpTooltipWin->SetVisible(false);
+    }
+    else
+    {
+        mpTooltipWin->msText = tooltip;
+        mpTooltipWin->mStyle = style;
+        ZRect rTooltip;
+        tZFontPtr pTooltipFont = mpTooltipWin->mStyle.Font();
+        rTooltip = pTooltipFont->StringRect(tooltip);
+        rTooltip.InflateRect(style.paddingH, style.paddingV);
+        mpTooltipWin->SetArea(rTooltip);
+        mpTooltipWin->SetVisible();
+        gpMainWin->ChildToFront(mpTooltipWin);
+        toolTipAppear = lastMouseMove;
+        UpdateTooltipLocation(lastMouseMove);
         mpTooltipWin->mIdleSleepMS = 100;
     }
-    mpTooltipWin->msText = tooltip;
-    mpTooltipWin->mStyle = style;
-    ZRect rTooltip;
-    tZFontPtr pTooltipFont = mpTooltipWin->mStyle.Font();
-    rTooltip = pTooltipFont->StringRect(tooltip);
-    rTooltip.InflateRect(style.paddingH, style.paddingV);
-    mpTooltipWin->SetArea(rTooltip);
-    mpTooltipWin->SetVisible();
-    gpMainWin->ChildToFront(mpTooltipWin);
-    toolTipAppear = lastMouseMove;
-    UpdateTooltipLocation(lastMouseMove);
-    bMouseHoverPosted = true;   // set true so that it's not replaced by other hover
     return true;
 }
 

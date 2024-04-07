@@ -740,12 +740,12 @@ void ImageViewer::ShowHelpDialog()
     ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
 
     ZGUI::Style text(gStyleGeneralText);
-    text.fp.fScale = 0.4;
+    text.fp.fScale = 0.4f;
     text.paddingH = (int32_t)gM;
 
     ZGUI::Style sectionText(gStyleGeneralText);
     sectionText.fp.nWeight = 800;
-    sectionText.fp.fScale = 1.0;
+    sectionText.fp.fScale = 1.0f;
     sectionText.look.colTop = 0xffaaaaaa;
     sectionText.look.colBottom = 0xffaaaaaa;
 
@@ -1412,8 +1412,8 @@ bool ImageViewer::Init()
         mpPanel->mPanelLayout += ZWinPanel::MakeButton("copylink", "File", "", "$apppath$/res/linkcopy.svg", "Copy path to image to clipboard", ZMessage("{copylink}", this), 1.0, style);
 
         string sRotateGroupLayout = "<panel hide_on_mouse_exit=1 border=1 spacers=0>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_left", "", "", "$apppath$/res/rot_left.svg", "90º Left", ZMessage("{rotate_left}", this), 1.0, style) + "</row>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_right", "", "", "$apppath$/res/rot_right.svg", "90º Right", ZMessage("{rotate_right}", this), 1.0, style) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_left", "", "", "$apppath$/res/rot_left.svg", "Left", ZMessage("{rotate_left}", this), 1.0, style) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_right", "", "", "$apppath$/res/rot_right.svg", "Right", ZMessage("{rotate_right}", this), 1.0, style) + "</row>";
         sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_h", "", "", "$apppath$/res/fliph.svg", "Flip Horizontal", ZMessage("{flipH}", this), 1.0, style) + "</row>";
         sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_v", "", "", "$apppath$/res/flipv.svg", "Flip Vertical", ZMessage("{flipV}", this), 1.0, style) + "</row>";
         sRotateGroupLayout += "</panel>";

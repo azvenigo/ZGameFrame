@@ -33,7 +33,7 @@ public:
 
     bool        IsKeyDown(uint8_t k) { return (keyState[k] & 0x80) != 0; }
 
-    bool        ShowTooltip(const std::string& tooltip, const ZGUI::Style& style);
+    bool        ShowTooltip(const std::string& tooltip, const ZGUI::Style& style = gStyleTooltip);
 
     bool        SetClipboard(const std::string& text);
     bool        SetClipboard(class ZBuffer* pBuffer);

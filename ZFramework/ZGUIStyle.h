@@ -27,9 +27,6 @@ extern ZFontParams gDefaultButtonFont;
 extern ZFontParams gDefaultTitleFont;
 extern ZFontParams gDefaultTextFont;
 
-extern ZFontParams gDefaultTooltipFont;
-extern ZTextLook   gDefaultToolitipLook;
-
 extern ZGUI::Style gStyleTooltip;
 extern ZGUI::Style gStyleCaption;
 extern ZGUI::Style gStyleButton;

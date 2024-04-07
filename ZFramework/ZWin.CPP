@@ -864,12 +864,7 @@ bool ZWin::OnMouseWheel(int64_t, int64_t, int64_t)
 
 bool ZWin::OnMouseHover(int64_t x, int64_t y)
 {
-    if (msTooltip.empty())
-        return true;
-
-    gInput.ShowTooltip(msTooltip, mTooltipStyle);
     mWorkToDoCV.notify_one();
-
     return true;
 }
 

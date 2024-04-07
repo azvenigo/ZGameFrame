@@ -29,7 +29,6 @@ ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 0.5f, 200, 2), ZGUI
 ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, (int32_t)gSpacer, (int32_t)gSpacer, 0, false);
 ZGUI::Style gDefaultPanelStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Unknown, (int32_t)gSpacer, (int32_t)gSpacer);
 
-
 ZGUI::RA_Descriptor gDefaultRAD({}, "full", ZGUI::C, 0.25, 0.25);   
 
 ZGUI::Palette gAppPalette{
