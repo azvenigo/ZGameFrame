@@ -299,7 +299,7 @@ bool ImageContest::HandleMessage(const ZMessage& message)
 
 
         Sprintf(end.msCompletionMessage, "invalidate;children=1;target=%s", GetTopWindow()->GetTargetName().c_str());
-        pImage->AddTransformation(end, 1000);
+        pImage->AddTransformation(end, 333);
 //        pImage->AddTransformation(lastTrans, 120);
 
         gAnimator.AddObject(pImage);

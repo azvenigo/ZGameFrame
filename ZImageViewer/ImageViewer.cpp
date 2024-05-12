@@ -491,7 +491,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     }
     else if (sType == "show_help")
     {
-        ShowHelpDialog();
+        ToggleShowHelpDialog();
         return true;
     }
 
@@ -697,12 +697,12 @@ void ImageViewer::SaveSelection(ZRect rSelection)
     InvalidateChildren();
 }
 
-void ImageViewer::ShowHelpDialog()
+void ImageViewer::ToggleShowHelpDialog()
 {
     ZWinDialog* pHelp = (ZWinDialog*)GetChildWindowByWinName("ImageViewerHelp");
     if (pHelp)
     {
-        pHelp->SetVisible();
+        gMessageSystem.Post("kill_child", "name", "ImageViewerHelp");
         return;
     }
 
@@ -710,9 +710,9 @@ void ImageViewer::ShowHelpDialog()
     pHelp->msWinName = "ImageViewerHelp";
     pHelp->mbAcceptsCursorMessages = true;
     pHelp->mbAcceptsFocus = true;
-    pHelp->mTransformIn = ZWin::kToOrFrom;
-    pHelp->mTransformOut = ZWin::kToOrFrom;
-    pHelp->mToOrFrom = ZTransformation(ZPoint(mAreaAbsolute.right - gM*5, mAreaAbsolute.top+gM), 0.0, 0.0);
+//    pHelp->mTransformIn = ZWin::kToOrFrom;
+//    pHelp->mTransformOut = ZWin::kToOrFrom;
+//    pHelp->mToOrFrom = ZTransformation(ZPoint(mAreaAbsolute.right - gM*5, mAreaAbsolute.top+gM), 0.0, 0.0);
 
     ZRect r((int64_t) (grFullArea.Width() * 0.6), (int64_t)(grFullArea.Height() * 0.5));
     pHelp->SetArea(r);
@@ -1364,6 +1364,13 @@ bool ImageViewer::Init()
         }
 
 
+        ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", 4, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+        if (!mpFavoritesFont)
+        {
+            mpFavoritesFont = gpFontSystem->CreateFont(favorites.fp);
+            ((ZDynamicFont*)mpFavoritesFont.get())->GenerateSymbolicGlyph('C', 0x2655);  // crown
+        }
+
         
         mpFolderLabel = new ZWinFolderLabel();
         mpFolderLabel->mBehavior = ZWinFolderLabel::kCollapsable;
@@ -1400,7 +1407,7 @@ bool ImageViewer::Init()
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("savefile", "", "", "$apppath$/res/save.svg", "Save Image", ZMessage("{saveimg}", this), 1.0, style) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("copyfile", "", "", "$apppath$/res/copy.svg", "Select a Copy Folder for quick-move with 'C'", ZMessage("{set_copy_folder}", this), 1.0, style) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("{set_move_folder}", this), 1.0, style) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("{deletemarked}", this), 1.0, style) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("{show_confirm}", this), 1.0, style) + "</row>";
         sFileGroupLayout += "</panel>";
 
         ZGUI::RA_Descriptor fileManageRAD({}, "file_manage_menu", ZGUI::VOutside | ZGUI::HC | ZGUI::T, 1.25, 6.0);
@@ -2375,7 +2382,7 @@ void ImageViewer::UpdateCaptions()
                     if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
                     {
                         mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 100, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, (int32_t)(gSpacer / 2), 100, 0x88000000, true);
+                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5.0, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, (int32_t)(gSpacer / 2), 100, 0x88000000, true);
                         mpWinImage->mCaptionMap["for_delete"].visible = true;
                         bShow = true;
                     }

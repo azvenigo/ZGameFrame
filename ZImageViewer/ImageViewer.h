@@ -217,7 +217,7 @@ protected:
 
     bool                    ImageMatchesCurFilter(const ViewingIndex& vi);
 
-    void                    ShowHelpDialog();
+    void                    ToggleShowHelpDialog();
     void                    ShowTooltipMessage(const std::string& msg, uint32_t col);
     void                    ShowImageSelectionPanel(ZRect rSelection);
     void                    SaveSelection(ZRect rSelection);
