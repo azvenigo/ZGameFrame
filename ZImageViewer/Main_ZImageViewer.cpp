@@ -185,7 +185,7 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 #ifndef _DEBUG
 
 
-    string sCurVersion = GetFileVersion(argv[0]);
+    string sCurVersion = FH::GetFileVersion(argv[0]);
     string sCurURL;
 
     if (ReadCFG("install/install.cfg", sCurVersion, sCurURL))
