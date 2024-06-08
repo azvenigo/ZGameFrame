@@ -21,6 +21,7 @@ endif()
 
 set(SANDBOXAPPS_SOURCES 
 FloatLinesWin.h FloatLinesWin.cpp 
+ParticleSandbox.h ParticleSandbox.cpp 
 LifeWin.h LifeWin.cpp 
 3DTestWin.h 3DTestWin.cpp 
 ProcessImageWin.h ProcessImageWin.cpp 

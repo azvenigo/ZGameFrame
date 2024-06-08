@@ -11,6 +11,7 @@
 #include "FloatLinesWin.h"
 #include "TextTestWin.h"
 #include "TestWin.h"
+#include "ParticleSandbox.h"
 #include "3DTestWin.h"
 #include "ZChessWin.h"
 #include "Resources.h"
@@ -101,6 +102,9 @@ void Sandbox::InitControlPanel()
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->Button("TestWin", "TestWin", "{initchildwindows;mode=9;target=MainAppMessageTarget}");
 
+    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
+    gpControlPanel->Button("ParticleSandbox", "ParticleSandbox", "{initchildwindows;mode=10;target=MainAppMessageTarget}");
+
     gpControlPanel->FitToControls();
 
     gpControlPanel->mTransformIn = ZWin::kToOrFrom;
@@ -119,9 +123,13 @@ void Sandbox::InitControlPanel()
 
 void Sandbox::DeleteAllButControlPanelAndDebugConsole()
 {
+    for (auto& pWin : sandboxWins)
+        gpMainWin->ChildDelete(pWin);
+
+    sandboxWins.clear();
     gpMainWin->ChildRemove(gpControlPanel);
     gpMainWin->ChildRemove(gpDebugConsole);
-    gpMainWin->ChildDeleteAll();
+//    gpMainWin->ChildDeleteAll();
 }
 
 
@@ -140,6 +148,7 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
 		pWin->SetVisible();
 		pWin->SetArea(grFullArea);
 		gpMainWin->ChildAdd(pWin);
+        sandboxWins.push_back(pWin);
 	}
 
 	else if (mode == eSandboxMode::kCheckerboard)
@@ -165,13 +174,14 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
                         pWin->SetArea(rSub);
                         pWin->SetDemoMode(true);
                         gpMainWin->ChildAdd(pWin);
-
+                        sandboxWins.push_back(pWin);
                     }
                     else
                     {
                         cFloatLinesWin* pWin = new cFloatLinesWin();
                         pWin->SetArea(rSub);
                         gpMainWin->ChildAdd(pWin);
+                        sandboxWins.push_back(pWin);
                     }
 				}
 				else
@@ -187,6 +197,7 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
                         uint32_t nCol2 = RANDU64(0xff000000, 0xffffffff);
 
                         gpMainWin->ChildAdd(pWin);
+                        sandboxWins.push_back(pWin);
                     }
                     else
                     {
@@ -194,6 +205,7 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
                         pWin->SetArea(rSub);
                         pWin->SetGridSize((int64_t)(rSub.Width() / (4.0)), (int64_t)(rSub.Height() / 4.0));
                         gpMainWin->ChildAdd(pWin);
+                        sandboxWins.push_back(pWin);
                     }
 
                     
@@ -208,13 +220,15 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
 		pWin->SetArea(grFullArea);
 		pWin->SetGridSize((int64_t) (gnLifeGridSize*(gGraphicSystem.GetAspectRatio())), gnLifeGridSize);
 		gpMainWin->ChildAdd(pWin);
-	}
+        sandboxWins.push_back(pWin);
+    }
 	else if (mode == eSandboxMode::kImageProcess)
 	{
 #ifdef _WIN64
 		cProcessImageWin* pWin = new cProcessImageWin();
 		pWin->SetArea(grFullArea);
 		gpMainWin->ChildAdd(pWin);
+        sandboxWins.push_back(pWin);
 #endif
 	}
 
@@ -224,6 +238,16 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
         TextTestWin* pWin = new TextTestWin();
         pWin->SetArea(rArea);
         gpMainWin->ChildAdd(pWin);
+        sandboxWins.push_back(pWin);
+    }
+
+    else if (mode == eSandboxMode::kParticleSandbox)
+    {
+        ZRect rArea(grFullArea);
+        ParticleSandbox* pWin = new ParticleSandbox();
+        pWin->SetArea(rArea);
+        gpMainWin->ChildAdd(pWin);
+        sandboxWins.push_back(pWin);
     }
 
     else if (mode == eSandboxMode::k3DTestWin)
@@ -235,7 +259,7 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
         uint32_t nCol2 = RANDU64(0xff000000, 0xffffffff);
 
         gpMainWin->ChildAdd(pWin);
-
+        sandboxWins.push_back(pWin);
     }
 
     else if (mode == eSandboxMode::kChessWin)
@@ -244,6 +268,7 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
         pWin->SetArea(grFullArea);
         //pWin->SetDemoMode(true);
         gpMainWin->ChildAdd(pWin);
+        sandboxWins.push_back(pWin);
     }
     else if (mode == eSandboxMode::kTestWin)
     {
@@ -251,6 +276,7 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
         pWin->SetArea(grFullArea);
         //pWin->SetDemoMode(true);
         gpMainWin->ChildAdd(pWin);
+        sandboxWins.push_back(pWin);
     }
 
     gpMainWin->ChildAdd(gpControlPanel);

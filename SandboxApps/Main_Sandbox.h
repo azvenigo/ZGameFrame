@@ -29,12 +29,14 @@ namespace Sandbox
         k3DTestWin = 7,
         kChessWin = 8,
         kTestWin = 9,
-        kImageViewer = 10
+        kParticleSandbox = 10
     };
 
     void InitControlPanel();
     void DeleteAllButControlPanelAndDebugConsole();
     void InitChildWindows(eSandboxMode mode);
+
+    tWinList sandboxWins;
 };
 
 namespace ZFrameworkApp
