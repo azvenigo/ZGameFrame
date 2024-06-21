@@ -283,6 +283,7 @@ protected:
 
     bool                    mbSubsample;
     bool                    mbShowUI;
+    bool                    mbShowFavOrDelState;
     eFilterState            mFilterState;   
 };
 

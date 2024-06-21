@@ -37,6 +37,7 @@ mpParentWin(0),
 mbInitted(false),
 mbVisible(true),
 mbAcceptsCursorMessages(false),
+mbTransformable(false),
 mbAcceptsFocus(false),
 mbInvalid(true),
 mbInvalidateParentWhenInvalid(false),
@@ -87,14 +88,17 @@ bool ZWin::Init()
         mbInitted = true;
         if (mAreaLocal.Width() > 0 && mAreaLocal.Height() > 0)
         {
-            ZTransformable::Init(mAreaAbsolute);
+            if (mbTransformable)
+                ZTransformable::Init(mAreaAbsolute);
+
             if (mbPaints && mpSurface && (mpSurface->GetArea().Width() != mAreaLocal.Width() || mpSurface->GetArea().Height() != mAreaLocal.Height()))
             {
                 mpSurface.reset(new ZBuffer());
                 mpSurface->Init(mAreaAbsolute.Width(), mAreaAbsolute.Height());
             }
             Paint();        // TBD this may be desired since our texture may be requested before the threadproc has a chance to call paint
-            TransformIn();
+            if (mbTransformable)
+                TransformIn();
         }
 
 		mThread = std::thread(&WindowThreadProc, (void*)this);
@@ -106,7 +110,8 @@ bool ZWin::Shutdown()
 {
 	if (mbInitted)
 	{
-        TransformOut();
+        if (mbTransformable)
+            TransformOut();
         SetVisible(false);
 
         SignalShutdown();
@@ -140,7 +145,7 @@ void ZWin::SignalShutdown()
 
 void ZWin::TransformIn()
 {
-	if (mTransformIn != kNone)
+	if (mTransformIn != kNone && mbTransformable)
 	{
         ZRect rp;
         if (mpParentWin)
@@ -202,7 +207,7 @@ void ZWin::TransformIn()
 
 void ZWin::TransformOut()
 {
-	if (mTransformOut != kNone && mbVisible)
+	if (mTransformOut != kNone && mbVisible && mbTransformable)
 	{
         tZBufferPtr backgroundBuf(new ZBuffer());
         backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
@@ -254,22 +259,25 @@ void ZWin::TransformOut()
 
 void ZWin::TransformTo(ZTransformation& to, int64_t nDuration)
 {
-    tZBufferPtr backgroundBuf(new ZBuffer());
-    backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
-    GetTopWindow()->RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
+    if (mbTransformable)
+    {
+        tZBufferPtr backgroundBuf(new ZBuffer());
+        backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
+        GetTopWindow()->RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
 
-    tZBufferPtr renderedBuf(new ZBuffer());
-    renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
-    RenderToBuffer(renderedBuf, mAreaAbsolute, mAreaLocal, nullptr);
+        tZBufferPtr renderedBuf(new ZBuffer());
+        renderedBuf->Init(mAreaInParent.Width(), mAreaInParent.Height());
+        RenderToBuffer(renderedBuf, mAreaAbsolute, mAreaLocal, nullptr);
 
-    ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf, backgroundBuf);
-    pImage->mbFullScreenDraw = true;
-    ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top));
-    pImage->StartTransformation(start);
-    pImage->AddTransformation(to, nDuration);
-    gAnimator.AddObject(pImage);
+        ZAnimObject_TransformingImage* pImage = new ZAnimObject_TransformingImage(renderedBuf, backgroundBuf);
+        pImage->mbFullScreenDraw = true;
+        ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top));
+        pImage->StartTransformation(start);
+        pImage->AddTransformation(to, nDuration);
+        gAnimator.AddObject(pImage);
 
-    MoveTo(to.mPosition.x, to.mPosition.y);
+        MoveTo(to.mPosition.x, to.mPosition.y);
+    }
 }
 
 
@@ -704,7 +712,7 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& 
         return;
 
     Paint();
-    if (mbPaints)
+    if (mbPaints && mpSurface)
     {
         mpSurface.get()->GetMutex().lock();
         pDest->Blt(mpSurface.get(), rClippedSrc, rClippedDst);
@@ -739,9 +747,8 @@ bool ZWin::ComputeVisibility()
     if (!mChildListMutex.try_lock())
         return false;
    
-    if (mbPaints)
+    if (mbPaints && mpSurface)
 	{
-        assert(mpSurface);
 //        mpSurface->mMutex.lock();
 		ZScreenRect sr(mpSurface, mAreaAbsolute, ZPoint(0, 0));
         gpGraphicSystem->GetScreenBuffer()->AddScreenRectAndComputeVisibility(sr);
@@ -1016,31 +1023,35 @@ void ZWin::InvalidateChildren()
 void ZWin::SetArea( const ZRect& area ) 
 {
     assert(area.Width() > 0 && area.Height() > 0);
-    if (mbPaints)
+    if (area != mAreaInParent)
     {
-        if (!mpSurface)
+        if (mbPaints)
         {
-            mpSurface.reset(new ZBuffer());
+            if (!mpSurface)
+            {
+                mpSurface.reset(new ZBuffer());
+            }
+
+            if (area.Width() != mAreaLocal.Width() || area.Height() != mAreaLocal.Height())
+            {
+                if (area.Area() > 0)
+                {
+                    mpSurface->Init(area.Width(), area.Height());
+#ifdef _DEBUG
+                    mpSurface->sDebugOwner = GetTargetName();
+#endif
+                }// else no need to create a surface
+            }
         }
 
-        if (area.Width() != mAreaLocal.Width() || area.Height() != mAreaLocal.Height())
-        {
-            if (area.Area() > 0)
-            {
-                mpSurface->Init(area.Width(), area.Height());
-#ifdef _DEBUG
-                mpSurface->sDebugOwner = GetTargetName();
-#endif
-            }// else no need to create a surface
-        }
+        mAreaInParent.SetRect(area);
+        mAreaLocal.SetRect(0, 0, area.Width(), area.Height());
+        if (mbTransformable)
+            ZTransformable::Init(mAreaLocal);
+        ComputeAreas();
     }
 
-    mAreaInParent.SetRect(area);
-    mAreaLocal.SetRect(0, 0, area.Width(), area.Height());
-    ZTransformable::Init(mAreaLocal);
-
     Invalidate();
-    ComputeAreas();
 }
 
 void  ZWin::MoveTo(int64_t newX, int64_t newY) 
@@ -1071,21 +1082,21 @@ bool ZWin::WindowThreadProc(void* pContext)
 
     while (!pThis->mbShutdownFlag && !gbApplicationExiting)
 	{
-		if (!pThis->mMessages.empty())	// race condition that message could be added after this check. But no big deal as it'll catch it next loop
-		{
-			// Handle messages
-			pThis->mMessageQueueMutex.lock();
-			tMessageList messagesToProcess(std::move(pThis->mMessages));	// take all messages from queue to be processed
-			pThis->mMessageQueueMutex.unlock();
+        if (!pThis->mMessages.empty())	// race condition that message could be added after this check. But no big deal as it'll catch it next loop
+        {
+            // Handle messages
+            pThis->mMessageQueueMutex.lock();
+            tMessageList messagesToProcess(std::move(pThis->mMessages));	// take all messages from queue to be processed
+            pThis->mMessageQueueMutex.unlock();
 
-			for (ZMessage& msg : messagesToProcess)
-			{
-				if (!pThis->HandleMessage(msg))
-				{
-					cout << "Failed to process message: " << msg.ToString() << "\n";
-				}
-			}
-		}
+            for (ZMessage& msg : messagesToProcess)
+            {
+                if (!pThis->HandleMessage(msg))
+                {
+                    cout << "Failed to process message: " << msg.ToString() << "\n";
+                }
+            }
+        }
 
         if (pThis->mbShutdownFlag)
             break;
@@ -1147,10 +1158,10 @@ bool ZWinDialog::Init()
     assert(gM > 0);
     //ZRect rButton(0, 0, gM * 4, gM * 2);
     ZRect rButtonArea(mAreaLocal);
-    rButtonArea.top = rButtonArea.bottom - gM * 2;
+    rButtonArea.top = rButtonArea.bottom - (gM * 3 + mStyle.paddingV*2);
     rButtonArea.left += gM * 2;
     rButtonArea.right -= gM * 2;
-    rButtonArea.bottom -= gSpacer;
+    rButtonArea.bottom -= mStyle.paddingV;
 
 //    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
 
@@ -1182,9 +1193,9 @@ bool ZWinDialog::Init()
     }
 
 
-    ZGUI::Style arrangeStyle(gStyleButton);
+    ZGUI::Style arrangeStyle(mStyle);
     if (arrangeList.size() == 1)
-        arrangeStyle.paddingH = (int32_t)(gM * 10);
+        arrangeStyle.paddingH = (int32_t)(rButtonArea.right/3);
 
     if (!arrangeList.empty())
         ArrangeWindows(arrangeList, rButtonArea, arrangeStyle, -1, 1);
@@ -1241,12 +1252,13 @@ bool ZWinDialog::Paint()
     cols[3] = nBaseCol;
 
 
+    const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
     mpSurface.get()->FillGradient(cols);
 /*    mpSurface.get()->Fill(0xff000000);
     mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mAreaLocal, ZBuffer::kEdgeBltMiddle_Stretch);*/
 
 
-    return false;
+    return ZWin::Paint();
 }
 
 bool ZWinDialog::OnMouseDownL(int64_t x, int64_t y)
@@ -1325,7 +1337,3 @@ void ZWinDialog::OnCancel()
         mpParentWin->SetFocus();
     gMessageSystem.Post("kill_child", "name", msWinName);
 }
-
-
-
-

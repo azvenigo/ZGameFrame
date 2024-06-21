@@ -45,6 +45,7 @@ set(COMMON_FILES
 ../../ZLibraries/Common/helpers/HTTPCache.h         ../../ZLibraries/Common/helpers/HTTPCache.cpp
 ../../ZLibraries/Common/helpers/CommandLineParser.h ../../ZLibraries/Common/helpers/CommandLineParser.cpp
 ../../ZLibraries/Common/helpers/CommandLineEditor.h ../../ZLibraries/Common/helpers/CommandLineEditor.cpp
+../../ZLibraries/Common/helpers/LoggingHelpers.h ../../ZLibraries/Common/helpers/LoggingHelpers.cpp
 ../../ZLibraries/Common/helpers/StringHelpers.h     ../../ZLibraries/Common/helpers/StringHelpers.cpp 
 ../../ZLibraries/Common/helpers/ThreadPool.h
 ../../ZLibraries/Common/helpers/Registry.h          ../../ZLibraries/Common/helpers/Registry.cpp

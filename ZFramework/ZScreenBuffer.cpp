@@ -361,9 +361,9 @@ int32_t ZScreenBuffer::RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rC
 
 #endif // _WIN64
 
-// #define DEBUG_VISIBILITY
+//#define DEBUG_VISIBILITY
 #ifdef DEBUG_VISIBILITY
-#define DebugVisibilityOutput OutputDebug
+#define DebugVisibilityOutput ZDEBUG_OUT
 #else
 #define DebugVisibilityOutput
 #endif

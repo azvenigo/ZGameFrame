@@ -199,6 +199,8 @@ public:
     bool                    mbInitted;
     bool                    mbVisible;
 	bool                    mbAcceptsCursorMessages;
+
+    bool                    mbTransformable;
 	eTransformType          mTransformIn;
 	eTransformType          mTransformOut;
     ZTransformation         mToOrFrom;

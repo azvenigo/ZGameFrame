@@ -1,6 +1,6 @@
 #include "ParticleSandbox.h"
 
-const int64_t kMaxParticles = 5;
+const int64_t kMaxParticles = 15;
 
 ParticleSandbox::ParticleSandbox()
 {
@@ -41,7 +41,7 @@ ZFPoint ParticleSandbox::GetForceVector(Particle* p)
 
             if (fDist > 0)
             {
-                double fForce = p2.mass / (fDist*fDist);
+                double fForce = sqrt(p2.mass) / (fDist*fDist);
 
                 force.x += ((p2.pos.x - p->pos.x) / 10.0) * fForce;
                 force.y += ((p2.pos.y - p->pos.y) / 10.0) * fForce;

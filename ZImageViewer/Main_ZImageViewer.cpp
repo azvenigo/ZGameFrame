@@ -40,7 +40,6 @@ ZTickManager            gTickManager;
 ZAnimator               gAnimator;
 ZWin*                   gpCaptureWin = nullptr;
 ZWin*                   gpMouseOverWin = nullptr;
-ZPoint                  gLastMouseMove;
 REG::Registry           gRegistry;
 LOG::Logger             gLogger;
 
