@@ -18,6 +18,7 @@ ZWinPaletteDialog::ZWinPaletteDialog()
     mCurV = 0;
     msWinName = kPaletteDialogName;
     mbAcceptsCursorMessages = true;
+    mbTransformable = true;
     mbAcceptsFocus = true;
     mpRGBEdit = nullptr;
 
