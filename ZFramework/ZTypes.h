@@ -524,11 +524,11 @@ public:
 	}
 
 
-	bool operator==(const tRect& r)	
+	bool operator==(const tRect& r) const
 	{ 
 		return ((left == r.left) && (top == r.top) && (right == r.right) && (bottom == r.bottom));
 	}
-	bool operator!=( const tRect& r)	
+	bool operator!=( const tRect& r) const
 	{ 
 		return (left != r.left)||(top != r.top)||(right != r.right)||(bottom != r.bottom);	
 	}

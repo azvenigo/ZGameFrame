@@ -36,6 +36,8 @@ namespace ZGUI
         C = HCenter|VCenter,
         I = HInside|VInside,
         O = HOutside|VOutside,
+        Fit = L|T|R|B,    // Aligned to all sides
+        F = Fit,
 
 
 

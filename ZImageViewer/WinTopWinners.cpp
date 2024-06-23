@@ -16,8 +16,9 @@ WinTopWinners::WinTopWinners()
     pMetaList = nullptr;
     mbDynamicThumbnailSizing = false;
     mStyle = gStyleGeneralText;
-    mStyle.fp.fScale = 1.0;
-    mStyle.fp.nWeight = 800;
+    mStyle.fp.fScale = 0.6;
+    mStyle.fp.nWeight = 400;
+    mStyle.pos = ZGUI::LB;
     mStyle.look.decoration = ZGUI::ZTextLook::kEmbossed;
     mStyle.look.colTop = 0xffff00ff;
     mStyle.look.colTop = 0xffffffff;

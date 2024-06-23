@@ -23,14 +23,12 @@ namespace ZGUI
             style = {};
             area = {};
             visible = true;
-            autoSizeFont = false;
         }
 
         std::string sText;
         Style       style;
         ZRect       area;
         bool        visible;
-        bool        autoSizeFont;
     };
 
     typedef std::map<std::string, class SVGImageBox> tSVGImageMap; // named SVGImageBoxes

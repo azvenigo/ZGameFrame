@@ -19,7 +19,6 @@ public:
         TooltipOnHover      = 1,        // 1   
         CloseOnMouseOut     = 1 << 1,   // 2
         CloseOnClick        = 1 << 2,   // 4
-        AutoSizeText        = 1 << 3,   // 8
     };
 
     ZWinLabel(uint8_t _behavior = None);

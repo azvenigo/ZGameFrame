@@ -259,10 +259,10 @@ bool ZWinBtn::Paint()
         return false;
     }
 
-    if (!mbEnabled)
+    if (!mbEnabled) // grey out whole button 
     {
-        mpSurface->FillAlpha(0x88333333); 
-        mpSurface->FillAlpha(0x88888888);     
+        mpSurface->FillAlpha(0x88333333);
+        mpSurface->FillAlpha(0x88888888);
     }
 
 	return ZWin::Paint();

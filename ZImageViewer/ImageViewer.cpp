@@ -464,7 +464,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
         InvalidateChildren();
         return true;
     }
-    else if (sType == "show_contest")
+    else if (sType == "rank_favorites")
     {
         ImageContest* pWin = new ImageContest();
         pWin->SetArea(mAreaInParent);
@@ -1409,11 +1409,11 @@ bool ImageViewer::Init()
 
         // file group
         string sFileGroupLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("openfile", "", "", "$apppath$/res/openfile.svg", "Load Image", ZMessage("{loadimg}", this), 1.0, style) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("savefile", "", "", "$apppath$/res/save.svg", "Save Image", ZMessage("{saveimg}", this), 1.0, style) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("copyfile", "", "", "$apppath$/res/copy.svg", "Select a Copy Folder for quick-move with 'C'", ZMessage("{set_copy_folder}", this), 1.0, style) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("{set_move_folder}", this), 1.0, style) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("{show_confirm}", this), 1.0, style) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("openfile", "", "", "$apppath$/res/openfile.svg", "Load Image", ZMessage("{loadimg}", this), 1.0, style, {}) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("savefile", "", "", "$apppath$/res/save.svg", "Save Image", ZMessage("{saveimg}", this), 1.0, style, {}) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("copyfile", "", "", "$apppath$/res/copy.svg", "Select a Copy Folder for quick-move with 'C'", ZMessage("{set_copy_folder}", this), 1.0, style, {}) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("{set_move_folder}", this), 1.0, style, {}) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("{show_confirm}", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "</panel>";
 
         ZGUI::RA_Descriptor fileManageRAD({}, "file_manage_menu", ZGUI::VOutside | ZGUI::HC | ZGUI::T, 1.25, 6.0);
@@ -1421,14 +1421,14 @@ bool ImageViewer::Init()
 
 
 
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("gotofolder", "File", "", "$apppath$/res/gotofolder.svg", "Go to Image Folder", ZMessage("{gotofolder}", this), 1.0, style);
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("copylink", "File", "", "$apppath$/res/linkcopy.svg", "Copy path to image to clipboard", ZMessage("{copylink}", this), 1.0, style);
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("gotofolder", "File", "", "$apppath$/res/gotofolder.svg", "Go to Image Folder", ZMessage("{gotofolder}", this), 1.0, style, {});
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("copylink", "File", "", "$apppath$/res/linkcopy.svg", "Copy path to image to clipboard", ZMessage("{copylink}", this), 1.0, style, {});
 
         string sRotateGroupLayout = "<panel hide_on_mouse_exit=1 border=1 spacers=0>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_left", "", "", "$apppath$/res/rot_left.svg", "Left", ZMessage("{rotate_left}", this), 1.0, style) + "</row>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_right", "", "", "$apppath$/res/rot_right.svg", "Right", ZMessage("{rotate_right}", this), 1.0, style) + "</row>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_h", "", "", "$apppath$/res/fliph.svg", "Flip Horizontal", ZMessage("{flipH}", this), 1.0, style) + "</row>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_v", "", "", "$apppath$/res/flipv.svg", "Flip Vertical", ZMessage("{flipV}", this), 1.0, style) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_left", "", "", "$apppath$/res/rot_left.svg", "Left", ZMessage("{rotate_left}", this), 1.0, style, {}) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_right", "", "", "$apppath$/res/rot_right.svg", "Right", ZMessage("{rotate_right}", this), 1.0, style, {}) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_h", "", "", "$apppath$/res/fliph.svg", "Flip Horizontal", ZMessage("{flipH}", this), 1.0, style, {}) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_v", "", "", "$apppath$/res/flipv.svg", "Flip Vertical", ZMessage("{flipV}", this), 1.0, style, {}) + "</row>";
         sRotateGroupLayout += "</panel>";
 
         
@@ -1448,12 +1448,17 @@ bool ImageViewer::Init()
 
 
         // Window Controls
-        ZGUI::Style rightAligned(style);
+        ZGUI::Style rightAligned(gStyleCaption);
         rightAligned.pos = ZGUI::R;
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("show_contest", "", "Rank Favorites", "", "Rank favorites", ZMessage("{show_contest}", this), 3.0, rightAligned);
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("rank_favorites", "", "Rank Favorites", "", "Rank favorites", ZMessage("{rank_favorites}", this), 3.0, rightAligned, gStyleCaption);
         mpPanel->mPanelLayout += "<space style=\"" + ZXML::Encode((string)spacestyle) + "\"/>";
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("show_help", "", "?", "", "Help", ZMessage("{show_help}", this), 1.0, rightAligned);
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("toggle_fullscreen", "", "", "$apppath$/res/fullscreen.svg", "Fullscreen/Windowed", ZMessage("{toggle_fullscreen}"), true, rightAligned);
+
+
+        ZGUI::Style bigFontStyle(gStyleCaption);
+        bigFontStyle.fp.fScale = 2.0;
+        bigFontStyle.pos = ZGUI::C;
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("show_help", "", "?", "", "Help", ZMessage("{show_help}", this), 1.0, rightAligned, bigFontStyle);
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("toggle_fullscreen", "", "", "$apppath$/res/fullscreen.svg", "Fullscreen/Windowed", ZMessage("{toggle_fullscreen}"), true, rightAligned, {});
 
         // Context
 
@@ -1510,6 +1515,9 @@ void ImageViewer::UpdateControlPanel()
         gMessageSystem.Post("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel");
 
         gMessageSystem.Post("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel");
+
+        gMessageSystem.Post("set_visible", "visible", SH::FromInt((int)(mFilterState == kFavs || mFilterState == kRanked)), "target", "rank_favorites");
+
     }
 
     if (mpPanel)

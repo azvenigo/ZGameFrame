@@ -734,7 +734,8 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 		break;
 	case ZGUI::LC:
 	case ZGUI::C:
-	case ZGUI::RC:
+    case ZGUI::F:
+    case ZGUI::RC:
 		rTextLine.top = (rAreaToDrawTo.top + rAreaToDrawTo.bottom - (mFontHeight * nLines))/2;
 		break;
 	case ZGUI::LB:
@@ -749,7 +750,8 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 	{
 	case ZGUI::CT:
 	case ZGUI::C:
-	case ZGUI::CB:
+    case ZGUI::F:
+    case ZGUI::CB:
 		lineStyle = ZGUI::CB;
 		break;
 	case ZGUI::RT:

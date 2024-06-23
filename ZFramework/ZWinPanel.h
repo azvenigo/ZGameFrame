@@ -59,7 +59,7 @@ public:
 
    inline bool          IsSet(uint32_t flag) { return (mBehavior & flag) != 0; }
 
-   static std::string   MakeButton(const std::string& id, const std::string& group, const std::string& caption, const std::string& svgpath, const std::string& tooltip, const std::string& message, float aspect, ZGUI::Style style);
+   static std::string   MakeButton(const std::string& id, const std::string& group, const std::string& caption, const std::string& svgpath, const std::string& tooltip, const std::string& message, float aspect, ZGUI::Style btnstyle, ZGUI::Style captionstyle);
    static std::string   MakeSubmenu(const std::string& id, const std::string& group, const std::string& caption, const std::string& svgpath, const std::string& tooltip, const std::string& panellayout, ZGUI::RA_Descriptor rad, float aspect, ZGUI::Style style);
    static std::string   MakeRadio(const std::string& id, const std::string& group, const std::string& radiogroup, const std::string& caption, const std::string& svgpath, const std::string& tooltip, const std::string& checkmessage, const std::string& uncheckmessage, float aspect, ZGUI::Style checkedStyle, ZGUI::Style uncheckedStyle);
 

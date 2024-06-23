@@ -224,7 +224,7 @@ tRowElements ZWinPanel::GetRowElements(int32_t row, ZGUI::ePosition alignment)
     return wins;
 }
 
-string ZWinPanel::MakeButton(const string& id, const string& group, const string& caption, const string& svgpath, const string& tooltip, const string& message, float aspect, ZGUI::Style style)
+string ZWinPanel::MakeButton(const string& id, const string& group, const string& caption, const string& svgpath, const string& tooltip, const string& message, float aspect, ZGUI::Style btnstyle, ZGUI::Style captionstyle)
 {
     string s = "<button id=\"" + id + "\"";
     if (!group.empty())
@@ -239,8 +239,10 @@ string ZWinPanel::MakeButton(const string& id, const string& group, const string
         s += " tooltip=\"" + tooltip + "\"";
     if (!message.empty())
         s += " msg=\"" + ZXML::Encode(message) + "\"";
-    if (!style.Uninitialized())
-        s += " style=" + ZXML::Encode((string)style);
+    if (!btnstyle.Uninitialized())
+        s += " style=" + ZXML::Encode((string)btnstyle);
+    if (!captionstyle.Uninitialized())
+        s += " captionstyle=" + ZXML::Encode((string)captionstyle);
 
     s += "/>";
 
@@ -354,7 +356,9 @@ bool ZWinPanel::ParseRow(ZXML* pRow)
             if (control->HasAttribute("caption"))
             {
                 pBtn->mCaption.sText = control->GetAttribute("caption");
-                pBtn->mCaption.autoSizeFont = true;
+
+                if (control->HasAttribute("captionstyle"))
+                    pBtn->mCaption.style = ZGUI::Style(control->GetAttribute("captionstyle"));
             }
             if (control->HasAttribute("svgpath"))
             {
@@ -385,7 +389,7 @@ bool ZWinPanel::ParseRow(ZXML* pRow)
             pWin = new ZWinLabel();
             ZWinLabel* pLabel = (ZWinLabel*)pWin;
             pLabel->msText = control->GetAttribute("caption");
-            pLabel->mBehavior |= ZWinLabel::eBehavior::AutoSizeText;
+            pLabel->mStyle.pos = ZGUI::Fit;
         }
         else if (type == "space")
         {
