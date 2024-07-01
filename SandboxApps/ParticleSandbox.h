@@ -36,11 +36,18 @@ public:
  
 
 protected:
+    void    DrawArrow(ZFPoint start, ZFPoint end, uint32_t col = 0xffffffff);
+
     void    SpawnParticle(int64_t index);
+    void    CreateGravField();
     void    DrawParticle(ZBuffer* pDest, int64_t index);
     ZFPoint GetForceVector(Particle* p);  
    tParticleArray particles;
 
+   tParticleArray gravField;
+
    tRectArray prevFrameRects;
+
+   int64_t   mLastTimeStamp;
 
 };

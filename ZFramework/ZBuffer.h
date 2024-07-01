@@ -93,7 +93,7 @@ public:
     virtual bool            BltScaled(ZBuffer* pSrc);
 
 
-	virtual void            DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRect* pClip = NULL);
+	virtual void            DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, double thickness = 2.0, ZRect* pClip = NULL);
     virtual void            DrawRectAlpha(uint32_t nCol, ZRect rDst);
 
 

@@ -1111,7 +1111,7 @@ bool ZWin::WindowThreadProc(void* pContext)
 
             uint64_t nStartTime = gTimer.GetMSSinceEpoch();
 
-            pThis->mWorkToDoCV.wait_for(lk, std::chrono::milliseconds(1));
+            pThis->mWorkToDoCV.wait_for(lk, std::chrono::microseconds(1));
 
             uint64_t nEndTime = gTimer.GetMSSinceEpoch();
             uint64_t nDelta = nEndTime - nStartTime;

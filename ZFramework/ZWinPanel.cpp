@@ -492,6 +492,10 @@ void ZWinPanel::UpdateUI()
             }
 
             tRowElements leftElements = GetRowElements(row, ZGUI::L);
+            tRowElements rightElements = GetRowElements(row, ZGUI::R);
+
+            int64_t elementMaxWidth = rRowArea.Width() / (leftElements.size() + rightElements.size());
+
             if (!leftElements.empty())
             {
                 string lastSeenGroupName;
@@ -505,7 +509,7 @@ void ZWinPanel::UpdateUI()
 
                     assert(rRowArea.Width() > 0);
                     int64_t h = rRowArea.Height();
-                    int64_t w = (int64_t)((float)h * element.aspectratio);
+                    int64_t w = min<int64_t>(elementMaxWidth, (int64_t)((float)h * element.aspectratio));
                     int64_t x = rRowArea.left;
                     int64_t y = rRowArea.top;
 
@@ -522,7 +526,6 @@ void ZWinPanel::UpdateUI()
             }
 
 
-            tRowElements rightElements = GetRowElements(row, ZGUI::R);
             if (!rightElements.empty())
             {
                 // walk over the rows backward for any windows right aligned
@@ -533,10 +536,16 @@ void ZWinPanel::UpdateUI()
                     bool bAddSpaceBetweenGroups = (i < (rightElements.size()-1) && (leftElements[i + 1].groupname != element.groupname));    // if group name has changed from last element to current, add gap
                     if (bAddSpaceBetweenGroups)
                         rRowArea.left -= gDefaultGroupingStyle.paddingH * 4;
-
+#ifdef _DEBUG
+                    if (rRowArea.Width() <= 0)
+                    {
+                        string sDebugLayout = SH::URL_Decode(mPanelLayout);
+                        int stophere = 5;
+                    }
+#endif
                     assert(rRowArea.Width() > 0);
                     int64_t h = rRowArea.Height();
-                    int64_t w =(int64_t) ((float)h * element.aspectratio);
+                    int64_t w = min<int64_t>(elementMaxWidth, (int64_t)((float)h * element.aspectratio));
                     int64_t x = rRowArea.right - mStyle.paddingH - w;
                     int64_t y = rRowArea.top;
 

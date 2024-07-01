@@ -10,6 +10,7 @@
 #include "easyexif/exif.h"
 #include "lunasvg.h"
 #include "mio/mmap.hpp"
+#include <intrin.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -70,7 +71,8 @@ bool ZBuffer::Init(int64_t nWidth, int64_t nHeight)
         }
 
 		mSurfaceArea.SetRect(0, 0, nWidth, nHeight);
-        memset(mpPixels, 0, nWidth * nHeight * sizeof(uint32_t));
+//        memset(mpPixels, 0, nWidth * nHeight * sizeof(uint32_t));
+        Fill(0);
         mbHasAlphaPixels = false;
 
 		return true;
@@ -912,7 +914,12 @@ bool ZBuffer::Fill(uint32_t nCol, ZRect* pRect)
             return false;
     }
     else
+    {
         rDst.SetRect(mSurfaceArea);
+/*        size_t numPixels = mSurfaceArea.Area();
+        __stosd((DWORD*)mpPixels, nCol, numPixels);
+        return true;*/
+    }
 
 	int64_t nDstStride = mSurfaceArea.Width();
 
@@ -924,8 +931,9 @@ bool ZBuffer::Fill(uint32_t nCol, ZRect* pRect)
 	for (int64_t y = 0; y < nFillHeight; y++)
 	{
 		uint32_t* pDstBits = (uint32_t*) (mpPixels + ((y + rDst.top) * nDstStride) + rDst.left);
-		for (int64_t x = 0; x < nFillWidth; x++)
-			*pDstBits++ = nCol;
+/*		for (int64_t x = 0; x < nFillWidth; x++)
+			*pDstBits++ = nCol;*/
+        __stosd((DWORD*)pDstBits, nCol, nFillWidth);
 	}
 
 	return true;
@@ -957,8 +965,10 @@ bool ZBuffer::FillAlpha(uint32_t nCol, ZRect* pRect)
 		for (int64_t y = 0; y < nFillHeight; y++)
 		{
 			uint32_t* pDstBits = (uint32_t*) (mpPixels + ((y + rDst.top) * nDstStride) + rDst.left);
-			for (int64_t x = 0; x < nFillWidth; x++)
-				*pDstBits++ = nCol;
+//			for (int64_t x = 0; x < nFillWidth; x++)
+//				*pDstBits++ = nCol;
+            __stosd((DWORD*)pDstBits, nCol, nFillWidth);
+
 		}
 	}
 	else if (nAlpha > 8)
@@ -1519,10 +1529,9 @@ void ZBuffer::FillInSpan(uint32_t* pDest, int64_t nNumPixels, double fR, double 
 	} 
 }
 
-void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRect* pClip)
+void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, double thickness, ZRect* pClip)
 {
 	ZRect rDest;
-	const double kfThickness = 2.0f;
 
 	if (pClip)
 	{
@@ -1536,8 +1545,8 @@ void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRec
 
 	rLineRect.top = (int64_t) min(v1.y, v2.y);
 	rLineRect.bottom = (int64_t) max(v1.y, v2.y);
-	rLineRect.left = (int64_t) min(v1.x - kfThickness/2.0f, v2.x - kfThickness/2.0f);
-	rLineRect.right = (int64_t) max(v1.x + kfThickness/2.0f, v2.x + kfThickness/2.0f);
+	rLineRect.left = (int64_t) min(v1.x - thickness /2.0f, v2.x - thickness /2.0f);
+	rLineRect.right = (int64_t) max(v1.x + thickness /2.0f, v2.x + thickness /2.0f);
 
 	rLineRect.IntersectRect(/*&rLineRect, */&rDest);
 
@@ -1559,16 +1568,16 @@ void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, ZRec
 		FillInSpan(pDest, rLineRect.Width(), fR, fG, fB, fA);
 	}
 
-	for (int64_t nScanLine = rLineRect.top; nScanLine <= rLineRect.bottom; nScanLine++)
+    for (int64_t nScanLine = rLineRect.top; nScanLine < rLineRect.bottom; nScanLine++)
 	{
 		FloatScanLineIntersection(fScanLine, v1, v2, fIntersection, fR, fG, fB, fA);
 
 		if (fA > 10.0f)		// Anything less is not really visible
 		{
-			int64_t nStartPixel = (int64_t) min(fIntersection - kfThickness/2.0f, fPrevScanLineIntersection - kfThickness/2.0f);
+			int64_t nStartPixel = (int64_t) min(fIntersection - thickness /2.0f, fPrevScanLineIntersection - thickness /2.0f);
 			nStartPixel = max(nStartPixel, rLineRect.left);		// clip left
 
-			int64_t nEndPixel = (int64_t) max(fIntersection + kfThickness/2.0f, fPrevScanLineIntersection + kfThickness/2.0f);
+			int64_t nEndPixel = (int64_t) max(fIntersection + thickness /2.0f, fPrevScanLineIntersection + thickness /2.0f);
 			nEndPixel = min(nEndPixel, rLineRect.right);
 
 			uint32_t* pDest = pSurface + nScanLine * nStride + nStartPixel;
