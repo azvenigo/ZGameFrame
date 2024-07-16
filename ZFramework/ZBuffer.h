@@ -6,6 +6,7 @@
 #include <string>
 #include <mutex>
 #include "easyexif/exif.h"
+#include "Z3DMath.h"
 
 typedef std::shared_ptr<class ZBuffer> tZBufferPtr;
 
@@ -96,6 +97,8 @@ public:
 	virtual void            DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, double thickness = 2.0, ZRect* pClip = NULL);
     virtual void            DrawRectAlpha(uint32_t nCol, ZRect rDst);
 
+    virtual void            DrawCircle(ZPoint center, int64_t radius, uint32_t col);
+    virtual void            DrawSphere(ZPoint center, int64_t radius, const Z3D::Vec3f& lightPos, const Z3D::Vec3f& viewPos, const Z3D::Vec3f& ambient, const Z3D::Vec3f& diffuse, const Z3D::Vec3f& specular, float shininess);
 
 
     // Load/Save
@@ -118,8 +121,8 @@ public:
 #endif
 
 protected:
-	bool                    FloatScanLineIntersection(double fScanLine, const ZColorVertex& v1, const ZColorVertex& v2, double& fIntersection, double& fR, double& fG, double& fB, double& fA);
-	void                    FillInSpan(uint32_t* pDest, int64_t nNumPixels, double fR, double fG, double fB, double fA);
+    bool                    FloatScanLineIntersection(double fScanLine, const ZColorVertex& v1, const ZColorVertex& v2, double& fIntersection, double& fR, double& fG, double& fB, double& fA);
+    void                    FillInSpan(uint32_t* pDest, int64_t nNumPixels, double fR, double fG, double fB, double fA);
 
     bool                    LoadFromSVG(const std::string& sName);
     uint32_t                ComputePixelBlur(ZBuffer* pBuffer, int64_t nX, int64_t nY, int64_t nRadius);

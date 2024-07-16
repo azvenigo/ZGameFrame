@@ -446,4 +446,43 @@ namespace Z3D
     }
 
 
+    inline uint32_t calculateLighting(int x, int y, int centerX, int centerY, int radius, const Vec3f& lightPos, const Vec3f& viewPos, const Vec3f& ambient, const Vec3f& diffuse, const Vec3f& specular, float shininess)
+    {
+        // Calculate normal vector
+        double z = std::sqrt(radius * radius - (x - centerX) * (x - centerX) - (y - centerY) * (y - centerY));
+        if (std::isnan(z)) 
+        {
+            z = 0; // Handle the case where z is NaN
+        }
+        Vec3f normal(x - centerX, y - centerY, z);
+        normal = normal.normalize();
+
+        // Calculate ambient lighting
+        Vec3f ambientLight = ambient;
+
+        // Calculate diffuse lighting
+        Vec3f lightDir = (lightPos - Vec3f(x, y, 0).normalize()).normalize();
+
+
+        float diff = std::max<float>(normal.dotProduct(lightDir), 0.0f);
+        Vec3f diffuseLight = diffuse * diff;
+
+        // Calculate specular lighting
+        Vec3f viewDir = (viewPos - Vec3f(x, y, 0).normalize()).normalize();
+        Vec3f reflectDir = (normal * (2.0f * normal.dotProduct(lightDir)) - lightDir).normalize();
+
+        float spec = std::pow(std::max<float>(viewDir.dotProduct(reflectDir), 0.0f), shininess);
+        Vec3f specularLight = specular * spec;
+
+        // Combine the components
+        Vec3f color = ambientLight + diffuseLight + specularLight;
+
+        // Ensure the color components are within the range [0, 1]
+        color[0] = std::min<float>(color[0], 1.0);
+        color[1] = std::min<float>(color[1], 1.0);
+        color[2] = std::min<float>(color[2], 1.0);
+
+        return ARGB(0xff, (uint32_t)(255.0 * color[0]), (uint32_t)(255.0 * color[1]), (uint32_t)(255.0 * color[2]));
+    }
+
 };

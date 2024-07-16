@@ -936,6 +936,8 @@ bool ZBuffer::Fill(uint32_t nCol, ZRect* pRect)
         __stosd((DWORD*)pDstBits, nCol, nFillWidth);
 	}
 
+    mbHasAlphaPixels = ARGB_A(nCol) < 255;
+
 	return true;
 }
 
@@ -1109,6 +1111,99 @@ void  ZBuffer::DrawRectAlpha(uint32_t nCol, ZRect rRect)
         }
     }
 }
+
+void ZBuffer::DrawCircle(ZPoint center, int64_t radius, uint32_t col)
+{
+    int64_t startScanline = center.y - radius;
+    limit<int64_t>(startScanline, 0, mSurfaceArea.bottom);
+
+    int64_t endScanline = center.y + radius;
+    limit<int64_t>(endScanline, 0, mSurfaceArea.bottom);
+
+    int64_t nDstStride = mSurfaceArea.Width();
+
+    for (int64_t y = startScanline; y < endScanline; y++)
+    {
+        int64_t dy = abs(y - center.y);
+        int64_t dx = sqrt(radius * radius - (dy * dy));
+        int64_t dx_start = center.x - dx;
+        int64_t dx_end = center.x + dx;
+        limit<int64_t>(dx_start, 0, mSurfaceArea.right);
+        limit<int64_t>(dx_end, 0, mSurfaceArea.right);
+
+
+        uint32_t* pDstBits = (uint32_t*)(mpPixels + (y * nDstStride) + dx_start);
+
+        double fA = (double)(col >> 24);
+        double fR = (double)((col & 0x00ff0000) >> 16);
+        double fG = (double)((col & 0x0000ff00) >> 8);
+        double fB = (double)((col & 0x000000ff));
+
+        FillInSpan(pDstBits, dx_end - dx_start, fR, fG, fB, fA);
+    }
+}
+
+void ZBuffer::DrawSphere(ZPoint center, int64_t radius, const Z3D::Vec3f& lightPos, const Z3D::Vec3f& viewPos, const Z3D::Vec3f& ambient, const Z3D::Vec3f& diffuse, const Z3D::Vec3f& specular, float shininess)
+{
+    int64_t startScanline = center.y - radius;
+
+    int64_t endScanline = center.y + radius;
+
+    int64_t nDstStride = mSurfaceArea.Width();
+
+
+//    startScanline = center.y - 1;
+//    endScanline = center.y;
+
+    limit<int64_t>(endScanline, 0, mSurfaceArea.bottom);
+    limit<int64_t>(startScanline, 0, mSurfaceArea.bottom);
+
+
+    for (int64_t y = startScanline; y < endScanline; y++)
+    {
+        int64_t dy = abs(y - center.y);
+        int64_t dx = sqrt(radius * radius - (dy * dy));
+        int64_t x = center.x - dx;
+        int64_t x_end = center.x + dx;
+        limit<int64_t>(x, 0, mSurfaceArea.right);
+        limit<int64_t>(x_end, 0, mSurfaceArea.right);
+
+
+        uint32_t* pDest = (uint32_t*)(mpPixels + (y * nDstStride) + x);
+//        FillInSpan(pDstBits, dx_end - dx_start, fR, fG, fB, fA);
+        int64_t nNumPixels = x_end - x;
+        while (nNumPixels > 0)
+        {
+            uint8_t nCurA;
+            uint8_t nCurR;
+            uint8_t nCurG;
+            uint8_t nCurB;
+
+            uint32_t col = Z3D::calculateLighting(x, y, center.x, center.y, radius, lightPos, viewPos, ambient, diffuse, specular, shininess);
+
+            float fA = (float)(col >> 24);
+            float fR = (float)((col & 0x00ff0000) >> 16);
+            float fG = (float)((col & 0x0000ff00) >> 8);
+            float fB = (float)((col & 0x000000ff));
+
+
+            TO_ARGB(*pDest, nCurA, nCurR, nCurG, nCurB);
+
+
+            uint8_t nDestR = static_cast<uint8_t>((uint32_t)((fR * fA + (nCurR * (255.0f - fA)))) >> 8);
+            uint8_t nDestG = static_cast<uint8_t>((uint32_t)((fG * fA + (nCurG * (255.0f - fA)))) >> 8);
+            uint8_t nDestB = static_cast<uint8_t>((uint32_t)((fB * fA + (nCurB * (255.0f - fA)))) >> 8);
+
+            *pDest = ARGB(255, nDestR, nDestG, nDestB);
+
+            pDest++;
+            x++;
+            nNumPixels--;
+        }
+
+    }
+}
+
 
 
 
