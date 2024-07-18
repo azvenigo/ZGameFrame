@@ -446,7 +446,7 @@ namespace Z3D
     }
 
 
-    inline uint32_t calculateLighting(int x, int y, int centerX, int centerY, int radius, const Vec3f& lightPos, const Vec3f& viewPos, const Vec3f& ambient, const Vec3f& diffuse, const Vec3f& specular, float shininess)
+    inline uint32_t calculateLighting(float x, float y, float centerX, float centerY, float radius, const Vec3f& lightPos, const Vec3f& viewPos, const Vec3f& ambient, const Vec3f& diffuse, const Vec3f& specular, float shininess)
     {
         // Calculate normal vector
         double z = std::sqrt(radius * radius - (x - centerX) * (x - centerX) - (y - centerY) * (y - centerY));
@@ -454,7 +454,7 @@ namespace Z3D
         {
             z = 0; // Handle the case where z is NaN
         }
-        Vec3f normal(x - centerX, y - centerY, z);
+        Vec3f normal(x - centerX, y - centerY, (float)z);
         normal = normal.normalize();
 
         // Calculate ambient lighting

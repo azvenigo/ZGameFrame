@@ -8,6 +8,12 @@
 
 using namespace std;
 
+const int kParticleMaxSize = 1024;
+float fShininess = 132.0f;
+Z3D::Vec3f specular(0.0, 1.0, 1.0);
+
+vector<tZBufferPtr> particleBuffers;
+
 ParticleSandbox::ParticleSandbox()
 {
     mbAcceptsFocus = true;
@@ -17,8 +23,10 @@ ParticleSandbox::ParticleSandbox()
    
 bool ParticleSandbox::Init()
 {
+    particleBuffers.resize(kParticleMaxSize);
 
-    enableCollisions = RANDBOOL();
+
+    enableCollisions = RANDBOOL;
     gravFieldX = RANDI64(0, 4);
     gravFieldY = RANDI64(0, 4);
 
@@ -39,13 +47,13 @@ bool ParticleSandbox::Init()
 
 
     mpControlPanel->Caption("particles_caption", "Particles");
-    mpControlPanel->Slider("particles", &mMaxParticles, 0, 500, 2, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("particles", &mMaxParticles, 0, 2500, 2, 0.2, "{reinit;target=particlesandbox}", true, false);
 
     mpControlPanel->Caption("particles_min", "Particle Size Min");
-    mpControlPanel->Slider("particleMassMin", &particleMassMin, 0, 400, 10, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("particleMassMin", &particleMassMin, 0, 4000, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
 
     mpControlPanel->Caption("particles_max", "Particle Size Max");
-    mpControlPanel->Slider("particleMassMax", &particleMassMax, 0, 400, 10, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("particleMassMax", &particleMassMax, 0, 4000, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
 
     mpControlPanel->AddSpace(gM / 2);
 
@@ -56,6 +64,9 @@ bool ParticleSandbox::Init()
     mpControlPanel->AddSpace(gM / 2);
 
     mpControlPanel->Caption("grav_caption", "Grav Field Grid X & Y");
+    mpControlPanel->Toggle("gravField_toggle", &shiftingGravField, "Shifting Grav Field", "{reinit;target=particlesandbox}", "{reinit;target=particlesandbox}");
+    
+
     mpControlPanel->Slider("gravFieldX", &gravFieldX, 0, 10, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
     mpControlPanel->Slider("gravFieldY", &gravFieldY, 0, 10, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
     mpControlPanel->Toggle("draw_field_toggle", &drawGravField, "Draw Grav Field", "{reinit;target=particlesandbox}", "{reinit;target=particlesandbox}");
@@ -73,8 +84,8 @@ bool ParticleSandbox::Init()
     mpControlPanel->Toggle("arrows_toggle", &drawArrows, "Draw Arrows", "{reinit;target=particlesandbox}", "{reinit;target=particlesandbox}");
 
     mpControlPanel->AddSpace(gM / 2);
-    mpControlPanel->Caption("friction_caption", "Friction");
-    mpControlPanel->Slider("friction_slider", &mFriction, 0, 100, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Caption("atten_caption", "Attenuation");
+    mpControlPanel->Slider("atten_slider", &Attenuation, 0, 100, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
 
     
 
@@ -99,9 +110,9 @@ void ParticleSandbox::InitFromParams()
 
 
 
-    lightPos = Z3D::Vec3f(RANDDOUBLE(-5.0,5.0), RANDDOUBLE(-5.0, 5.0), 5);
-    viewPos = Z3D::Vec3f(RANDDOUBLE(-5.0, 5.0), RANDDOUBLE(-5.0, 5.0), 1);
-    ambient = Z3D::Vec3f(0.05, 0.05, 0.05);
+    lightPos = Z3D::Vec3f((float)RANDDOUBLE(-5.0,5.0), (float)RANDDOUBLE(-5.0, 5.0), (float)5);
+    viewPos = Z3D::Vec3f((float)RANDDOUBLE(-5.0, 5.0), (float)RANDDOUBLE(-5.0, 5.0), (float)1);
+    ambient = Z3D::Vec3f(0.05f, 0.05f, 0.05f);
 
     lightPos.normalize();
     viewPos.normalize();
@@ -233,22 +244,22 @@ void ParticleSandbox::CreateGravField()
     if (gravFieldX == 0 || gravFieldY == 0)
         return;
 
-    int starty = mAreaLocal.Height() / (gravFieldY + 1);    // start offset a bit
-    int startx = mAreaLocal.Width() / (gravFieldX + 1);    // start offset a bit
+    int64_t starty = mAreaLocal.Height() / (gravFieldY + 1);    // start offset a bit
+    int64_t startx = mAreaLocal.Width() / (gravFieldX + 1);    // start offset a bit
 
-    int spacingy = mAreaLocal.Height() / gravFieldY;
-    int spacingx = mAreaLocal.Width() / gravFieldX;
+    int64_t spacingy = mAreaLocal.Height() / gravFieldY;
+    int64_t spacingx = mAreaLocal.Width() / gravFieldX;
     
-    for (int iy = 0; iy < gravFieldY; iy++)
+    for (int64_t iy = 0; iy < gravFieldY; iy++)
     {
-        int y = starty + spacingy * iy;
-        for (int ix = 0; ix < gravFieldX; ix++)
+        int64_t y = starty + spacingy * iy;
+        for (int64_t ix = 0; ix < gravFieldX; ix++)
         {
-            int x = startx + spacingx * ix;
+            int64_t x = startx + spacingx * ix;
 
             Particle gf;
 
-            gf.pos = ZFPoint(x, y);
+            gf.pos = ZFPoint((float)x, (float)y);
             gf.dir.x = RANDDOUBLE((double)-10.0, (double)10.0);
             gf.dir.y = RANDDOUBLE((double)-10.0, (double)10.0);
             gf.mass = RANDEXP_DOUBLE(100.0, 600.0);
@@ -262,33 +273,35 @@ void ParticleSandbox::SpawnParticle(int64_t index)
 {
     if (index == 0)
     {
-        particles[index].mass = centerMass;
+        particles[index].mass = (double)centerMass;
         particles[index].dir.x = 0;
         particles[index].dir.y = 0;
-        particles[index].pos.x = mAreaLocal.Width() / 2;
-        particles[index].pos.y = mAreaLocal.Height() / 2;
+        particles[index].pos.x = mAreaLocal.Width() / 2.0;
+        particles[index].pos.y = mAreaLocal.Height() / 2.0;
         particles[index].col = 0xffffffff;
         particles[index].active = centerMass > 0;
     }
     else
     {
-        particles[index].mass = RANDEXP_DOUBLE((double)particleMassMin, (double)particleMassMax);
+        if (particles[index].mass < 10.0 || particles[index].mass > particleMassMax)
+            particles[index].mass = RANDEXP_DOUBLE((double)particleMassMin, (double)particleMassMax);
         particles[index].dir.x = RANDDOUBLE((double)-10.0, (double)10.0);
         particles[index].dir.y = RANDDOUBLE((double)-10.0, (double)10.0);
         //    particles[index].dir.x = 0;
         //    particles[index].dir.y = 0;
-        particles[index].pos.x = RANDU64(0, mAreaLocal.Width());
-        particles[index].pos.y = RANDU64(0, mAreaLocal.Height());
+
+        double randdist = RANDDOUBLE(0, mAreaLocal.Width());
+        double angle = RANDDOUBLE(0.0, 360.0 / (2 * 3.1415));
+
+        particles[index].pos.x = mAreaLocal.Width() / 2 + randdist * sin(angle);
+        particles[index].pos.y = mAreaLocal.Height() / 2 + randdist * cos(angle);
         particles[index].col = RANDU64(0xff000000, 0xffffffff);
-        particles[index].fShininess = RANDDOUBLE(0, 255);
-        particles[index].specular = Z3D::Vec3f(RANDDOUBLE(0, 1.0), RANDDOUBLE(0, 1.0), RANDDOUBLE(0, 1.0));
-        particles[index].diffuse = Z3D::Vec3f(RANDDOUBLE(0, 1.0), RANDDOUBLE(0, 1.0), RANDDOUBLE(0, 1.0));
 
         particles[index].active = true;
     }
 }
 
-ZFPoint ParticleSandbox::GetForceVector(Particle* p)
+ZFPoint GetForceVector(Particle* p, const tParticleArray& particles, const tParticleArray& gravField, double atten)
 {
     ZFPoint force;
     for (const auto& p2 : particles)
@@ -301,8 +314,8 @@ ZFPoint ParticleSandbox::GetForceVector(Particle* p)
             {
                 double fForce = (p2.mass*p->mass) / (fDist*fDist);
 
-                double dX = ((p2.pos.x - p->pos.x) * fForce) / 50000.0;
-                double dY = ((p2.pos.y - p->pos.y) * fForce) / 50000.0;
+                double dX = ((p2.pos.x - p->pos.x) * fForce) / (10000.0*atten);
+                double dY = ((p2.pos.y - p->pos.y) * fForce) / (10000.0*atten);
 
                 force.x += dX;
                 force.y += dY;
@@ -343,19 +356,37 @@ double Magnitude(ZFPoint v)
     return sqrt(v.x * v.x + v.y * v.y);
 }
 
-ZFPoint ParticleSandbox::LimitMagnitude(ZFPoint v)
+ZFPoint LimitMagnitude(ZFPoint v, int64_t terminal)
 {
-    if (mTerminalVelocity > 0)
+    if (terminal > 0)
     {
         double mag = Magnitude(v);
-        if (mag > mTerminalVelocity / 10.0)
+        if (mag > terminal / 10.0)
         {
-            return ZFPoint(v.x * (mTerminalVelocity / mag), v.y * (mTerminalVelocity / mag));
+            return ZFPoint(v.x * (terminal / mag), v.y * (terminal / mag));
         }
     }
     return v;
 }
 
+
+void UpdateParticleDirs(tParticleArray& particles, tParticleArray& gravField, size_t i, size_t last, int64_t terminal, int64_t atten)
+{
+    while (i != last)
+    {
+        auto& p = particles[i];
+        ZFPoint force = GetForceVector(&p, particles, gravField, atten/50.0);
+
+        double attenuation = (double)atten / 10.0;
+
+        p.dir.x += force.x * attenuation;
+        p.dir.y += force.y * attenuation;
+
+        p.dir = LimitMagnitude(p.dir, terminal);
+
+        i++;
+    }
+}
 
 bool ParticleSandbox::Process()
 {
@@ -406,23 +437,42 @@ bool ParticleSandbox::Process()
             }
         }
 
+        size_t threads = std::thread::hardware_concurrency();
+        workers.resize(threads);
 
-        for (auto& p : particles)
+        size_t jobs_per_thread = std::max<size_t>(particles.size() / threads, 1);
+        size_t batches = (particles.size() + jobs_per_thread - 1) / jobs_per_thread;
+
+        if (batches > particles.size())
+            batches = particles.size();
+        if (batches > workers.size())
+            batches = workers.size();
+
+
+        for (int i = 0; i < batches; i++)
         {
-            ZFPoint force = GetForceVector(&p);
+            size_t first = i * jobs_per_thread;
+            size_t last = first + jobs_per_thread;
+            if (last > particles.size())
+                last = particles.size();
+            if (i == threads - 1)
+                last = particles.size();
 
-            double friction = (double)mFriction / 100.0;
-
-            p.dir.x += force.x * (1.0 - friction);
-            p.dir.y += force.y * (1.0 - friction);
-
-            p.dir = LimitMagnitude(p.dir);
+            assert(first < particles.size());
+            assert(last < particles.size()+1);
+            workers[i] = std::thread(UpdateParticleDirs, std::ref(particles), std::ref(gravField), first, last, mTerminalVelocity, Attenuation);
         }
+
+        for (int i = 0; i < batches; i++)
+        {
+            workers[i].join();
+        }
+
 
         int64_t time = gTimer.GetUSSinceEpoch();
         double timeScale = (time - mLastTimeStamp) / 16000.0;
 
-        for (int64_t i = 1; i < particles.size(); i++)  // 1 because particle 0 is the center big particle
+        for (int64_t i = 1; i < (int64_t)particles.size(); i++)  // 1 because particle 0 is the center big particle
         {
             Particle* p = &particles[i];
             if (p->active /*&& !(p->dir.x == 0 && p->dir.y == 0)*/)
@@ -441,17 +491,19 @@ bool ParticleSandbox::Process()
         }
 
         // shift grav field
-        for (int64_t i = 0; i < gravField.size(); i++)
+        if (shiftingGravField)
         {
-            Particle* p = &gravField[i];
-            ZFPoint force = GetForceVector(p);
-            double friction = (double)mFriction / 100.0;
-            p->dir.x += force.x * (1.0 - friction);
-            p->dir.y += force.y * (1.0 - friction);
+            for (int64_t i = 0; i < (int64_t)gravField.size(); i++)
+            {
+                Particle* p = &gravField[i];
+                ZFPoint force = GetForceVector(p, particles, gravField, Attenuation / 50.0);
+                double attenuation = (double)Attenuation / 50.0;
+                p->dir.x += force.x * attenuation;
+                p->dir.y += force.y * attenuation;
 
-            p->dir = LimitMagnitude(p->dir);
+                p->dir = LimitMagnitude(p->dir, mTerminalVelocity);
+            }
         }
-
 
         mLastTimeStamp = time;
 
@@ -496,14 +548,14 @@ bool ParticleSandbox::Paint()
     }*/
     mpSurface->Fill(0);
 
-    for (int64_t i = 0; i < particles.size(); i++)
+    for (int64_t i = 0; i < (int64_t)particles.size(); i++)
     {
         DrawParticle(mpSurface.get(), i);
     }
 
     if (drawGravField)
     {
-        for (int64_t i = 0; i < gravField.size(); i++)
+        for (int64_t i = 0; i < (int64_t)gravField.size(); i++)
         {
             ZFPoint end(gravField[i].pos);
             end.x += gravField[i].dir.x * (gravField[i].mass / 100);
@@ -519,18 +571,34 @@ bool ParticleSandbox::Paint()
 
 bool Particle::Draw(ZBuffer* pDest, Z3D::Vec3f lightPos, Z3D::Vec3f viewPos, Z3D::Vec3f ambient)
 {
-    int64_t size = 2*sqrt(mass);
+    int64_t size = (int64_t)(2.0 * sqrt(mass));
+    limit<int64_t>(size, 1, kParticleMaxSize);
 
     if (rendering->GetArea().right != size)
     {    
-        rendering->Init(size, size);
-        rendering->Fill(0);
+        if (particleBuffers[size] == nullptr)
+        {
+            particleBuffers[size].reset(new ZBuffer());
+            particleBuffers[size]->Init(size, size);
+            particleBuffers[size]->Fill(0);
+            particleBuffers[size]->mbHasAlphaPixels = true;
 
-        ZPoint center(size/2, size/2);
-        rendering->DrawSphere(center, size/2, lightPos, viewPos, ambient, diffuse, specular, fShininess);
+            ZPoint center(size / 2, size / 2);
+            particleBuffers[size]->DrawSphere(center, size / 2, lightPos, viewPos, ambient, Z3D::Vec3f(1,1,1), specular, fShininess);
+        }
+
+        rendering->Init(size, size);
+        rendering->CopyPixels(particleBuffers[size].get());
+        rendering->mbHasAlphaPixels = true;
+
+        uint32_t nHSV = COL::ARGB_To_AHSV(col);
+        uint32_t nH = AHSV_H(nHSV);
+        uint32_t nS = AHSV_S(nHSV);
+
+        rendering->Colorize(nH, nS);
     }
 
-    ZRect rDest(pos.x, pos.y, pos.x + size, pos.y + size);
+    ZRect rDest((int64_t)pos.x, (int64_t)pos.y, (int64_t)pos.x + size, (int64_t)pos.y + size);
     rDest.OffsetRect(-size / 2, -size / 2);
 
     return pDest->Blt(rendering.get(), rendering->GetArea(), rDest);
@@ -571,6 +639,8 @@ bool ParticleSandbox::OnKeyDown(uint32_t key)
             gMessageSystem.Post("{quit_app_confirmed}");
             break;
         case ' ':
+            particleBuffers.clear();
+            particleBuffers.resize(kParticleMaxSize);
             InitFromParams();
             break;
         }

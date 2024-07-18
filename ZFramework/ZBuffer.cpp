@@ -1125,7 +1125,7 @@ void ZBuffer::DrawCircle(ZPoint center, int64_t radius, uint32_t col)
     for (int64_t y = startScanline; y < endScanline; y++)
     {
         int64_t dy = abs(y - center.y);
-        int64_t dx = sqrt(radius * radius - (dy * dy));
+        int64_t dx = (int64_t)sqrt(radius * radius - (dy * dy));
         int64_t dx_start = center.x - dx;
         int64_t dx_end = center.x + dx;
         limit<int64_t>(dx_start, 0, mSurfaceArea.right);
@@ -1162,7 +1162,7 @@ void ZBuffer::DrawSphere(ZPoint center, int64_t radius, const Z3D::Vec3f& lightP
     for (int64_t y = startScanline; y < endScanline; y++)
     {
         int64_t dy = abs(y - center.y);
-        int64_t dx = sqrt(radius * radius - (dy * dy));
+        int64_t dx = (int64_t)sqrt(radius * radius - (dy * dy));
         int64_t x = center.x - dx;
         int64_t x_end = center.x + dx;
         limit<int64_t>(x, 0, mSurfaceArea.right);
