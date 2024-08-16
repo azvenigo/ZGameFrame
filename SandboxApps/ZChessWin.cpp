@@ -214,7 +214,7 @@ void ZChoosePGNWin::RefreshList()
     for (auto entry : mPGNEntries)
     {
         //string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(gDefaultTextFont) + " position=lb link={selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
-        string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(fp) + " position=lb link={selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
+        string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(fp) + " position=lb link={selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + "}>" + entry.first + "</text></line>";
         nCount++;
 
         if ( msFilter.empty() ||  SH::Contains(entry.first, msFilter, false) || SH::Contains(entry.second, msFilter, false)) // if empty filter or either caption or pgn contents include filter text (case insensitive)
@@ -449,7 +449,7 @@ void ZPGNWin::UpdateView()
                 sMoveLine += "<text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff000000 color2=0xff000000 position=rb link={setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove) + "}>" + move.blackAction + "</text></line>";
 
                 if (!move.whiteComment.empty())
-                    gMessageSystem.Post("{statusmessage}", mpParentWin, "message", SH::FromInt(nMove) + ". [" + move.whiteAction + "] " + move.whiteComment, "col", 0xff0066aa);
+                    gMessageSystem.Post(ZMessage("{statusmessage}", mpParentWin, "message", SH::FromInt(nMove) + ". [" + move.whiteAction + "] " + move.whiteComment, "col", 0xff0066aa));
 
             }
             else
@@ -459,7 +459,7 @@ void ZPGNWin::UpdateView()
                 sMoveLine += "<text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=rb link={setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove) + "}>[" + move.blackAction + "]</text></line>";
 
                 if (!move.blackComment.empty())
-                    gMessageSystem.Post("{statusmessage}", mpParentWin, "message", SH::FromInt(nMove) + "... [" + move.blackAction + "] " + move.blackComment, "col", 0xff0066aa);
+                    gMessageSystem.Post(ZMessage("{statusmessage}", mpParentWin, "message", SH::FromInt(nMove) + "... [" + move.blackAction + "] " + move.blackComment, "col", 0xff0066aa));
 
             }
             mpMovesWin->AddLineNode(sMoveLine);
@@ -491,7 +491,7 @@ bool ZPGNWin::SetHalfMove(int64_t nHalfMove)
 //        string sMessage;
 //        Sprintf(sMessage, "sethistoryindex;target=chesswin;halfmove=%d", mCurrentHalfMoveNumber);
 //        gMessageSystem.Post(sMessage);
-        gMessageSystem.Post("{sethistoryindex}", mpParentWin, "halfmove", mCurrentHalfMoveNumber);
+        gMessageSystem.Post(ZMessage("{sethistoryindex}", mpParentWin, "halfmove", mCurrentHalfMoveNumber));
 
         UpdateView();
         return true;
@@ -925,7 +925,7 @@ bool ZChessWin::Process()
             {
                 ZDEBUG_OUT("Setting halfmove:", mBoard.GetHalfMoveNumber() + 1);
                 mnDemoModeNextMoveTimeStamp = gTimer.GetUSSinceEpoch() + ((kAutoplayMaxMSBetweenMoves-mAutoplayMSBetweenMoves)*1000);
-                gMessageSystem.Post("{sethistoryindex}", this, "halfmove", mBoard.GetHalfMoveNumber());
+                gMessageSystem.Post(ZMessage("{sethistoryindex}", this, "halfmove", mBoard.GetHalfMoveNumber()));
             }
         }
     }
@@ -1369,6 +1369,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             }
 
             InvalidateChildren();
+            return true;
         }
         else
         {
@@ -1679,7 +1680,7 @@ bool ZPiecePromotionWin::OnMouseDownL(int64_t x, int64_t y)
     int64_t nPiece = x/nPieceWidth;
     if (!mDest.y == 0) // promotion on 0 rank is by black
         nPiece += 4;
-    gMessageSystem.Post("{promote}", mpParentWin, "piece", mPromotionPieces[nPiece], "x", mDest.x, "y", mDest.y);
+    gMessageSystem.Post(ZMessage("{promote}", mpParentWin, "piece", mPromotionPieces[nPiece], "x", mDest.x, "y", mDest.y));
     return true;
 }
 

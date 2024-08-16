@@ -8,7 +8,15 @@
 #include <assert.h>
 
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// IMessageTarget
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+class IMessageTarget
+{
+public:
+    virtual std::string GetTargetName() = 0;                                // returns a unique target identifier
+    virtual bool        ReceiveMessage(const class ZMessage& message) = 0;  // returns true if the message was handled.
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZMessage
@@ -29,11 +37,75 @@ class ZMessage
     friend class ZMessageSystem;
 public:
 	ZMessage();
-    ZMessage(const std::string& sType, const std::string& sRawMessage, class IMessageTarget* pTarget = nullptr);
-    ZMessage(const std::string& sRaw, class IMessageTarget* pTarget = nullptr);
+//    ZMessage(const std::string& sType, const std::string& sRawMessage, class IMessageTarget* pTarget = nullptr);
+//    ZMessage(const std::string& sRaw, class IMessageTarget* pTarget = nullptr);
+
+    ZMessage(std::string sRaw)
+    {
+        FromString(sRaw);
+    };
+
     ZMessage(const ZMessage& rhs);
 
 	~ZMessage();
+
+
+
+
+
+
+
+
+
+
+    template <typename T, typename...Types>
+    ZMessage(std::string type, std::string key, T val, Types...more)
+    {
+        mType = type;
+        ToMessage(key, val, more...);
+    }
+
+    ZMessage(std::string type, class IMessageTarget* pTarget)
+    {
+        mType = type;
+        assert(pTarget);
+        mTarget = pTarget->GetTargetName();
+    }
+
+
+    template <typename T, typename...Types>
+    ZMessage(std::string type, class IMessageTarget* pTarget, std::string key, T val, Types...more)
+    {
+        mType = type;
+        assert(pTarget);
+        mTarget = pTarget->GetTargetName();
+        ToMessage(key, val, more...);
+    }
+
+
+
+    template <typename S, typename...SMore>
+    inline void ToMessage(std::string key, S val, SMore...moreargs)
+    {
+        std::stringstream ss;
+        ss << val;
+        if (key == "target")
+            mTarget = ss.str();
+        else
+            mKeyValueMap[key] = ss.str();
+        return ToMessage(moreargs...);
+    }
+
+    inline void ToMessage() {}   // needed for the variadic with no args
+
+
+
+
+
+
+
+
+
 
 
 
@@ -66,15 +138,6 @@ private:
 };
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// IMessageTarget
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-class IMessageTarget
-{
-public:
-	virtual std::string GetTargetName() = 0;							// returns a unique target identifier
-	virtual bool        ReceiveMessage(const ZMessage& message) = 0;		// returns true if the message was handled.
-};
 
 
 typedef std::list<ZMessage>                  	    tMessageList;
@@ -102,60 +165,8 @@ public:
 	void    RemoveNotification(const std::string& sMessageType, IMessageTarget* pTarget);
 	void    RemoveAllNotifications(IMessageTarget* pTarget);
 
-	void    Post(std::string sType, class IMessageTarget* pTarget = nullptr);
-    void    Post(ZMessage& message, class IMessageTarget* pTarget = nullptr);
-
-
-
-
-
-
-    template <typename T, typename...Types>
-    void Post(std::string type, std::string key, T val, Types...more)
-    {
-        ZMessage m;
-        m.mType = type;
-        ToMessage(m, key, val, more...);
-
-        const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
-        mMessageQueue.push_back(std::move(m));
-    }
-
-
-    template <typename T, typename...Types>
-    void Post(std::string type, IMessageTarget* pTarget, std::string key, T val, Types...more)
-    {
-        ZMessage m;
-        m.mType = type;
-
-        if (pTarget)
-            m.mTarget = pTarget->GetTargetName();
-        ToMessage(m, key, val, more...);
-
-        const std::lock_guard<std::mutex> lock(mMessageQueueMutex);
-        mMessageQueue.push_back(std::move(m));
-    }
-
-
-
-    template <typename S, typename...SMore>
-    inline void ToMessage(ZMessage& m, std::string key, S val, SMore...moreargs)
-    {
-        std::stringstream ss;
-        ss << val;
-        if (key == "target")
-            m.mTarget = ss.str();
-        else
-            m.mKeyValueMap[key] = ss.str();
-        return ToMessage(m, moreargs...);
-    }
-
-    inline void ToMessage(ZMessage&) {}   // needed for the variadic with no args
-
-
-
-
-
+    void    Post(const std::string& sRawMessage);
+    void    Post(const ZMessage& message);
 
 
 

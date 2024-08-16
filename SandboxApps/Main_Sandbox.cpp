@@ -57,7 +57,6 @@ void Sandbox::InitControlPanel()
     int64_t controlTriggerH = 64;
 
     grControlPanelArea.SetRect(grFullArea.right - controlW, 0, grFullArea.right, controlH);
-    grControlPanelTrigger.SetRect(grFullArea.right - controlTriggerW, 0, grFullArea.right, controlTriggerH);
     gnControlPanelButtonHeight = grFullArea.Height() / 50;
     gnControlPanelEdge = grFullArea.Height() / 100;
 
@@ -68,7 +67,7 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel = new ZWinControlPanel();
     gpControlPanel->SetArea(rControlPanel);
-    gpControlPanel->mrTrigger = grControlPanelTrigger;
+    gpControlPanel->mrTrigger = rControlPanel;
     gpControlPanel->mbHideOnMouseExit = true;
 
     gpControlPanel->Init();

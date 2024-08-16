@@ -68,9 +68,9 @@ bool ImageContest::ShowOpenFolderDialog()
 
 void ImageContest::HandleQuitCommand()
 {
-    gMessageSystem.Post("set_visible", GetTopWindow()->GetChildWindowByWinName("ZWinImageViewer"), "visible", "1");
-    gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
-    gMessageSystem.Post("set_focus", "target", "ZWinImageViewer");
+    gMessageSystem.Post(ZMessage("set_visible", GetTopWindow()->GetChildWindowByWinName("ZWinImageViewer"), "visible", "1"));
+    gMessageSystem.Post(ZMessage("kill_child", GetTopWindow(), "name", GetTargetName()));
+    gMessageSystem.Post(ZMessage("set_focus", "target", "ZWinImageViewer"));
 
 //    gMessageSystem.Post("quit_app_confirmed");
 }

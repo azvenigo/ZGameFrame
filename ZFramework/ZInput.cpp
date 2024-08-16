@@ -27,7 +27,7 @@ void ZInput::OnKeyDown(uint32_t key)
     if (!pTarget)
         pTarget = gpMainWin;
 
-    gMessageSystem.Post("keydown", pTarget, "code", key);
+    gMessageSystem.Post(ZMessage("keydown", pTarget, "code", key));
 }
 
 void ZInput::OnKeyUp(uint32_t key)
@@ -38,7 +38,7 @@ void ZInput::OnKeyUp(uint32_t key)
     if (!pTarget)
         pTarget = gpMainWin;
 
-    gMessageSystem.Post("keyup", pTarget, "code", key);
+    gMessageSystem.Post(ZMessage("keyup", pTarget, "code", key));
 }
 
 void ZInput::OnChar(uint32_t key)
@@ -47,55 +47,37 @@ void ZInput::OnChar(uint32_t key)
     if (!pTarget)
         pTarget = gpMainWin;
 
-    gMessageSystem.Post("chardown", pTarget, "code", key);
+    gMessageSystem.Post(ZMessage("chardown", pTarget, "code", key));
 }
 
 void ZInput::OnLButtonUp(int64_t x, int64_t y)
 {
     lButtonDown = false;
-    ZMessage cursorMessage;
-    cursorMessage.SetType("cursor_msg");
-    cursorMessage.SetParam("subtype", "l_up");
-    cursorMessage.SetParam("x", SH::FromInt(x));
-    cursorMessage.SetParam("y", SH::FromInt(y));
-    if (captureWin)
-        cursorMessage.SetTarget(captureWin->GetTargetName());
-    else
-        cursorMessage.SetTarget(gpMainWin->GetTargetName());
+    IMessageTarget* pTarget = captureWin;
+    if (!captureWin)
+        pTarget = gpMainWin;
 
-    gMessageSystem.Post(cursorMessage);
+    gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "l_up", "x", x, "y", y));
 }
 
 void ZInput::OnLButtonDown(int64_t x, int64_t y)
 {
     lButtonDown = true;
-    ZMessage cursorMessage;
-    cursorMessage.SetType("cursor_msg");
-    cursorMessage.SetParam("subtype", "l_down");
-    cursorMessage.SetParam("x", SH::FromInt(x));
-    cursorMessage.SetParam("y", SH::FromInt(y));
-    if (captureWin)
-        cursorMessage.SetTarget(captureWin->GetTargetName());
-    else
-        cursorMessage.SetTarget(gpMainWin->GetTargetName());
+    IMessageTarget* pTarget = captureWin;
+    if (!captureWin)
+        pTarget = gpMainWin;
 
-    gMessageSystem.Post(cursorMessage);
+    gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "l_down", "x", x, "y", y));
 }
 
 void ZInput::OnRButtonUp(int64_t x, int64_t y)
 {
     rButtonDown = false;
-    ZMessage cursorMessage;
-    cursorMessage.SetType("cursor_msg");
-    cursorMessage.SetParam("subtype", "r_up");
-    cursorMessage.SetParam("x", SH::FromInt(x));
-    cursorMessage.SetParam("y", SH::FromInt(y));
-    if (captureWin)
-        cursorMessage.SetTarget(captureWin->GetTargetName());
-    else
-        cursorMessage.SetTarget(gpMainWin->GetTargetName());
+    IMessageTarget* pTarget = captureWin;
+    if (!captureWin)
+        pTarget = gpMainWin;
 
-    gMessageSystem.Post(cursorMessage);
+    gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "r_up", "x", x, "y", y));
 }
 
 void ZInput::OnRButtonDown(int64_t x, int64_t y)
@@ -103,17 +85,11 @@ void ZInput::OnRButtonDown(int64_t x, int64_t y)
     rButtonDown = true;
     mouseDown.Set(x, y);
 
-    ZMessage cursorMessage;
-    cursorMessage.SetType("cursor_msg");
-    cursorMessage.SetParam("subtype", "r_down");
-    cursorMessage.SetParam("x", SH::FromInt(x));
-    cursorMessage.SetParam("y", SH::FromInt(y));
-    if (captureWin)
-        cursorMessage.SetTarget(captureWin->GetTargetName());
-    else
-        cursorMessage.SetTarget(gpMainWin->GetTargetName());
+    IMessageTarget* pTarget = captureWin;
+    if (!captureWin)
+        pTarget = gpMainWin;
 
-    gMessageSystem.Post(cursorMessage);
+    gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "r_down", "x", x, "y", y));
 }
 
 
@@ -126,17 +102,11 @@ void ZInput::OnMouseMove(int64_t x, int64_t y)
         lastMouseMove.Set(x, y);
         lastMouseMoveTime = gTimer.GetElapsedTime();
 
-        ZMessage cursorMessage;
-        cursorMessage.SetType("cursor_msg");
-        cursorMessage.SetParam("subtype", "move");
-        cursorMessage.SetParam("x", SH::FromInt(x));
-        cursorMessage.SetParam("y", SH::FromInt(y));
-        if (captureWin)
-            cursorMessage.SetTarget(captureWin->GetTargetName());
-        else
-            cursorMessage.SetTarget(gpMainWin->GetTargetName());
+        IMessageTarget* pTarget = captureWin;
+        if (!captureWin)
+            pTarget = gpMainWin;
 
-        gMessageSystem.Post(cursorMessage);
+        gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "move", "x", x, "y", y));
 
         CheckForMouseOverNewWindow();
 
@@ -155,17 +125,11 @@ void ZInput::Process()
 
 void ZInput::OnMouseWheel(int64_t x, int64_t y, int64_t delta)
 {
-    ZMessage cursorMessage;
-    cursorMessage.SetType("cursor_msg");
-    cursorMessage.SetParam("subtype", "wheel");
-    cursorMessage.SetParam("x", SH::FromInt(x));
-    cursorMessage.SetParam("y", SH::FromInt(y));
-    cursorMessage.SetParam("delta", SH::FromInt(delta));
-    if (captureWin)
-        cursorMessage.SetTarget(captureWin->GetTargetName());
-    else
-        cursorMessage.SetTarget(gpMainWin->GetTargetName());
-    gMessageSystem.Post(cursorMessage);
+    IMessageTarget* pTarget = captureWin;
+    if (!captureWin)
+        pTarget = gpMainWin;
+
+    gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "wheel", "x", x, "y", y, "delta", delta));
 }
 
 void ZInput::CheckForMouseOverNewWindow()
@@ -212,17 +176,11 @@ void ZInput::CheckMouseForHover()
         {
             ShowTooltip(pMouseOverWin->msTooltip);
 
-            ZMessage cursorMessage;
-            cursorMessage.SetType("cursor_msg");
-            cursorMessage.SetParam("subtype", "hover");
-            cursorMessage.SetParam("x", SH::FromInt(lastMouseMove.x));
-            cursorMessage.SetParam("y", SH::FromInt(lastMouseMove.y));
-            if (captureWin)
-                cursorMessage.SetTarget(captureWin->GetTargetName());
-            else
-                cursorMessage.SetTarget(gpMainWin->GetTargetName());
+            IMessageTarget* pTarget = captureWin;
+            if (!captureWin)
+                pTarget = gpMainWin;
 
-            gMessageSystem.Post(cursorMessage);
+            gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "hover", "x", lastMouseMove.x, "y", lastMouseMove.y));
         }
 
         bMouseHoverPosted = true;

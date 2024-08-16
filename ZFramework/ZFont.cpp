@@ -1637,11 +1637,14 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
         tZFontPtr pLoaded = LoadFont(FontCacheFilename(params));
         if (pLoaded)
         {
-            int64_t height = pLoaded->Height();
-            const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
-            mHeightToFontMap[height][pLoaded->GetFontParams()] = pLoaded;
-            assert(pLoaded);
-            return pLoaded;
+            if (pLoaded->GetFontParams() == params)
+            {
+                int64_t height = pLoaded->Height();
+                const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
+                mHeightToFontMap[height][pLoaded->GetFontParams()] = pLoaded;
+                assert(pLoaded);
+                return pLoaded;
+            }
         }
 
         ZDEBUG_OUT("WARNING: cached font failed to load...re-creating.");

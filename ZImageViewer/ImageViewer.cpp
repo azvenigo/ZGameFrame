@@ -288,7 +288,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     case 'C':
         if (gInput.IsKeyDown(VK_CONTROL))
         {
-            gMessageSystem.Post("copylink", this);
+            gMessageSystem.Post(ZMessage("copylink", this));
             return true;
         }
         if (mCopyToFolder.empty())
@@ -704,7 +704,7 @@ void ImageViewer::ToggleShowHelpDialog()
     ZWinDialog* pHelp = (ZWinDialog*)GetChildWindowByWinName("ImageViewerHelp");
     if (pHelp)
     {
-        gMessageSystem.Post("kill_child", "name", "ImageViewerHelp");
+        gMessageSystem.Post(ZMessage("kill_child", "name", "ImageViewerHelp"));
         return;
     }
 
@@ -1375,7 +1375,7 @@ bool ImageViewer::Init()
         }
         else
         {
-            gMessageSystem.Post("show_help", this);
+            gMessageSystem.Post(ZMessage("show_help", this));
         }
 
         mpFolderLabel = new ZWinFolderLabel();
@@ -1499,24 +1499,24 @@ void ImageViewer::UpdateControlPanel()
     {
         ZMessage m;
 
-        gMessageSystem.Post("set_enabled", "target", "copylink", "enabled", SH::FromInt((int)ValidIndex(mViewingIndex)));
+        gMessageSystem.Post(ZMessage("set_enabled", "target", "copylink", "enabled", SH::FromInt((int)ValidIndex(mViewingIndex))));
 
-        gMessageSystem.Post("set_caption", "target", "filterall", "text", std::format("All ({})", mImageArray.size()));
+        gMessageSystem.Post(ZMessage("set_caption", "target", "filterall", "text", std::format("All ({})", mImageArray.size())));
 //        gMessageSystem.Post("set_enabled", "target", "filterall", "enabled", SH::FromInt((int)mFilterState == kAll));
 
 
-        gMessageSystem.Post("set_caption", "target", "filterfavs", "text", std::format("Favorites ({})", mFavImageArray.size()));
-        gMessageSystem.Post("set_enabled", "target", "filterfavs", "enabled", SH::FromInt((int)!mFavImageArray.empty()));
+        gMessageSystem.Post(ZMessage("set_caption", "target", "filterfavs", "text", std::format("Favorites ({})", mFavImageArray.size())));
+        gMessageSystem.Post(ZMessage("set_enabled", "target", "filterfavs", "enabled", SH::FromInt((int)!mFavImageArray.empty())));
 
-        gMessageSystem.Post("set_caption", "target", "filterranked", "text", "Ranked");
-        gMessageSystem.Post("set_enabled", "enabled", SH::FromInt((int)!mRankedArray.empty()), "target", "filterranked");
+        gMessageSystem.Post(ZMessage("set_caption", "target", "filterranked", "text", "Ranked"));
+        gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mRankedArray.empty()), "target", "filterranked"));
 
-        gMessageSystem.Post("set_caption", "text", std::format("To Be Deleted ({})", mToBeDeletedImageArray.size()), "target", "filterdel");
-        gMessageSystem.Post("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel");
+        gMessageSystem.Post(ZMessage("set_caption", "text", std::format("To Be Deleted ({})", mToBeDeletedImageArray.size()), "target", "filterdel"));
+        gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
 
-        gMessageSystem.Post("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel");
+        gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
 
-        gMessageSystem.Post("set_visible", "visible", SH::FromInt((int)(mFilterState == kFavs || mFilterState == kRanked)), "target", "rank_favorites");
+        gMessageSystem.Post(ZMessage("set_visible", "visible", SH::FromInt((int)(mFilterState == kFavs || mFilterState == kRanked)), "target", "rank_favorites"));
 
     }
 
