@@ -1413,7 +1413,7 @@ bool ImageViewer::Init()
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("savefile", "", "", "$apppath$/res/save.svg", "Save Image", ZMessage("{saveimg}", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("copyfile", "", "", "$apppath$/res/copy.svg", "Select a Copy Folder for quick-move with 'C'", ZMessage("{set_copy_folder}", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("{set_move_folder}", this), 1.0, style, {}) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("{show_confirm}", this), 1.0, style, {}) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("show_confirm", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "</panel>";
 
         ZGUI::RA_Descriptor fileManageRAD({}, "file_manage_menu", ZGUI::VOutside | ZGUI::HC | ZGUI::T, 1.25, 6.0);
