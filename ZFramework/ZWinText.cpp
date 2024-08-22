@@ -22,7 +22,7 @@ bool ZWinLabel::OnMouseDownL(int64_t x, int64_t y)
 {
     if (mBehavior & CloseOnClick)
     {
-        gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
+        gMessageSystem.Post(ZMessage("kill_child", GetTopWindow(), "name", GetTargetName()));
     }
 
     return ZWin::OnMouseDownL(x, y);
@@ -66,7 +66,7 @@ bool ZWinLabel::Process()
         {
             SetVisible(false);
             mBehavior = None;   // no further actions
-            gMessageSystem.Post("kill_child", GetTopWindow(), "name", GetTargetName());
+            gMessageSystem.Post(ZMessage("kill_child", GetTopWindow(), "name", GetTargetName()));
         }
     }
 
@@ -105,7 +105,7 @@ bool ZWinLabel::Paint()
     if (!msText.empty())
     {
         if (mStyle.pos == ZGUI::Fit)
-            mStyle.fp.fScale = ZFontParams::Scale(mAreaLocal.Height() / 2);
+            mStyle.fp.nScalePoints = ZFontParams::ScalePoints(mAreaLocal.Height() / 2);
 
         if (mStyle.wrap)
         {

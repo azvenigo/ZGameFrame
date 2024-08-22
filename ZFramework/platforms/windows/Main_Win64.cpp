@@ -109,6 +109,51 @@ int processFolder(const fs::path& folderPath)
 int main(int argc, char* argv[])
 {
 
+//#define TEST_MESSAGE_POSTING
+#ifdef TEST_MESSAGE_POSTING
+
+
+    uint64_t nStart = gTimer.GetUSSinceEpoch();
+    const int kIters = 1 * 1000 * 1000;
+
+
+    int64_t count = 0;
+
+    for (int i = 0; i < kIters; i++)
+    {
+        gMessageSystem.Post(ZMessage("cursor_msg", &appMessageHandler, "subtype", "move", "x", i, "y", i));
+
+        count++;
+
+/*        ZMessage cursorMessage;
+        cursorMessage.SetType("cursor_msg");
+        cursorMessage.SetParam("subtype", "move");
+        cursorMessage.SetParam("x", SH::FromInt(i));
+        cursorMessage.SetParam("y", SH::FromInt(i));
+        cursorMessage.SetTarget("blah");
+
+        gMessageSystem.Post(cursorMessage);*/
+
+        
+
+
+
+
+    }
+
+    uint64_t nEnd = gTimer.GetUSSinceEpoch();
+
+    uint64_t nDelta = nEnd - nStart;
+
+
+    cout << "messages: " << count << " time:" << nDelta << "\n";
+
+    int stophere = 5;
+
+#endif
+
+
+
 
     // Enable exception handling
     SetUnhandledExceptionFilter([](PEXCEPTION_POINTERS exceptionInfo) -> LONG {
@@ -636,7 +681,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         else if (wParam == VK_OEM_3)    // ~
         {
-            gMessageSystem.Post("{toggleconsole}");
+            gMessageSystem.Post(ZMessage("toggleconsole"));
         }
         else if (wParam == 'f' || wParam == 'F')
         {
@@ -700,19 +745,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //            gpMainWin->InvalidateChildren();
         gbPaused = false;
         gTimer.Start();
-        gMessageSystem.Post("pause", "set", "0");
+        gMessageSystem.Post(ZMessage("pause", "set", "0"));
     }
 		break;
 	case WM_ACTIVATE:
 		if (LOWORD(wParam) == WA_INACTIVE)
 		{
-			gMessageSystem.Post("pause", "set", "1");
+			gMessageSystem.Post(ZMessage("pause", "set", "1"));
             gbPaused = true;
 			gTimer.Stop();
 		}
 		else
 		{
-            gMessageSystem.Post("pause", "set", "0");
+            gMessageSystem.Post(ZMessage("pause", "set", "0"));
             gbPaused = false;
 			gTimer.Start();
 		}

@@ -43,11 +43,11 @@ public:
     ZFontParams();
     ZFontParams(const ZFontParams& rhs);
 
-    ZFontParams(const std::string name, float _fScale, int64_t weight = 200, int64_t tracking = 0, int64_t fixed = 0, bool italic = false, bool symbolic = false)
+    ZFontParams(const std::string name, int64_t _scalePoints, int64_t weight = 200, int64_t tracking = 0, int64_t fixed = 0, bool italic = false, bool symbolic = false)
     {
-        assert(_fScale > 0 && _fScale < 10.0);
+        assert(_scalePoints > 0 && _scalePoints < 10000.0);
         sFacename = name;
-        fScale = _fScale;
+        nScalePoints = _scalePoints;
         nWeight = weight;
         nTracking = tracking;
         nFixedWidth = fixed;
@@ -59,7 +59,7 @@ public:
     {
         nlohmann::json j = nlohmann::json::parse(sJSON);
         sFacename = j["n"];
-        fScale = j["fs"];
+        nScalePoints = j["fs"];
         nWeight = j["w"];
         nTracking = j["t"];
         nFixedWidth = j["f"];
@@ -80,7 +80,7 @@ public:
     {
         nlohmann::json j;
         j["n"] = sFacename.c_str();
-        j["fs"] = fScale;
+        j["fs"] = nScalePoints;
         j["w"] = nWeight;
         j["t"] = nTracking;
         j["f"] = nFixedWidth;
@@ -96,14 +96,14 @@ public:
 
     int64_t Height() const 
     { 
-        assert(fScale > 0 && fScale < 100.0);
-        return (int64_t)(fScale * (float)gM);
+        assert(nScalePoints > 0 && nScalePoints < 100000.0);
+        return (nScalePoints * gM)/1000;
     }
 
-    static float Scale(int64_t h) 
+    static int64_t ScalePoints(int64_t h)
     { 
-        float scale = truncate<float>(((float)h / (float)gM), 3);
-        assert(scale > 0 && scale < 100.0);
+        int64_t scale = (h * 1000) / gM;
+        assert(scale > 0 && scale < 100000.0);
         return scale;
     }
 
@@ -115,9 +115,9 @@ public:
         else if (nNameCompare > 0)
             return false;
 
-        if (fScale < rhs.fScale)
+        if (nScalePoints < rhs.nScalePoints)
             return true;
-        else if (fScale > rhs.fScale)
+        else if (nScalePoints > rhs.nScalePoints)
             return false;
 
 
@@ -129,7 +129,7 @@ public:
         return false;
     }
 
-    float  fScale; // scaled height by ZGUI::gM    measure
+    int64_t nScalePoints; // scaled height by ZGUI::gM    measure is scaled int 
     int64_t nWeight;
     int64_t nTracking;
     int64_t nFixedWidth;
@@ -210,7 +210,8 @@ extern std::vector<std::string> gWindowsFontFacenames;
 inline bool operator==(const ZFontParams& lhs, const ZFontParams& rhs)
 {
     bool bEqual = 
-        lhs.fScale              == rhs.fScale &&
+//        lhs.nScalePoints        == rhs.nScalePoints &&
+        lhs.Height()            == rhs.Height() &&
         lhs.nWeight             == rhs.nWeight &&
         lhs.nTracking           == rhs.nTracking &&
         lhs.bItalic             == rhs.bItalic &&

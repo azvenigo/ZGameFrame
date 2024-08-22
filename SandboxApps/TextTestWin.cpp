@@ -117,7 +117,7 @@ bool TextTestWin::Init()
 #ifdef _WIN64
     mnSelectedFontIndex = (int32_t) (RANDU64( 0, gWindowsFontFacenames.size() ));
 
-    mCustomFontParams.fScale = 1.5;
+    mCustomFontParams.nScalePoints = 1500;
     mCustomFontParams.nWeight = 200;
     mCustomFontParams.sFacename = gWindowsFontFacenames[mnSelectedFontIndex];
 
@@ -188,7 +188,7 @@ bool TextTestWin::Init()
 
     ZGUI::ZTextLook captionLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
 
-    pCP->Button("choosecolor", "Color", ZMessage("{choosecolor}", this));
+    pCP->Button("choosecolor", "Color", ZMessage("choosecolor", this));
 
     pCP->Caption("heightlabel", "Height");
 
@@ -338,7 +338,7 @@ void TextTestWin::UpdateFontByParams()
 {
 #ifdef _WIN64
     ZDynamicFont* pNewFont = new ZDynamicFont();
-    mCustomFontParams.fScale = ZFontParams::Scale(mCustomFontHeight);
+    mCustomFontParams.nScalePoints = ZFontParams::ScalePoints(mCustomFontHeight);
     pNewFont->Init(mCustomFontParams);
 
     if (mCustomFontParams.nFixedWidth > 0)

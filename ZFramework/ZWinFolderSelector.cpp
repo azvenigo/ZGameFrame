@@ -108,7 +108,7 @@ bool ZWinFolderLabel::OnMouseOut()
 bool ZWinFolderLabel::OnMouseDownL(int64_t x, int64_t y)
 {
     if ((mBehavior&kSelectable)!=0)
-        gMessageSystem.Post("scan", this, "folder", mMouseOverSubpath.string());
+        gMessageSystem.Post(ZMessage("scan", this, "folder", mMouseOverSubpath.string()));
 
     return ZWin::OnMouseDownL(x, y);
 }
@@ -247,7 +247,7 @@ bool ZWinFolderSelector::Init()
 
         mpOpenFolderBtn = new ZWinBtn();
         mpOpenFolderBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
-        mpOpenFolderBtn->msButtonMessage = ZMessage("{openfolder}", this);
+        mpOpenFolderBtn->msButtonMessage = ZMessage("openfolder", this);
         mpOpenFolderBtn->msTooltip = "Open Folder";
         ChildAdd(mpOpenFolderBtn);
         int64_t nSide = gM;
@@ -280,7 +280,7 @@ bool ZWinFolderSelector::Paint()
 
 bool ZWinFolderSelector::OnMouseDownL(int64_t x, int64_t y)
 {
-    gMessageSystem.Post("kill_child", "name", msWinName);
+    gMessageSystem.Post(ZMessage("kill_child", "name", msWinName));
     return ZWin::OnMouseDownL(x, y);
 }
 

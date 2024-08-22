@@ -123,7 +123,7 @@ void ZWinCheck::SetState(bool bChecked, bool bPostNotifications)
         if (bChecked && !msRadioGroup.empty())
         {
             // If we're part of a radio group and we're being checked, send out a message to uncheck all others in the group
-            gMessageSystem.Post("radio_check", "group", msRadioGroup, "checked", msWinName);
+            gMessageSystem.Post(ZMessage("radio_check", "group", msRadioGroup, "checked", msWinName));
         }
     }
 
@@ -156,7 +156,7 @@ ZWinBtn::ZWinBtn()
 	mpDownEdgeImage     = NULL;
 	mDrawState          = kUp;
     mbEnabled           = true;
-	msButtonMessage     = "{btn_pressed}";
+	msButtonMessage     = ZMessage("btn_pressed");
     mBtnStyle           = gStyleButton;
     mCaption.style      = gStyleCaption;
     mSVGImage.style     = gStyleCaption;

@@ -438,7 +438,7 @@ bool ZWinPanel::HandleMessage(const ZMessage& message)
     {
         if (mpParentWin)
             mpParentWin->SetFocus();
-        gMessageSystem.Post("kill_child", "name", msWinName);
+        gMessageSystem.Post(ZMessage("kill_child", "name", msWinName));
         return true;
     }
 

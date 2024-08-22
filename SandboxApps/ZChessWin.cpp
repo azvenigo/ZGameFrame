@@ -46,7 +46,7 @@ bool ZChoosePGNWin::Init()
     ZWinTextEdit* pEdit = new ZWinTextEdit(&msFilter);
     pEdit->SetArea(rControl);
     pEdit->mStyle = gDefaultWinTextEditStyle;
-    pEdit->mStyle.fp.fScale = 1.0;
+    pEdit->mStyle.fp.nScalePoints = 1000;
     pEdit->mStyle.pos = ZGUI::LC;
     ChildAdd(pEdit);
     pEdit->SetFocus();
@@ -59,7 +59,7 @@ bool ZChoosePGNWin::Init()
 
 
     ZGUI::Style btnStyle(gStyleButton);
-    btnStyle.fp.fScale = 0.5;
+    btnStyle.fp.nScalePoints = 500;
 
 
     pBtn = new ZWinBtn();
@@ -67,7 +67,7 @@ bool ZChoosePGNWin::Init()
     pBtn->mCaption.style = btnStyle;
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
-    pBtn->msButtonMessage = ZMessage("{randgame}", this);
+    pBtn->msButtonMessage = ZMessage("randgame", this);
     ChildAdd(pBtn);
 
 
@@ -80,7 +80,7 @@ bool ZChoosePGNWin::Init()
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
-    pBtn->msButtonMessage = ZMessage("{cancelpgnselect}", mpParentWin);
+    pBtn->msButtonMessage = ZMessage("cancelpgnselect", mpParentWin);
     ChildAdd(pBtn);
 
     ZRect rListbox(gSpacer, gSpacer + rControl.bottom, mAreaLocal.Width() - gSpacer, rButton.top - gSpacer);
@@ -208,13 +208,13 @@ void ZChoosePGNWin::RefreshList()
     mpGamesList->Clear();
 
     ZFontParams fp = gDefaultTextFont;
-    fp.fScale = 0.5;
+    fp.nScalePoints = 500;
 
     size_t nCount = 0;
     for (auto entry : mPGNEntries)
     {
         //string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(gDefaultTextFont) + " position=lb link={selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
-        string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(fp) + " position=lb link={selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + ">" + entry.first + "</text></line>";
+        string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(fp) + " position=lb link={selectpgn;index=" + SH::FromInt(nCount) + ";target=" + GetTargetName() + "}>" + entry.first + "</text></line>";
         nCount++;
 
         if ( msFilter.empty() ||  SH::Contains(entry.first, msFilter, false) || SH::Contains(entry.second, msFilter, false)) // if empty filter or either caption or pgn contents include filter text (case insensitive)
@@ -240,11 +240,11 @@ ZPGNWin::ZPGNWin()
 bool ZPGNWin::Init()
 {
     mMoveFont.sFacename = "Verdana";
-    mMoveFont.fScale = 1.2f;
+    mMoveFont.nScalePoints = 1200;
     mMoveFont.nWeight = 200;
 
     mTagsFont.sFacename = "Verdana";
-    mTagsFont.fScale = 0.6f;
+    mTagsFont.nScalePoints = 600;
 
     mBoldFont = mMoveFont;
     mBoldFont.nWeight = 800;
@@ -263,8 +263,8 @@ bool ZPGNWin::Init()
 
     ZWinBtn* pBtn;
 
-    ZGUI::Style wd = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.fScale, 200, 0, 0, false, true), {}, ZGUI::C);
-    ZGUI::Style wd3 = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.fScale, 200, 0, 0, false, true), {}, ZGUI::C);
+    ZGUI::Style wd = ZGUI::Style(ZFontParams("Wingdings", gStyleButton.fp.nScalePoints, 200, 0, 0, false, true), {}, ZGUI::C);
+    ZGUI::Style wd3 = ZGUI::Style(ZFontParams("Wingdings 3", gStyleButton.fp.nScalePoints, 200, 0, 0, false, true), {}, ZGUI::C);
 
     size_t nButtonSlots = 10;
     size_t nButtonSize = (mAreaLocal.Width() - gSpacer *2) / nButtonSlots;
@@ -276,7 +276,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.sText = ")"; // wingdings 3 to the beggining
     pBtn->mCaption.style = wd3;
     pBtn->SetArea(rButton);
-    pBtn->msButtonMessage = ZMessage("{beginning}", this);
+    pBtn->msButtonMessage = ZMessage("beginning", this);
     ChildAdd(pBtn);
 
     pBtn = new ZWinBtn();
@@ -284,7 +284,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->msButtonMessage = ZMessage("{backone}", this);
+    pBtn->msButtonMessage = ZMessage("backone", this);
     ChildAdd(pBtn);
 
     pBtn = new ZWinBtn();
@@ -292,7 +292,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->msButtonMessage = ZMessage("{forwardone}", this);
+    pBtn->msButtonMessage = ZMessage("forwardone", this);
     ChildAdd(pBtn);
 
     pBtn = new ZWinBtn();
@@ -300,7 +300,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd3;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->msButtonMessage = ZMessage("{end}", this);
+    pBtn->msButtonMessage = ZMessage("end", this);
     ChildAdd(pBtn);
 
     pBtn = new ZWinBtn();
@@ -308,7 +308,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width() * 2, 0);
     pBtn->SetArea(rButton);
-    pBtn->msButtonMessage = ZMessage("{chessdb}", mpParentWin);
+    pBtn->msButtonMessage = ZMessage("chessdb", mpParentWin);
     ChildAdd(pBtn);
 
 
@@ -317,7 +317,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width() *2, 0);
     pBtn->SetArea(rButton);
-    pBtn->msButtonMessage = ZMessage("{loadgame}", mpParentWin);
+    pBtn->msButtonMessage = ZMessage("loadgame", mpParentWin);
     ChildAdd(pBtn);
 
 
@@ -326,7 +326,7 @@ bool ZPGNWin::Init()
     pBtn->mCaption.style = wd;
     rButton.OffsetRect(rButton.Width(), 0);
     pBtn->SetArea(rButton);
-    pBtn->msButtonMessage = ZMessage("{savegame}", mpParentWin);
+    pBtn->msButtonMessage = ZMessage("savegame", mpParentWin);
     ChildAdd(pBtn);
 
     ZRect rMoves(rGameTags.left, rGameTags.bottom + gSpacer, rGameTags.right, rButton.top - gSpacer * 2);
@@ -449,7 +449,7 @@ void ZPGNWin::UpdateView()
                 sMoveLine += "<text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff000000 color2=0xff000000 position=rb link={setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove) + "}>" + move.blackAction + "</text></line>";
 
                 if (!move.whiteComment.empty())
-                    gMessageSystem.Post("{statusmessage}", mpParentWin, "message", SH::FromInt(nMove) + ". [" + move.whiteAction + "] " + move.whiteComment, "col", 0xff0066aa);
+                    gMessageSystem.Post(ZMessage("statusmessage", mpParentWin, "message", SH::FromInt(nMove) + ". [" + move.whiteAction + "] " + move.whiteComment, "col", 0xff0066aa));
 
             }
             else
@@ -459,7 +459,7 @@ void ZPGNWin::UpdateView()
                 sMoveLine += "<text fontparams=" + SH::URL_Encode(mBoldFont) + " color=0xff0088ff color2=0xff0088ff position=rb link={setmove;target=pgnwin;halfmove=" + SH::FromInt(nHalfMove) + "}>[" + move.blackAction + "]</text></line>";
 
                 if (!move.blackComment.empty())
-                    gMessageSystem.Post("{statusmessage}", mpParentWin, "message", SH::FromInt(nMove) + "... [" + move.blackAction + "] " + move.blackComment, "col", 0xff0066aa);
+                    gMessageSystem.Post(ZMessage("statusmessage", mpParentWin, "message", SH::FromInt(nMove) + "... [" + move.blackAction + "] " + move.blackComment, "col", 0xff0066aa));
 
             }
             mpMovesWin->AddLineNode(sMoveLine);
@@ -491,7 +491,7 @@ bool ZPGNWin::SetHalfMove(int64_t nHalfMove)
 //        string sMessage;
 //        Sprintf(sMessage, "sethistoryindex;target=chesswin;halfmove=%d", mCurrentHalfMoveNumber);
 //        gMessageSystem.Post(sMessage);
-        gMessageSystem.Post("{sethistoryindex}", mpParentWin, "halfmove", mCurrentHalfMoveNumber);
+        gMessageSystem.Post(ZMessage("sethistoryindex", mpParentWin, "halfmove", mCurrentHalfMoveNumber));
 
         UpdateView();
         return true;
@@ -613,14 +613,14 @@ bool ZChessWin::Init()
         ZWinControlPanel* pCP = new ZWinControlPanel();
         pCP->SetArea(rControlPanel);
 
-        string invalidateMsg(ZMessage("{invalidate}", this));
+        string invalidateMsg(ZMessage("invalidate", this));
 
         pCP->Init();
 
         ZGUI::ZTextLook buttonLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
         ZGUI::ZTextLook checkedButtonLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff73ff73);
 
-        ZWin* pEditButton = pCP->Toggle("editmode", &mbEditMode, "Edit Mode", ZMessage("{toggleeditmode}", this), ZMessage("{toggleeditmode}", this));
+        ZWin* pEditButton = pCP->Toggle("editmode", &mbEditMode, "Edit Mode", ZMessage("toggleeditmode", this), ZMessage("toggleeditmode", this));
 
 
         pCP->AddSpace(panelH / 30);
@@ -642,18 +642,18 @@ bool ZChessWin::Init()
 
         mpEditBoardWin->AddSpace(panelH / 30);
 
-        mpEditBoardWin->Button("clearboard", "Clear", ZMessage("{clearboard}", this));
-        mpEditBoardWin->Button("resetboard", "Reset", ZMessage("{resetboard}", this));
+        mpEditBoardWin->Button("clearboard", "Clear", ZMessage("clearboard", this));
+        mpEditBoardWin->Button("resetboard", "Reset", ZMessage("resetboard", this));
 
         mpEditBoardWin->AddSpace(panelH / 30);
-        mpEditBoardWin->Button("changeturn", "Change Turn", ZMessage("{changeturn}", this));
+        mpEditBoardWin->Button("changeturn", "Change Turn", ZMessage("changeturn", this));
 
         mpEditBoardWin->AddSpace(panelH / 30);
-        mpEditBoardWin->Button("showpalette", "Colors", ZMessage("{showpalette}", this));
+        mpEditBoardWin->Button("showpalette", "Colors", ZMessage("showpalette", this));
 
         mpEditBoardWin->AddSpace(panelH / 30);
         mpEditBoardWin->Caption("size", "Size");
-        mpEditBoardWin->Slider("pieceheight", &mnPieceHeight, 1, 26, 10, 0.2, ZMessage("{updatesize}", this), true, false);
+        mpEditBoardWin->Slider("pieceheight", &mnPieceHeight, 1, 26, 10, 0.2, ZMessage("updatesize", this), true, false);
 
         ChildAdd(mpEditBoardWin, false);
 
@@ -672,7 +672,7 @@ bool ZChessWin::Init()
         mpStatusWin = new ZWinTextEdit(&msStatus);
         //mpStatusWin->msText = "Welcome to ZChess";
         msStatus = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::Scale(mAreaLocal.Height()/28), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, false);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::ScalePoints(mAreaLocal.Height()/28), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, false);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, (int32_t)gSpacer, (int32_t)gSpacer));
         ChildAdd(mpStatusWin);
     }
@@ -694,7 +694,7 @@ void ZChessWin::UpdateSize()
     if (mpSymbolicFont)
         delete mpSymbolicFont;
     mpSymbolicFont = new ZDynamicFont();
-    mpSymbolicFont->Init(ZFontParams("MS Gothic", ZFontParams::Scale(mnPieceHeight), 400, mnPieceHeight / 4, true), false, false);
+    mpSymbolicFont->Init(ZFontParams("MS Gothic", ZFontParams::ScalePoints(mnPieceHeight), 400, mnPieceHeight / 4, true), false, false);
     mpSymbolicFont->GenerateSymbolicGlyph('K', 9812);
     mpSymbolicFont->GenerateSymbolicGlyph('Q', 9813);
     mpSymbolicFont->GenerateSymbolicGlyph('R', 9814);
@@ -738,7 +738,7 @@ void ZChessWin::UpdateSize()
     {
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, (int32_t)gSpacer, (int32_t)gSpacer));
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::Scale(mnPieceHeight / 2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::ScalePoints(mnPieceHeight / 2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, true);
     }
 
 
@@ -925,7 +925,7 @@ bool ZChessWin::Process()
             {
                 ZDEBUG_OUT("Setting halfmove:", mBoard.GetHalfMoveNumber() + 1);
                 mnDemoModeNextMoveTimeStamp = gTimer.GetUSSinceEpoch() + ((kAutoplayMaxMSBetweenMoves-mAutoplayMSBetweenMoves)*1000);
-                gMessageSystem.Post("{sethistoryindex}", this, "halfmove", mBoard.GetHalfMoveNumber());
+                gMessageSystem.Post(ZMessage("sethistoryindex", this, "halfmove", mBoard.GetHalfMoveNumber()));
             }
         }
     }
@@ -1156,7 +1156,7 @@ void ZChessWin::UpdateStatus(const std::string& sText, uint32_t col)
     {
         //mpStatusWin->msText = sText;
         msStatus = sText;
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::Scale(mnPieceHeight/2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, 0, 0, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::ScalePoints(mnPieceHeight/2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, 0, 0, gDefaultTextAreaFill, true);
         mpStatusWin->Invalidate();
     }
 }
@@ -1215,7 +1215,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "showpalette")
     {
-        ZWinPaletteDialog::ShowPaletteDialog("Board Colors", &mPalette.mColorMap, ZMessage("{palette_ok}", this), 2);
+        ZWinPaletteDialog::ShowPaletteDialog("Board Colors", &mPalette.mColorMap, ZMessage("palette_ok", this), 2);
         return true;
     }
     else if (sType == "palette_ok")
@@ -1361,7 +1361,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
 
                 pImage = new ZAnimObject_TransformingImage(mPieceData[mBoard.Piece(move.mDest)].mpImage);
                 pImage->StartTransformation(ZTransformation(ZPoint(rSrcSquareArea.left, rSrcSquareArea.top)));
-                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, ZMessage("{hidesquare;x=-1;y=-1}", this)), nTransformTime);
+                pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top), 1.0, 0.0, 255, ZMessage("hidesquare", this, "x", -1, "y", -1)), nTransformTime);
                 pImage->AddTransformation(ZTransformation(ZPoint(rDstSquareArea.left, rDstSquareArea.top)), 33);    // 33ms to at least cover 30fps
                 pImage->SetDestination(mpSurface);
                 mHiddenSquare = move.mDest;
@@ -1369,6 +1369,7 @@ bool ZChessWin::HandleMessage(const ZMessage& message)
             }
 
             InvalidateChildren();
+            return true;
         }
         else
         {
@@ -1679,7 +1680,7 @@ bool ZPiecePromotionWin::OnMouseDownL(int64_t x, int64_t y)
     int64_t nPiece = x/nPieceWidth;
     if (!mDest.y == 0) // promotion on 0 rank is by black
         nPiece += 4;
-    gMessageSystem.Post("{promote}", mpParentWin, "piece", mPromotionPieces[nPiece], "x", mDest.x, "y", mDest.y);
+    gMessageSystem.Post(ZMessage("promote", mpParentWin, "piece", mPromotionPieces[nPiece], "x", mDest.x, "y", mDest.y));
     return true;
 }
 

@@ -73,7 +73,7 @@ namespace ZGUI
         Style(const std::string& s);
 
         tZFontPtr Font();
-        bool Uninitialized() { return fp.sFacename.empty() || fp.fScale == 0; }
+        bool Uninitialized() { return fp.sFacename.empty() || fp.nScalePoints == 0; }
 
         operator std::string() const;
         void operator = (const Style& rhs);

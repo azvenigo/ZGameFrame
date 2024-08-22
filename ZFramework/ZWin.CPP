@@ -945,6 +945,7 @@ bool ZWin::HandleMessage(const ZMessage& message)
     }
     else if (sType == "kill_child")
 	{
+        ZDEBUG_OUT("Killing child:", message.GetParam("name"));
         ChildDelete(GetChildWindowByWinName(message.GetParam("name")));
 		return true;
 	}
@@ -1172,7 +1173,7 @@ bool ZWinDialog::Init()
         ZWinBtn* pBtn(new ZWinBtn());
         pBtn->mCaption.sText = "Cancel";
         pBtn->mCaption.style = gStyleButton;
-        pBtn->msButtonMessage = ZMessage("{dlg_cancel}", this);
+        pBtn->msButtonMessage = ZMessage("dlg_cancel", this);
 //        pBtn->SetArea(rButton);
         ChildAdd(pBtn);
         arrangeList.push_back(pBtn);
@@ -1183,7 +1184,7 @@ bool ZWinDialog::Init()
     if (mBehavior & eBehavior::OKButton)
     {
         ZWinBtn* pBtn(new ZWinBtn());
-        pBtn->msButtonMessage = ZMessage("{dlg_ok}", this);
+        pBtn->msButtonMessage = ZMessage("dlg_ok", this);
         pBtn->mCaption.sText = "OK";
         pBtn->mCaption.style = gStyleButton;
         arrangeList.push_back(pBtn);
@@ -1327,7 +1328,7 @@ void ZWinDialog::OnOK()
         mpParentWin->SetFocus();
     // post close
 
-    gMessageSystem.Post("kill_child", "name", msWinName);
+    gMessageSystem.Post(ZMessage("kill_child", "name", msWinName));
 
 }
 
@@ -1335,5 +1336,5 @@ void ZWinDialog::OnCancel()
 {
     if (mpParentWin)
         mpParentWin->SetFocus();
-    gMessageSystem.Post("kill_child", "name", msWinName);
+    gMessageSystem.Post(ZMessage("kill_child", "name", msWinName));
 }
