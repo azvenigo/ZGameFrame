@@ -95,7 +95,7 @@ void ZInput::OnRButtonDown(int64_t x, int64_t y)
 
 void ZInput::OnMouseMove(int64_t x, int64_t y)
 {
-    ZDEBUG_OUT("mouse move:", x, y, "\n");
+    //ZDEBUG_OUT("mouse move:", x, y, "\n");
 
     if (lastMouseMove != ZPoint(x,y))
     {

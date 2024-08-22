@@ -6,6 +6,7 @@
 #include <set>
 #include <mutex>
 #include <assert.h>
+#include <iostream>
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,47 +53,84 @@ public:
 
 
 
-
-
-
-
-
-
-    template <typename T, typename...Types>
-    ZMessage(std::string type, std::string key, T val, Types...more)
-    {
-        mType = type;
-        ToMessage(key, val, more...);
-    }
-
-    ZMessage(std::string type, class IMessageTarget* pTarget)
-    {
-        mType = type;
-        assert(pTarget);
-        mTarget = pTarget->GetTargetName();
-    }
-
-
-    template <typename T, typename...Types>
-    ZMessage(std::string type, class IMessageTarget* pTarget, std::string key, T val, Types...more)
-    {
-        mType = type;
-        assert(pTarget);
-        mTarget = pTarget->GetTargetName();
-        ToMessage(key, val, more...);
-    }
-
-
-
-    template <typename S, typename...SMore>
-    inline void ToMessage(std::string key, S val, SMore...moreargs)
+    // Fallback converter (slower than specialized below)
+    template <typename T>
+    std::string ConvertToString(const T& val) 
     {
         std::stringstream ss;
         ss << val;
+        return ss.str();
+    }
+  
+    template <>
+    std::string ConvertToString<int64_t>(const int64_t& val) {
+        return std::to_string(val);
+    }
+    template <>
+    std::string ConvertToString<uint64_t>(const uint64_t& val) {
+        return std::to_string(val);
+    }
+    template <>
+    std::string ConvertToString<int32_t>(const int32_t& val) {
+        return std::to_string(val);
+    }
+    template <>
+    std::string ConvertToString<uint32_t>(const uint32_t& val) {
+        return std::to_string(val);
+    }
+    template <>
+    std::string ConvertToString<float>(const float& val) {
+        return std::to_string(val);
+    }
+    template <>
+    std::string ConvertToString<double>(const double& val) {
+        return std::to_string(val);
+    }
+    template <>
+    std::string ConvertToString<std::string>(const std::string& val) {
+        return val;
+    }
+    template <>
+    std::string ConvertToString<const char*>(const char* const& val) {
+        return std::string(val);
+    }
+
+    
+
+
+
+    template <typename T, typename...Types>
+    ZMessage(const std::string& type, const std::string& key, T val, Types...more)
+    {
+        mType = type;
+        ToMessage(key, val, more...);
+    }
+
+    ZMessage(const std::string& type, class IMessageTarget* pTarget)
+    {
+        mType = type;
+        assert(pTarget);
+        mTarget = pTarget->GetTargetName();
+    }
+
+
+    template <typename T, typename...Types>
+    ZMessage(const std::string& type, class IMessageTarget* pTarget, std::string key, T val, Types...more)
+    {
+        mType = type;
+        assert(pTarget);
+        mTarget = pTarget->GetTargetName();
+        ToMessage(key, val, more...);
+    }
+
+    template <typename S, typename...SMore>
+    inline void ToMessage(const std::string& key, S val, SMore...moreargs)
+    {
         if (key == "target")
-            mTarget = ss.str();
+            mTarget = val;
         else
-            mKeyValueMap[key] = ss.str();
+            mKeyValueMap[key] = ConvertToString(val);
+
         return ToMessage(moreargs...);
     }
 

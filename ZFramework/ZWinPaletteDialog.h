@@ -45,8 +45,6 @@ public:
 
     bool        HandleMessage(const ZMessage& message);
 
-    ZGUI::Style mStyle;
-
     static ZWinPaletteDialog* ShowPaletteDialog(std::string sCaption, ZGUI::tColorMap* pColorMap, std::string sOnOKMeessage = "", size_t nRecentColors = 0);
 
 protected:

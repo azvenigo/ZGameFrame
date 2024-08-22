@@ -5,6 +5,7 @@
 #include <string>
 #include <limits>
 #include <vector>
+#include <cmath>
 
 // Helper template to ensure value is bounded between min and max
 template <class T>
@@ -17,11 +18,10 @@ void limit(T& val, T min, T max)
 };
 
 template <typename T>
-T truncate(T number, int decimalPlaces) 
+T round_to_decimals(T number, int decimalPlaces)
 {
-    T multiplier = (T)pow(10, decimalPlaces);
-    T numberfloor = floorf(number * multiplier);
-    return numberfloor / multiplier;
+    T multiplier = static_cast<T>(pow(10, decimalPlaces));
+    return std::round(number * multiplier) / multiplier;
 }
 
 template <class T>

@@ -21,9 +21,6 @@ ZWinPaletteDialog::ZWinPaletteDialog()
     mbTransformable = true;
     mbAcceptsFocus = true;
     mpRGBEdit = nullptr;
-
-    if (msWinName.empty())
-        msWinName = "ZWinPaletteDialog_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
 bool ZWinPaletteDialog::Init()
@@ -251,6 +248,8 @@ void ZWinPaletteDialog::OnCancel()
 
     *mpColorMap = mOriginalColorMap;
 
+    ZDEBUG_OUT("palette dialog on cancel\n");
+
     ZWinDialog::OnCancel();
 }
 
@@ -413,7 +412,7 @@ void ZWinPaletteDialog::ComputeAreas()
         rEdit = ZGUI::Arrange(rEdit, mrSVArea, ZGUI::ILOB, 0, gM);
         mpRGBEdit->SetArea(rEdit);
         mpRGBEdit->mnCharacterLimit = 8;
-        mpRGBEdit->msOnChangeMessage = ZMessage("{rgb_edit}", this);
+        mpRGBEdit->msOnChangeMessage = ZMessage("rgb_edit", this);
     }
 
     ZWin::ComputeAreas();
@@ -437,9 +436,23 @@ bool ZWinPaletteDialog::HandleMessage(const ZMessage& message)
 
 ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, ZGUI::tColorMap* pColorMap, std::string sOnOKMeessage, size_t nRecentColors)
 {
-    assert(pColorMap);
+    ZDEBUG_OUT_LOCKLESS("ShowPalette Called\n");
 
-    ZWinPaletteDialog* pDialog = new ZWinPaletteDialog();
+    assert(pColorMap);
+    ZWinPaletteDialog* pDialog = (ZWinPaletteDialog*)gpMainWin->GetChildWindowByWinName(kPaletteDialogName);
+       
+    if (pDialog)
+    {
+        ZRect rMain(gpMainWin->GetArea());
+
+        ZRect r(rMain.Width() / 3, (int64_t)(rMain.Width() / 4.5));
+        r = ZGUI::Arrange(r, rMain, ZGUI::C);
+        pDialog->SetArea(r);
+        pDialog->SetVisible();
+        return pDialog;
+    }
+        
+    pDialog = new ZWinPaletteDialog();
 
     ZRect rMain(gpMainWin->GetArea());
 
@@ -449,6 +462,8 @@ ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, ZG
     pDialog->mBehavior |= ZWinDialog::eBehavior::Draggable | ZWinDialog::eBehavior::OKButton | ZWinDialog::eBehavior::CancelButton;
     pDialog->mStyle = gDefaultDialogStyle;
     pDialog->mStyle.fp = gStyleButton.fp;
+    pDialog->mStyle.paddingV = gSpacer;
+    pDialog->mStyle.paddingH = gSpacer;
 
     pDialog->mpColorMap = pColorMap;
     pDialog->mOriginalColorMap = *pColorMap;
@@ -456,8 +471,8 @@ ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, ZG
     pDialog->SetArea(r);
     pDialog->msOnOKMessage = sOnOKMeessage;
     pDialog->msCaption = sCaption;
-    pDialog->mTransformIn = ZWin::kSlideDown;
+    //pDialog->mTransformIn = ZWin::kSlideDown;
 
-    gpMainWin->ChildAdd(pDialog, false);
+    gpMainWin->ChildAdd(pDialog);
     return pDialog;
 }

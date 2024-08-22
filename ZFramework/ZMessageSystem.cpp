@@ -57,56 +57,64 @@ void ZMessage::SetParam(const string& sKey, const string& sVal)
 
 void ZMessage::FromString(const string& sMessage)
 {
-    assert(!sMessage.empty() && sMessage[0] == '{' && sMessage[sMessage.length() - 1] == '}');
-
     mKeyValueMap.clear();
 
-    string sParse(sMessage.substr(1, sMessage.length() - 2));  // strip curlies
-
-    SH::SplitToken(mType, sParse, ";");  // first element
-    assert(mType[0] != '{');
-
-    bool bDone = false;
-    while (!bDone)
+    if (sMessage[0] == '{')
     {
-        string sPair;
-        SH::SplitToken(sPair, sParse, ";");
-        if (!sPair.empty())
+        assert(sMessage[sMessage.length() - 1] == '}');
+        string sParse(sMessage.substr(1, sMessage.length() - 2));  // strip curlies
+
+        SH::SplitToken(mType, sParse, ";");  // first element
+        assert(mType[0] != '{');
+
+        bool bDone = false;
+        while (!bDone)
+        {
+            string sPair;
+            SH::SplitToken(sPair, sParse, ";");
+            if (!sPair.empty())
+            {
+                string sKey;
+                SH::SplitToken(sKey, sPair, "=");
+                ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
+                ZASSERT_MESSAGE(!sPair.empty(), "Value is empty!");
+                if (sKey == "target")
+                    mTarget = sPair;
+                else if (sKey == "type")
+                {
+                    mType = sPair;
+                    assert(mType[0] != '{');
+                }
+                else
+                    mKeyValueMap[sKey] = SH::URL_Decode(sPair);  // sParse now contains the value;
+            }
+            else
+                bDone = true;
+        }
+
+        // Last key value pair
+        if (!sParse.empty())
         {
             string sKey;
-            SH::SplitToken(sKey, sPair, "=");
+            SH::SplitToken(sKey, sParse, "=");
             ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
-            ZASSERT_MESSAGE(!sPair.empty(), "Value is empty!");
+            ZASSERT_MESSAGE(!sParse.empty(), "Value is empty!");
             if (sKey == "target")
-                mTarget = sPair;
+                mTarget = sParse;
             else if (sKey == "type")
             {
-                mType = sPair;
+                mType = sParse;
                 assert(mType[0] != '{');
             }
             else
-                mKeyValueMap[sKey] = SH::URL_Decode(sPair);  // sParse now contains the value;
+                mKeyValueMap[sKey] = SH::URL_Decode(sParse);  // sParse now contains the value;
         }
-        else
-            bDone = true;
     }
-
-    // Last key value pair
-    if (!sParse.empty())
+    else
     {
-        string sKey;
-        SH::SplitToken(sKey, sParse, "=");
-        ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
-        ZASSERT_MESSAGE(!sParse.empty(), "Value is empty!");
-        if (sKey == "target")
-            mTarget = sParse;
-        else if (sKey == "type")
-        {
-            mType = sParse;
-            assert(mType[0] != '{');
-        }
-        else
-            mKeyValueMap[sKey] = SH::URL_Decode(sParse);  // sParse now contains the value;
+        assert(sMessage.find(';') == string::npos);
+
+        mType = sMessage;
     }
 }
 
@@ -224,15 +232,26 @@ void ZMessageSystem::RegisterTarget(IMessageTarget* pTarget)
     ZASSERT(pTarget);
     ZASSERT_MESSAGE(IsRegistered(pTarget->GetTargetName()), string("Target \"" + pTarget->GetTargetName() + "\" already mapped!").c_str());
 
+    static bool track = false;
+
+    if (track)
+    {
+        string sName = pTarget->GetTargetName();
+        ZDEBUG_OUT("Register: ", sName, "\n");
+    }
+
     mNameToMessageTargetMap[pTarget->GetTargetName()] = pTarget;
 }
 
 void ZMessageSystem::UnregisterTarget(IMessageTarget* pTarget)
 {
+    ZDEBUG_OUT("Unregister: ", pTarget->GetTargetName(), "\n");
     ZASSERT(pTarget);
     tNameToMessageTargetMap::iterator it = mNameToMessageTargetMap.find(pTarget->GetTargetName());
     if (it != mNameToMessageTargetMap.end())
         mNameToMessageTargetMap.erase(it);
+    else
+        assert(false);
 }
 
 bool ZMessageSystem::IsRegistered(const std::string& sTargetName)
@@ -242,8 +261,24 @@ bool ZMessageSystem::IsRegistered(const std::string& sTargetName)
 
 void ZMessageSystem::Post(const std::string& sRawMessage)
 {
-    ZMessage m(sRawMessage);
-    Post(m);
+    assert(sRawMessage[0] == '{' && sRawMessage[sRawMessage.length()-1] == '}');
+
+    // multiple messages to parse
+    size_t messageStart = 0;
+    size_t messageEnd = SH::FindMatching(sRawMessage, messageStart);
+    while (messageStart != string::npos && messageEnd != string::npos)
+    {
+        string s(sRawMessage.substr(messageStart, messageEnd - messageStart + 1));
+
+        mMessageQueueMutex.lock();
+        mMessageQueue.push_back(std::move(ZMessage(s)));
+        mMessageQueueMutex.unlock();
+
+        messageStart = messageEnd;
+
+        messageStart = sRawMessage.find('{', messageStart + 1); // find a next message if there is one
+        messageEnd = SH::FindMatching(sRawMessage, messageStart);
+    }
 }
 
 void ZMessageSystem::Post(const ZMessage& msg)

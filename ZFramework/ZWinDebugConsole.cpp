@@ -48,7 +48,7 @@ bool ZWinDebugConsole::Init()
         return true;
 
     if (!mFont)
-        mFont = gpFontSystem->GetFont(ZFontParams("consolas", 0.6f, 200, 0, 14));
+        mFont = gpFontSystem->GetFont(ZFontParams("consolas", 600, 200, 0, 14));
 
     if (ZWin::Init())
 	{

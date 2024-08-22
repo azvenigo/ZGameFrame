@@ -156,7 +156,7 @@ ZWinBtn::ZWinBtn()
 	mpDownEdgeImage     = NULL;
 	mDrawState          = kUp;
     mbEnabled           = true;
-	msButtonMessage     = "{btn_pressed}";
+	msButtonMessage     = ZMessage("btn_pressed");
     mBtnStyle           = gStyleButton;
     mCaption.style      = gStyleCaption;
     mSVGImage.style     = gStyleCaption;

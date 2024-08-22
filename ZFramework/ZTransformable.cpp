@@ -368,7 +368,8 @@ void ZTransformable::EndTransformation()
 	mCurTransform.mnTimestamp = gTimer.GetElapsedTime();	// reset the current timestamp
 	mEndTransform = mCurTransform;
 
-    gMessageSystem.Post(mEndTransform.msCompletionMessage);
+    if (!mEndTransform.msCompletionMessage.empty())
+        gMessageSystem.Post(mEndTransform.msCompletionMessage);
 
    
     const std::lock_guard<std::recursive_mutex> lock(mTransformationListMutex);

@@ -43,7 +43,7 @@ bool ConfirmDeleteDialog::Init()
 //        rLabel = gStyleButton.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sFolder.c_str(), sFolder.length(), ZGUI::LT, gDefaultSpacer);
 
         ZGUI::Style labelstyle(gStyleCaption);
-        labelstyle.fp.fScale = 0.5;
+        labelstyle.fp.nScalePoints = 500;
         labelstyle.bgCol = 0;
         labelstyle.look.colTop = 0xffffff00;
         labelstyle.look.colBottom = 0xffffff00;
@@ -60,7 +60,7 @@ bool ConfirmDeleteDialog::Init()
 
 
         ZGUI::Style style(gStyleButton);
-        style.fp.fScale = 1.0;
+        style.fp.nScalePoints = 1000;
         style.paddingH = (int32_t)gSpacer;
         style.paddingV = (int32_t)gSpacer;
         style.pos = ZGUI::C;
@@ -71,7 +71,7 @@ bool ConfirmDeleteDialog::Init()
 
         ZWinBtn* pBtn;
         pBtn = new ZWinBtn();
-        pBtn->msButtonMessage = ZMessage("{deleteconfirm}", this);
+        pBtn->msButtonMessage = ZMessage("deleteconfirm", this);
         pBtn->mCaption.sText = "Confirm Delete";
         pBtn->mCaption.style = style;
         pBtn->mCaption.style.look.colTop = 0xffff0000;
@@ -82,7 +82,7 @@ bool ConfirmDeleteDialog::Init()
         arrangeList.push_back(pBtn);
 
         pBtn = new ZWinBtn();
-        pBtn->msButtonMessage = ZMessage("{goback}", this);
+        pBtn->msButtonMessage = ZMessage("goback", this);
         pBtn->mCaption.sText = "Go Back";
         pBtn->mCaption.style = style;
 
@@ -105,12 +105,12 @@ bool ConfirmDeleteDialog::Init()
 
         ZFontParams font;
         font.sFacename = "Verdana";
-        font.fScale = 0.66f;
+        font.nScalePoints = 660;
 
         size_t nCount = 1;
         for (auto& entry : mFiles)
         {
-            string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(font) + " position=lb link=select;filename=" + SH::URL_Encode(entry.string()) + ";target=ZWinImageViewer>[" + SH::FromInt(nCount) + "] " + entry.filename().string() + "</text></line>";
+            string sListBoxEntry = "<line wrap=0><text color=0xff000000 color2=0xff000000 fontparams=" + SH::URL_Encode(font) + " position=lb link={select;filename=" + SH::URL_Encode(entry.string()) + ";target=ZWinImageViewer}>[" + SH::FromInt(nCount) + "] " + entry.filename().string() + "</text></line>";
             nCount++;
             mpFilesList->AddLineNode(sListBoxEntry);
         }

@@ -17,7 +17,7 @@ namespace ZGUI
             rDraw = pDst->GetArea();
 
         if (style.pos == ZGUI::Fit)
-            style.fp.fScale = ZFontParams::Scale(rDraw.Height()/2);
+            style.fp.nScalePoints = ZFontParams::ScalePoints(rDraw.Height()/2);
 
         return style.Font()->DrawTextParagraph(pDst, sText, rDraw, &style);
     }
@@ -66,7 +66,7 @@ namespace ZGUI
             int64_t w = (int64_t)svgbitmap.width();
             int64_t h = (int64_t)svgbitmap.height();
             uint32_t s = svgbitmap.stride();
-            ZDEBUG_OUT("Rendering SVG at:", w, "x", h, "\n");
+            //ZDEBUG_OUT("Rendering SVG at:", w, "x", h, "\n");
 
             mRendered->Init(w, h);
             uint32_t* pPixels = mRendered->GetPixels();

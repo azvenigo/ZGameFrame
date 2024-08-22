@@ -11,7 +11,7 @@
 
 ZFontParams::ZFontParams()
 {
-    fScale = 0;
+    nScalePoints = 0;
     nWeight = 0;
     nTracking = 1;
     nFixedWidth = 0;
@@ -21,7 +21,7 @@ ZFontParams::ZFontParams()
 
 ZFontParams::ZFontParams(const ZFontParams& rhs)
 {
-    fScale = rhs.fScale;
+    nScalePoints = rhs.nScalePoints;
     nWeight = rhs.nWeight;
     nTracking = rhs.nTracking;
     nFixedWidth = rhs.nFixedWidth;
@@ -115,7 +115,7 @@ bool ZFont::LoadFont(const string& sFilename)
     memcpy(&mFontHeight, pData, sizeof(mFontHeight));
     pData += sizeof(mFontHeight);
 
-    mFontParams.fScale = ZFontParams::Scale(mFontHeight);
+    mFontParams.nScalePoints = ZFontParams::ScalePoints(mFontHeight);
 
 
     memcpy(&mFontParams.nWeight, pData,  sizeof(mFontParams.nWeight));
@@ -333,7 +333,7 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 
 inline bool ZFont::DrawText_Helper(ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip)
 {
-    cout << "DrawText_Helper... height:" << mFontHeight << "\n";
+    //cout << "DrawText_Helper... height:" << mFontHeight << "\n";
 
 	int64_t nX = rAreaToDrawTo.left;
 	int64_t nY = rAreaToDrawTo.top;
@@ -1637,7 +1637,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
         tZFontPtr pLoaded = LoadFont(FontCacheFilename(params));
         if (pLoaded)
         {
-            if (pLoaded->GetFontParams() == params)
+            if (pLoaded->Height() == params.Height())
             {
                 int64_t height = pLoaded->Height();
                 const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
@@ -1658,7 +1658,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
     }
 
     ZFontParams fp(pNewFont->GetFontParams());
-    ZDEBUG_OUT("Created font:%s scale:%.3f size:%d\n", fp.sFacename, fp.fScale, pNewFont->Height());
+//    ZDEBUG_OUT("Created font:%s scale:%.3f size:%d\n", fp.sFacename, fp.fScale, pNewFont->Height());
 
     const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
     mHeightToFontMap[fp.Height()][fp].reset(pNewFont);
@@ -1690,19 +1690,19 @@ tZFontPtr ZFontSystem::GetFont(const std::string& sFontName, int32_t nHeight)
     }
 
     // Not found, create one
-    return CreateFont(ZFontParams(sFontName, ZFontParams::Scale(nHeight)));
+    return CreateFont(ZFontParams(sFontName, ZFontParams::ScalePoints(nHeight)));
 }
 
 tZFontPtr ZFontSystem::GetFont(const ZFontParams& params)
 {
-    if (params.sFacename.empty() || params.fScale == 0)
+    if (params.sFacename.empty() || params.nScalePoints == 0)
     {
         ZDEBUG_OUT("Error with font params\n");
         return nullptr;
     }
 
     int64_t height = params.Height();
-    assert(params.fScale > 0 && params.fScale < 10.0);
+    assert(params.nScalePoints > 0 && params.nScalePoints < 10000);
 
     const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
     auto findIt = mHeightToFontMap[height].find(params);

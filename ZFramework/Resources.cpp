@@ -196,7 +196,7 @@ bool cResources::ReceiveMessage(const ZMessage& message)
     }
     else if (sType == "show_app_palette")
     {
-        ZWinPaletteDialog::ShowPaletteDialog("Application Color Palette", &gAppPalette.mColorMap, ZMessage("{app_restart}"));
+        ZWinPaletteDialog::ShowPaletteDialog("Application Color Palette", &gAppPalette.mColorMap, ZMessage("app_restart"));
         return true;
     }
 

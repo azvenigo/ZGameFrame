@@ -124,7 +124,7 @@ void ImageViewer::HandleQuitCommand()
     delete mpMetadataLoaderPool;
     mpMetadataLoaderPool = nullptr;
 
-    gMessageSystem.Post("{quit_app_confirmed}");
+    gMessageSystem.Post(ZMessage("quit_app_confirmed"));
 }
 
 void ImageViewer::UpdateUI()
@@ -274,7 +274,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
         break;
     case 'p':
     case 'P':
-        gMessageSystem.Post(ZMessage("{show_app_palette}"));
+        gMessageSystem.Post(ZMessage("show_app_palette"));
         return true;
     case 'r':
     case 'R':
@@ -401,9 +401,9 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             for (auto& i : mToBeDeletedImageArray)
                 deletionList.push_back(i->filename);
             ConfirmDeleteDialog* pDialog = ConfirmDeleteDialog::ShowDialog("Please confirm the following files to be deleted", deletionList);
-            pDialog->msOnConfirmDelete = ZMessage("{delete_confirm}", this);
-            pDialog->msOnCancel = ZMessage("{delete_cancel_and_quit}", this);
-            pDialog->msOnGoBack = ZMessage("{delete_goback}", this);
+            pDialog->msOnConfirmDelete = ZMessage("delete_confirm", this);
+            pDialog->msOnCancel = ZMessage("delete_cancel_and_quit", this);
+            pDialog->msOnGoBack = ZMessage("delete_goback", this);
         }
         return true;
     }
@@ -735,7 +735,7 @@ void ImageViewer::ToggleShowHelpDialog()
     pLabel->mStyle = gStyleCaption;
     pLabel->mStyle.pos = ZGUI::CT;
     pLabel->mStyle.paddingV = (int32_t)gM * 2;
-    pLabel->mStyle.fp.fScale = 2.0;
+    pLabel->mStyle.fp.nScalePoints = 2000;
     pLabel->mStyle.fp.nWeight = 800;
     pLabel->mStyle.look = ZGUI::ZTextLook::kShadowed;
     pLabel->mStyle.look.colTop = 0xff999999;
@@ -747,12 +747,12 @@ void ImageViewer::ToggleShowHelpDialog()
     ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
 
     ZGUI::Style text(gStyleGeneralText);
-    text.fp.fScale = 1.0f;
+    text.fp.nScalePoints = 1000;
     text.paddingH = (int32_t)gM;
 
     ZGUI::Style sectionText(gStyleGeneralText);
     sectionText.fp.nWeight = 800;
-    sectionText.fp.fScale = 1.0f;
+    sectionText.fp.nScalePoints = 1000;
     sectionText.look.colTop = 0xffaaaaaa;
     sectionText.look.colBottom = 0xffaaaaaa;
 
@@ -1324,7 +1324,7 @@ bool ImageViewer::Init()
 
 //        int64_t nGroupSide = (gM * 2) - gSpacer * 4;
 
-        mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", 1.5, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+        mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", 1500, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
         //        mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
         ZDynamicFont* pFont = (ZDynamicFont*)mSymbolicStyle.Font().get();
 
@@ -1341,7 +1341,7 @@ bool ImageViewer::Init()
         pFont->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
 
 
-        ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", 8, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+        ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", 8000, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
         mpFavoritesFont = gpFontSystem->CreateFont(favorites.fp);
         ((ZDynamicFont*)mpFavoritesFont.get())->GenerateSymbolicGlyph('C', 0x2655);  // crown
 
@@ -1385,7 +1385,7 @@ bool ImageViewer::Init()
         mpFolderLabel->mStyle.pos = ZGUI::LC;
         mpFolderLabel->mStyle.paddingH = (int32_t)gSpacer;
         mpFolderLabel->mStyle.paddingV = (int32_t)gSpacer;
-        mpFolderLabel->mStyle.fp.fScale = 0.8f;
+        mpFolderLabel->mStyle.fp.nScalePoints = 800;
         mpFolderLabel->SetArea(ZRect(0, 0, mAreaLocal.Width() / 4, gM));
         ChildAdd(mpFolderLabel, !mCurrentFolder.empty());
 
@@ -1409,10 +1409,10 @@ bool ImageViewer::Init()
 
         // file group
         string sFileGroupLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("openfile", "", "", "$apppath$/res/openfile.svg", "Load Image", ZMessage("{loadimg}", this), 1.0, style, {}) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("savefile", "", "", "$apppath$/res/save.svg", "Save Image", ZMessage("{saveimg}", this), 1.0, style, {}) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("copyfile", "", "", "$apppath$/res/copy.svg", "Select a Copy Folder for quick-move with 'C'", ZMessage("{set_copy_folder}", this), 1.0, style, {}) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("{set_move_folder}", this), 1.0, style, {}) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("openfile", "", "", "$apppath$/res/openfile.svg", "Load Image", ZMessage("loadimg", this), 1.0, style, {}) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("savefile", "", "", "$apppath$/res/save.svg", "Save Image", ZMessage("saveimg", this), 1.0, style, {}) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("copyfile", "", "", "$apppath$/res/copy.svg", "Select a Copy Folder for quick-move with 'C'", ZMessage("set_copy_folder", this), 1.0, style, {}) + "</row>";
+        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("set_move_folder", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("show_confirm", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "</panel>";
 
@@ -1421,14 +1421,14 @@ bool ImageViewer::Init()
 
 
 
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("gotofolder", "File", "", "$apppath$/res/gotofolder.svg", "Go to Image Folder", ZMessage("{gotofolder}", this), 1.0, style, {});
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("copylink", "File", "", "$apppath$/res/linkcopy.svg", "Copy path to image to clipboard", ZMessage("{copylink}", this), 1.0, style, {});
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("gotofolder", "File", "", "$apppath$/res/gotofolder.svg", "Go to Image Folder", ZMessage("gotofolder", this), 1.0, style, {});
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("copylink", "File", "", "$apppath$/res/linkcopy.svg", "Copy path to image to clipboard", ZMessage("copylink", this), 1.0, style, {});
 
         string sRotateGroupLayout = "<panel hide_on_mouse_exit=1 border=1 spacers=0>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_left", "", "", "$apppath$/res/rot_left.svg", "Left", ZMessage("{rotate_left}", this), 1.0, style, {}) + "</row>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_right", "", "", "$apppath$/res/rot_right.svg", "Right", ZMessage("{rotate_right}", this), 1.0, style, {}) + "</row>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_h", "", "", "$apppath$/res/fliph.svg", "Flip Horizontal", ZMessage("{flipH}", this), 1.0, style, {}) + "</row>";
-        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_v", "", "", "$apppath$/res/flipv.svg", "Flip Vertical", ZMessage("{flipV}", this), 1.0, style, {}) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_left", "", "", "$apppath$/res/rot_left.svg", "Left", ZMessage("rotate_left", this), 1.0, style, {}) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_right", "", "", "$apppath$/res/rot_right.svg", "Right", ZMessage("rotate_right", this), 1.0, style, {}) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_h", "", "", "$apppath$/res/fliph.svg", "Flip Horizontal", ZMessage("flipH", this), 1.0, style, {}) + "</row>";
+        sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("flip_v", "", "", "$apppath$/res/flipv.svg", "Flip Vertical", ZMessage("flipV", this), 1.0, style, {}) + "</row>";
         sRotateGroupLayout += "</panel>";
 
         
@@ -1438,10 +1438,10 @@ bool ImageViewer::Init()
         mpPanel->mPanelLayout += "<space style=\"" + ZXML::Encode((string)spacestyle) + "\"/>";
 
         // Filter group
-        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterall", "Filter", "FilterGroup", "All", "", "All images", ZMessage("{filter_all}", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
-        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterfavs", "Filter", "FilterGroup", "Favorites", "", "Favorites (hit '1' to toggle current image)", ZMessage("{filter_favs}", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
-        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterranked", "Filter", "FilterGroup", "Ranked", "", "Images that have been ranked", ZMessage("{filter_ranked}", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
-        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterdel", "Filter", "FilterGroup", "To Be Deleted", "", "Flagged for deletion", ZMessage("{filter_del}", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterall", "Filter", "FilterGroup", "All", "", "All images", ZMessage("filter_all", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterfavs", "Filter", "FilterGroup", "Favorites", "", "Favorites (hit '1' to toggle current image)", ZMessage("filter_favs", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterranked", "Filter", "FilterGroup", "Ranked", "", "Images that have been ranked", ZMessage("filter_ranked", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterdel", "Filter", "FilterGroup", "To Be Deleted", "", "Flagged for deletion", ZMessage("filter_del", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
 
 
 
@@ -1450,15 +1450,15 @@ bool ImageViewer::Init()
         // Window Controls
         ZGUI::Style rightAligned(gStyleCaption);
         rightAligned.pos = ZGUI::R;
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("rank_favorites", "", "Rank Favorites", "", "Rank favorites", ZMessage("{rank_favorites}", this), 3.0, rightAligned, gStyleCaption);
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("rank_favorites", "", "Rank Favorites", "", "Rank favorites", ZMessage("rank_favorites", this), 3.0, rightAligned, gStyleCaption);
         mpPanel->mPanelLayout += "<space style=\"" + ZXML::Encode((string)spacestyle) + "\"/>";
 
 
         ZGUI::Style bigFontStyle(gStyleCaption);
-        bigFontStyle.fp.fScale = 2.0;
+        bigFontStyle.fp.nScalePoints = 2000;
         bigFontStyle.pos = ZGUI::C;
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("show_help", "", "?", "", "Help", ZMessage("{show_help}", this), 1.0, rightAligned, bigFontStyle);
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("toggle_fullscreen", "", "", "$apppath$/res/fullscreen.svg", "Fullscreen/Windowed", ZMessage("{toggle_fullscreen}"), true, rightAligned, {});
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("show_help", "", "?", "", "Help", ZMessage("show_help", this), 1.0, rightAligned, bigFontStyle);
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("toggle_fullscreen", "", "", "$apppath$/res/fullscreen.svg", "Fullscreen/Windowed", ZMessage("toggle_fullscreen"), true, rightAligned, {});
 
         // Context
 
@@ -1534,7 +1534,7 @@ bool ImageViewer::OnParentAreaChange()
     ZWin::OnParentAreaChange();
     UpdateUI();
 
-    ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", 8, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+    ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", 8000, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     mpFavoritesFont = gpFontSystem->CreateFont(favorites.fp);
     ((ZDynamicFont*)mpFavoritesFont.get())->GenerateSymbolicGlyph('C', 0x2655);  // crown
 
@@ -2025,7 +2025,7 @@ bool ImageViewer::ScanForImagesInFolder(std::filesystem::path folder)
 
     if (bErrors)
     {
-        gMessageSystem.Post("{toggleconsole}");
+        gMessageSystem.Post(ZMessage("toggleconsole"));
         return false;
     }
 
@@ -2385,7 +2385,7 @@ void ImageViewer::UpdateCaptions()
                             if (nRank > 0)
                             {
                                 ZGUI::Style eloStyle(gStyleCaption);
-                                eloStyle.fp.fScale = 2.0;
+                                eloStyle.fp.nScalePoints = 2000;
                                 eloStyle.look.colTop = 0xffffd800;
                                 eloStyle.look.colBottom = 0xff9d8500;
                                 eloStyle.look.decoration = ZGUI::ZTextLook::kShadowed;
@@ -2425,7 +2425,7 @@ void ImageViewer::UpdateCaptions()
                     if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
                     {
                         mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5.0, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, (int32_t)(gSpacer / 2), 100, 0x88000000, true);
+                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5000, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, (int32_t)(gSpacer / 2), 100, 0x88000000, true);
                         mpWinImage->mCaptionMap["for_delete"].visible = true;
 
                         mpWinImage->mCaptionMap["image_count"].style.look.colTop = 0xffff0000;
@@ -2450,7 +2450,7 @@ void ImageViewer::UpdateCaptions()
         if (!mMoveToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> move to:\n%s", mMoveToFolder.string().c_str());
-            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.fScale, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.fScale*8), 0x88000000, true);
+            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nScalePoints, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nScalePoints *8), 0x88000000, true);
             mpWinImage->mCaptionMap["move_to_folder"].visible = bShow;
         }
         else
@@ -2461,7 +2461,7 @@ void ImageViewer::UpdateCaptions()
         if (!mCopyToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["copy_to_folder"].sText, "'C' -> copy to:\n%s", mCopyToFolder.string().c_str());
-            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.fScale, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.fScale * 12), 0x88000000, true);
+            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nScalePoints, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nScalePoints * 12), 0x88000000, true);
             mpWinImage->mCaptionMap["copy_to_folder"].visible = bShow;
         }
         else
@@ -2515,7 +2515,7 @@ void ImageViewer::UpdateCaptions()
 
             ZGUI::Style style(mpWinImage->mpTable->mCellStyle);
             style.fp.nWeight = 800;
-            style.fp.fScale = style.fp.fScale*1.2f;
+            style.fp.nScalePoints = style.fp.nScalePoints*1.2f;
 
             mpWinImage->mpTable->SetColStyle(0, style);
         }

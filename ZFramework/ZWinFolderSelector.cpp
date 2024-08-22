@@ -247,7 +247,7 @@ bool ZWinFolderSelector::Init()
 
         mpOpenFolderBtn = new ZWinBtn();
         mpOpenFolderBtn->mSVGImage.Load(sAppPath + "/res/openfolder.svg");
-        mpOpenFolderBtn->msButtonMessage = ZMessage("{openfolder}", this);
+        mpOpenFolderBtn->msButtonMessage = ZMessage("openfolder", this);
         mpOpenFolderBtn->msTooltip = "Open Folder";
         ChildAdd(mpOpenFolderBtn);
         int64_t nSide = gM;
