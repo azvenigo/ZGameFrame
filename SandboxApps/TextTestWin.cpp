@@ -188,7 +188,7 @@ bool TextTestWin::Init()
 
     ZGUI::ZTextLook captionLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
 
-    pCP->Button("choosecolor", "Color", ZMessage("{choosecolor}", this));
+    pCP->Button("choosecolor", "Color", ZMessage("choosecolor", this));
 
     pCP->Caption("heightlabel", "Height");
 

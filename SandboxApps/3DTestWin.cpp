@@ -1051,7 +1051,7 @@ bool Z3DTestWin::Init()
 
         pCP->AddSpace(16);
         pCP->Caption("rendersize", "Render Size");
-        pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("{updaterendersize}", this), true);
+        pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("updaterendersize", this), true);
 
         ZGUI::ZTextLook toggleLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
