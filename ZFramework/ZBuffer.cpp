@@ -316,6 +316,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 bool ZBuffer::LoadFromSVG(const std::string& sName)
 {
     auto doc = lunasvg::Document::loadFromFile(sName);
+    //doc->get
     auto svgbitmap = doc->renderToBitmap((uint32_t)mSurfaceArea.Width(), (uint32_t)mSurfaceArea.Height()); // if the buffer is already initialized, this will render at the same dimensions. If not these will be 0x0 & it will render at the SVG embedded dimensions
 
     int64_t w = (int64_t)svgbitmap.width();

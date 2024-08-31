@@ -22,7 +22,8 @@ public:
     }
 
 
-    bool    GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline, uint32_t whiteCol = 0xffffffff, uint32_t blackCol = 0xff000000);
+//    bool    GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline, uint32_t whiteCol = 0xffffffff, uint32_t blackCol = 0xff000000);
+    bool LoadImage(std::string path, int64_t nSize, uint32_t col = 0xffffffff);
 
 
     tZBufferPtr mpImage;

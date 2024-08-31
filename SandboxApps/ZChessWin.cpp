@@ -712,19 +712,32 @@ void ZChessWin::UpdateSize()
     uint32_t whiteCol = mPalette.mColorMap[kWhiteCol].col;
     uint32_t blackCol = mPalette.mColorMap[kBlackCol].col;
 
-    mPieceData['K'].GenerateImageFromSymbolicFont('K', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['Q'].GenerateImageFromSymbolicFont('Q', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['R'].GenerateImageFromSymbolicFont('R', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['B'].GenerateImageFromSymbolicFont('B', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['N'].GenerateImageFromSymbolicFont('N', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['P'].GenerateImageFromSymbolicFont('P', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
+//    if (whiteCol == 0xffffffff)
+    {
+        mPieceData['K'].LoadImageA("res/chess/king.svg", mnPieceHeight, whiteCol);
+        mPieceData['Q'].LoadImageA("res/chess/queen.svg", mnPieceHeight, whiteCol);
+        mPieceData['R'].LoadImageA("res/chess/rook.svg", mnPieceHeight, whiteCol);
+        mPieceData['B'].LoadImageA("res/chess/bishop.svg", mnPieceHeight, whiteCol);
+        mPieceData['N'].LoadImageA("res/chess/knight.svg", mnPieceHeight, whiteCol);
+        mPieceData['P'].LoadImageA("res/chess/pawn.svg", mnPieceHeight, whiteCol);
+    }
+/*    else
+    {
+        // load black piece images (as they are filled in and can be colorized)
+        mPieceData['K'].LoadImageA("res/chess/king_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['Q'].LoadImageA("res/chess/queen_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['R'].LoadImageA("res/chess/rook_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['B'].LoadImageA("res/chess/bishop_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['N'].LoadImageA("res/chess/knight_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['P'].LoadImageA("res/chess/pawn_b.svg", mnPieceHeight, whiteCol);
+    }*/
 
-    mPieceData['k'].GenerateImageFromSymbolicFont('k', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['q'].GenerateImageFromSymbolicFont('q', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['r'].GenerateImageFromSymbolicFont('r', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['b'].GenerateImageFromSymbolicFont('b', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['n'].GenerateImageFromSymbolicFont('n', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['p'].GenerateImageFromSymbolicFont('p', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
+    mPieceData['k'].LoadImageA("res/chess/king_b.svg", mnPieceHeight, blackCol);
+    mPieceData['q'].LoadImageA("res/chess/queen_b.svg", mnPieceHeight, blackCol);
+    mPieceData['r'].LoadImageA("res/chess/rook_b.svg", mnPieceHeight, blackCol);
+    mPieceData['b'].LoadImageA("res/chess/bishop_b.svg", mnPieceHeight, blackCol);
+    mPieceData['n'].LoadImageA("res/chess/knight_b.svg", mnPieceHeight, blackCol);
+    mPieceData['p'].LoadImageA("res/chess/pawn_b.svg", mnPieceHeight, blackCol);
 
     mrBoardArea.SetRect(0, 0, mnPieceHeight * 8, mnPieceHeight * 8);
     mrBoardArea = mrBoardArea.CenterInRect(mAreaLocal);
@@ -1517,6 +1530,25 @@ void ZChessWin::ShowPromotingWin(const ZPoint& grid)
 }
 
 
+bool ChessPiece::LoadImage(std::string path, int64_t nSize, uint32_t col)
+{
+    mpImage.reset(new ZBuffer());
+    mpImage->Init(nSize, nSize);
+    if (!mpImage->LoadBuffer(path))
+        return false;
+
+    // replace the red pixels with piece color
+    uint32_t replacementCol = 0xffff0000;
+    for (uint32_t index = 0; index < nSize*nSize; index++)
+    {
+        if (mpImage->mpPixels[index] == replacementCol)
+            mpImage->mpPixels[index] = col;
+    }
+
+    return true;
+}
+
+/*
 bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline, uint32_t whiteCol, uint32_t blackCol)
 {
     mpImage.reset(new ZBuffer());
@@ -1560,7 +1592,7 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
     pFont->DrawTextParagraph(mpImage.get(), s, rSquare, &style);
     return true;
 }
-
+*/
 
 void ZChessWin::ClearHistory()
 {

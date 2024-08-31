@@ -138,7 +138,7 @@ link_directories(${LINK_DIRS})
 include_directories(${INCLUDE_DIRS})
 
 add_executable(SandboxApps WIN32 ${SOURCES} ${INCLUDES})
-add_dependencies(SandboxApps lunasvg)
+#add_dependencies(SandboxApps lunasvg)
 target_link_libraries(SandboxApps ${LINK_LIBS})
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/res" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)

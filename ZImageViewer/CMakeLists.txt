@@ -142,7 +142,7 @@ link_directories(${LINK_DIRS})
 include_directories(${INCLUDE_DIRS})
 
 add_executable(ZImageViewer WIN32 ${SOURCES} ${INCLUDES})
-add_dependencies(ZImageViewer lunasvg)
+#add_dependencies(ZImageViewer lunasvg)
 
 target_link_libraries(ZImageViewer ${LINK_LIBS})
 

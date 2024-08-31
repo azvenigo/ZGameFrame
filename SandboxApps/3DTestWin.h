@@ -37,6 +37,7 @@ public:
     uint32_t mColor;
 };
 
+//#define RENDER_TEAPOT
 #define RENDER_SPHERES
 
 
@@ -84,6 +85,7 @@ private:
     int64_t     mnMaxSphereSizeTimes100;
     int64_t     mnRotateSpeed;
     int64_t     mnRayDepth;
+    int64_t     mnFOVTime100;
     double      mfBaseAngle;
 
     bool        mbRenderCube;
