@@ -279,18 +279,18 @@ public:
     Transform& operator*=(const Transform& transform);
 
     Transform& multiply(const Transform& transform);
+    Transform& translate(float tx, float ty);
+    Transform& scale(float sx, float sy);
     Transform& rotate(float angle);
     Transform& rotate(float angle, float cx, float cy);
-    Transform& scale(float sx, float sy);
     Transform& shear(float shx, float shy);
-    Transform& translate(float tx, float ty);
 
     Transform& postMultiply(const Transform& transform);
+    Transform& postTranslate(float tx, float ty);
+    Transform& postScale(float sx, float sy);
     Transform& postRotate(float angle);
     Transform& postRotate(float angle, float cx, float cy);
-    Transform& postScale(float sx, float sy);
     Transform& postShear(float shx, float shy);
-    Transform& postTranslate(float tx, float ty);
 
     Transform inverse() const;
     Transform& invert();
@@ -308,11 +308,11 @@ public:
 
     bool parse(const char* data, size_t length);
 
+    static Transform translated(float tx, float ty);
+    static Transform scaled(float sx, float sy);
     static Transform rotated(float angle);
     static Transform rotated(float angle, float cx, float cy);
-    static Transform scaled(float sx, float sy);
     static Transform sheared(float shx, float shy);
-    static Transform translated(float tx, float ty);
 
     static const Transform Identity;
 
@@ -394,7 +394,7 @@ private:
     int m_index;
 };
 
-static std::string emptyString;
+extern const std::string emptyString;
 
 class FontFace {
 public:
@@ -421,15 +421,14 @@ private:
 
 class FontFaceCache {
 public:
-    FontFace addFontFace(const std::string& family, bool italic, bool bold, const std::string& filename);
-    FontFace addFontFace(const std::string& family, bool italic, bool bold, const void* data, size_t length);
-    FontFace addFontFace(const std::string& family, bool italic, bool bold, const FontFace& face);
+    bool addFontFace(const std::string& family, bool bold, bool italic, const std::string& filename);
+    bool addFontFace(const std::string& family, bool bold, bool italic, const void* data, size_t length);
+    bool addFontFace(const std::string& family, bool bold, bool italic, const FontFace& face);
 
-    FontFace getFallbackFontFace(bool italic, bool bold);
-    FontFace getFontFace(const std::string& family, bool italic, bool bold);
+    FontFace getFontFace(const std::string& family, bool bold, bool italic);
 
 private:
-    FontFaceCache() = default;
+    FontFaceCache();
     using FontFaceEntry = std::tuple<bool, bool, FontFace>;
     std::map<std::string, std::vector<FontFaceEntry>> m_table;
     friend FontFaceCache* fontFaceCache();

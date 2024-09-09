@@ -68,9 +68,9 @@ SVGTextFragmentsBuilder::SVGTextFragmentsBuilder(std::u32string& text, SVGTextFr
     m_fragments.clear();
 }
 
-void SVGTextFragmentsBuilder::build(const SVGTextElement* element)
+void SVGTextFragmentsBuilder::build(const SVGTextElement* textElement)
 {
-    handleElement(element);
+    handleElement(textElement);
     for(const auto& position : m_textPositions) {
         fillCharacterPositions(position);
     }
@@ -190,7 +190,9 @@ void SVGTextFragmentsBuilder::handleText(const SVGTextNode* node)
         lastCharacter = currentCharacter;
     }
 
-    m_textPositions.emplace_back(node, startOffset, m_text.length());
+    if(startOffset < m_text.length()) {
+        m_textPositions.emplace_back(node, startOffset, m_text.length());
+    }
 }
 
 void SVGTextFragmentsBuilder::handleElement(const SVGTextPositioningElement* element)
@@ -351,7 +353,7 @@ Rect SVGTextElement::boundingBox(bool includeStroke) const
         const auto& stroke = fragment.element->stroke();
         auto fragmentRect = Rect(fragment.x, fragment.y - font.ascent(), fragment.width, fragment.element->font_size());
         if(includeStroke && stroke.isRenderable())
-            fragmentRect.inflate(fragment.element->stroke_width());
+            fragmentRect.inflate(fragment.element->stroke_width() / 2.f);
         auto fragmentTranform = Transform::translated(fragment.x, fragment.y);
         fragmentTranform.rotate(fragment.angle);
         fragmentTranform.translate(-fragment.x, -fragment.y);

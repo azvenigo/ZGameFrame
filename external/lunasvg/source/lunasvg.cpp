@@ -19,13 +19,13 @@ const char* lunasvg_version_string()
 
 namespace lunasvg {
 
-Bitmap::Bitmap(uint8_t* data, int width, int height, int stride)
-    : m_surface(plutovg_surface_create_for_data(data, width, height, stride))
+Bitmap::Bitmap(int width, int height)
+    : m_surface(plutovg_surface_create(width, height))
 {
 }
 
-Bitmap::Bitmap(int width, int height)
-    : m_surface(plutovg_surface_create(width, height))
+Bitmap::Bitmap(uint8_t* data, int width, int height, int stride)
+    : m_surface(plutovg_surface_create_for_data(data, width, height, stride))
 {
 }
 
@@ -157,9 +157,29 @@ Matrix::Matrix(const Transform& transform)
 {
 }
 
+Matrix Matrix::operator*(const Matrix& matrix) const
+{
+    return Transform(*this) * Transform(matrix);
+}
+
+Matrix& Matrix::operator*=(const Matrix &matrix)
+{
+    return (*this = *this * matrix);
+}
+
 Matrix& Matrix::multiply(const Matrix& matrix)
 {
-    return (*this = Transform(*this) * Transform(matrix));
+    return (*this *= matrix);
+}
+
+Matrix& Matrix::scale(float sx, float sy)
+{
+    return multiply(scaled(sx, sy));
+}
+
+Matrix& Matrix::translate(float tx, float ty)
+{
+    return multiply(translated(tx, ty));
 }
 
 Matrix& Matrix::rotate(float angle)
@@ -172,49 +192,9 @@ Matrix& Matrix::rotate(float angle, float cx, float cy)
     return multiply(rotated(angle, cx, cy));
 }
 
-Matrix& Matrix::scale(float sx, float sy)
-{
-    return multiply(scaled(sx, sy));
-}
-
 Matrix& Matrix::shear(float shx, float shy)
 {
     return multiply(sheared(shx, shy));
-}
-
-Matrix& Matrix::translate(float tx, float ty)
-{
-    return multiply(translated(tx, ty));
-}
-
-Matrix& Matrix::postMultiply(const Matrix& matrix)
-{
-    return (*this = Transform(matrix) * Transform(*this));
-}
-
-Matrix& Matrix::postRotate(float angle)
-{
-    return postMultiply(rotated(angle));
-}
-
-Matrix& Matrix::postRotate(float angle, float cx, float cy)
-{
-    return postMultiply(rotated(angle, cx, cy));
-}
-
-Matrix& Matrix::postScale(float sx, float sy)
-{
-    return postMultiply(scaled(sx, sy));
-}
-
-Matrix& Matrix::postShear(float shx, float shy)
-{
-    return postMultiply(sheared(shx, shy));
-}
-
-Matrix& Matrix::postTranslate(float tx, float ty)
-{
-    return postMultiply(translated(tx, ty));
 }
 
 Matrix Matrix::inverse() const
@@ -232,6 +212,16 @@ void Matrix::reset()
     *this = Matrix(1, 0, 0, 1, 0, 0);
 }
 
+Matrix Matrix::translated(float tx, float ty)
+{
+    return Transform::translated(tx, ty);
+}
+
+Matrix Matrix::scaled(float sx, float sy)
+{
+    return Transform::scaled(sx, sy);
+}
+
 Matrix Matrix::rotated(float angle)
 {
     return Transform::rotated(angle);
@@ -242,19 +232,9 @@ Matrix Matrix::rotated(float angle, float cx, float cy)
     return Transform::rotated(angle, cx, cy);
 }
 
-Matrix Matrix::scaled(float sx, float sy)
-{
-    return Transform::scaled(sx, sy);
-}
-
 Matrix Matrix::sheared(float shx, float shy)
 {
     return Transform::sheared(shx, shy);
-}
-
-Matrix Matrix::translated(float tx, float ty)
-{
-    return Transform::translated(tx, ty);
 }
 
 bool Element::hasAttribute(const std::string& name) const
@@ -280,7 +260,7 @@ void Element::setAttribute(const std::string& name, const std::string& value)
 
 void Element::render(Bitmap& bitmap, const Matrix& matrix) const
 {
-    if(m_element == nullptr)
+    if(m_element == nullptr || bitmap.isNull())
         return;
     auto canvas = Canvas::create(bitmap);
     SVGRenderState state(nullptr, nullptr, matrix, SVGRenderMode::Painting, canvas);
@@ -378,14 +358,14 @@ std::unique_ptr<Document> Document::loadFromData(const char* data, size_t length
     return document;
 }
 
-bool Document::addFontFace(const std::string& family, bool italic, bool bold, const std::string& filename)
+bool Document::addFontFace(const std::string& family, bool bold, bool italic, const std::string& filename)
 {
-    return !fontFaceCache()->addFontFace(family, italic, bold, filename).isNull();
+    return fontFaceCache()->addFontFace(family, bold, italic, filename);
 }
 
-bool Document::addFontFace(const std::string& family, bool italic, bool bold, const void* data, size_t length)
+bool Document::addFontFace(const std::string& family, bool bold, bool italic, const void* data, size_t length)
 {
-    return !fontFaceCache()->addFontFace(family, italic, bold, data, length).isNull();
+    return fontFaceCache()->addFontFace(family, bold, italic, data, length);
 }
 
 float Document::width() const
@@ -400,7 +380,7 @@ float Document::height() const
 
 Box Document::boundingBox() const
 {
-    return m_rootElement->paintBoundingBox();
+    return m_rootElement->localTransform().mapRect(m_rootElement->paintBoundingBox());
 }
 
 void Document::updateLayout()

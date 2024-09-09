@@ -1,36 +1,24 @@
-
 ################################################################################
-
-cmake_minimum_required(VERSION 3.7.1)
-
+cmake_minimum_required(VERSION 3.15)
 ################################################################################
-
-project(SandboxApps)
-
-####################
-# CHECK IS 64BIT BUILD
-
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-else()
-	message(FATAL_ERROR "32bit Unsupported")
-endif()
-
 
 ####################
 # SandboxApps
+project(SandboxApps)
+
 
 set(SANDBOXAPPS_SOURCES 
-FloatLinesWin.h FloatLinesWin.cpp 
-ParticleSandbox.h ParticleSandbox.cpp 
-LifeWin.h LifeWin.cpp 
-3DTestWin.h 3DTestWin.cpp 
-ProcessImageWin.h ProcessImageWin.cpp 
-TextTestWin.h TextTestWin.cpp
-ZChess.h ZChess.cpp
-ZChessWin.h ZChessWin.cpp
-Main_Sandbox.h Main_Sandbox.cpp
-TestWin.h TestWin.cpp
-teapotdata.h
+	FloatLinesWin.h 			FloatLinesWin.cpp 
+	ParticleSandbox.h 		ParticleSandbox.cpp 
+	LifeWin.h 						LifeWin.cpp 
+	3DTestWin.h 					3DTestWin.cpp 
+	ProcessImageWin.h 		ProcessImageWin.cpp 
+	TextTestWin.h 				TextTestWin.cpp
+	ZChess.h 							ZChess.cpp
+	ZChessWin.h 					ZChessWin.cpp
+	Main_Sandbox.h 				Main_Sandbox.cpp
+	TestWin.h 						TestWin.cpp
+	teapotdata.h
 )
 
 set (GUI_FILES
@@ -138,8 +126,8 @@ link_directories(${LINK_DIRS})
 include_directories(${INCLUDE_DIRS})
 
 add_executable(SandboxApps WIN32 ${SOURCES} ${INCLUDES})
-#add_dependencies(SandboxApps lunasvg)
-target_link_libraries(SandboxApps ${LINK_LIBS})
+target_link_libraries(SandboxApps PRIVATE ${LINK_LIBS})
+
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/res" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/../ZFramework/default_resources" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)

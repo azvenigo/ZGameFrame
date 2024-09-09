@@ -1,34 +1,21 @@
-
 ################################################################################
-
-cmake_minimum_required(VERSION 3.7.1)
-
+cmake_minimum_required(VERSION 3.15)
 ################################################################################
-
-project(ZImageViewer)
-
-####################
-# CHECK IS 64BIT BUILD
-
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-else()
-	message(FATAL_ERROR "32bit Unsupported")
-endif()
-
 
 ####################
 # ZImageViewer
+project(ZImageViewer)
 
 set(ZIMAGEVIEWER_SOURCES 
-Main_ZImageViewer.h Main_ZImageViewer.cpp
-ImageViewer.h ImageViewer.cpp
-ImageContest.h ImageContest.cpp
-ImageMeta.h     ImageMeta.cpp
-ConfirmDeleteDialog.h ConfirmDeleteDialog.cpp
-WinTopWinners.h WinTopWinners.cpp
-ZImageViewer.rc 
-resource_win64.h
-raw_resources/ZImageViewer.ico
+	Main_ZImageViewer.h 		Main_ZImageViewer.cpp
+	ImageViewer.h 					ImageViewer.cpp
+	ImageContest.h 					ImageContest.cpp
+	ImageMeta.h     				ImageMeta.cpp
+	ConfirmDeleteDialog.h 	ConfirmDeleteDialog.cpp
+	WinTopWinners.h 				WinTopWinners.cpp
+	ZImageViewer.rc 
+	resource_win64.h
+	raw_resources/ZImageViewer.ico
 )
 
 set (GUI_FILES
@@ -142,8 +129,8 @@ link_directories(${LINK_DIRS})
 include_directories(${INCLUDE_DIRS})
 
 add_executable(ZImageViewer WIN32 ${SOURCES} ${INCLUDES})
-#add_dependencies(ZImageViewer lunasvg)
 
+#target_link_libraries(ZImageViewer PRIVATE ${LINK_LIBS} lunasvg::lunasvg)
 target_link_libraries(ZImageViewer ${LINK_LIBS})
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/res" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)

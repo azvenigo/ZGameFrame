@@ -50,7 +50,17 @@ Transform& Transform::operator*=(const Transform& transform)
 
 Transform& Transform::multiply(const Transform& transform)
 {
-    return (*this = *this * transform);
+    return (*this *= transform);
+}
+
+Transform& Transform::translate(float tx, float ty)
+{
+    return multiply(translated(tx, ty));
+}
+
+Transform& Transform::scale(float sx, float sy)
+{
+    return multiply(scaled(sx, sy));
 }
 
 Transform& Transform::rotate(float angle)
@@ -63,24 +73,24 @@ Transform& Transform::rotate(float angle, float cx, float cy)
     return multiply(rotated(angle, cx, cy));
 }
 
-Transform& Transform::scale(float sx, float sy)
-{
-    return multiply(scaled(sx, sy));
-}
-
 Transform& Transform::shear(float shx, float shy)
 {
     return multiply(sheared(shx, shy));
 }
 
-Transform& Transform::translate(float tx, float ty)
-{
-    return multiply(translated(tx, ty));
-}
-
 Transform& Transform::postMultiply(const Transform& transform)
 {
     return (*this = transform * *this);
+}
+
+Transform& Transform::postTranslate(float tx, float ty)
+{
+    return postMultiply(translated(tx, ty));
+}
+
+Transform& Transform::postScale(float sx, float sy)
+{
+    return postMultiply(scaled(sx, sy));
 }
 
 Transform& Transform::postRotate(float angle)
@@ -93,19 +103,9 @@ Transform& Transform::postRotate(float angle, float cx, float cy)
     return postMultiply(rotated(angle, cx, cy));
 }
 
-Transform& Transform::postScale(float sx, float sy)
-{
-    return postMultiply(scaled(sx, sy));
-}
-
 Transform& Transform::postShear(float shx, float shy)
 {
     return postMultiply(sheared(shx, shy));
-}
-
-Transform& Transform::postTranslate(float tx, float ty)
-{
-    return postMultiply(translated(tx, ty));
 }
 
 Transform Transform::inverse() const
@@ -302,7 +302,7 @@ void Path::addRect(const Rect& rect)
 
 void Path::reset()
 {
-    plutovg_path_reset(ensure());
+    *this = Path();
 }
 
 Rect Path::boundingRect() const
@@ -325,13 +325,16 @@ bool Path::isUnique() const
 bool Path::parse(const char* data, size_t length)
 {
     plutovg_path_reset(ensure());
-    return plutovg_path_parse(ensure(), data, length);
+    return plutovg_path_parse(m_data, data, length);
 }
 
 plutovg_path_t* Path::ensure()
 {
-    if(!isUnique())
+    if(!isUnique()) {
+        plutovg_path_destroy(m_data);
         m_data = plutovg_path_clone(m_data);
+    }
+
     return m_data;
 }
 
@@ -368,6 +371,8 @@ void PathIterator::next()
 {
     m_index += m_elements[m_index].header.length;
 }
+
+const std::string emptyString;
 
 FontFace::FontFace(plutovg_font_face_t* face)
     : m_face(face)
@@ -421,77 +426,39 @@ plutovg_font_face_t* FontFace::release()
     return std::exchange(m_face, nullptr);
 }
 
-FontFace FontFaceCache::addFontFace(const std::string& family, bool italic, bool bold, const std::string& filename)
+bool FontFaceCache::addFontFace(const std::string& family, bool bold, bool italic, const std::string& filename)
 {
-    return addFontFace(family, italic, bold, FontFace(filename));
+    return addFontFace(family, bold, italic, FontFace(filename));
 }
 
-FontFace FontFaceCache::addFontFace(const std::string& family, bool italic, bool bold, const void* data, size_t length)
+bool FontFaceCache::addFontFace(const std::string& family, bool bold, bool italic, const void* data, size_t length)
 {
-    return addFontFace(family, italic, bold, FontFace(data, length));
+    return addFontFace(family, bold, italic, FontFace(data, length));
 }
 
-FontFace FontFaceCache::addFontFace(const std::string& family, bool italic, bool bold, const FontFace& face)
+bool FontFaceCache::addFontFace(const std::string& family, bool bold, bool italic, const FontFace& face)
 {
     if(!face.isNull())
-       m_table[family].emplace_back(italic, bold, face);
-    return face;
+        m_table[family].emplace_back(bold, italic, face);
+    return !face.isNull();
 }
 
-#ifdef _WIN32
-#define ARIAL_REGULAR "C:/Windows/Fonts/arial.ttf"
-#define ARIAL_ITALIC "C:/Windows/Fonts/ariali.ttf"
-#define ARIAL_BOLD "C:/Windows/Fonts/arialbd.ttf"
-#define ARIAL_BOLD_ITALIC "C:/Windows/Fonts/arialbi.ttf"
-#elif __APPLE__
-#define ARIAL_REGULAR "/Library/Fonts/Arial.ttf"
-#define ARIAL_ITALIC "/Library/Fonts/Arial Italic.ttf"
-#define ARIAL_BOLD "/Library/Fonts/Arial Bold.ttf"
-#define ARIAL_BOLD_ITALIC "/Library/Fonts/Arial Bold Italic.ttf"
-#else
-#define ARIAL_REGULAR "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-#define ARIAL_ITALIC "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"
-#define ARIAL_BOLD "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-#define ARIAL_BOLD_ITALIC "/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"
-#endif
-
-FontFace FontFaceCache::getFallbackFontFace(bool italic, bool bold)
-{
-    if(!italic && !bold)
-        return addFontFace(emptyString, false, false, ARIAL_REGULAR);
-    if(italic && !bold)
-        return addFontFace(emptyString, true, false, ARIAL_ITALIC);
-    if(!italic && bold)
-        return addFontFace(emptyString, false, true, ARIAL_BOLD);
-    return addFontFace(emptyString, true, true, ARIAL_BOLD_ITALIC);
-}
-
-FontFace FontFaceCache::getFontFace(const std::string& family, bool italic, bool bold)
+FontFace FontFaceCache::getFontFace(const std::string& family, bool bold, bool italic)
 {
     auto it = m_table.find(family);
     if(it == m_table.end()) {
-        if(family.empty())
-            return getFallbackFontFace(italic, bold);
-        return getFontFace(emptyString, italic, bold);
+        if(!family.empty())
+            return getFontFace(emptyString, bold, italic);
+        return FontFace();
     }
 
-    if(family.empty()) {
-        for(const auto& item : it->second) {
-            if(italic == std::get<0>(item) && bold == std::get<1>(item)) {
-                return std::get<2>(item);
-            }
-        }
-
-        return getFallbackFontFace(italic, bold);
-    }
-
-    auto select = [italic, bold](const FontFaceEntry& a, const FontFaceEntry& b) {
+    auto select = [bold, italic](const FontFaceEntry& a, const FontFaceEntry& b) {
         if(std::get<2>(a).isNull())
             return b;
         if(std::get<2>(b).isNull())
             return a;
-        int aScore = (italic == std::get<0>(a)) + (bold == std::get<1>(a));
-        int bScore = (italic == std::get<0>(b)) + (bold == std::get<1>(b));
+        int aScore = (bold == std::get<0>(a)) + (italic == std::get<1>(a));
+        int bScore = (bold == std::get<0>(b)) + (italic == std::get<1>(b));
         return aScore > bScore ? a : b;
     };
 
@@ -501,6 +468,26 @@ FontFace FontFaceCache::getFontFace(const std::string& family, bool italic, bool
     }
 
     return std::get<2>(entry);
+}
+
+FontFaceCache::FontFaceCache()
+{
+#ifdef _WIN32
+    addFontFace(emptyString, false, false, "C:/Windows/Fonts/arial.ttf");
+    addFontFace(emptyString, true, false, "C:/Windows/Fonts/arialbd.ttf");
+    addFontFace(emptyString, false, true, "C:/Windows/Fonts/ariali.ttf");
+    addFontFace(emptyString, true, true, "C:/Windows/Fonts/arialbi.ttf");
+#elif __APPLE__
+    addFontFace(emptyString, false, false, "/Library/Fonts/Arial.ttf");
+    addFontFace(emptyString, true, false, "/Library/Fonts/Arial Bold.ttf");
+    addFontFace(emptyString, false, true, "/Library/Fonts/Arial Italic.ttf");
+    addFontFace(emptyString, true, true, "/Library/Fonts/Arial Bold Italic.ttf");
+#elif __linux__
+    addFontFace(emptyString, false, false, "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+    addFontFace(emptyString, true, false, "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf");
+    addFontFace(emptyString, false, true, "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf");
+    addFontFace(emptyString, true, true, "/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf");
+#endif
 }
 
 FontFaceCache* fontFaceCache()

@@ -1,9 +1,12 @@
 
 ################################################################################
 
-cmake_minimum_required(VERSION 3.7.1)
+cmake_minimum_required(VERSION 3.15)
 
 ################################################################################
+
+set(BUILD_SHARED_LIBS OFF)
+set(LUNASVG_BUILD_EXAMPLES OFF)
 
 project(ZGameFrame)
 
@@ -40,12 +43,12 @@ endif()
 
 
 set(COMMON_FILES 
-../../ZLibraries/Common/helpers/FileHelpers.h         ../../ZLibraries/Common/helpers/FileHelpers.cpp
+../../ZLibraries/Common/helpers/FileHelpers.h				../../ZLibraries/Common/helpers/FileHelpers.cpp
 ../../ZLibraries/Common/helpers/FNMatch.h           ../../ZLibraries/Common/helpers/FNMatch.cpp 
 ../../ZLibraries/Common/helpers/HTTPCache.h         ../../ZLibraries/Common/helpers/HTTPCache.cpp
 ../../ZLibraries/Common/helpers/CommandLineParser.h ../../ZLibraries/Common/helpers/CommandLineParser.cpp
 ../../ZLibraries/Common/helpers/CommandLineEditor.h ../../ZLibraries/Common/helpers/CommandLineEditor.cpp
-../../ZLibraries/Common/helpers/LoggingHelpers.h ../../ZLibraries/Common/helpers/LoggingHelpers.cpp
+../../ZLibraries/Common/helpers/LoggingHelpers.h 		../../ZLibraries/Common/helpers/LoggingHelpers.cpp
 ../../ZLibraries/Common/helpers/StringHelpers.h     ../../ZLibraries/Common/helpers/StringHelpers.cpp 
 ../../ZLibraries/Common/helpers/ThreadPool.h
 ../../ZLibraries/Common/helpers/Registry.h          ../../ZLibraries/Common/helpers/Registry.cpp
@@ -60,8 +63,9 @@ set(COMMON_FILES
 add_library(mio INTERFACE External/mio)
 add_library(mio::mio ALIAS mio)
 
+
 #if(MSVC)
-list(APPEND LINK_LIBS  Version.lib)
+list(APPEND LINK_LIBS Version.lib lunasvg)
 #endif()
 
 
@@ -79,20 +83,21 @@ list(APPEND INCLUDE_DIRS
 ../../ZLibraries/Common/stb
 ../../ZLibraries/Common/curl/include
 ../ZFramework/platforms/windows
-../external/lunasvg/include
 ../external
+../external/lunasvg/source
 )
 
-list(APPEND LINK_DIRS ../external/lunasvg/build ../external/plutovg/build ../../ZLibraries/Common/curl/lib)
-list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib lunasvg.lib libcurl.lib)
+list(APPEND LINK_DIRS ../../ZLibraries/Common/curl/lib)
+list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libcurl.lib)
 
 
 ####################
 # PROJECTS
 
-#add_subdirectory(External/lunasvg)
 add_subdirectory(SandboxApps)
 add_subdirectory(ZImageViewer)
+add_subdirectory(External/lunasvg)
+
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ZImageViewer)
 ################################################################################
