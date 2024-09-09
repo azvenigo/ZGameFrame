@@ -67,8 +67,8 @@ bool ParticleSandbox::Init()
     mpControlPanel->Toggle("gravField_toggle", &shiftingGravField, "Shifting Grav Field", "{reinit;target=particlesandbox}", "{reinit;target=particlesandbox}");
     
 
-    mpControlPanel->Slider("gravFieldX", &gravFieldX, 0, 10, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
-    mpControlPanel->Slider("gravFieldY", &gravFieldY, 0, 10, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("gravFieldX", &gravFieldX, 0, 100, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("gravFieldY", &gravFieldY, 0, 100, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
     mpControlPanel->Toggle("draw_field_toggle", &drawGravField, "Draw Grav Field", "{reinit;target=particlesandbox}", "{reinit;target=particlesandbox}");
 
     mpControlPanel->Caption("term_caption", "Terminal Velocity");

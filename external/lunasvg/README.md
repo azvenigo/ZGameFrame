@@ -1,14 +1,12 @@
-[![Releases](https://img.shields.io/badge/Version-2.3.8-orange.svg)](https://github.com/sammycage/lunasvg/releases)
+[![Releases](https://img.shields.io/badge/Version-3.0.0-orange.svg)](https://github.com/sammycage/lunasvg/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/sammycage/lunasvg/blob/master/LICENSE)
-[![Build Status](https://github.com/sammycage/lunasvg/actions/workflows/ci.yml/badge.svg)](https://github.com/sammycage/lunasvg/actions)
+[![Build Status](https://github.com/sammycage/lunasvg/actions/workflows/main.yml/badge.svg)](https://github.com/sammycage/lunasvg/actions)
 
-> If you like the work lunasvg is doing please consider a small donation : [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.me/sammycage)
+# LunaSVG
 
-# LunaSVG - SVG rendering library in C++
+LunaSVG is an SVG rendering library in C++, designed to be lightweight and portable, offering efficient rendering and manipulation of Scalable Vector Graphics (SVG) files.
 
-![LunaSVG](https://github.com/sammycage/lunasvg/blob/master/luna.png)
-
-## Example
+## Basic Usage
 
 ```cpp
 #include <lunasvg.h>
@@ -18,58 +16,64 @@ using namespace lunasvg;
 int main()
 {
     auto document = Document::loadFromFile("tiger.svg");
+    if(document == nullptr)
+        return -1;
     auto bitmap = document->renderToBitmap();
-
-    // do something useful with the bitmap here.
-
+    if(bitmap.isNull())
+        return -1;
+    bitmap.writeToPng("tiger.png");
     return 0;
 }
 
 ```
 
+![tiger.png](https://github.com/user-attachments/assets/b87bbf92-6dd1-4b29-a890-99cfffce66b8)
+
 ## Features
 
-- Basic Shapes
-- Document Structures
-- Coordinate Systems, Transformations and Units
-- SolidColors
-- Gradients
-- Patterns
-- Masks
-- ClipPaths
-- Markers
-- StyleSheet
+LunaSVG supports nearly all graphical features outlined in the SVG 1.1 and SVG 1.2 Tiny specifications. The primary exceptions are animation, filters, and scripts. As LunaSVG is designed for static rendering, animation is unlikely to be supported in the future. However, support for filters may be added.
 
-## TODO
+### Supported Elements
 
-- Texts
-- Filters
-- Images
+`<a>` `<circle>` `<clipPath>` `<defs>` `<ellipse>` `<g>` `<image>` `<line>` `<linearGradient>` `<marker>` `<mask>` `<path>` `<pattern>` `<polygon>` `<polyline>` `<radialGradient>` `<rect>` `<stop>` `<style>` `<svg>` `<symbol>` `<text>` `<tspan>` `<use>`
 
-## Build
+## Installation
 
-```
+Follow the steps below to install LunaSVG using either [Meson](https://mesonbuild.com/) or [CMake](https://cmake.org/).
+
+### Using Meson
+
+```bash
 git clone https://github.com/sammycage/lunasvg.git
 cd lunasvg
-mkdir build
-cd build
-cmake ..
-make -j 2
+meson setup build
+ninja -C build install
 ```
 
-To install lunasvg library.
+### Using CMake
 
-```
-make install
+```bash
+git clone https://github.com/sammycage/lunasvg.git
+cd lunasvg
+cmake -B build .
+make -C build -j2
+make -C build install
 ```
 
 ## Demo
 
-By enabling the `LUNASVG_BUILD_EXAMPLES` option during the CMake configuration, the lunasvg build includes a simple SVG to PNG converter for easy conversion of SVG files to PNG format.
+LunaSVG provides a command-line tool `svg2png` for converting SVG files to PNG format.
 
-Run Demo.
-```
+### Usage:
+```bash
 svg2png [filename] [resolution] [bgColor]
+```
+
+### Examples:
+```bash
+$ svg2png input.svg
+$ svg2png input.svg 512x512
+$ svg2png input.svg 512x512 0xff00ffff
 ```
 
 ## Projects Using LunaSVG
@@ -78,7 +82,10 @@ svg2png [filename] [resolution] [bgColor]
 - [PICsimLab](https://github.com/lcgamboa/picsimlab)
 - [MoneyManagerEx](https://github.com/moneymanagerex/moneymanagerex)
 - [RmlUi](https://github.com/mikke89/RmlUi)
-- [EKA2L1](https://github.com/EKA2L/EKA2L1)
 - [ObEngine](https://github.com/ObEngine/ObEngine)
 - [OTTO](https://github.com/bitfieldaudio/OTTO)
 - [EmulationStation-DE](https://gitlab.com/es-de/emulationstation-de)
+- [SvgBooga](https://github.com/etodanik/SvgBooga/tree/main)
+- [Dear ImGui](https://github.com/ocornut/imgui)
+- [Multi Theft Auto: San Andreas](https://github.com/multitheftauto/mtasa-blue)
+- [eScada Solutions](https://www.escadasolutions.com)

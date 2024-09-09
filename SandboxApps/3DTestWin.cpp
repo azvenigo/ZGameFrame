@@ -20,7 +20,6 @@ using namespace Z3D;
 
 
 
-//#define RENDER_TEAPOT
 
 #ifdef RENDER_TEAPOT
 #include "teapotdata.h"
@@ -294,6 +293,9 @@ struct IsectInfo
     Vec2f uv;
     uint32_t index = 0;
 };
+
+
+bool trace(Vec3d& orig, const Vec3d& dir, std::vector<Object*>& objects, IsectInfo& isect);
 
 Vec3d castRay(
     Vec3d& orig, const Vec3d& dir,
@@ -816,11 +818,11 @@ Vec3d TraceSpheres(
 
 
 
-void ThreadTrace(ZRect rArea, std::vector<Sphere>& spheres, ZBuffer* pDest, int64_t nDepth)
+void ThreadTrace(ZRect rArea, std::vector<Sphere>& spheres, ZBuffer* pDest, int64_t nDepth, double fov)
 {
     ZRect rFullArea(pDest->GetArea());
     double invWidth = 1 / double(rFullArea.Width()), invHeight = 1 / double(rFullArea.Height());
-    double fov = 30, aspectratio = rFullArea.Width() / double(rFullArea.Height());
+    double /*fov = 30,*/ aspectratio = rFullArea.Width() / double(rFullArea.Height());
     double angle = (double)tan( M_PI * 0.5 * fov / 180.);
 
     for (int64_t y = rArea.top; y < rArea.bottom; ++y) {
@@ -868,7 +870,7 @@ void Z3DTestWin::RenderSpheres(tZBufferPtr pSurface)
             nBottom = height;
 
         ZRect r(0, nTop, width, nBottom);
-        workers.emplace_back(std::thread(ThreadTrace, (ZRect)r, std::ref(mSpheres), (ZBuffer*)pSurface.get(), mnRayDepth));
+        workers.emplace_back(std::thread(ThreadTrace, (ZRect)r, std::ref(mSpheres), (ZBuffer*)pSurface.get(), mnRayDepth, (mnFOVTime100 / 100.0)));
 
         nTop += nLines;
     }
@@ -911,6 +913,7 @@ Z3DTestWin::Z3DTestWin()
     mnTargetSphereCount = 15;
     mnMinSphereSizeTimes100 = kDefaultMinSphereSize;
     mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize/2;
+    mnFOVTime100 = 30.0 * 100.0;
     mnRotateSpeed = 10;
     mnRayDepth = 3;
     mfBaseAngle = 0.0;
@@ -1029,7 +1032,7 @@ bool Z3DTestWin::Init()
 
         pCP->Init();
 
-        string sUpdateSphereCountMsg(ZMessage("{updatespherecount}", this));
+        string sUpdateSphereCountMsg(ZMessage("updatespherecount", this));
 
         pCP->Caption("Sphere Count", "Sphere Count");
         pCP->Slider("spherecount", &mnTargetSphereCount, 1, 50, 1, 0.25, sUpdateSphereCountMsg, true, false);
@@ -1043,6 +1046,10 @@ bool Z3DTestWin::Init()
 
         pCP->Caption("speed", "Speed");
         pCP->Slider("rotatespeed", &mnRotateSpeed, 0, 100, 1, 0.25, "", true, false);
+
+        pCP->Caption("fov", "FOV");
+        pCP->Slider("fov", &mnFOVTime100, 100, 18000, 1, 0.25, "", false, false);
+
 
         pCP->Caption("raydepth", "Ray Depth");
         pCP->Slider("raydepth", &mnRayDepth, 0, 10, 1, 0.25, "", true, false);
@@ -1347,7 +1354,7 @@ bool Z3DTestWin::Paint()
     if (mpTeapotRender)
     {
         ZRect rArea(mpTeapotRender.get()->GetArea());
-        mpTransformTexture->Blt(mpTeapotRender.get(), rArea, rArea);
+        mpSurface->Blt(mpTeapotRender.get(), rArea, rArea);
     }
 #endif
 

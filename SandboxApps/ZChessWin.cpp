@@ -17,6 +17,7 @@
 #include "ZWinPaletteDialog.h"
 
 using namespace std;
+using namespace lunasvg;
 
 
 ZChoosePGNWin::ZChoosePGNWin()
@@ -582,10 +583,10 @@ bool ZChessWin::Init()
     }
     else
     {
-        mPalette.mColorMap = ZGUI::tColorMap{   { "light_sq", 0xffeeeed5 },     // kLightSqCol
-                                                { "dark_sq", 0xff7d945d },      // kDarkSqCol
-                                                { "white_col", 0xffffffff },    // kWhiteCol
-                                                { "black_col", 0xff000000 } };  // kBlackCol
+        mPalette.mColorMap = ZGUI::tColorMap{   { "light_sq", 0xff99c4dc },     // kLightSqCol
+                                                { "dark_sq", 0xff4e5262 },      // kDarkSqCol
+                                                { "white_col", 0xffd0d2eb },    // kWhiteCol
+                                                { "black_col", 0xff12142f } };  // kBlackCol
         gRegistry.SetDefault("chess", "palette", mPalette);
     }
 
@@ -712,19 +713,32 @@ void ZChessWin::UpdateSize()
     uint32_t whiteCol = mPalette.mColorMap[kWhiteCol].col;
     uint32_t blackCol = mPalette.mColorMap[kBlackCol].col;
 
-    mPieceData['K'].GenerateImageFromSymbolicFont('K', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['Q'].GenerateImageFromSymbolicFont('Q', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['R'].GenerateImageFromSymbolicFont('R', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['B'].GenerateImageFromSymbolicFont('B', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['N'].GenerateImageFromSymbolicFont('N', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['P'].GenerateImageFromSymbolicFont('P', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-
-    mPieceData['k'].GenerateImageFromSymbolicFont('k', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['q'].GenerateImageFromSymbolicFont('q', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['r'].GenerateImageFromSymbolicFont('r', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['b'].GenerateImageFromSymbolicFont('b', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['n'].GenerateImageFromSymbolicFont('n', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
-    mPieceData['p'].GenerateImageFromSymbolicFont('p', mnPieceHeight, mpSymbolicFont, true, whiteCol, blackCol);
+//    if (whiteCol == 0xffffffff)
+    {
+        mPieceData['K'].LoadImage("res/chess/king_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['Q'].LoadImage("res/chess/queen_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['R'].LoadImage("res/chess/rook_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['B'].LoadImage("res/chess/bishop_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['N'].LoadImage("res/chess/knight_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['P'].LoadImage("res/chess/pawn_b.svg", mnPieceHeight, whiteCol);
+    }
+/*    else
+    {
+        // load black piece images (as they are filled in and can be colorized)
+        mPieceData['K'].LoadImageA("res/chess/king_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['Q'].LoadImageA("res/chess/queen_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['R'].LoadImageA("res/chess/rook_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['B'].LoadImageA("res/chess/bishop_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['N'].LoadImageA("res/chess/knight_b.svg", mnPieceHeight, whiteCol);
+        mPieceData['P'].LoadImageA("res/chess/pawn_b.svg", mnPieceHeight, whiteCol);
+    }*/
+    
+    mPieceData['k'].LoadImage("res/chess/king_b.svg", mnPieceHeight, blackCol);
+    mPieceData['q'].LoadImage("res/chess/queen_b.svg", mnPieceHeight, blackCol);
+    mPieceData['r'].LoadImage("res/chess/rook_b.svg", mnPieceHeight, blackCol);
+    mPieceData['b'].LoadImage("res/chess/bishop_b.svg", mnPieceHeight, blackCol);
+    mPieceData['n'].LoadImage("res/chess/knight_b.svg", mnPieceHeight, blackCol);
+    mPieceData['p'].LoadImage("res/chess/pawn_b.svg", mnPieceHeight, blackCol);
 
     mrBoardArea.SetRect(0, 0, mnPieceHeight * 8, mnPieceHeight * 8);
     mrBoardArea = mrBoardArea.CenterInRect(mAreaLocal);
@@ -1517,6 +1531,48 @@ void ZChessWin::ShowPromotingWin(const ZPoint& grid)
 }
 
 
+bool ChessPiece::LoadImage(std::string path, int64_t nSize, uint32_t col)
+{
+    mpImage.reset(new ZBuffer());
+    mpImage->Init(nSize, nSize);
+//    if (!mpImage->LoadBuffer(path))
+//        return false;
+
+
+    string sDoc;
+    if (!SH::Load(path, sDoc))
+    {
+        return false;
+    }
+
+    char buf[64];
+    sprintf(buf, "style=\"fill:#%02X%02X%02X;", ARGB_R(col), ARGB_G(col), ARGB_B(col));
+
+
+    sDoc = SH::replaceTokens(sDoc, "style=\"fill:#ff00ff;", buf);
+
+
+    auto doc = lunasvg::Document::loadFromData(sDoc);
+
+    if (!doc)
+        return false;
+    auto svgbitmap = doc->renderToBitmap((uint32_t)nSize, (uint32_t)nSize); // if the buffer is already initialized, this will render at the same dimensions. If not these will be 0x0 & it will render at the SVG embedded dimensions
+
+    int64_t w = (int64_t)svgbitmap.width();
+    int64_t h = (int64_t)svgbitmap.height();
+    uint32_t s = svgbitmap.stride();
+
+    for (int64_t y = 0; y < h; y++)
+    {
+        memcpy(mpImage->mpPixels + y * w, svgbitmap.data() + y * s, w * 4);
+    }
+
+    mpImage->mbHasAlphaPixels = true;
+
+    return true;
+}
+
+/*
 bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline, uint32_t whiteCol, uint32_t blackCol)
 {
     mpImage.reset(new ZBuffer());
@@ -1560,7 +1616,7 @@ bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFo
     pFont->DrawTextParagraph(mpImage.get(), s, rSquare, &style);
     return true;
 }
-
+*/
 
 void ZChessWin::ClearHistory()
 {
