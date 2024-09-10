@@ -2515,7 +2515,7 @@ void ImageViewer::UpdateCaptions()
 
             ZGUI::Style style(mpWinImage->mpTable->mCellStyle);
             style.fp.nWeight = 800;
-            style.fp.nScalePoints = style.fp.nScalePoints*1.2f;
+            style.fp.nScalePoints = (int64_t) ((float)style.fp.nScalePoints * 1.2f);
 
             mpWinImage->mpTable->SetColStyle(0, style);
         }

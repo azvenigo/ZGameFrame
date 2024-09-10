@@ -913,7 +913,7 @@ Z3DTestWin::Z3DTestWin()
     mnTargetSphereCount = 15;
     mnMinSphereSizeTimes100 = kDefaultMinSphereSize;
     mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize/2;
-    mnFOVTime100 = 30.0 * 100.0;
+    mnFOVTime100 = 30 * 100;
     mnRotateSpeed = 10;
     mnRayDepth = 3;
     mfBaseAngle = 0.0;

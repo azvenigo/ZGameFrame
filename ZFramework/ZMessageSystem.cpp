@@ -24,7 +24,7 @@ ZMessage::ZMessage(const ZMessage& rhs)
     gTotalMessageCount++;
     mKeyValueMap = rhs.mKeyValueMap;
     mType = rhs.mType;
-    mTarget = rhs.mTarget;
+    //mTarget = rhs.mTarget;
 }
 
 ZMessage::~ZMessage()
@@ -78,9 +78,7 @@ void ZMessage::FromString(const string& sMessage)
                 SH::SplitToken(sKey, sPair, "=");
                 ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
                 ZASSERT_MESSAGE(!sPair.empty(), "Value is empty!");
-                if (sKey == "target")
-                    mTarget = sPair;
-                else if (sKey == "type")
+                if (sKey == "type")
                 {
                     mType = sPair;
                     assert(mType[0] != '{');
@@ -99,9 +97,7 @@ void ZMessage::FromString(const string& sMessage)
             SH::SplitToken(sKey, sParse, "=");
             ZASSERT_MESSAGE(!sKey.empty(), "Key is empty!");
             ZASSERT_MESSAGE(!sParse.empty(), "Value is empty!");
-            if (sKey == "target")
-                mTarget = sParse;
-            else if (sKey == "type")
+            if (sKey == "type")
             {
                 mType = sParse;
                 assert(mType[0] != '{');
@@ -121,8 +117,12 @@ void ZMessage::FromString(const string& sMessage)
 string ZMessage::ToString() const
 {
     string sRaw("{" + mType + ";");
-    if (!mTarget.empty())
-        sRaw += "target=" + mTarget + ";";
+
+    tKeyValueMap::const_iterator it = mKeyValueMap.find("target");
+    if (it != mKeyValueMap.end())
+    {
+        sRaw += "target=" + (*it).second + ";";
+    }
 
     for (tKeyValueMap::const_iterator it = mKeyValueMap.begin(); it != mKeyValueMap.end(); it++)
     {

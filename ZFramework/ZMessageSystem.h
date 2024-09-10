@@ -110,7 +110,7 @@ public:
     {
         mType = type;
         assert(pTarget);
-        mTarget = pTarget->GetTargetName();
+        SetTarget(pTarget->GetTargetName());
     }
 
 
@@ -119,18 +119,14 @@ public:
     {
         mType = type;
         assert(pTarget);
-        mTarget = pTarget->GetTargetName();
+        SetTarget(pTarget->GetTargetName());
         ToMessage(key, val, more...);
     }
 
     template <typename S, typename...SMore>
     inline void ToMessage(const std::string& key, S val, SMore...moreargs)
     {
-        if (key == "target")
-            mTarget = val;
-        else
-            mKeyValueMap[key] = ConvertToString(val);
-
+        mKeyValueMap[key] = ConvertToString(val);
         return ToMessage(moreargs...);
     }
 
@@ -154,8 +150,15 @@ public:
 
 
 	// Helper functions
-    std::string     GetTarget() const { return mTarget; }
-	void            SetTarget(const std::string& sTarget) { mTarget = sTarget; }
+    std::string     GetTarget() const 
+    { 
+        tKeyValueMap::const_iterator it = mKeyValueMap.find("target");
+        if (it == mKeyValueMap.end())
+            return "";
+
+        return (*it).second; 
+    }
+	void            SetTarget(const std::string& sTarget) { mKeyValueMap["target"] = sTarget; }
 
     std::string     GetType() const { return mType; }
     void            SetType(const std::string& sType) { mType = sType; }
@@ -171,7 +174,7 @@ public:
 
 private:
 	tKeyValueMap    mKeyValueMap;
-    std::string     mTarget;
+    //std::string     mTarget;
     std::string     mType;
 };
 

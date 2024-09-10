@@ -1180,7 +1180,7 @@ void ZBuffer::DrawSphere(ZPoint center, int64_t radius, const Z3D::Vec3f& lightP
             uint8_t nCurG;
             uint8_t nCurB;
 
-            uint32_t col = Z3D::calculateLighting(x, y, center.x, center.y, radius, lightPos, viewPos, ambient, diffuse, specular, shininess);
+            uint32_t col = Z3D::calculateLighting((float)x, (float)y, (float)center.x, (float)center.y, (float)radius, lightPos, viewPos, ambient, diffuse, specular, shininess);
 
             float fA = (float)(col >> 24);
             float fR = (float)((col & 0x00ff0000) >> 16);
@@ -1909,7 +1909,7 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 
 	return true;
 
-#define M_PI 3.141592653
+//#define M_PI 3.141592653
 }
 
 

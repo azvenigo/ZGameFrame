@@ -1535,24 +1535,19 @@ bool ChessPiece::LoadImage(std::string path, int64_t nSize, uint32_t col)
 {
     mpImage.reset(new ZBuffer());
     mpImage->Init(nSize, nSize);
-//    if (!mpImage->LoadBuffer(path))
-//        return false;
 
 
-    string sDoc;
-    if (!SH::Load(path, sDoc))
-    {
-        return false;
-    }
+    auto doc = lunasvg::Document::loadFromFile(path);
 
-    char buf[64];
-    sprintf(buf, "style=\"fill:#%02X%02X%02X;", ARGB_R(col), ARGB_G(col), ARGB_B(col));
+    string sCol(std::format("#{:02X}{:02X}{:02X}", ARGB_R(col), ARGB_G(col), ARGB_B(col)));
+    auto element = doc->getElementById("piece");
+    element.setAttribute("fill", sCol);
 
+    element = doc->getElementById("base");
+    if (!element.isNull())
+        element.setAttribute("fill", sCol);
 
-    sDoc = SH::replaceTokens(sDoc, "style=\"fill:#ff00ff;", buf);
-
-
-    auto doc = lunasvg::Document::loadFromData(sDoc);
+    doc->updateLayout();
 
     if (!doc)
         return false;
