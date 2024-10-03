@@ -5,9 +5,6 @@ cmake_minimum_required(VERSION 3.15)
 
 ################################################################################
 
-set(BUILD_SHARED_LIBS OFF)
-set(LUNASVG_BUILD_EXAMPLES OFF)
-
 project(ZGameFrame)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -65,7 +62,8 @@ add_library(mio::mio ALIAS mio)
 
 
 #if(MSVC)
-list(APPEND LINK_LIBS Version.lib lunasvg)
+list(APPEND LINK_LIBS Version.lib)
+add_definitions(/wd4251)
 #endif()
 
 
@@ -84,11 +82,11 @@ list(APPEND INCLUDE_DIRS
 ../../ZLibraries/Common/curl/include
 ../ZFramework/platforms/windows
 ../external
-../external/lunasvg/source
+../external/lunasvg/include
 )
 
-list(APPEND LINK_DIRS ../../ZLibraries/Common/curl/lib)
-list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libcurl.lib)
+list(APPEND LINK_DIRS ../../ZLibraries/Common/curl/lib ../external/lunasvg/build/debug)
+list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libcurl.lib lunasvg.lib)
 
 
 ####################
@@ -96,7 +94,7 @@ list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib
 
 add_subdirectory(SandboxApps)
 add_subdirectory(ZImageViewer)
-add_subdirectory(External/lunasvg)
+#add_subdirectory(External/lunasvg)
 
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ZImageViewer)

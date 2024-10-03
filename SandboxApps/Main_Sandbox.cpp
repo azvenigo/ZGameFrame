@@ -11,6 +11,7 @@
 #include "FloatLinesWin.h"
 #include "TextTestWin.h"
 #include "TestWin.h"
+#include "OnePageDocWin.h"
 #include "ParticleSandbox.h"
 #include "3DTestWin.h"
 #include "ZChessWin.h"
@@ -98,6 +99,9 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
     gpControlPanel->Button("ParticleSandbox", "ParticleSandbox", "{initchildwindows;mode=10;target=MainAppMessageTarget}");
+
+    gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
+    gpControlPanel->Button("OnePageDoc", "OnePageDoc", "{initchildwindows;mode=11;target=MainAppMessageTarget}");
 
     gpControlPanel->FitToControls();
 
@@ -239,6 +243,15 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
     {
         ZRect rArea(grFullArea);
         ParticleSandbox* pWin = new ParticleSandbox();
+        pWin->SetArea(rArea);
+        gpMainWin->ChildAdd(pWin);
+        sandboxWins.push_back(pWin);
+    }
+
+    else if (mode == eSandboxMode::kOnePageDoc)
+    {
+        ZRect rArea(grFullArea);
+        OnePageDocWin* pWin = new OnePageDocWin();
         pWin->SetArea(rArea);
         gpMainWin->ChildAdd(pWin);
         sandboxWins.push_back(pWin);

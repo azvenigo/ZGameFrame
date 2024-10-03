@@ -29,7 +29,8 @@ namespace Sandbox
         k3DTestWin = 7,
         kChessWin = 8,
         kTestWin = 9,
-        kParticleSandbox = 10
+        kParticleSandbox = 10,
+        kOnePageDoc = 11
     };
 
     void InitControlPanel();

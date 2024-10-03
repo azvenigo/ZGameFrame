@@ -130,9 +130,10 @@ include_directories(${INCLUDE_DIRS})
 
 add_executable(ZImageViewer WIN32 ${SOURCES} ${INCLUDES})
 
-#target_link_libraries(ZImageViewer PRIVATE ${LINK_LIBS} lunasvg::lunasvg)
 target_link_libraries(ZImageViewer ${LINK_LIBS})
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_LIST_DIR}/../external/lunasvg/build/$<CONFIG>/lunasvg.dll" $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_LIST_DIR}/../external/lunasvg/build/_deps/plutovg-build/$<CONFIG>/plutovg.dll" $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/res" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/install" $<TARGET_FILE_DIR:${PROJECT_NAME}>/install)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/../ZFramework/default_resources" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)

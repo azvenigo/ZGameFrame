@@ -344,8 +344,8 @@ bool ZBuffer::SaveBuffer(const std::string& sName)
     string sExt = filename.extension().string();
     SH::makelower(sExt);
 
-    int w = (int)mSurfaceArea.Width();
-    int h = (int)mSurfaceArea.Height();
+    int64_t w = (int64_t)mSurfaceArea.Width();
+    int64_t h = (int64_t)mSurfaceArea.Height();
 
     uint32_t* pSwizzled = new uint32_t[w * h];
 

@@ -458,7 +458,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
     else if (sType == "invalidate")
     {
         if (mbSubsample && mpWinImage)
-            mpWinImage->nSubsampling = 2;
+            mpWinImage->nSubsampling = 4;
         else
             mpWinImage->nSubsampling = 0;
         InvalidateChildren();
@@ -1355,7 +1355,7 @@ bool ImageViewer::Init()
         mpWinImage->mFillColor = 0xff000000;
         mpWinImage->mZoomHotkey = VK_MENU;
         if (mbSubsample)
-            mpWinImage->nSubsampling = 2;
+            mpWinImage->nSubsampling = 4;
         mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable|ZWinImage::kSelectableArea|ZWinImage::kLaunchGeolocation;
 
 //        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;

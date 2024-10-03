@@ -823,6 +823,7 @@ void ThreadTrace(ZRect rArea, std::vector<Sphere>& spheres, ZBuffer* pDest, int6
     ZRect rFullArea(pDest->GetArea());
     double invWidth = 1 / double(rFullArea.Width()), invHeight = 1 / double(rFullArea.Height());
     double /*fov = 30,*/ aspectratio = rFullArea.Width() / double(rFullArea.Height());
+
     double angle = (double)tan( M_PI * 0.5 * fov / 180.);
 
     for (int64_t y = rArea.top; y < rArea.bottom; ++y) {
@@ -1257,6 +1258,7 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
     screenVerts[3].v = 1.0;
 
     gRasterizer.Rasterize(mpSurface.get(), pTexture.get(), screenVerts);
+//    gRasterizer.MultiSampleRasterizeWithAlpha(mpSurface.get(), pTexture.get(), screenVerts, nullptr, 1);
 }
 
 

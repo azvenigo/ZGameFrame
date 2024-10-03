@@ -423,45 +423,65 @@ bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, t
 }
 
 
-uint32_t SampleTexture(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, uint32_t nSampleSubdivisions)
+uint32_t SampleTexture(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, int32_t nSampleSubdivisions)
 {
     uint32_t* pSourcePixels = pTexture->GetPixels();
     int64_t nTextureStride = pTexture->GetArea().Width();
-    double fTextureW = (double)pTexture->GetArea().Width() - 0.5;
-    double fTextureH = (double)pTexture->GetArea().Height() - 0.5;
+    double fTextureW = (double)pTexture->GetArea().Width() - 1.0;
+    double fTextureH = (double)pTexture->GetArea().Height() - 1.0;
 
-    double fSubPixelDU = (1.0/fTextureW) / (double)nSampleSubdivisions;
-    double fSubPixelDV = (1.0/fTextureH) / (double)nSampleSubdivisions;
+
+    double fSubDU = fTexturePixelDU / (double)nSampleSubdivisions;
+    double fSubDV = fTexturePixelDV / (double)nSampleSubdivisions;
+
+    double fSubDUy = -fSubDV;
+    double fsubDVy = fSubDU;
+
 
     uint64_t nFinalA = 0;
     uint64_t nFinalR = 0;
     uint64_t nFinalG = 0;
     uint64_t nFinalB = 0;
 
-    double fSampleV = fTexturePixelV;
-    for (uint32_t y = 0; y < nSampleSubdivisions; y++)
+    double minIndex = 0;
+    double maxIndex = nSampleSubdivisions;
+
+    // Loop over the subdivisions to accumulate samples
+    for (double y = minIndex; y < maxIndex; y += 1.0)
     {
-        double fSampleU = fTexturePixelU;
-        for (uint32_t x = 0; x < nSampleSubdivisions; x++)
+        for (double x = minIndex; x < maxIndex; x += 1.0)
         {
+            // Compute the UV offsets for the current sample
+            double fSampleU = fTexturePixelU + x * fSubDU + y * fSubDV;
+            double fSampleV = fTexturePixelV + x * fSubDUy + y * fsubDVy;
+
+            // Convert UV to texture coordinates (integer pixel coordinates)
             int64_t nTextureX = (int64_t)(fSampleU * fTextureW);
             int64_t nTextureY = (int64_t)(fSampleV * fTextureH);
+
+            // Fetch the pixel color from the texture
             uint32_t nSourceCol = *(pSourcePixels + nTextureY * nTextureStride + nTextureX);
+
+            // Accumulate the ARGB values
             nFinalA += ARGB_A(nSourceCol);
             nFinalR += ARGB_R(nSourceCol);
             nFinalG += ARGB_G(nSourceCol);
             nFinalB += ARGB_B(nSourceCol);
-
-            fSampleU += fSubPixelDV;
         }
-        fSampleV += fSubPixelDV;
     }
 
+    // Compute the average color from all samples
     uint32_t nSamples = nSampleSubdivisions * nSampleSubdivisions;
-    uint32_t nFinalCol = ARGB((uint32_t)(nFinalA / nSamples), (uint32_t)(nFinalR / nSamples), (uint32_t)(nFinalG / nSamples), (uint32_t)(nFinalB / nSamples));
+    uint32_t nFinalCol = ARGB(
+        (uint32_t)(nFinalA / nSamples),
+        (uint32_t)(nFinalR / nSamples),
+        (uint32_t)(nFinalG / nSamples),
+        (uint32_t)(nFinalB / nSamples)
+    );
 
     return nFinalCol;
 }
+
 
 bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip, uint32_t nSubsamples, uint8_t nAlpha)
 {

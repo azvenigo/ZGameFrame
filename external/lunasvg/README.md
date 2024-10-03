@@ -31,9 +31,7 @@ int main()
 
 ## Features
 
-LunaSVG supports nearly all graphical features outlined in the SVG 1.1 and SVG 1.2 Tiny specifications. The primary exceptions are animation, filters, and scripts. As LunaSVG is designed for static rendering, animation is unlikely to be supported in the future. However, support for filters may be added.
-
-### Supported Elements
+LunaSVG supports nearly all graphical features outlined in the SVG 1.1 and SVG 1.2 Tiny specifications. The primary exceptions are animation, filters, and scripts. As LunaSVG is designed for static rendering, animation is unlikely to be supported in the future. However, support for filters may be added. It currently handles a wide variety of elements, including:
 
 `<a>` `<circle>` `<clipPath>` `<defs>` `<ellipse>` `<g>` `<image>` `<line>` `<linearGradient>` `<marker>` `<mask>` `<path>` `<pattern>` `<polygon>` `<polyline>` `<radialGradient>` `<rect>` `<stop>` `<style>` `<svg>` `<symbol>` `<text>` `<tspan>` `<use>`
 
@@ -47,7 +45,8 @@ Follow the steps below to install LunaSVG using either [Meson](https://mesonbuil
 git clone https://github.com/sammycage/lunasvg.git
 cd lunasvg
 meson setup build
-ninja -C build install
+meson compile -C build
+meson install -C build
 ```
 
 ### Using CMake
@@ -56,8 +55,8 @@ ninja -C build install
 git clone https://github.com/sammycage/lunasvg.git
 cd lunasvg
 cmake -B build .
-make -C build -j2
-make -C build install
+cmake --build build
+cmake --install build
 ```
 
 ## Demo

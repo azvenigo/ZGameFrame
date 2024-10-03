@@ -63,11 +63,6 @@ Transform& Transform::scale(float sx, float sy)
     return multiply(scaled(sx, sy));
 }
 
-Transform& Transform::rotate(float angle)
-{
-    return multiply(rotated(angle));
-}
-
 Transform& Transform::rotate(float angle, float cx, float cy)
 {
     return multiply(rotated(angle, cx, cy));
@@ -91,11 +86,6 @@ Transform& Transform::postTranslate(float tx, float ty)
 Transform& Transform::postScale(float sx, float sy)
 {
     return postMultiply(scaled(sx, sy));
-}
-
-Transform& Transform::postRotate(float angle)
-{
-    return postMultiply(rotated(angle));
 }
 
 Transform& Transform::postRotate(float angle, float cx, float cy)
@@ -163,19 +153,17 @@ bool Transform::parse(const char* data, size_t length)
     return plutovg_matrix_parse(&m_matrix, data, length);
 }
 
-Transform Transform::rotated(float angle)
-{
-    plutovg_matrix_t matrix;
-    plutovg_matrix_init_rotate(&matrix, PLUTOVG_DEG2RAD(angle));
-    return matrix;
-}
-
 Transform Transform::rotated(float angle, float cx, float cy)
 {
     plutovg_matrix_t matrix;
-    plutovg_matrix_init_translate(&matrix, cx, cy);
-    plutovg_matrix_rotate(&matrix, PLUTOVG_DEG2RAD(angle));
-    plutovg_matrix_translate(&matrix, -cx, -cy);
+    if(cx == 0.f && cy == 0.f) {
+        plutovg_matrix_init_rotate(&matrix, PLUTOVG_DEG2RAD(angle));
+    } else {
+        plutovg_matrix_init_translate(&matrix, cx, cy);
+        plutovg_matrix_rotate(&matrix, PLUTOVG_DEG2RAD(angle));
+        plutovg_matrix_translate(&matrix, -cx, -cy);
+    }
+
     return matrix;
 }
 
@@ -198,19 +186,6 @@ Transform Transform::translated(float tx, float ty)
     plutovg_matrix_t matrix;
     plutovg_matrix_init_translate(&matrix, tx, ty);
     return matrix;
-}
-
-static plutovg_path_t* defaultPathData()
-{
-    thread_local plutovg_path_t* path = nullptr;
-    if(path == nullptr)
-        path = plutovg_path_create();
-    return plutovg_path_reference(path);
-}
-
-Path::Path()
-    : m_data(defaultPathData())
-{
 }
 
 Path::Path(const Path& path)
@@ -302,11 +277,14 @@ void Path::addRect(const Rect& rect)
 
 void Path::reset()
 {
-    *this = Path();
+    plutovg_path_destroy(m_data);
+    m_data = nullptr;
 }
 
 Rect Path::boundingRect() const
 {
+    if(m_data == nullptr)
+        return Rect::Empty;
     plutovg_rect_t extents;
     plutovg_path_extents(m_data, &extents, false);
     return extents;
@@ -314,12 +292,16 @@ Rect Path::boundingRect() const
 
 bool Path::isEmpty() const
 {
-    return plutovg_path_get_elements(m_data, nullptr) == 0;
+    if(m_data)
+        return plutovg_path_get_elements(m_data, nullptr) == 0;
+    return true;
 }
 
 bool Path::isUnique() const
 {
-    return plutovg_path_get_reference_count(m_data) == 1;
+    if(m_data)
+        return plutovg_path_get_reference_count(m_data) == 1;
+    return true;
 }
 
 bool Path::parse(const char* data, size_t length)
@@ -330,7 +312,9 @@ bool Path::parse(const char* data, size_t length)
 
 plutovg_path_t* Path::ensure()
 {
-    if(!isUnique()) {
+    if(isNull()) {
+        m_data = plutovg_path_create();
+    } else if(!isUnique()) {
         plutovg_path_destroy(m_data);
         m_data = plutovg_path_clone(m_data);
     }
@@ -379,13 +363,13 @@ FontFace::FontFace(plutovg_font_face_t* face)
 {
 }
 
-FontFace::FontFace(const void* data, size_t length)
-    : m_face(plutovg_font_face_load_from_data(data, length, 0, nullptr, nullptr))
+FontFace::FontFace(const void* data, size_t length, plutovg_destroy_func_t destroy_func, void* closure)
+    : m_face(plutovg_font_face_load_from_data(data, length, 0, destroy_func, closure))
 {
 }
 
-FontFace::FontFace(const std::string& filename)
-    : m_face(plutovg_font_face_load_from_file(filename.data(), 0))
+FontFace::FontFace(const char* filename)
+    : m_face(plutovg_font_face_load_from_file(filename, 0))
 {
 }
 
@@ -426,16 +410,6 @@ plutovg_font_face_t* FontFace::release()
     return std::exchange(m_face, nullptr);
 }
 
-bool FontFaceCache::addFontFace(const std::string& family, bool bold, bool italic, const std::string& filename)
-{
-    return addFontFace(family, bold, italic, FontFace(filename));
-}
-
-bool FontFaceCache::addFontFace(const std::string& family, bool bold, bool italic, const void* data, size_t length)
-{
-    return addFontFace(family, bold, italic, FontFace(data, length));
-}
-
 bool FontFaceCache::addFontFace(const std::string& family, bool bold, bool italic, const FontFace& face)
 {
     if(!face.isNull())
@@ -472,22 +446,42 @@ FontFace FontFaceCache::getFontFace(const std::string& family, bool bold, bool i
 
 FontFaceCache::FontFaceCache()
 {
-#ifdef _WIN32
-    addFontFace(emptyString, false, false, "C:/Windows/Fonts/arial.ttf");
-    addFontFace(emptyString, true, false, "C:/Windows/Fonts/arialbd.ttf");
-    addFontFace(emptyString, false, true, "C:/Windows/Fonts/ariali.ttf");
-    addFontFace(emptyString, true, true, "C:/Windows/Fonts/arialbi.ttf");
-#elif __APPLE__
-    addFontFace(emptyString, false, false, "/Library/Fonts/Arial.ttf");
-    addFontFace(emptyString, true, false, "/Library/Fonts/Arial Bold.ttf");
-    addFontFace(emptyString, false, true, "/Library/Fonts/Arial Italic.ttf");
-    addFontFace(emptyString, true, true, "/Library/Fonts/Arial Bold Italic.ttf");
-#elif __linux__
-    addFontFace(emptyString, false, false, "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
-    addFontFace(emptyString, true, false, "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf");
-    addFontFace(emptyString, false, true, "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf");
-    addFontFace(emptyString, true, true, "/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf");
+    static const struct {
+        const char* filename;
+        const bool bold;
+        const bool italic;
+    } entries[] = {
+#if defined(_WIN32)
+        {"C:/Windows/Fonts/arial.ttf", false, false},
+        {"C:/Windows/Fonts/arialbd.ttf", true, false},
+        {"C:/Windows/Fonts/ariali.ttf", false, true},
+        {"C:/Windows/Fonts/arialbi.ttf", true, true},
+#elif defined(__APPLE__)
+        {"/Library/Fonts/Arial.ttf", false, false},
+        {"/Library/Fonts/Arial Bold.ttf", true, false},
+        {"/Library/Fonts/Arial Italic.ttf", false, true},
+        {"/Library/Fonts/Arial Bold Italic.ttf", true, true},
+
+        {"/System/Library/Fonts/Supplemental/Arial.ttf", false, false},
+        {"/System/Library/Fonts/Supplemental/Arial Bold.ttf", true, false},
+        {"/System/Library/Fonts/Supplemental/Arial Italic.ttf", false, true},
+        {"/System/Library/Fonts/Supplemental/Arial Bold Italic.ttf", true, true},
+#elif defined(__linux__)
+        {"/usr/share/fonts/dejavu/DejaVuSans.ttf", false, false},
+        {"/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf", true, false},
+        {"/usr/share/fonts/dejavu/DejaVuSans-Oblique.ttf", false, true},
+        {"/usr/share/fonts/dejavu/DejaVuSans-BoldOblique.ttf", true, true},
+
+        {"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", false, false},
+        {"/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", true, false},
+        {"/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf", false, true},
+        {"/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf", true, true},
 #endif
+    };
+
+    for(const auto& entry : entries) {
+        addFontFace(emptyString, entry.bold, entry.italic, FontFace(entry.filename));
+    }
 }
 
 FontFaceCache* fontFaceCache()
@@ -551,7 +545,7 @@ std::shared_ptr<Canvas> Canvas::create(float x, float y, float width, float heig
 
 std::shared_ptr<Canvas> Canvas::create(const Rect& extents)
 {
-    return std::shared_ptr<Canvas>(new Canvas(extents.x, extents.y, extents.w, extents.h));
+    return create(extents.x, extents.y, extents.w, extents.h);
 }
 
 void Canvas::setColor(const Color& color)
@@ -612,8 +606,6 @@ void Canvas::strokePath(const Path& path, const StrokeData& strokeData, const Tr
 
 void Canvas::fillText(const std::u32string_view& text, const Font& font, const Point& origin, const Transform& transform)
 {
-    if(text.empty() || font.isNull())
-        return;
     plutovg_canvas_reset_matrix(m_canvas);
     plutovg_canvas_translate(m_canvas, -m_x, -m_y);
     plutovg_canvas_transform(m_canvas, &transform.matrix());
@@ -659,10 +651,6 @@ void Canvas::clipRect(const Rect& rect, FillRule clipRule, const Transform& tran
 
 void Canvas::drawImage(const Bitmap& image, const Rect& dstRect, const Rect& srcRect, const Transform& transform)
 {
-    if(dstRect.isEmpty() || srcRect.isEmpty()) {
-        return;
-    }
-
     auto xScale = dstRect.w / srcRect.w;
     auto yScale = dstRect.h / srcRect.h;
     plutovg_matrix_t matrix = {xScale, 0, 0, yScale, -srcRect.x * xScale, -srcRect.y * yScale};
@@ -673,10 +661,9 @@ void Canvas::drawImage(const Bitmap& image, const Rect& dstRect, const Rect& src
     plutovg_canvas_transform(m_canvas, &transform.matrix());
     plutovg_canvas_translate(m_canvas, dstRect.x, dstRect.y);
     plutovg_canvas_set_fill_rule(m_canvas, PLUTOVG_FILL_RULE_NON_ZERO);
-    plutovg_canvas_clip_rect(m_canvas, 0, 0, dstRect.w, dstRect.h);
     plutovg_canvas_set_operator(m_canvas, PLUTOVG_OPERATOR_SRC_OVER);
     plutovg_canvas_set_paint(m_canvas, paint);
-    plutovg_canvas_paint(m_canvas);
+    plutovg_canvas_fill_rect(m_canvas, 0, 0, dstRect.w, dstRect.h);
     plutovg_paint_destroy(paint);
 }
 

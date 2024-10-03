@@ -8,7 +8,7 @@ namespace lunasvg {
 
 PropertyID propertyid(const std::string_view& name)
 {
-    const struct {
+    static const struct {
         std::string_view name;
         PropertyID value;
     } table[] = {
@@ -48,7 +48,6 @@ PropertyID propertyid(const std::string_view& name)
         {"style", PropertyID::Style},
         {"transform", PropertyID::Transform},
         {"viewBox", PropertyID::ViewBox},
-        {"white-space", PropertyID::WhiteSpace},
         {"width", PropertyID::Width},
         {"x", PropertyID::X},
         {"x1", PropertyID::X1},
@@ -68,7 +67,7 @@ PropertyID propertyid(const std::string_view& name)
 
 PropertyID csspropertyid(const std::string_view& name)
 {
-    const struct {
+    static const struct {
         std::string_view name;
         PropertyID value;
     } table[] = {
@@ -227,6 +226,7 @@ bool Length::parse(std::string_view input, LengthNegativeMode mode)
     case '%':
         m_value = value;
         m_units = LengthUnits::Percent;
+        input.remove_prefix(1);
         break;
     case 'p':
         input.remove_prefix(1);

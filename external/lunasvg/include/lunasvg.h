@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 #if !defined(LUNASVG_BUILD_STATIC) && (defined(_WIN32) || defined(__CYGWIN__))
 #define LUNASVG_EXPORT __declspec(dllexport)
@@ -63,6 +64,23 @@ typedef struct plutovg_surface plutovg_surface_t;
 typedef struct plutovg_matrix plutovg_matrix_t;
 
 /**
+ * @brief Callback for cleaning up resources.
+ *
+ * This function is called to release resources associated with a specific operation.
+ *
+ * @param closure A user-defined pointer to the resource or context to be freed.
+ */
+typedef void (*lunasvg_destroy_func_t)(void* closure);
+
+/**
+ * @brief A function pointer type for a write callback.
+ * @param closure A pointer to user-defined data or context.
+ * @param data A pointer to the data to be written.
+ * @param size The size of the data in bytes.
+ */
+typedef void (*lunasvg_write_func_t)(void* closure, void* data, int size);
+
+/**
  * @brief Returns the version of the lunasvg library encoded in a single integer.
  *
  * Encodes the version of the lunasvg library into a single integer for easier comparison.
@@ -81,6 +99,29 @@ LUNASVG_API int lunasvg_version(void);
  * @return A pointer to a string containing the version in "X.Y.Z" format.
  */
 LUNASVG_API const char* lunasvg_version_string(void);
+
+/**
+* @brief Add a font face from a file to the cache.
+* @param family The name of the font family. If an empty string is provided, the font will act as a fallback.
+* @param bold Use `true` for bold, `false` otherwise.
+* @param italic Use `true` for italic, `false` otherwise.
+* @param filename The path to the font file.
+* @return `true` if the font face was successfully added to the cache, `false` otherwise.
+*/
+LUNASVG_API bool lunasvg_add_font_face_from_file(const char* family, bool bold, bool italic, const char* filename);
+
+/**
+* @brief Add a font face from memory to the cache.
+* @param family The name of the font family. If an empty string is provided, the font will act as a fallback.
+* @param bold Use `true` for bold, `false` otherwise.
+* @param italic Use `true` for italic, `false` otherwise.
+* @param data A pointer to the memory buffer containing the font data.
+* @param length The size of the memory buffer in bytes.
+* @param destroy_func Callback function to free the memory buffer when it is no longer needed.
+* @param closure User-defined pointer passed to the `destroy_func` callback.
+* @return `true` if the font face was successfully added to the cache, `false` otherwise.
+*/
+LUNASVG_API bool lunasvg_add_font_face_from_data(const char* family, bool bold, bool italic, const void* data, size_t length, lunasvg_destroy_func_t destroy_func, void* closure);
 
 #ifdef __cplusplus
 }
@@ -200,11 +241,26 @@ public:
     bool isNull() const { return m_surface == nullptr; }
 
     /**
+     * @brief Checks if the bitmap is valid.
+     * @deprecated This function has been deprecated. Use `isNull()` instead to check whether the bitmap is null.
+     * @return True if the bitmap is null, false otherwise.
+     */
+    bool valid() const { return isNull(); }
+
+    /**
      * @brief Writes the bitmap to a PNG file.
      * @param filename The name of the file to write.
      * @return True if the file was written successfully, false otherwise.
      */
     bool writeToPng(const std::string& filename) const;
+
+    /**
+     * @brief Writes the bitmap to a PNG stream.
+     * @param callback Callback function for writing data.
+     * @param closure User-defined data passed to the callback.
+     * @return True if successful, false otherwise.
+     */
+    bool writeToPng(lunasvg_write_func_t callback, void* closure) const;
 
     /**
      * @internal
@@ -297,28 +353,28 @@ public:
     Matrix(const Transform& transform);
 
     /**
-     * @brief Pre-multiplies this matrix with another matrix.
+     * @brief Multiplies this matrix with another matrix.
      * @param matrix The matrix to multiply with.
      * @return A new matrix that is the result of the multiplication.
      */
     Matrix operator*(const Matrix& matrix) const;
 
     /**
-     * @brief Pre-multiplies this matrix with another matrix in-place.
+     * @brief Multiplies this matrix with another matrix in place.
      * @param matrix The matrix to multiply with.
      * @return A reference to this matrix after multiplication.
      */
     Matrix& operator*=(const Matrix& matrix);
 
     /**
-     * @brief Pre-multiplies this matrix with another matrix.
+     * @brief Multiplies this matrix with another matrix.
      * @param matrix The matrix to multiply with.
      * @return A reference to this matrix after multiplication.
      */
     Matrix& multiply(const Matrix& matrix);
 
     /**
-     * @brief Pre-translates this matrix by the specified offsets.
+     * @brief Translates this matrix by the specified offsets.
      * @param tx The horizontal translation offset.
      * @param ty The vertical translation offset.
      * @return A reference to this matrix after translation.
@@ -326,7 +382,7 @@ public:
     Matrix& translate(float tx, float ty);
 
     /**
-     * @brief Pre-scales this matrix by the specified factors.
+     * @brief Scales this matrix by the specified factors.
      * @param sx The horizontal scaling factor.
      * @param sy The vertical scaling factor.
      * @return A reference to this matrix after scaling.
@@ -334,23 +390,16 @@ public:
     Matrix& scale(float sx, float sy);
 
     /**
-     * @brief Pre-rotates this matrix by the specified angle.
-     * @param angle The rotation angle in degrees.
-     * @return A reference to this matrix after rotation.
-     */
-    Matrix& rotate(float angle);
-
-    /**
-     * @brief Pre-rotates this matrix by the specified angle around a point.
+     * @brief Rotates this matrix by the specified angle around a point.
      * @param angle The rotation angle in degrees.
      * @param cx The x-coordinate of the center of rotation.
      * @param cy The y-coordinate of the center of rotation.
      * @return A reference to this matrix after rotation.
      */
-    Matrix& rotate(float angle, float cx, float cy);
+    Matrix& rotate(float angle, float cx = 0.f, float cy = 0.f);
 
     /**
-     * @brief Pre-shears this matrix by the specified factors.
+     * @brief Shears this matrix by the specified factors.
      * @param shx The horizontal shearing factor.
      * @param shy The vertical shearing factor.
      * @return A reference to this matrix after shearing.
@@ -391,20 +440,13 @@ public:
     static Matrix scaled(float sx, float sy);
 
     /**
-     * @brief Creates a rotation matrix with the specified angle.
-     * @param angle The rotation angle in degrees.
-     * @return A new rotation matrix.
-     */
-    static Matrix rotated(float angle);
-
-    /**
      * @brief Creates a rotation matrix with the specified angle around a point.
      * @param angle The rotation angle in degrees.
      * @param cx The x-coordinate of the center of rotation.
      * @param cy The y-coordinate of the center of rotation.
      * @return A new rotation matrix.
      */
-    static Matrix rotated(float angle, float cx, float cy);
+    static Matrix rotated(float angle, float cx = 0.f, float cy = 0.f);
 
     /**
      * @brief Creates a shearing matrix with the specified factors.
@@ -422,19 +464,110 @@ public:
     float f{0}; ///< The vertical translation offset.
 };
 
+class SVGNode;
+class SVGTextNode;
 class SVGElement;
 
-class LUNASVG_API Element {
+class Element;
+class TextNode;
+
+class LUNASVG_API Node {
+public:
+    /**
+     * @brief Constructs a null node.
+     */
+    Node() = default;
+
+    /**
+     * @brief Checks if the node is a text node.
+     * @return True if the node is a text node, false otherwise.
+     */
+    bool isTextNode() const;
+
+    /**
+     * @brief Checks if the node is an element node.
+     * @return True if the node is an element node, false otherwise.
+     */
+    bool isElement() const;
+
+    /**
+     * @brief Converts the node to a TextNode.
+     * @return A TextNode or a null node if conversion is not possible.
+     */
+    TextNode toTextNode() const;
+
+    /**
+     * @brief Converts the node to an Element.
+     * @return An Element or a null node if conversion is not possible.
+     */
+    Element toElement() const;
+
+    /**
+     * @brief Returns the parent element.
+     * @return The parent element of this node. If this node has no parent, a null `Element` is returned.
+     */
+    Element parentElement() const;
+
+    /**
+     * @brief Checks if the node is null.
+     * @return True if the node is null, false otherwise.
+     */
+    bool isNull() const { return m_node == nullptr; }
+
+    /**
+     * @brief Checks if two nodes are equal.
+     * @param element The node to compare.
+     * @return True if equal, otherwise false.
+     */
+    bool operator==(const Node& node) const { return m_node == node.m_node; }
+
+    /**
+     * @brief Checks if two nodes are not equal.
+     * @param element The node to compare.
+     * @return True if not equal, otherwise false.
+     */
+    bool operator!=(const Node& node) const { return m_node != node.m_node; }
+
+protected:
+    Node(SVGNode* node);
+    SVGNode* node() const { return m_node; }
+    SVGNode* m_node{nullptr};
+    friend class Element;
+};
+
+using NodeList = std::vector<Node>;
+
+class LUNASVG_API TextNode : public Node {
+public:
+    /**
+     * @brief Constructs a null text node.
+     */
+    TextNode() = default;
+
+    /**
+     * @brief Returns the text content of the node.
+     * @return A string representing the text content.
+     */
+    const std::string& data() const;
+
+    /**
+     * @brief Sets the text content of the node.
+     * @param data The new text content to set.
+     */
+    void setData(const std::string& data);
+
+private:
+    TextNode(SVGTextNode* text);
+    SVGTextNode* text() const;
+    friend class Node;
+};
+
+class LUNASVG_API Element : public Node {
 public:
     /**
      * @brief Constructs a null element.
      */
     Element() = default;
-
-    /**
-     * @internal
-     */
-    Element(SVGElement* element) : m_element(element) {}
 
     /**
      * @brief Checks if the element has a specific attribute.
@@ -504,18 +637,16 @@ public:
     Box getBoundingBox() const;
 
     /**
-     * @brief Checks if the element is null.
-     * @return True if the element is null, false otherwise.
+     * @brief Returns the child nodes of this node.
+     * @return A NodeList containing the child nodes.
      */
-    bool isNull() const { return m_element == nullptr; }
-
-    /**
-     * @internal
-     */
-    SVGElement* get() { return m_element; }
+    NodeList children() const;
 
 private:
-    SVGElement* m_element{nullptr};
+    Element(SVGElement* element);
+    SVGElement* element() const;
+    friend class Node;
+    friend class Document;
 };
 
 class SVGRootElement;
@@ -550,27 +681,6 @@ public:
      * @return A pointer to the loaded `Document`, or `nullptr` on failure.
      */
     static std::unique_ptr<Document> loadFromData(const char* data, size_t length);
-
-    /**
-     * @brief Add a font face from a file to the cache.
-     * @param family The name of the font family.
-     * @param bold Use `true` for bold, `false` otherwise.
-     * @param italic Use `true` for italic, `false` otherwise.
-     * @param filename The path to the font file.
-     * @return `true` if the font face was successfully added to the cache, `false` otherwise.
-     */
-    static bool addFontFace(const std::string& family, bool bold, bool italic, const std::string& filename);
-
-    /**
-     * @brief Add a font face from memory to the cache.
-     * @param family The name of the font family.
-     * @param bold Use `true` for bold, `false` otherwise.
-     * @param italic Use `true` for italic, `false` otherwise.
-     * @param data A pointer to the memory buffer containing the font data.
-     * @param length The size of the memory buffer in bytes.
-     * @return `true` if the font face was successfully added to the cache, `false` otherwise.
-     */
-    static bool addFontFace(const std::string& family, bool bold, bool italic, const void* data, size_t length);
 
     /**
      * @brief Returns the intrinsic width of the document in pixels.

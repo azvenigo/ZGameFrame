@@ -17,6 +17,16 @@ const char* lunasvg_version_string()
     return LUNASVG_VERSION_STRING;
 }
 
+bool lunasvg_add_font_face_from_file(const char* family, bool bold, bool italic, const char* filename)
+{
+    return lunasvg::fontFaceCache()->addFontFace(family, bold, italic, lunasvg::FontFace(filename));
+}
+
+bool lunasvg_add_font_face_from_data(const char* family, bool bold, bool italic, const void* data, size_t length, lunasvg_destroy_func_t destroy_func, void* closure)
+{
+    return lunasvg::fontFaceCache()->addFontFace(family, bold, italic, lunasvg::FontFace(data, length, destroy_func, closure));
+}
+
 namespace lunasvg {
 
 Bitmap::Bitmap(int width, int height)
@@ -116,6 +126,13 @@ bool Bitmap::writeToPng(const std::string& filename) const
     return false;
 }
 
+bool Bitmap::writeToPng(lunasvg_write_func_t callback, void* closure) const
+{
+    if(m_surface)
+        return plutovg_surface_write_to_png_stream(m_surface, callback, closure);
+    return false;
+}
+
 plutovg_surface_t* Bitmap::release()
 {
     return std::exchange(m_surface, nullptr);
@@ -182,11 +199,6 @@ Matrix& Matrix::translate(float tx, float ty)
     return multiply(translated(tx, ty));
 }
 
-Matrix& Matrix::rotate(float angle)
-{
-    return multiply(rotated(angle));
-}
-
 Matrix& Matrix::rotate(float angle, float cx, float cy)
 {
     return multiply(rotated(angle, cx, cy));
@@ -222,11 +234,6 @@ Matrix Matrix::scaled(float sx, float sy)
     return Transform::scaled(sx, sy);
 }
 
-Matrix Matrix::rotated(float angle)
-{
-    return Transform::rotated(angle);
-}
-
 Matrix Matrix::rotated(float angle, float cx, float cy)
 {
     return Transform::rotated(angle, cx, cy);
@@ -237,41 +244,106 @@ Matrix Matrix::sheared(float shx, float shy)
     return Transform::sheared(shx, shy);
 }
 
+Node::Node(SVGNode* node)
+    : m_node(node)
+{
+}
+
+bool Node::isTextNode() const
+{
+    return m_node && m_node->isTextNode();
+}
+
+bool Node::isElement() const
+{
+    return m_node && m_node->isElement();
+}
+
+TextNode Node::toTextNode() const
+{
+    if(m_node && m_node->isTextNode())
+        return static_cast<SVGTextNode*>(m_node);
+    return TextNode();
+}
+
+Element Node::toElement() const
+{
+    if(m_node && m_node->isElement())
+        return static_cast<SVGElement*>(m_node);
+    return Element();
+}
+
+Element Node::parentElement() const
+{
+    if(m_node)
+        return m_node->parent();
+    return Element();
+}
+
+TextNode::TextNode(SVGTextNode* text)
+    : Node(text)
+{
+}
+
+const std::string& TextNode::data() const
+{
+    if(m_node)
+        return text()->data();
+    return emptyString;
+}
+
+void TextNode::setData(const std::string& data)
+{
+    if(m_node) {
+        text()->setData(data);
+    }
+}
+
+SVGTextNode* TextNode::text() const
+{
+    return static_cast<SVGTextNode*>(m_node);
+}
+
+Element::Element(SVGElement* element)
+    : Node(element)
+{
+}
+
 bool Element::hasAttribute(const std::string& name) const
 {
-    if(m_element)
-        return m_element->hasAttribute(name);
+    if(m_node)
+        return element()->hasAttribute(name);
     return false;
 }
 
 const std::string& Element::getAttribute(const std::string& name) const
 {
-    if(m_element == nullptr)
-        return emptyString;
-    return m_element->getAttribute(name);
+    if(m_node)
+        return element()->getAttribute(name);
+    return emptyString;
 }
 
 void Element::setAttribute(const std::string& name, const std::string& value)
 {
-    if(m_element) {
-        m_element->setAttribute(name, value);
+    if(m_node) {
+        element()->setAttribute(name, value);
     }
 }
 
 void Element::render(Bitmap& bitmap, const Matrix& matrix) const
 {
-    if(m_element == nullptr || bitmap.isNull())
+    if(m_node == nullptr || bitmap.isNull())
         return;
     auto canvas = Canvas::create(bitmap);
     SVGRenderState state(nullptr, nullptr, matrix, SVGRenderMode::Painting, canvas);
-    m_element->render(state);
+    element()->render(state);
 }
 
 Bitmap Element::renderToBitmap(int width, int height, uint32_t backgroundColor) const
 {
-    if(m_element == nullptr)
+    if(m_node == nullptr)
         return Bitmap();
-    auto elementBounds = m_element->localTransform().mapRect(m_element->paintBoundingBox());
+    auto elementBounds = element()->localTransform().mapRect(element()->paintBoundingBox());
     if(elementBounds.isEmpty())
         return Bitmap();
     if(width <= 0 && height <= 0) {
@@ -295,17 +367,17 @@ Bitmap Element::renderToBitmap(int width, int height, uint32_t backgroundColor) 
 
 Matrix Element::getLocalMatrix() const
 {
-    if(m_element)
-        return m_element->localTransform();
+    if(m_node)
+        return element()->localTransform();
     return Matrix();
 }
 
 Matrix Element::getGlobalMatrix() const
 {
-    if(m_element == nullptr)
+    if(m_node == nullptr)
         return Matrix();
-    auto transform = m_element->localTransform();
-    for(auto parent = m_element->parent(); parent; parent = parent->parent())
+    auto transform = element()->localTransform();
+    for(auto parent = element()->parent(); parent; parent = parent->parent())
         transform.postMultiply(parent->localTransform());
     return transform;
 }
@@ -322,9 +394,24 @@ Box Element::getGlobalBoundingBox() const
 
 Box Element::getBoundingBox() const
 {
-    if(m_element)
-        return m_element->paintBoundingBox();
+    if(m_node)
+        return element()->paintBoundingBox();
     return Box();
+}
+
+NodeList Element::children() const
+{
+    if(m_node == nullptr)
+        return NodeList();
+    NodeList children;
+    for(const auto& child : element()->children())
+        children.push_back(child.get());
+    return children;
+}
+
+SVGElement* Element::element() const
+{
+    return static_cast<SVGElement*>(m_node);
 }
 
 std::unique_ptr<Document> Document::loadFromFile(const std::string& filename)
@@ -356,16 +443,6 @@ std::unique_ptr<Document> Document::loadFromData(const char* data, size_t length
         return nullptr;
     document->updateLayout();
     return document;
-}
-
-bool Document::addFontFace(const std::string& family, bool bold, bool italic, const std::string& filename)
-{
-    return fontFaceCache()->addFontFace(family, bold, italic, filename);
-}
-
-bool Document::addFontFace(const std::string& family, bool bold, bool italic, const void* data, size_t length)
-{
-    return fontFaceCache()->addFontFace(family, bold, italic, data, length);
 }
 
 float Document::width() const

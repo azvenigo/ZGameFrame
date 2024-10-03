@@ -73,7 +73,7 @@ struct Rule {
 
 class RuleData {
 public:
-    RuleData(const Selector& selector, const DeclarationList& declarations, uint32_t specificity, uint32_t position)
+    RuleData(const Selector& selector, const DeclarationList& declarations, size_t specificity, size_t position)
         : m_selector(selector), m_declarations(declarations), m_specificity(specificity), m_position(position)
     {}
 
@@ -81,8 +81,8 @@ public:
 
     const Selector& selector() const { return m_selector; }
     const DeclarationList& declarations() const { return m_declarations; }
-    uint32_t specificity() const { return m_specificity; }
-    uint32_t position() const { return m_position; }
+    size_t specificity() const { return m_specificity; }
+    size_t position() const { return m_position; }
 
     bool match(const SVGElement* element) const;
 
@@ -93,8 +93,8 @@ private:
 
     Selector m_selector;
     DeclarationList m_declarations;
-    uint32_t m_specificity;
-    uint32_t m_position;
+    size_t m_specificity;
+    size_t m_position;
 };
 
 inline bool operator<(const RuleData& a, const RuleData& b) { return a.isLessThan(b); }
@@ -303,7 +303,7 @@ private:
     static bool parseSimpleSelector(std::string_view& input, SimpleSelector& simpleSelector);
 
     RuleDataList m_rules;
-    uint32_t m_position{0};
+    size_t m_position{0};
 };
 
 bool StyleSheet::parseSheet(std::string_view input)
@@ -332,7 +332,7 @@ bool StyleSheet::parseSheet(std::string_view input)
         if(!parseRule(input, rule))
             return false;
         for(const auto& selector : rule.selectors) {
-            uint32_t specificity = 0;
+            size_t specificity = 0;
             for(const auto& simpleSelector : selector) {
                 specificity += (simpleSelector.id == ElementID::Star) ? 0x0 : 0x1;
                 for(const auto& attributeSelector : simpleSelector.attributeSelectors) {
@@ -360,9 +360,7 @@ bool StyleSheet::parseRule(std::string_view& input, Rule& rule)
     rule.declarations.clear();
     if(!parseSelectors(input, rule.selectors))
         return false;
-    if(!parseDeclarations(input, rule.declarations))
-        return false;
-    return true;
+    return parseDeclarations(input, rule.declarations);
 }
 
 bool StyleSheet::parseSelectors(std::string_view& input, SelectorList& selectors)
@@ -706,7 +704,7 @@ bool Document::parse(const char* data, size_t length)
             styleSheet.parseSheet(buffer);
         } else {
             auto node = std::make_unique<SVGTextNode>(this);
-            node->setText(buffer);
+            node->setData(buffer);
             currentElement->addChild(std::move(node));
         }
     };

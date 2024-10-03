@@ -245,7 +245,6 @@ void ZMessageSystem::RegisterTarget(IMessageTarget* pTarget)
 
 void ZMessageSystem::UnregisterTarget(IMessageTarget* pTarget)
 {
-    ZDEBUG_OUT("Unregister: ", pTarget->GetTargetName(), "\n");
     ZASSERT(pTarget);
     tNameToMessageTargetMap::iterator it = mNameToMessageTargetMap.find(pTarget->GetTargetName());
     if (it != mNameToMessageTargetMap.end())
@@ -261,6 +260,9 @@ bool ZMessageSystem::IsRegistered(const std::string& sTargetName)
 
 void ZMessageSystem::Post(const std::string& sRawMessage)
 {
+    if (sRawMessage.empty())
+        return;
+
     assert(sRawMessage[0] == '{' && sRawMessage[sRawMessage.length()-1] == '}');
 
     // multiple messages to parse

@@ -9,7 +9,7 @@ project(lunasvg LANGUAGES CXX VERSION ${LUNASVG_VERSION_MAJOR}.${LUNASVG_VERSION
 include(FetchContent)
 FetchContent_Declare(plutovg
     GIT_REPOSITORY https://github.com/sammycage/plutovg.git
-    GIT_TAG v0.0.4
+    GIT_TAG main
     GIT_SHALLOW ON
     FIND_PACKAGE_ARGS 0.0.4
 )
@@ -110,3 +110,7 @@ export(EXPORT lunasvgTargets
     NAMESPACE lunasvg::
 )
 
+option(LUNASVG_BUILD_EXAMPLES "Build examples" ON)
+if(LUNASVG_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()

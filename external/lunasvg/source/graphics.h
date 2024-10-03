@@ -281,15 +281,13 @@ public:
     Transform& multiply(const Transform& transform);
     Transform& translate(float tx, float ty);
     Transform& scale(float sx, float sy);
-    Transform& rotate(float angle);
-    Transform& rotate(float angle, float cx, float cy);
+    Transform& rotate(float angle, float cx = 0.f, float cy = 0.f);
     Transform& shear(float shx, float shy);
 
     Transform& postMultiply(const Transform& transform);
     Transform& postTranslate(float tx, float ty);
     Transform& postScale(float sx, float sy);
-    Transform& postRotate(float angle);
-    Transform& postRotate(float angle, float cx, float cy);
+    Transform& postRotate(float angle, float cx = 0.f, float cy = 0.f);
     Transform& postShear(float shx, float shy);
 
     Transform inverse() const;
@@ -310,7 +308,6 @@ public:
 
     static Transform translated(float tx, float ty);
     static Transform scaled(float sx, float sy);
-    static Transform rotated(float angle);
     static Transform rotated(float angle, float cx, float cy);
     static Transform sheared(float shx, float shy);
 
@@ -329,7 +326,7 @@ enum class PathCommand {
 
 class Path {
 public:
-    Path();
+    Path() = default;
     Path(const Path& path);
     Path(Path&& path);
     ~Path();
@@ -359,6 +356,7 @@ public:
     Rect boundingRect() const;
     bool isEmpty() const;
     bool isUnique() const;
+    bool isNull() const { return m_data == nullptr; }
 
     bool parse(const char* data, size_t length);
 
@@ -367,7 +365,7 @@ public:
 private:
     plutovg_path_t* release();
     plutovg_path_t* ensure();
-    plutovg_path_t* m_data;
+    plutovg_path_t* m_data = nullptr;
 };
 
 inline void Path::swap(Path& path)
@@ -400,8 +398,8 @@ class FontFace {
 public:
     FontFace() = default;
     FontFace(plutovg_font_face_t* face);
-    FontFace(const void* data, size_t length);
-    FontFace(const std::string& filename);
+    FontFace(const void* data, size_t length, plutovg_destroy_func_t destroy_func, void* closure);
+    FontFace(const char* filename);
     FontFace(const FontFace& face);
     FontFace(FontFace&& face);
     ~FontFace();
@@ -421,8 +419,6 @@ private:
 
 class FontFaceCache {
 public:
-    bool addFontFace(const std::string& family, bool bold, bool italic, const std::string& filename);
-    bool addFontFace(const std::string& family, bool bold, bool italic, const void* data, size_t length);
     bool addFontFace(const std::string& family, bool bold, bool italic, const FontFace& face);
 
     FontFace getFontFace(const std::string& family, bool bold, bool italic);
