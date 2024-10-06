@@ -45,11 +45,11 @@ bool OnePageDocWin::Init()
         sText = SH::convertToASCII(sText);
         assert(bRet);
 
-        int64_t nHeightPoints = 600;
-        mDocStyle = ZGUI::Style(ZFontParams("Goudy Old Style", nHeightPoints, 600));
+        int64_t nHeightPoints = 300;
+        mDocStyle = ZGUI::Style(ZFontParams("verdana", nHeightPoints, 100));
         ZRect rFull;
-        int64_t lines = mDocStyle.Font()->CalculateNumberOfLines(nHeightPoints*16, (uint8_t*)sText.c_str(), sText.length());
-        rFull.SetRect(0, 0, nHeightPoints*16, lines * mDocStyle.fp.Height());
+        int64_t lines = mDocStyle.Font()->CalculateNumberOfLines(nHeightPoints*5, (uint8_t*)sText.c_str(), sText.length());
+        rFull.SetRect(0, 0, nHeightPoints*5, lines * mDocStyle.fp.Height());
         
         tZBufferPtr docImage(new ZBuffer());
         docImage->Init(rFull.Width(), rFull.Height());

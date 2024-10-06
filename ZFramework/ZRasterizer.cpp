@@ -423,12 +423,79 @@ bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, t
 }
 
 
-uint32_t SampleTexture(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, int32_t nSampleSubdivisions)
+
+
+uint32_t ZRasterizer::SampleTexture_ZoomedIn(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, int32_t nSampleSubdivisions)
 {
     uint32_t* pSourcePixels = pTexture->GetPixels();
     int64_t nTextureStride = pTexture->GetArea().Width();
     double fTextureW = (double)pTexture->GetArea().Width() - 1.0;
     double fTextureH = (double)pTexture->GetArea().Height() - 1.0;
+
+
+
+
+
+
+
+
+    double fSubPixelDU = (1.0 / fTextureW) / (double)nSampleSubdivisions;
+    double fSubPixelDV = (1.0 / fTextureH) / (double)nSampleSubdivisions;
+
+    uint64_t nFinalA = 0;
+    uint64_t nFinalR = 0;
+    uint64_t nFinalG = 0;
+    uint64_t nFinalB = 0;
+
+    double fSampleV = fTexturePixelV;
+    for (uint32_t y = 0; y < nSampleSubdivisions; y++)
+
+
+
+    {
+        double fSampleU = fTexturePixelU;
+        for (uint32_t x = 0; x < nSampleSubdivisions; x++)
+        {
+
+
+
+
+
+            int64_t nTextureX = (int64_t)(fSampleU * fTextureW);
+            int64_t nTextureY = (int64_t)(fSampleV * fTextureH);
+
+
+            uint32_t nSourceCol = *(pSourcePixels + nTextureY * nTextureStride + nTextureX);
+
+
+            nFinalA += ARGB_A(nSourceCol);
+            nFinalR += ARGB_R(nSourceCol);
+            nFinalG += ARGB_G(nSourceCol);
+            nFinalB += ARGB_B(nSourceCol);
+
+            fSampleU += fSubPixelDV;
+        }
+        fSampleV += fSubPixelDV;
+    }
+
+
+    uint32_t nSamples = nSampleSubdivisions * nSampleSubdivisions;
+    uint32_t nFinalCol = ARGB((uint32_t)(nFinalA / nSamples), (uint32_t)(nFinalR / nSamples), (uint32_t)(nFinalG / nSamples), (uint32_t)(nFinalB / nSamples));
+
+
+
+
+
+
+    return nFinalCol;
+}
+
+uint32_t ZRasterizer::SampleTexture_ZoomedOut(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, int32_t nSampleSubdivisions)
+{
+    uint32_t* pSourcePixels = pTexture->GetPixels();
+    int64_t nTextureStride = pTexture->GetArea().Width();
+    double fTextureW = (double)pTexture->GetArea().Width()-1.0;
+    double fTextureH = (double)pTexture->GetArea().Height()-1.0;
 
 
     double fSubDU = fTexturePixelDU / (double)nSampleSubdivisions;
@@ -443,17 +510,24 @@ uint32_t SampleTexture(ZBuffer* pTexture, double fTexturePixelU, double fTexture
     uint64_t nFinalG = 0;
     uint64_t nFinalB = 0;
 
-    double minIndex = 0;
-    double maxIndex = nSampleSubdivisions;
+    double minIndex = -nSampleSubdivisions/2.0;
+    double maxIndex = nSampleSubdivisions/2.0;
 
     // Loop over the subdivisions to accumulate samples
+    uint32_t nSamples = 0;
     for (double y = minIndex; y < maxIndex; y += 1.0)
     {
         for (double x = minIndex; x < maxIndex; x += 1.0)
         {
             // Compute the UV offsets for the current sample
-            double fSampleU = fTexturePixelU + x * fSubDU + y * fSubDV;
-            double fSampleV = fTexturePixelV + x * fSubDUy + y * fsubDVy;
+//            double fSampleU = fTexturePixelU + x * fSubDU + y * fSubDV;
+//            double fSampleV = fTexturePixelV + x * fSubDUy + y * fsubDVy;
+
+            double fSampleU = fTexturePixelU + x * fSubDU;
+            double fSampleV = fTexturePixelV + y * fSubDV;
+
+            if (fSampleU < 0.0 || fSampleU > 1.0 || fSampleV < 0.0 || fSampleV > 1.0)
+                continue;
 
             // Convert UV to texture coordinates (integer pixel coordinates)
             int64_t nTextureX = (int64_t)(fSampleU * fTextureW);
@@ -467,11 +541,11 @@ uint32_t SampleTexture(ZBuffer* pTexture, double fTexturePixelU, double fTexture
             nFinalR += ARGB_R(nSourceCol);
             nFinalG += ARGB_G(nSourceCol);
             nFinalB += ARGB_B(nSourceCol);
+            nSamples++;
         }
     }
 
     // Compute the average color from all samples
-    uint32_t nSamples = nSampleSubdivisions * nSampleSubdivisions;
     uint32_t nFinalCol = ARGB(
         (uint32_t)(nFinalA / nSamples),
         (uint32_t)(nFinalR / nSamples),
@@ -502,6 +576,22 @@ bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* 
     ZASSERT(pDestination->GetPixels() != nullptr);
     SetupRasterization(pDestination, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
 
+
+    float screenDist = sqrt(
+        pow(vertexArray[0].x - vertexArray[1].x, 2) +
+        pow(vertexArray[0].y - vertexArray[1].y, 2)
+    );
+
+    float textureDist =  fTextureW * sqrt(
+        pow(vertexArray[0].u - vertexArray[1].u, 2) +
+        pow(vertexArray[0].v - vertexArray[1].v, 2)
+    );
+
+    // Determine if we're zoomed in or zoomed out
+    bool isZoomedIn = (screenDist > textureDist);
+
+
+
     // For each scanline
     for (int64_t nScanLine = nTopScanLine; nScanLine < nBottomScanLine; nScanLine++)
     {
@@ -529,14 +619,30 @@ bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* 
 
         ZASSERT(pDestination->GetPixels() != nullptr);
 
-        for (int64_t nCount = 0; nCount < nScanLinePixels; nCount++)
+
+        if (isZoomedIn)
         {
-            uint32_t nSampled = SampleTexture(pTexture, fTextureU, fTextureV, fTextureDU, fTextureDV, nSubsamples);
-            if (ARGB_A(nSampled) > 0)
-                *pDestPixels = COL::AlphaBlend_Col2Alpha(nSampled, *pDestPixels, nAlpha);
-            pDestPixels++;
-            fTextureU += fTextureDU;
-            fTextureV += fTextureDV;
+            for (int64_t nCount = 0; nCount < nScanLinePixels; nCount++)
+            {
+                uint32_t nSampled = SampleTexture_ZoomedIn(pTexture, fTextureU, fTextureV, fTextureDU, fTextureDV, nSubsamples);
+                if (ARGB_A(nSampled) > 0)
+                    *pDestPixels = COL::AlphaBlend_Col2Alpha(nSampled, *pDestPixels, nAlpha);
+                pDestPixels++;
+                fTextureU += fTextureDU;
+                fTextureV += fTextureDV;
+            }
+        }
+        else
+        {
+            for (int64_t nCount = 0; nCount < nScanLinePixels; nCount++)
+            {
+                uint32_t nSampled = SampleTexture_ZoomedOut(pTexture, fTextureU, fTextureV, fTextureDU, fTextureDV, nSubsamples);
+                if (ARGB_A(nSampled) > 0)
+                    *pDestPixels = COL::AlphaBlend_Col2Alpha(nSampled, *pDestPixels, nAlpha);
+                pDestPixels++;
+                fTextureU += fTextureDU;
+                fTextureV += fTextureDV;
+            }
         }
 
         mnDrawnPixels += nScanLinePixels;
