@@ -289,33 +289,6 @@ bool ReadStringFromFile(const string& sFilename, string& sResult)
 	return true;
 }
 
-
-bool IsWhiteSpace(char c)
-{
-	return	c == ' ' || 
-		c == '\t' ||
-		c == '\r' || 
-		c == '\n';
-}
-
-bool ContainsWhitespace(const string& sVal)
-{
-	return sVal.find_first_of(" \t\r\n") != -1;
-}
-
-void TrimWhitespace(string& sVal)
-{
-	int64_t nFirstNonWhiteSpace = 0;
-	while (nFirstNonWhiteSpace < (int64_t) sVal.length() && IsWhiteSpace(sVal[nFirstNonWhiteSpace]))
-		nFirstNonWhiteSpace++;
-
-	int64_t nLastNonWhiteSpace = (int64_t) sVal.length();
-	while (nLastNonWhiteSpace > nFirstNonWhiteSpace && IsWhiteSpace(sVal[nLastNonWhiteSpace]))
-		nLastNonWhiteSpace--;
-
-	sVal = sVal.substr(nFirstNonWhiteSpace, nLastNonWhiteSpace-nFirstNonWhiteSpace);
-}
-
 void Sprintf(string& sOut, const char* lpszFormat, ...)
 {
 	va_list args;
@@ -329,15 +302,4 @@ void Sprintf(string& sOut, const char* lpszFormat, ...)
 	sOut.assign(buf, len-1);    // minus '\0' terminator
 
 	delete[] buf;
-}
-
-
-bool StartsWith(const string& sConsider, const string& starts)
-{
-	return sConsider.substr(0, starts.length()) == starts;
-}
-
-bool EndsWith(const string& sConsider, const string& ends)
-{
-	return sConsider.substr(sConsider.length() - ends.length()) == ends;
 }

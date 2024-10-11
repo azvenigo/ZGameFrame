@@ -24,9 +24,9 @@ extern int64_t gM;    // gMeasure as set globally
 // The list ends with two 0s
 typedef std::vector<uint8_t> tPixelDataList;
 
-struct sCharDescriptor
+struct CharDesc
 {
-    sCharDescriptor() 
+    CharDesc() 
     { 
         nCharWidth = 0; 
         memset(kerningArray, 0, sizeof(kerningArray));
@@ -171,7 +171,7 @@ public:
 
     int64_t         CharWidth(uint8_t c);
     int32_t         GetSpaceBetweenChars(uint8_t c1, uint8_t c2);
-    ZRect           Arrange(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding = 0);
+    ZRect           Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t nPadding = 0);
 	int64_t         StringWidth(const std::string& sText);
     ZRect           StringRect(const std::string& sText);
 
@@ -181,23 +181,23 @@ public:
 
 
 protected:
-	bool                    DrawText_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip);
-	bool                    DrawText_Gradient_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, uint32_t nCol2, ZRect* pClip);
+	bool            DrawText_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip);
+	bool            DrawText_Gradient_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, uint32_t nCol2, ZRect* pClip);
 
-    void                    BuildGradient(uint32_t nColor1, uint32_t nColor2, std::vector<uint32_t>& gradient);
-   
-    virtual void            DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY);
-    virtual void            DrawCharClipped(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
-    virtual void            DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
+    void            BuildGradient(uint32_t nColor1, uint32_t nColor2, std::vector<uint32_t>& gradient);
 
-    void                    FindKerning(uint8_t c1, uint8_t c2);
+    virtual void    DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY);
+    virtual void    DrawCharClipped(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
+    virtual void    DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
 
-    ZFontParams             mFontParams;
-    int64_t                 mFontHeight;
-    bool                    mbEnableKerning;
+    void            FindKerning(uint8_t c1, uint8_t c2);
 
-	sCharDescriptor         mCharDescriptors[kMaxChars];  // lower 128 ascii chars
-	bool                    mbInitted;
+    ZFontParams     mFontParams;
+    int64_t         mFontHeight;
+    bool            mbEnableKerning;
+
+	CharDesc        mCharDescriptors[kMaxChars];  // lower 128 ascii chars
+	bool            mbInitted;
 };
 
 
@@ -266,12 +266,6 @@ private:
 
 #endif
 
-
-#define REPLACE_FONT_SYSTEM_NEW_PARAM_BASED_MAPPING
-
-
-#ifdef REPLACE_FONT_SYSTEM_NEW_PARAM_BASED_MAPPING
-
 typedef std::shared_ptr<ZFont>              tZFontPtr;
 typedef std::map<ZFontParams, tZFontPtr>    tZFontMap;
 typedef std::map<int64_t, tZFontMap>        tFontHeightToZFontMap;
@@ -290,9 +284,6 @@ public:
 #ifdef _WIN64
     tZFontPtr   CreateFont(const ZFontParams& params);
 #endif
-
-//    std::vector<std::string>    GetFontNames();
-//    std::vector<int32_t>        GetAvailableSizes(const std::string& sFontName);
 
     size_t          GetFontCount();
 
@@ -320,43 +311,5 @@ private:
 };
 
 
-#else
-
-typedef std::shared_ptr<ZFont>  tZFontPtr;
-typedef std::map< int32_t, tZFontPtr > tSizeToFont;
-typedef std::map< std::string, tSizeToFont >  tNameToFontMap;
-
-
-class ZFontSystem
-{
-public:
-    ZFontSystem();
-    ~ZFontSystem();
-
-    bool        Init();        
-    void        Shutdown();
-
-    tZFontPtr   LoadFont(const std::string& sFilename);          // returns loaded font index
-#ifdef _WIN64
-    tZFontPtr   CreateFont(const ZFontParams& params);      // returns created font index
-#endif
-
-
-    std::vector<std::string>    GetFontNames();
-    std::vector<int32_t>        GetAvailableSizes(const std::string& sFontName);
-
-    tZFontPtr       GetDefaultFont(const std::string& sFontName, int32_t nFontSize);
-
-    void            SetDefaultFontName(const std::string& sName) { msDefaultFontName = sName; }
-    int32_t         GetDefaultFontCount() { return (int32_t) mNameToFontMap[msDefaultFontName].size(); }
-    tZFontPtr       GetDefaultFont(int32_t nIndex);
-
-private:
-     
-    tNameToFontMap  mNameToFontMap;
-    std::string     msDefaultFontName;
-};
-
-#endif
 
 extern ZFontSystem* gpFontSystem;

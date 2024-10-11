@@ -161,7 +161,7 @@ bool ZXML::Parse(const string& sRaw)
 {
 	// Find first non whitespace char.
 	int64_t nFindOffset = 0;
-	while (IsWhiteSpace(sRaw[nFindOffset]))
+	while (std::isspace(sRaw[nFindOffset]))
 		nFindOffset++;
 
 	// If this is a single named node:
@@ -198,7 +198,7 @@ bool ZXML::Parse(const string& sRaw)
 
 			// If the node name contains a space, it must be surrounded by quotes
 			string sName = pNewChild->GetName();
-			if (ContainsWhitespace(sName))
+			if (SH::ContainsWhitespace(sName))
 				sName = "\"" + sName + "\"";
 
 			string sEndTag = "</" + sName + ">";
@@ -236,7 +236,7 @@ std::list<string> ZXML::SplitAttributes(string sAttributes)
 	while (!bDone)
 	{
 		// skip whitespaces
-		while (IsWhiteSpace(sAttributes[nIndex]) && nIndex < sAttributes.length())
+		while (std::isspace(sAttributes[nIndex]) && nIndex < sAttributes.length())
 			nIndex++;
 
 		sAttributes = sAttributes.substr(nIndex);
@@ -247,7 +247,7 @@ std::list<string> ZXML::SplitAttributes(string sAttributes)
 			return attributeList;
 
 
-		while (!IsWhiteSpace(sAttributes[nIndex]) && sAttributes[nIndex] != '\"' && nIndex < sAttributes.length())
+		while (!std::isspace(sAttributes[nIndex]) && sAttributes[nIndex] != '\"' && nIndex < sAttributes.length())
 		{
 			nIndex++;
 		}
@@ -325,7 +325,7 @@ void ZXML::ParseKeyValuePair(const string& sKeyValuePair)
 			 !StartsWith(sValue, " ") &&
 			 !EndsWith(sValue, " "));
 
-	if (StartsWith(sValue, "\""))
+	if (SH::StartsWith(sValue, "\""))
 	{
 		ZASSERT_MESSAGE(EndsWith(sValue, "\""), "Key value pair has no ending quote.");
 		sValue = sValue.substr(1, sValue.length()-2);		// clip left and right quotes
@@ -361,7 +361,7 @@ string ZXML::ToString(int64_t nDepth)
 	}
 
 	string sNameToString;
-	if (ContainsWhitespace(msName))
+	if (SH::ContainsWhitespace(msName))
 		sNameToString = "\"" + msName + "\"";
 	else
 		sNameToString = msName;
@@ -376,7 +376,7 @@ string ZXML::ToString(int64_t nDepth)
 		{
 			string sKey = (*it).first;
 			string sValue = (*it).second;
-			if (ContainsWhitespace(sValue))
+			if (SH::ContainsWhitespace(sValue))
 				sReturned += sKey + "=\"" + sValue + "\" ";		// quotes around the value
 			else
 				sReturned +=  sKey + "=" + sValue + " ";		// no quotes
@@ -408,7 +408,7 @@ string ZXML::ToString(int64_t nDepth)
 		{
 			string sKey = (*it).first;
 			string sValue = (*it).second;
-			if (ContainsWhitespace(sValue))
+			if (SH::ContainsWhitespace(sValue))
 				sReturned += sKey + "=\"" + sValue + "\" ";		// quotes around the value
 			else
 				sReturned +=  sKey + "=" + sValue + " ";		// no quotes

@@ -195,7 +195,7 @@ bool ZFont::SaveFont(const string& sFilename)
 
     for (int32_t i = 0; i < kMaxChars; i++)
     {
-        sCharDescriptor& fontChar = mCharDescriptors[i];
+        CharDesc& fontChar = mCharDescriptors[i];
         uncompBuffer->write((uint8_t*)&fontChar.nCharWidth, sizeof(uint16_t));
 
         // Write out the number of pixel data   
@@ -659,49 +659,10 @@ ZRect ZFont::StringRect(const std::string& sText)
 
 // This function helps format text by returning a rectangle where the text should be output
 // It will not clip, however... That should be done by the caller if necessary
-ZRect ZFont::Arrange(ZRect rArea, const uint8_t* pChars, size_t nNumChars, ZGUI::ePosition pos, int64_t nPadding)
+ZRect ZFont::Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t nPadding)
 {
-    assert(pChars && nNumChars > 0);
-	ZRect rText(0,0, StringWidth(string((char*)pChars,nNumChars)), mFontHeight);
-	rArea.DeflateRect(nPadding, nPadding);
-
-/*	int64_t nXCenter = rArea.left + (rArea.Width()  - rText.Width())/2;
-	int64_t nYCenter = rArea.top  + (rArea.Height() - mFontParams.nHeight)/2;
-
-	switch (pos)
-	{
-	case ZGUI::LT:
-		rText.OffsetRect(rArea.left, rArea.top);
-		break;
-	case ZGUI::CT:
-		rText.OffsetRect(nXCenter, rArea.top);
-		break;
-	case ZGUI::RT:
-		rText.OffsetRect(rArea.right - rText.Width(), rArea.top);
-		break;
-
-	case ZGUI::LC:
-		rText.OffsetRect(rArea.left, nYCenter);
-		break;
-	case ZGUI::C:
-		rText.OffsetRect(nXCenter, nYCenter);
-		break;
-	case ZGUI::RC:
-		rText.OffsetRect(rArea.right - rText.Width(), nYCenter);
-		break;
-
-	case ZGUI::LB:
-		rText.OffsetRect(rArea.left, rArea.bottom - mFontParams.nHeight);
-		break;
-	case ZGUI::CB:
-		rText.OffsetRect(nXCenter, rArea.bottom - mFontParams.nHeight);
-		break;
-	case ZGUI::RB:
-		rText.OffsetRect(rArea.right - rText.Width(), rArea.bottom - mFontParams.nHeight);
-		break;
-	}
-
-	return rText;*/
+	ZRect rText(0,0, StringWidth(sText), mFontHeight);
+    rArea.DeflateRect(nPadding, nPadding);
 
     return ZGUI::Arrange(rText, rArea, pos, nPadding, nPadding);
 }
@@ -771,7 +732,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 	{
         int64_t nLettersToDraw = CalculateWordsThatFitOnLine(rTextLine.Width(), (uint8_t*) pChars, pEnd-pChars);
        
-        ZRect rAdjustedLine(Arrange(rTextLine, (uint8_t*)pChars, nLettersToDraw, lineStyle));
+        ZRect rAdjustedLine(Arrange(rTextLine, string(pChars, nLettersToDraw), lineStyle));
         if (rAdjustedLine.bottom > rAreaToDrawTo.top && rAdjustedLine.top < rAreaToDrawTo.bottom)       // only draw if line is within rAreaToDrawTo
 		    DrawText(pBuffer, string(pChars, nLettersToDraw), rAdjustedLine, &pStyle->look, pClip);
 

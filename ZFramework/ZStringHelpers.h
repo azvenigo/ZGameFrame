@@ -22,28 +22,18 @@ void        StringToFloatArray(const std::string& sVal, std::vector<float>& floa
 std::string FloatArrayToString(std::vector<float>& floatArray);
 
 
-std::string StringMapToString(tKeyValueMap& stringMap);
-void        StringToStringMap(std::string sVal, tKeyValueMap& stringMap);
+//std::string StringMapToString(tKeyValueMap& stringMap);
+//void        StringToStringMap(std::string sVal, tKeyValueMap& stringMap);
 
 bool        StringToBinary(const std::string& sString, void* pDest);		// std::string must be in ascii 2 hex values per byte of destination..... so pDest must point to a buffer of sVal.length()/2
 bool        BinaryToString(void* pSource, int64_t nLength, std::string& sString);
 
 
-void        TrimWhitespace(std::string& sVal);
-
 bool        WriteStringToFile(const std::string& sFilename, const std::string& sString, bool bCompressEncode = false);
 bool        ReadStringFromFile(const std::string& sFilename, std::string& sResult);
 
-bool        IsAlpha(char c);
-bool        IsWhiteSpace(char c);
-bool        ContainsWhitespace(const std::string& sVal);
-
 void        Sprintf(std::string& sOut, const char* format, ...);
 void        Sprintf(std::string& sOut, const char* format, va_list args);
-
-bool		StartsWith(const std::string& sConsider, const std::string& starts);
-bool		EndsWith(const std::string& sConsider, const std::string& ends);
-
 
 // Parsers
 

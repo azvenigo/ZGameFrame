@@ -173,7 +173,7 @@ bool ZWinFormattedDoc::OnMouseDownL(int64_t x, int64_t y)
                 else
                 {
                     tZFontPtr pFont(entry.style.Font());
-                    ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.text.data(), entry.text.length(), entry.style.pos);
+                    ZRect rText = pFont->Arrange(rLine, entry.text, entry.style.pos);
                     if (rText.PtInRect(nMouseX, nMouseY) && !entry.link.empty())
                     {
                         gMessageSystem.Post(entry.link);
@@ -387,7 +387,7 @@ bool ZWinFormattedDoc::Paint()
                     if (!entry.text.empty())
                     {
                         tZFontPtr pFont(entry.style.Font());
-                        ZRect rText = pFont->Arrange(rLine, (uint8_t*)entry.text.data(), entry.text.length(), entry.style.pos);
+                        ZRect rText = pFont->Arrange(rLine, entry.text, entry.style.pos);
 
                         int64_t nShadowOffset = max((int)pFont->Height() / 16, (int)1);
 

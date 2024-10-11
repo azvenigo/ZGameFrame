@@ -974,7 +974,7 @@ bool ZChessWin::Paint()
                     sLabel = "White is in Check";
             }
 
-            rMoveLabel = pLabelFont->Arrange(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
+            rMoveLabel = pLabelFont->Arrange(rMoveLabel, sLabel, ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gSpacer, gSpacer);
 
@@ -992,7 +992,7 @@ bool ZChessWin::Paint()
                 else
                     sLabel = "Black is in Check";
             }
-            rMoveLabel = pLabelFont->Arrange(rMoveLabel, (uint8_t*)sLabel.data(), sLabel.length(), ZGUI::Center);
+            rMoveLabel = pLabelFont->Arrange(rMoveLabel, sLabel, ZGUI::Center);
             rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gSpacer, gSpacer);
             mpSurface->Fill(0xff000000, &rMoveLabel);

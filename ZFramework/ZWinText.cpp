@@ -39,7 +39,7 @@ bool ZWinLabel::OnMouseHover(int64_t x, int64_t y)
         ZRect rTextArea;
         
         tZFontPtr pTooltipFont = gpFontSystem->GetFont(mStyleTooltip.fp);
-        rTextArea = pTooltipFont->Arrange(mAreaLocal, (uint8_t*)msTooltipText.c_str(), msTooltipText.length(), mStyleTooltip.pos);
+        rTextArea = pTooltipFont->Arrange(mAreaLocal, msTooltipText, mStyleTooltip.pos);
         rTextArea.InflateRect(pTooltipFont->Height()/4, pTooltipFont->Height()/4);
 
 
@@ -113,7 +113,7 @@ bool ZWinLabel::Paint()
         }
         else
         {
-            ZRect rOut = mStyle.Font()->Arrange(mAreaLocal, (uint8_t*)msText.c_str(), msText.length(), mStyle.pos);
+            ZRect rOut = mStyle.Font()->Arrange(mAreaLocal, msText, mStyle.pos);
             mStyle.Font()->DrawText(mpSurface.get(), msText, rOut, &mStyle.look);
         }
     }
@@ -287,7 +287,7 @@ bool ZWinTextEdit::Paint()
         }
 
 
-        ZRect rString(mStyle.Font()->Arrange(rOut, (uint8_t*)mpText->c_str(), mpText->length(), posToUse, 0));
+        ZRect rString(mStyle.Font()->Arrange(rOut, *mpText, posToUse, 0));
 
         mStyle.Font()->DrawText(mpSurface.get(), *mpText, rString, &mStyle.look, &mAreaLocal);
 
