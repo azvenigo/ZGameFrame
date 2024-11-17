@@ -41,11 +41,12 @@ bool OnePageDocWin::Init()
         mpWinImage = new ZWinImage();
 
         string sText;
-        bool bRet = SH::Load("res/docs/alice_wonderland.txt", sText);
-        sText = SH::convertToASCII(sText);
+//        bool bRet = SH::Load("res/docs/alice_wonderland.txt", sText);
+        bool bRet = SH::Load("res/docs/Frankenstein.txt", sText);
+//        sText = SH::convertToASCII(sText);
         assert(bRet);
 
-        int64_t nHeightPoints = 300;
+        int64_t nHeightPoints = 1200;
         mDocStyle = ZGUI::Style(ZFontParams("verdana", nHeightPoints, 100));
         ZRect rFull;
         int64_t lines = mDocStyle.Font()->CalculateNumberOfLines(nHeightPoints*5, (uint8_t*)sText.c_str(), sText.length());

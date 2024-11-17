@@ -18,6 +18,7 @@ set(SANDBOXAPPS_SOURCES
 	ZChessWin.h 					ZChessWin.cpp
 	Main_Sandbox.h 				Main_Sandbox.cpp
 	TestWin.h 						TestWin.cpp
+	OverlayWin.h 					OverlayWin.cpp
 	OnePageDocWin.h				OnePageDocWin.cpp
 	teapotdata.h
 )

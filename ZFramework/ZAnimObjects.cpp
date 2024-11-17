@@ -23,7 +23,7 @@ using namespace std;
 ZAnimObject::ZAnimObject()
 {
 	mState = kNone;
-    mpDestination = nullptr;
+    mpDestOverride = nullptr;
 	mnTimeStamp = gTimer.GetElapsedTime();
     mbFullScreenDraw = false;
 }
@@ -133,6 +133,25 @@ tRectList ZAnimObject::ComputeDirtyRects(const ZRect& rOldArea, const ZRect& rNe
     return dirtyList;
 }
 
+ZAnimObject_StaticImage::ZAnimObject_StaticImage() : ZAnimObject()
+{
+};
+
+bool ZAnimObject_StaticImage::Paint(ZBuffer* pDest)
+{
+    if (!mImage)
+        return true;
+
+    ZBuffer* pRealDest = pDest;
+    if (mpDestOverride)
+        pRealDest = mpDestOverride.get();
+
+
+    pRealDest->Blt(mImage.get(), mImage->GetArea(), mrDrawArea);
+
+    return true;
+}
+
 
 ZAnimObject_TextMover::ZAnimObject_TextMover(ZGUI::Style _style) : ZAnimObject()
 {
@@ -149,8 +168,12 @@ ZAnimObject_TextMover::ZAnimObject_TextMover(ZGUI::Style _style) : ZAnimObject()
 }
 
 
-bool ZAnimObject_TextMover::Paint()
+bool ZAnimObject_TextMover::Paint(ZBuffer* pDest)
 {
+    ZBuffer* pRealDest = pDest;
+    if (mpDestOverride)
+        pRealDest = mpDestOverride.get();
+
 	uint64_t nCurrentTime = gTimer.GetElapsedTime();
 	int64_t nDeltaTime = nCurrentTime - mnTimeStamp;
 	mnTimeStamp = nCurrentTime;
@@ -169,7 +192,7 @@ bool ZAnimObject_TextMover::Paint()
 
     mrDrawArea.SetRect(nX, nY, nX + nWidth, nY + nHeight);
 
-	ZRect rBufferArea(mpDestination->GetArea());
+	ZRect rBufferArea(pRealDest->GetArea());
 
 	if (!rBufferArea.Overlaps(&mrDrawArea))    // Have we moved off screen?
 	{
@@ -194,13 +217,13 @@ bool ZAnimObject_TextMover::Paint()
 
 		useStyle.look.colTop = ARGB((uint8_t) nAlpha, ARGB_R(useStyle.look.colTop), ARGB_G(useStyle.look.colTop), ARGB_B(useStyle.look.colTop));
         useStyle.look.colBottom = ARGB((uint8_t) nAlpha, ARGB_R(useStyle.look.colBottom), ARGB_G(useStyle.look.colBottom), ARGB_B(useStyle.look.colBottom));
-		useStyle.Font()->DrawText(mpDestination.get(), msText, mrDrawArea, &useStyle.look);
+		useStyle.Font()->DrawText(pRealDest, msText, mrDrawArea, &useStyle.look);
 
 		return true;
 	}
 
 	// Plain Draw
-    mStyle.Font()->DrawText(mpDestination.get(), msText, mrDrawArea, &mStyle.look);
+    mStyle.Font()->DrawText(pRealDest, msText, mrDrawArea, &mStyle.look);
 
 	return true;
 }
@@ -256,13 +279,18 @@ ZCEAnimObject_Sparkler::ZCEAnimObject_Sparkler() : ZAnimObject()
 	mnSourceColor = 0xffffffff;
 }
 
-bool ZCEAnimObject_Sparkler::Paint()
+bool ZCEAnimObject_Sparkler::Paint(ZBuffer* pDest)
 {
+    ZBuffer* pRealDest = pDest;
+    if (mpDestOverride)
+        pRealDest = mpDestOverride.get();
+
+
 	ProcessSparkles();
 
-	uint32_t* pDest = mpDestination->GetPixels();
-	int64_t  nStride = mpDestination->GetArea().Width();
-    ZRect* pClip = &mpDestination->GetArea();
+	uint32_t* pPixels = pRealDest->GetPixels();
+	int64_t  nStride = pRealDest->GetArea().Width();
+    ZRect* pClip = &pRealDest->GetArea();
 	for (tSparkleList::iterator it = mSparkleList.begin(); it != mSparkleList.end(); it++)
 	{
 		sSparkle& sparkle = *it;
@@ -276,35 +304,35 @@ bool ZCEAnimObject_Sparkler::Paint()
 			int64_t nY = (int64_t) point.y;
 			if (pClip->PtInRect(nX, nY))
 			{
-				uint32_t* pBits = pDest + nY * nStride + nX;
+				uint32_t* pBits = pPixels + nY * nStride + nX;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
 				*pBits = COL::AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX+1, nY))
 			{
-				uint32_t* pBits = pDest + nY * nStride + nX+1;
+				uint32_t* pBits = pPixels + nY * nStride + nX+1;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
 				*pBits = COL::AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX-1, nY))
 			{
-				uint32_t* pBits = pDest + nY * nStride + nX-1;
+				uint32_t* pBits = pPixels + nY * nStride + nX-1;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
 				*pBits = COL::AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX, nY-1))
 			{
-				uint32_t* pBits = pDest + ((nY-1) * nStride) + nX;
+				uint32_t* pBits = pPixels + ((nY-1) * nStride) + nX;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
 				*pBits = COL::AlphaBlend_AddAlpha(0x88882222, *pBits, nB1);
 			}
 
 			if (pClip->PtInRect(nX, nY+1))
 			{
-				uint32_t* pBits = pDest + ((nY+1) * nStride) + nX;
+				uint32_t* pBits = pPixels + ((nY+1) * nStride) + nX;
 				uint8_t nB1 = (uint8_t) ((fBrightness) * 255.0f);
 				*pBits = COL::AlphaBlend_AddAlpha(0x8800FFFF, *pBits, nB1);
 			}
@@ -445,9 +473,15 @@ ZAnimObject_TextPulser::ZAnimObject_TextPulser(ZGUI::Style _style) : ZAnimObject
     mStyle = _style;
 }
 
-bool ZAnimObject_TextPulser::Paint()
+bool ZAnimObject_TextPulser::Paint(ZBuffer* pDest)
 {
-	ZRect rBufferArea(mpDestination->GetArea());
+    ZBuffer* pRealDest = pDest;
+    if (mpDestOverride)
+        pRealDest = mpDestOverride.get();
+
+
+
+	ZRect rBufferArea(pRealDest->GetArea());
 
 	double pulse = 0.5 * (1.0 + (double) sin(((double) gTimer.GetElapsedTime()) / mfPeriod));
 	int64_t nAlpha = (int64_t) ((double) mnMinAlpha + ((double)mnMaxAlpha - (double)mnMinAlpha) * pulse );
@@ -460,7 +494,7 @@ bool ZAnimObject_TextPulser::Paint()
     useStyle.pos = ZGUI::C;
 
 
-    mStyle.Font()->DrawTextParagraph(mpDestination.get(), msText, mrDrawArea, &useStyle);
+    mStyle.Font()->DrawTextParagraph(pRealDest, msText, mrDrawArea, &useStyle);
     mrLastDrawArea = mrDrawArea;
 	return true;
 
@@ -516,8 +550,12 @@ void ZAnimObject_BitmapShatterer::SetBitmapToShatter(ZBuffer* pBufferToShatter, 
 	mState = kAnimating;
 }
 
-bool ZAnimObject_BitmapShatterer::Paint()
+bool ZAnimObject_BitmapShatterer::Paint(ZBuffer* pDest)
 {
+    ZBuffer* pRealDest = pDest;
+    if (mpDestOverride)
+        pRealDest = mpDestOverride.get();
+
 	for (tShatterQuadList::iterator it = mShatterQuadList.begin(); it != mShatterQuadList.end(); it++)
 	{
 		cShatterQuad& quad = *it;
@@ -537,11 +575,11 @@ bool ZAnimObject_BitmapShatterer::Paint()
 			transformedQuad.mVertices[i].y = fCenterY + transformedQuad.fScale*(x*sinAngle + y*cosAngle);
 		}
 
-        ZRect* pClip = &mpDestination->GetArea();
-		mRasterizer.RasterizeWithAlpha(mpDestination.get(), mpTexture.get(), transformedQuad.mVertices, pClip, 128);
+        ZRect* pClip = &pRealDest->GetArea();
+		mRasterizer.RasterizeWithAlpha(pRealDest, mpTexture.get(), transformedQuad.mVertices, pClip, 128);
 	}
 
-	Process(mpDestination->GetArea());
+	Process(pRealDest->GetArea());
 
 	return true;
 }
@@ -970,9 +1008,13 @@ ZAnimObject_Transformer::~ZAnimObject_Transformer()
 }
 
 
-bool ZAnimObject_Transformer::Paint()
+bool ZAnimObject_Transformer::Paint(ZBuffer* pDest)
 {
-	if (mpTransformer)
+    ZBuffer* pRealDest = pDest;
+    if (mpDestOverride)
+        pRealDest = mpDestOverride.get();
+   
+    if (mpTransformer)
 	{
 		if (mpTransformer->GetState() == ZTransformable::kFinished)
 		{
@@ -980,7 +1022,7 @@ bool ZAnimObject_Transformer::Paint()
 			mpTransformer = NULL;
 		}
 //		else
-//			mpTransformer->TransformDraw(mpDestination.get(), &mpDestination->GetArea());
+//			mpTransformer->TransformDraw(pRealDest.get(), &mpDestination->GetArea());
 	}
 	return true;
 }
@@ -1010,8 +1052,12 @@ ZAnimObject_TransformingImage::~ZAnimObject_TransformingImage()
 {
 }
 
-bool ZAnimObject_TransformingImage::Paint()
+bool ZAnimObject_TransformingImage::Paint(ZBuffer* pDest)
 {
+    ZBuffer* pRealDest = pDest;
+    if (mpDestOverride)
+        pRealDest = mpDestOverride.get();
+
     tRectList dirtyRects;
     if (mTransformState == ZTransformable::kFinished)
 	{
@@ -1056,8 +1102,8 @@ bool ZAnimObject_TransformingImage::Paint()
 
             if (mCurTransform.mScale == 1.0 && mCurTransform.mRotation == 0 && mCurTransform.mnAlpha > 0xf0)
             {
-                if (mpDestination)
-                    mpDestination->Blt(mpImage.get(), mpImage->GetArea(), mrDrawArea);
+                if (pRealDest)
+                    pRealDest->Blt(mpImage.get(), mpImage->GetArea(), mrDrawArea);
                 else
                     gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpImage.get(), mpImage->GetArea(), mrDrawArea);
             }
@@ -1068,12 +1114,7 @@ bool ZAnimObject_TransformingImage::Paint()
                     mpWorkingBuffer->CopyPixels(mpBackground.get());
 
                 gRasterizer.RasterizeWithAlpha(mpWorkingBuffer.get(), mpImage.get(), mVerts, nullptr, mCurTransform.mnAlpha);
-
-
-                if (mpDestination)
-                    mpDestination->Blt(mpWorkingBuffer.get(), mBounds, mBounds);
-                else
-                    gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpWorkingBuffer.get(), mBounds, mBounds);
+                pRealDest->Blt(mpWorkingBuffer.get(), mBounds, mBounds);
             }
         }
     }

@@ -20,6 +20,7 @@ public:
     void    SetArea(const ZRect& newArea);
     void    RenderToBuffer(tZBufferPtr pTexture, const ZRect& rSrc, const ZRect& rDst, ZWin* pThis = nullptr); // override because this window is never visible
 
+    tZBufferPtr GetSurface() { return mpSurface; }
 
     void    ShowMessageBox(std::string title, std::string message, std::string onOKMessage);
 

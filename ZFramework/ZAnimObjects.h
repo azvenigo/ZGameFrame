@@ -22,31 +22,43 @@ public:
 		kFinished = 3
 	};
 
-									ZAnimObject();
-   virtual							~ZAnimObject();
+                    ZAnimObject();
+   virtual          ~ZAnimObject();
 
-   virtual bool                  	Paint() { return false; }
-   virtual eState   	            GetState() { return mState; }
-   virtual void                  	SetState(eState state) { mState = state; }
+   virtual bool     Paint(ZBuffer* pDest = nullptr) { return false; }    // paint to pDest unless 
+   virtual eState   GetState() { return mState; }
+   virtual void     SetState(eState state) { mState = state; }
 
-   virtual void						SetContext(void* pContext) { mpContext = pContext; }
-   virtual void*					GetContext() { return mpContext; }
+   virtual void     SetContext(void* pContext) { mpContext = pContext; }
+   virtual void*    GetContext() { return mpContext; }
 
-   virtual void                     SetDestination(tZBufferPtr pDestination) { mpDestination = pDestination; }
+   virtual void     SetDestination(tZBufferPtr pDestination) { mpDestOverride = pDestination; }
 
-   static tRectList                 ComputeDirtyRects(const ZRect& rOldArea, const ZRect& rNewArea);
+   static tRectList ComputeDirtyRects(const ZRect& rOldArea, const ZRect& rNewArea);
 
-   ZRect                			mrDrawArea;
-   ZRect                            mrLastDrawArea;
-   bool                             mbFullScreenDraw;
+   ZRect            mrDrawArea;
+   ZRect            mrLastDrawArea;
+   bool             mbFullScreenDraw;
 
 protected:
-   eState  			                mState;
-   int64_t               			mnTimeStamp;
-   tZBufferPtr                      mpDestination;
+   eState           mState;
+   int64_t          mnTimeStamp;
+   tZBufferPtr      mpDestOverride;
 
-   void*							mpContext;			// Contextual owner.
+   void*            mpContext;			// Contextual owner.
 };
+
+// Static Image
+class ZAnimObject_StaticImage : public ZAnimObject
+{
+public:
+    ZAnimObject_StaticImage();
+    virtual bool    Paint(ZBuffer* pDest);
+
+    tZBufferPtr mImage;
+};
+
+
 
 // Moves text
 class ZAnimObject_TextMover : public ZAnimObject
@@ -54,7 +66,7 @@ class ZAnimObject_TextMover : public ZAnimObject
 public:
     ZAnimObject_TextMover(ZGUI::Style _style = {});
 
-    virtual bool    Paint();
+    virtual bool    Paint(ZBuffer* pDest);
 
     void            SetText(const std::string& sText);
     void           	SetLocation(int64_t nX, int64_t nY);
@@ -97,7 +109,7 @@ public:
    // cCEAnimObject
    ZCEAnimObject_Sparkler();
 
-   virtual bool		Paint();
+   virtual bool		Paint(ZBuffer* pDest);
 
    // ZCEAnimObject_Sparkler 
    void           	SetSource(tZBufferPtr pSource, const ZRect& rBounds, uint32_t nSourceColor);
@@ -126,7 +138,7 @@ public:
    // cCEAnimObject
     ZAnimObject_TextPulser(ZGUI::Style _style = {});
 
-   virtual bool Paint();
+   virtual bool Paint(ZBuffer* pDest);
 
    // cCEAnimObject_TextPulser
    void			SetText(const std::string& sText);
@@ -148,7 +160,7 @@ public:
 	ZAnimObject_Transformer(ZTransformable* pTransformer);
 	virtual ~ZAnimObject_Transformer();
 
-	virtual bool  Paint();
+	virtual bool  Paint(ZBuffer* pDest);
 
 protected:
 	ZTransformable* mpTransformer;
@@ -161,7 +173,7 @@ public:
 	ZAnimObject_TransformingImage(tZBufferPtr pImage, tZBufferPtr pBackground = nullptr, ZRect* pDestArea = nullptr);
 	virtual ~ZAnimObject_TransformingImage();
 
-	virtual bool  Paint();
+	virtual bool  Paint(ZBuffer* pDest);
 
     tZBufferPtr mpImage;
     tZBufferPtr mpBackground;   // snapshot of the screen when animation object is instantiated for transparency, non-rectangular rasterization, etc.
@@ -212,7 +224,7 @@ class ZAnimObject_BitmapShatterer : public ZAnimObject
 public:
 					ZAnimObject_BitmapShatterer();
    virtual			~ZAnimObject_BitmapShatterer();
-   virtual bool		Paint();
+   virtual bool		Paint(ZBuffer* pDest);
 
    void				SetBitmapToShatter(ZBuffer* pBufferToShatter, ZRect& rSrc, ZRect& rStartingDst, int64_t nSubdivisions);
 

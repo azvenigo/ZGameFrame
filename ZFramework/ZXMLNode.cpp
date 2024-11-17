@@ -320,14 +320,14 @@ void ZXML::ParseKeyValuePair(const string& sKeyValuePair)
 	//string sValue = sKeyValuePair.Right(sKeyValuePair.length() - nEquals - 1);
 	string sValue = sKeyValuePair.substr(nEquals+1);  // test that it grabs everything after equals
 
-	ZASSERT(!StartsWith(sKey, " ") && 
-		     !EndsWith(sKey, " ") &&
-			 !StartsWith(sValue, " ") &&
-			 !EndsWith(sValue, " "));
+	ZASSERT(!SH::StartsWith(sKey, " ") && 
+		     !SH::EndsWith(sKey, " ") &&
+			 !SH::StartsWith(sValue, " ") &&
+			 !SH::EndsWith(sValue, " "));
 
 	if (SH::StartsWith(sValue, "\""))
 	{
-		ZASSERT_MESSAGE(EndsWith(sValue, "\""), "Key value pair has no ending quote.");
+		ZASSERT_MESSAGE(SH::EndsWith(sValue, "\""), "Key value pair has no ending quote.");
 		sValue = sValue.substr(1, sValue.length()-2);		// clip left and right quotes
 
 		ZASSERT(sValue[0] != '\"' && sValue[sValue.length()-1] != '\"');

@@ -57,11 +57,12 @@ public:
 	size_t	GetVisibilityCount() { return mScreenRectList.size(); }
 
 	int32_t	RenderVisibleRects();   // returns number of rects that needed rendering
-    int32_t RenderVisibleRects(const ZRect& rClip);
-    int32_t RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rClip);  
+//    int32_t RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rClip);  // shouldn't be needed any longer since screenbuffer will collect all visible...this can just be a blt
 
     bool    RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst);
+    bool    PaintToSystem(const ZRect& rClip);
 
+    bool    PaintToSystem();    // final transfer from internal surface
 
 protected:
 	ZGraphicSystem*		mpGraphicSystem;

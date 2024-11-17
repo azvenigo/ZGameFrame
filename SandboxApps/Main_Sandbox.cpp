@@ -25,6 +25,8 @@ using namespace std;
 ZMainWin*               gpMainWin;
 ZWinControlPanel*       gpControlPanel;
 ZWinDebugConsole*       gpDebugConsole;
+
+ZAnimObject_StaticImage* gpOverlay;
 ZGraphicSystem          gGraphicSystem;
 ZGraphicSystem*         gpGraphicSystem = &gGraphicSystem;
 ZRasterizer             gRasterizer;
@@ -48,6 +50,8 @@ int64_t                 gnLifeGridSize = 500;
 REG::Registry           gRegistry;
 LOG::Logger             gLogger;
 
+bool                    gbShowOverlayWin = false;
+
 
 void Sandbox::InitControlPanel()
 {
@@ -67,6 +71,8 @@ void Sandbox::InitControlPanel()
     gpControlPanel->mbHideOnMouseExit = true;
 
     gpControlPanel->Init();
+
+    gpControlPanel->Toggle("overlaybtn", nullptr, "Overlay Window", "{toggleoverlay;target=MainAppMessageTarget}", "{toggleoverlay;target=MainAppMessageTarget}");
 
     gpControlPanel->Button("quit_app_confirmed", "Quit", "{quit_app_confirmed}");
     gpControlPanel->AddSpace(gnControlPanelButtonHeight / 2);
@@ -130,6 +136,65 @@ void Sandbox::DeleteAllButControlPanelAndDebugConsole()
 //    gpMainWin->ChildDeleteAll();
 }
 
+void Sandbox::ToggleOverlay()
+{
+    if (gbShowOverlayWin)
+    {
+        if (!gpOverlay)
+        {
+            gpOverlay = new ZAnimObject_StaticImage();
+            gpOverlay->mrDrawArea = grFullArea;
+            gpOverlay->mImage.reset(new ZBuffer());
+            gpOverlay->mImage->Init(grFullArea.Width(), grFullArea.Height());
+            gpOverlay->mImage->Fill(0x00000000);
+
+            ZGUI::Style titleStyle(gStyleCaption);
+            titleStyle.fp.sFacename = "Chiller";
+            titleStyle.fp.nScalePoints = 20000;
+            titleStyle.fp.nTracking = 20;
+            titleStyle.fp.nWeight = 900;
+            titleStyle.pos = ZGUI::CT;
+
+            ZRect r(grFullArea);
+            r = ZGUI::Arrange(r, grFullArea, ZGUI::C);
+
+            /*
+            // BLURRY SHADOW
+            titleStyle.look.colBottom = 0xff000000;
+            titleStyle.look.colTop = 0xff000000;
+            titleStyle.Font()->DrawTextParagraph(gpOverlay->mImage.get(), "Where is the\nAny key?", r, &titleStyle);
+            gpOverlay->mImage.get()->Blur(10.0);
+            r.OffsetRect(RANDI64(-20,20), RANDI64(-20, 20));
+            */
+
+            titleStyle.look.colTop = 0xffffffff;
+            titleStyle.look.colBottom = 0xffffffff;
+            titleStyle.Font()->DrawTextParagraph(gpOverlay->mImage.get(), "Where is the\nAny key?", r, &titleStyle);
+            
+
+            // invert the alpha channel
+            uint32_t* pPixels = gpOverlay->mImage->GetPixels();
+            for (int64_t i = 0; i < grFullArea.Width() * grFullArea.Height(); i++)
+            {
+                uint32_t col = *pPixels;
+                *pPixels = ARGB((255 - ARGB_A(col)), ARGB_R(col), ARGB_G(col), ARGB_B(col));
+
+                pPixels++;
+            }
+
+
+            gAnimator.AddObject(gpOverlay);
+        }
+    }
+    else
+    {
+        if (gpOverlay)
+        {
+            gAnimator.KillObject(gpOverlay);
+            gpOverlay = nullptr;
+        }
+    }
+}
 
 void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
 {
@@ -292,6 +357,8 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
 
 
 
+
+
 class MainAppMessageTarget : public IMessageTarget
 {
 public:
@@ -312,6 +379,11 @@ public:
         else if (sType == "toggleconsole")
         {
             gpDebugConsole->SetVisible(!gpDebugConsole->mbVisible);
+        }
+        else if (sType == "toggleoverlay")
+        {
+            gbShowOverlayWin = !gbShowOverlayWin;
+            Sandbox::ToggleOverlay();
         }
 
 		return true;

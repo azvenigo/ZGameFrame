@@ -239,45 +239,34 @@ int main(int argc, char* argv[])
 
                         int64_t nEndTime = gTimer.GetUSSinceEpoch();
 
-                        //						ZOUT("Computing visibility took time:%lld us. Rects:%d\n", nEndTime - nStartTime, pScreenBuffer->GetVisibilityCount());
+                        // ZOUT("Computing visibility took time:%lld us. Rects:%d\n", nEndTime - nStartTime, pScreenBuffer->GetVisibilityCount());
                     }
 
 
-                    if (gAnimator.HasFullScreenDrawObjects())
+                    static int64_t nTotalRenderTime = 0;
+                    static int64_t nTotalFrames = 0;
+
+                    int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
+
+/*                    if (gAnimator.HasFullScreenDrawObjects())
                     {
                         gAnimator.Paint();
-
                     }
                     else
-                    {
-                        static int64_t nTotalRenderTime = 0;
-                        static int64_t nTotalFrames = 0;
-
-                        int64_t nStartRenderVisible = gTimer.GetUSSinceEpoch();
+                    {*/
                         int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
-                        int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
+                        gAnimator.Paint(pScreenBuffer);
+                        pScreenBuffer->PaintToSystem();
+                    //}
+                    int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
 
-                        int64_t nDelta = nEndRenderVisible - nStartRenderVisible;
-                        nTotalRenderTime += nDelta;
-                        nTotalFrames += 1;
-                        //				    ZOUT("render took time:%lld us. Rects:%d/%d. Total Frames:%d, avg frame time:%lld us\n", nEndRenderVisible - nStartRenderVisible, nRenderedCount, pScreenBuffer->GetVisibilityCount(), nTotalFrames, (nTotalRenderTime/nTotalFrames));
-
-                        tRectList rPostAnimDirtyList;
-                        if (gAnimator.GetDirtyRects(rPostAnimDirtyList))
-                        {
-                            for (auto& r : rPostAnimDirtyList)
-                            {
-                                pScreenBuffer->RenderVisibleRects(r);
-                            }
-                        }
-
-                        gAnimator.Paint();
-                    }
-
+                    int64_t nDelta = nEndRenderVisible - nStartRenderVisible;
+                    nTotalRenderTime += nDelta;
+                    nTotalFrames += 1;
+                    // ZOUT("render took time:%lld us. Rects:%d/%d. Total Frames:%d, avg frame time:%lld us\n", nEndRenderVisible - nStartRenderVisible, nRenderedCount, pScreenBuffer->GetVisibilityCount(), nTotalFrames, (nTotalRenderTime/nTotalFrames));
 
                     pScreenBuffer->EndRender();
                     InvalidateRect(gpGraphicSystem->GetMainHWND(), NULL, false);
-
                 }
 
                 if (gbGraphicSystemResetNeeded && !gbPaused && gbRenderingEnabled)
@@ -687,6 +676,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             if (gInput.IsKeyDown(VK_CONTROL))
                 SwitchFullscreen(!gGraphicSystem.mbFullScreen);
+        }
+        else if (wParam == 'O')
+        {
+            gMessageSystem.Post(ZMessage("{toggleoverlay;target=MainAppMessageTarget}"));
         }
 #ifdef _WIN32
         else if (wParam == 'L' && gInput.IsKeyDown(VK_CONTROL))

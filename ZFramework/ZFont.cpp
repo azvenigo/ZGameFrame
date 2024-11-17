@@ -1663,7 +1663,7 @@ tZFontPtr ZFontSystem::GetFont(const ZFontParams& params)
     }
 
     int64_t height = params.Height();
-    assert(params.nScalePoints > 0 && params.nScalePoints < 10000);
+    assert(params.nScalePoints > 0 && params.nScalePoints < 50000);
 
     const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
     auto findIt = mHeightToFontMap[height].find(params);
