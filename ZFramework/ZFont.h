@@ -174,11 +174,12 @@ public:
     ZRect           Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t nPadding = 0);
 	int64_t         StringWidth(const std::string& sText);
     ZRect           StringRect(const std::string& sText);
+    ZRect           StringRect(const std::string& sText, int64_t nLineWidth);                                   // returns the rectangle required to fully render a multi-line string given a width
 
-	int64_t         CalculateWordsThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);  // returns the number of characters that should be drawn on this line, breaking at words
-	int64_t         CalculateLettersThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);	// returns the number of characters that fit on that line
-	int64_t         CalculateNumberOfLines(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);	// returns the number of lines required to draw text
-
+	int64_t         CalculateWordsThatFitInWidth(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);  // returns the number of characters that should be drawn on this line, breaking at words
+	int64_t         CalculateLettersThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars); // returns the number of characters that fit on that line
+	int64_t         CalculateNumberOfLines(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);        // returns the number of lines required to draw text
+    int64_t         CalculateWidestLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);           // returns the widest line that would be visible drawing the text
 
 protected:
 	bool            DrawText_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip);
@@ -191,6 +192,7 @@ protected:
     virtual void    DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
 
     void            FindKerning(uint8_t c1, uint8_t c2);
+    int64_t         StringWidth(const uint8_t* pChar, size_t length);
 
     ZFontParams     mFontParams;
     int64_t         mFontHeight;

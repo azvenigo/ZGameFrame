@@ -68,20 +68,20 @@ protected:
 
 
 
-   int64_t mMaxParticles = 5;
-   int64_t mTerminalVelocity = 8;
+   int64_t mMaxParticles = 100;
+   int64_t mTerminalVelocity = 5;
 
    bool    shiftingGravField = false;
    int64_t gravFieldX = 0;
    int64_t gravFieldY = 0;
 
-   int64_t centerMass = 10000;
+   int64_t centerMass = 0;
 
    int64_t particleMassMin = 1;
-   int64_t particleMassMax = 1000;
+   int64_t particleMassMax = 100;
 
 
-   int64_t Attenuation = 50;
+   int64_t Attenuation = 90;
 
    Z3D::Vec3f lightPos;
    Z3D::Vec3f viewPos;

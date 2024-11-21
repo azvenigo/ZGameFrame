@@ -254,6 +254,7 @@ int main(int argc, char* argv[])
                     }
                     else
                     {*/
+                    //pScreenBuffer->Fill(0xFF0000FF); // debug fill
                         int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
                         gAnimator.Paint(pScreenBuffer);
                         pScreenBuffer->PaintToSystem();

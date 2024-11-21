@@ -238,24 +238,29 @@ int32_t ZFont::GetSpaceBetweenChars(uint8_t c1, uint8_t c2)
 
 int64_t ZFont::StringWidth(const string& sText)
 {
-	ZASSERT(mbInitted);
+    ZASSERT(mbInitted);
 
     if (sText.empty())
         return 0;
 
-	int64_t nWidth = 0;
-    int32_t nLength = (int32_t) sText.length();
-    const uint8_t* pChar;
-    for (pChar = (uint8_t*)sText.c_str(); pChar < (uint8_t*)sText.data()+nLength-1; pChar++)   // add up all of the chars except last one
+    return StringWidth((uint8_t*)sText.c_str(), sText.length());
+}
+
+int64_t ZFont::StringWidth(const uint8_t* pChar, size_t length)
+{
+    int64_t nWidth = 0;
+    const uint8_t* pEnd = pChar + length-1;
+    for (; pChar < pEnd; pChar++)   // add up all of the chars except last one
     {
-        nWidth += mCharDescriptors[*pChar].nCharWidth + 1 + GetSpaceBetweenChars(*pChar, *(pChar+1)); // char width adjusted by kerning with next char
+        nWidth += mCharDescriptors[*pChar].nCharWidth + 1 + GetSpaceBetweenChars(*pChar, *(pChar + 1)); // char width adjusted by kerning with next char
     }
 
     if (*pChar)
         nWidth += mCharDescriptors[*pChar].nCharWidth;  // last char
 
-	return nWidth;
+    return nWidth;
 }
+
 
 bool ZFont::DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, ZGUI::Style* pStyle, ZRect* pClip)
 {
@@ -656,12 +661,21 @@ ZRect ZFont::StringRect(const std::string& sText)
     return ZRect(0, 0, StringWidth(sText), mFontHeight);
 }
 
+ZRect ZFont::StringRect(const std::string& sText, int64_t nLineWidth)
+{
+    ZRect r;
+    int64_t lines = CalculateNumberOfLines(nLineWidth, (uint8_t*)sText.c_str(), sText.length());
+    int64_t widest = CalculateWidestLine(nLineWidth, (uint8_t*)sText.c_str(), sText.length());
+    return ZRect(0, 0, widest, mFontHeight*lines);
+}
+
 
 // This function helps format text by returning a rectangle where the text should be output
 // It will not clip, however... That should be done by the caller if necessary
 ZRect ZFont::Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t nPadding)
 {
-	ZRect rText(0,0, StringWidth(sText), mFontHeight);
+//	ZRect rText(0,0, StringWidth(sText), mFontHeight);
+    ZRect rText(StringRect(sText, rArea.Width()));
     rArea.DeflateRect(nPadding, nPadding);
 
     return ZGUI::Arrange(rText, rArea, pos, nPadding, nPadding);
@@ -730,7 +744,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 
     while (pChars < pEnd && rTextLine.top < rTextLine.bottom)
 	{
-        int64_t nLettersToDraw = CalculateWordsThatFitOnLine(rTextLine.Width(), (uint8_t*) pChars, pEnd-pChars);
+        int64_t nLettersToDraw = CalculateWordsThatFitInWidth(rTextLine.Width(), (uint8_t*) pChars, pEnd-pChars);
        
         ZRect rAdjustedLine(Arrange(rTextLine, string(pChars, nLettersToDraw), lineStyle));
         if (rAdjustedLine.bottom > rAreaToDrawTo.top && rAdjustedLine.top < rAreaToDrawTo.bottom)       // only draw if line is within rAreaToDrawTo
@@ -762,7 +776,7 @@ int64_t ZFont::CalculateNumberOfLines(int64_t nLineWidth, const uint8_t* pChars,
     uint8_t* pEnd = (uint8_t*) pChars + nNumChars;
 	while (pChars < pEnd)
 	{
-		int64_t nLettersToDraw = CalculateWordsThatFitOnLine(nLineWidth, pChars, pEnd-pChars);
+		int64_t nLettersToDraw = CalculateWordsThatFitInWidth(nLineWidth, pChars, pEnd-pChars);
 		pChars += nLettersToDraw;
 		nLines++;
 	}
@@ -796,10 +810,28 @@ int64_t ZFont::CalculateLettersThatFitOnLine(int64_t nLineWidth, const uint8_t* 
 	return nChars;
 }
 
+int64_t ZFont::CalculateWidestLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars)
+{
+    size_t nChars = 0;
+    int64_t nWidest = 0;
+
+    while (nChars < nNumChars)
+    {
+        int64_t nLineChars = CalculateWordsThatFitInWidth(nLineWidth, pChars, nNumChars-nChars);
+        int64_t width = StringWidth(pChars, nLineChars);
+        nWidest = std::max<int64_t>(nWidest, width);
+
+        nChars += nLineChars;
+        pChars += nLineChars;
+    }
+
+    return nWidest;
+}
+
 
 
 // Take into account line break character '\n'
-int64_t ZFont::CalculateWordsThatFitOnLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars)
+int64_t ZFont::CalculateWordsThatFitInWidth(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars)
 {
 	ZASSERT(pChars);
 	ZASSERT(nLineWidth > 0)

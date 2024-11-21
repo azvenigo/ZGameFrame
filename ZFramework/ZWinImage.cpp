@@ -383,7 +383,11 @@ bool ZWinImage::LoadImage(const string& sName)
 void ZWinImage::SetArea(const ZRect& newArea)
 {
     if (mpSurface)
+    {
+        mpSurface->mMutex.lock();
         mpSurface->mRenderState = ZBuffer::kBusy_SkipRender;
+        mpSurface->mMutex.unlock();
+    }
     ZWin::SetArea(newArea);
 
     if (mViewState == kFitToWindow)

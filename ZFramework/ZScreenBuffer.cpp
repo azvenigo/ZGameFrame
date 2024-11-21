@@ -174,7 +174,7 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 #endif
         }
 
-        if (pCurBuffer->mRenderState == ZBuffer::kReadyToRender)
+        if (pCurBuffer->mRenderState == ZBuffer::kReadyToRender || pCurBuffer->mRenderState == ZBuffer::kFreeToModify)
         {
             nRenderedCount++;
             ZRect rTexture(sr.mpSourceBuffer->GetArea());
@@ -507,10 +507,8 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
     // Set the render flag for all buffers in the new list
     for (auto& sr : newList)
     {
-//        sr.mpSourceBuffer->mMutex.lock();
         if (sr.mpSourceBuffer->mRenderState != ZBuffer::eRenderState::kBusy_SkipRender) // only set ready to render if not busy
             sr.mpSourceBuffer->mRenderState = ZBuffer::kReadyToRender;
-//        sr.mpSourceBuffer->mMutex.lock();
     }
 
 	mScreenRectList = newList;

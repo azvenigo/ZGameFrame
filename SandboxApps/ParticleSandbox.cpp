@@ -356,7 +356,7 @@ double Magnitude(ZFPoint v)
     return sqrt(v.x * v.x + v.y * v.y);
 }
 
-ZFPoint LimitMagnitude(ZFPoint v, int64_t terminal)
+ZFPoint LimitMagnitude(ZFPoint v, double terminal)
 {
     if (terminal > 0)
     {
@@ -377,12 +377,15 @@ void UpdateParticleDirs(tParticleArray& particles, tParticleArray& gravField, si
         auto& p = particles[i];
         ZFPoint force = GetForceVector(&p, particles, gravField, atten/50.0);
 
-        double attenuation = (double)atten / 10.0;
+        double attenuation = 0.0;
+        if (atten > 0)
+        {
+            attenuation = 100.0 / (double)atten;
+        }
 
         p.dir.x += force.x * attenuation;
         p.dir.y += force.y * attenuation;
-
-        p.dir = LimitMagnitude(p.dir, terminal);
+        p.dir = LimitMagnitude(p.dir, terminal / 10.0);
 
         i++;
     }
@@ -501,7 +504,7 @@ bool ParticleSandbox::Process()
                 p->dir.x += force.x * attenuation;
                 p->dir.y += force.y * attenuation;
 
-                p->dir = LimitMagnitude(p->dir, mTerminalVelocity);
+                p->dir = LimitMagnitude(p->dir, mTerminalVelocity/10.0);
             }
         }
 
@@ -546,7 +549,7 @@ bool ParticleSandbox::Paint()
     {
         mpSurface->FillAlpha(0xee000000, &prevFrameRects[i]);
     }*/
-    mpSurface->Fill(0);
+    //mpSurface->Fill(0xff000000);
 
     for (int64_t i = 0; i < (int64_t)particles.size(); i++)
     {

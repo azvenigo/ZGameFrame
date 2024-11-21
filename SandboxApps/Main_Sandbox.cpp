@@ -146,30 +146,30 @@ void Sandbox::ToggleOverlay()
             gpOverlay->mrDrawArea = grFullArea;
             gpOverlay->mImage.reset(new ZBuffer());
             gpOverlay->mImage->Init(grFullArea.Width(), grFullArea.Height());
-            gpOverlay->mImage->Fill(0x00000000);
+            gpOverlay->mImage->Fill(0x10000000);
 
             ZGUI::Style titleStyle(gStyleCaption);
-            titleStyle.fp.sFacename = "Chiller";
+            titleStyle.fp.sFacename = "Ravi";
             titleStyle.fp.nScalePoints = 20000;
             titleStyle.fp.nTracking = 20;
             titleStyle.fp.nWeight = 900;
-            titleStyle.pos = ZGUI::CT;
+            titleStyle.pos = ZGUI::C;
 
-            ZRect r(grFullArea);
-            r = ZGUI::Arrange(r, grFullArea, ZGUI::C);
+            string sCaption("Where is the\nAny key?");
 
+            ZRect r(titleStyle.Font()->Arrange(grFullArea, sCaption, ZGUI::CT));
             /*
             // BLURRY SHADOW
             titleStyle.look.colBottom = 0xff000000;
             titleStyle.look.colTop = 0xff000000;
-            titleStyle.Font()->DrawTextParagraph(gpOverlay->mImage.get(), "Where is the\nAny key?", r, &titleStyle);
+            titleStyle.Font()->DrawTextParagraph(gpOverlay->mImage.get(), sCaption, r, &titleStyle);
             gpOverlay->mImage.get()->Blur(10.0);
             r.OffsetRect(RANDI64(-20,20), RANDI64(-20, 20));
             */
 
             titleStyle.look.colTop = 0xffffffff;
             titleStyle.look.colBottom = 0xffffffff;
-            titleStyle.Font()->DrawTextParagraph(gpOverlay->mImage.get(), "Where is the\nAny key?", r, &titleStyle);
+            titleStyle.Font()->DrawTextParagraph(gpOverlay->mImage.get(), sCaption, r, &titleStyle);
             
 
             // invert the alpha channel
