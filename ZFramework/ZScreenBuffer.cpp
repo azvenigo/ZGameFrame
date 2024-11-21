@@ -107,19 +107,47 @@ void ZScreenBuffer::EndRender()
 
 #ifdef _WIN64
 
+bool ZScreenBuffer::PaintToSystem()
+{
+    if (!mbRenderingEnabled)
+        return false;
+
+    BITMAPINFO bmpInfo;
+    bmpInfo.bmiHeader.biBitCount = 32;
+    bmpInfo.bmiHeader.biCompression = BI_RGB;
+    bmpInfo.bmiHeader.biPlanes = 1;
+    bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
+
+    mSurfaceArea;
+
+    bmpInfo.bmiHeader.biWidth = (LONG)mSurfaceArea.Width();
+    bmpInfo.bmiHeader.biHeight = (LONG)-mSurfaceArea.Height();
+
+    DWORD nStartScanline = (DWORD)0;
+    DWORD nScanLines = (DWORD)mSurfaceArea.Height();
+
+    void* pBits = mpPixels;
+
+    int nRet = SetDIBitsToDevice(mDC,       // HDC
+        (DWORD)0,                 // Dest X
+        (DWORD)0,                  // Dest Y
+        (DWORD)mSurfaceArea.Width(),            // Dest Width
+        (DWORD)mSurfaceArea.Height(),           // Dest Height
+        (DWORD)0,               // Src X
+        (DWORD)0,                // Src Y
+        nStartScanline,                                  // Start Scanline
+        nScanLines,           // Num Scanlines
+        pBits,       // * pixels
+        &bmpInfo,                          // BMPINFO
+        DIB_RGB_COLORS);                    // Usage
+
+    return true;
+}
+
 int32_t ZScreenBuffer::RenderVisibleRects()
 {
     if (!mbRenderingEnabled)
         return 0;
-
-//    TIME_SECTION_START(RenderVisibleRects);
-
-	BITMAPINFO bmpInfo;
-	bmpInfo.bmiHeader.biBitCount = 32;
-	bmpInfo.bmiHeader.biCompression = BI_RGB;
-	bmpInfo.bmiHeader.biPlanes = 1;
-	bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
-
 
     tZBufferPtr pCurBuffer;
 
@@ -146,31 +174,13 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 #endif
         }
 
-        if (pCurBuffer->mRenderState == ZBuffer::kReadyToRender)
+        if (pCurBuffer->mRenderState == ZBuffer::kReadyToRender || pCurBuffer->mRenderState == ZBuffer::kFreeToModify)
         {
             nRenderedCount++;
             ZRect rTexture(sr.mpSourceBuffer->GetArea());
 
-            bmpInfo.bmiHeader.biWidth = (LONG)rTexture.Width();
-            bmpInfo.bmiHeader.biHeight = (LONG)-rTexture.Height();
-
-            DWORD nStartScanline = (DWORD)sr.mSourcePt.y;
-            DWORD nScanLines = (DWORD)sr.mrDest.Height();
-
-            void* pBits = sr.mpSourceBuffer->GetPixels() + sr.mSourcePt.y * rTexture.Width();
-
-            int nRet = SetDIBitsToDevice(mDC,       // HDC
-                (DWORD)sr.mrDest.left,                 // Dest X
-                (DWORD)sr.mrDest.top,                  // Dest Y
-                (DWORD)sr.mrDest.Width(),            // Dest Width
-                (DWORD)sr.mrDest.Height(),           // Dest Height
-                (DWORD)sr.mSourcePt.x,               // Src X
-                (DWORD)sr.mSourcePt.y,                // Src Y
-                nStartScanline,                                  // Start Scanline
-                nScanLines,           // Num Scanlines
-                pBits,       // * pixels
-                &bmpInfo,                          // BMPINFO
-                DIB_RGB_COLORS);                    // Usage
+            ZRect rSource(sr.mSourcePt.x, sr.mSourcePt.y, sr.mSourcePt.x + sr.mrDest.Width(), sr.mSourcePt.y + sr.mrDest.Height());
+            Blt(sr.mpSourceBuffer.get(), rSource, sr.mrDest);
         }
 	}
 
@@ -190,10 +200,10 @@ int32_t ZScreenBuffer::RenderVisibleRects()
 	return (int32_t) nRenderedCount;
 }
 
-int32_t ZScreenBuffer::RenderVisibleRects(const ZRect& rClip)
+bool ZScreenBuffer::PaintToSystem(const ZRect& rClip)
 {
     if (!mbRenderingEnabled)
-        return 0;
+        return false;
 
     //    TIME_SECTION_START(RenderVisibleRects);
 
@@ -203,67 +213,28 @@ int32_t ZScreenBuffer::RenderVisibleRects(const ZRect& rClip)
     bmpInfo.bmiHeader.biPlanes = 1;
     bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
 
+    bmpInfo.bmiHeader.biWidth = (LONG)mSurfaceArea.Width();
+    bmpInfo.bmiHeader.biHeight = (LONG)-mSurfaceArea.Height();
 
-    tZBufferPtr pCurBuffer;
+    DWORD nStartScanline = (DWORD)rClip.top;
+    DWORD nScanLines = (DWORD)rClip.Height();
 
-    int64_t nRenderedCount = 0;
+    void* pBits = mpPixels + rClip.top * mSurfaceArea.Width();
 
-    const std::lock_guard<std::mutex> surfaceLock(mScreenRectListMutex);
-    for (auto& sr : mScreenRectList)
-    {
-        // If no overlap, move on
-        if (!sr.mrDest.Overlaps(rClip))
-            continue;
-
-
-        // Since the mScreenRectList happens to be sorted so that referenced textures are together, we should lock, render all from that texture, then unlock
-        if (sr.mpSourceBuffer != pCurBuffer)
-        {
-            if (pCurBuffer)
-                pCurBuffer->GetMutex().unlock();
-
-            pCurBuffer = sr.mpSourceBuffer;
-            pCurBuffer->GetMutex().lock();
-        }
-
-        nRenderedCount++;
-        ZRect rTexture(sr.mpSourceBuffer->GetArea());
-
-        bmpInfo.bmiHeader.biWidth = (LONG)rTexture.Width();
-        bmpInfo.bmiHeader.biHeight = (LONG)-rTexture.Height();
-
-        ZRect rClippedSource(sr.mSourcePt.x, sr.mSourcePt.y, sr.mSourcePt.x + sr.mrDest.Width(), sr.mSourcePt.y + sr.mrDest.Height());
-        ZRect rClippedDest(sr.mrDest);
-
-        if (!Clip(rClip, rClippedSource, rClippedDest))
-            continue;
-
-        DWORD nStartScanline = (DWORD)rClippedSource.top;
-        DWORD nScanLines = (DWORD)rClippedSource.Height();
-
-        void* pBits = sr.mpSourceBuffer->GetPixels() + rClippedSource.top * rTexture.Width();
-
-        //ZDEBUG_OUT("dr: TL[", rClippedDest.left, ",", rClippedDest.top, "] lines:", nScanLines,"\n");
-
-            int nRet = SetDIBitsToDevice(mDC,   // HDC
-            (DWORD)rClippedDest.left,       // Dest X
-            (DWORD)rClippedDest.top,        // Dest Y
-            (DWORD)rClippedDest.Width(),    // Dest Width
-            (DWORD)rClippedDest.Height(),   // Dest Height
-            (DWORD)rClippedSource.left,     // Src X
-            (DWORD)rClippedSource.top,      // Src Y
-            nStartScanline,                 // Start Scanline
-            nScanLines,                     // Num Scanlines
-            pBits,                          // * pixels
-            &bmpInfo,                       // BMPINFO
-            DIB_RGB_COLORS);                // Usage
+    int nRet = SetDIBitsToDevice(mDC,   // HDC
+    (DWORD)rClip.left,       // Dest X
+    (DWORD)rClip.top,        // Dest Y
+    (DWORD)rClip.Width(),    // Dest Width
+    (DWORD)rClip.Height(),   // Dest Height
+    (DWORD)rClip.left,     // Src X
+    (DWORD)rClip.top,      // Src Y
+    nStartScanline,                 // Start Scanline
+    nScanLines,                     // Num Scanlines
+    pBits,                          // * pixels
+    &bmpInfo,                       // BMPINFO
+    DIB_RGB_COLORS);                // Usage
   
-  }
-
-    if (pCurBuffer)
-        pCurBuffer->GetMutex().unlock();
-
-    return (int32_t)nRenderedCount;
+    return true;
 }
 
 
@@ -313,7 +284,7 @@ bool ZScreenBuffer::RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst)
 }
 
 
-int32_t ZScreenBuffer::RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rClip)
+/*int32_t ZScreenBuffer::RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rClip)
 {
     if (!mbRenderingEnabled)
         return 0;
@@ -356,7 +327,7 @@ int32_t ZScreenBuffer::RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rC
 
     return (int32_t)nRenderedCount;
 }
-
+*/
 
 
 #endif // _WIN64
@@ -536,10 +507,8 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
     // Set the render flag for all buffers in the new list
     for (auto& sr : newList)
     {
-//        sr.mpSourceBuffer->mMutex.lock();
         if (sr.mpSourceBuffer->mRenderState != ZBuffer::eRenderState::kBusy_SkipRender) // only set ready to render if not busy
             sr.mpSourceBuffer->mRenderState = ZBuffer::kReadyToRender;
-//        sr.mpSourceBuffer->mMutex.lock();
     }
 
 	mScreenRectList = newList;

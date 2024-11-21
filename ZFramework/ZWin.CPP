@@ -1004,7 +1004,11 @@ void ZWin::Invalidate()
     if (mbPaints)
     {
         if (mpSurface)
+        {
+            mpSurface->mMutex.lock();
             mpSurface->mRenderState = ZBuffer::kBusy_SkipRender;
+            mpSurface->mMutex.unlock();
+        }
         mbInvalid = true;
     }
     if (mbInvalidateParentWhenInvalid && mpParentWin)

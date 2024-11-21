@@ -1046,7 +1046,7 @@ bool Z3DTestWin::Init()
         pCP->Slider("maxspheresize", &mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.25, sUpdateSphereCountMsg, true, false);
 
         pCP->Caption("speed", "Speed");
-        pCP->Slider("rotatespeed", &mnRotateSpeed, 0, 100, 1, 0.25, "", true, false);
+        pCP->Slider("rotatespeed", &mnRotateSpeed, 0, 500, 1, 0.25, "", true, false);
 
         pCP->Caption("fov", "FOV");
         pCP->Slider("fov", &mnFOVTime100, 100, 18000, 1, 0.25, "", false, false);
@@ -1276,7 +1276,7 @@ bool Z3DTestWin::Paint()
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
     mpSurface->FillAlpha(0xff000000);
 
-    mfBaseAngle += (mnRotateSpeed / 1000.0) * gTimer.GetElapsedTime() / 10000.0;
+    mfBaseAngle += (mnRotateSpeed / 10000.0) * gTimer.GetElapsedTime() / 10000.0;
 
     if (mbRenderSpheres)
     {

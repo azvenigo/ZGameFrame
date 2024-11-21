@@ -36,6 +36,8 @@ namespace Sandbox
     void InitControlPanel();
     void DeleteAllButControlPanelAndDebugConsole();
     void InitChildWindows(eSandboxMode mode);
+    void ToggleOverlay();
+
 
     tWinList sandboxWins;
 };

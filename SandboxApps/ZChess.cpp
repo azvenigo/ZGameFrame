@@ -1435,8 +1435,7 @@ bool ChessBoard::FromFEN(const string& sFEN)
 
 void ChessBoard::DebugDump()
 {
-    TableOutput table;
-    table.SetSeparator(' ', 1);
+    Table table;
 
     table.AddRow(' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
     for (int y = 0; y < 8; y++)

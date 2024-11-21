@@ -24,7 +24,7 @@ ZAnimator::~ZAnimator()
    }   
 }
 
-bool ZAnimator::Paint()
+bool ZAnimator::Paint(ZBuffer* pDest)
 {
     if (mAnimObjectList.empty())
         return false;
@@ -36,7 +36,7 @@ bool ZAnimator::Paint()
     {
         ZAnimObject* pObject = *it;
         if (pObject->GetState() != ZAnimObject::kHidden)
-            pObject->Paint();
+            pObject->Paint(pDest);
     }
 
     // Remove any objects that are in kFinished state

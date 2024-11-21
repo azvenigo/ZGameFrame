@@ -561,7 +561,7 @@ void ZWinFormattedDoc::AddMultiLine(string sLine, ZGUI::Style style, const strin
     tFormattedLine line;
     while (sLine.length() > 0)
     {
-        int64_t nChars = pFont->CalculateWordsThatFitOnLine(mrDocumentArea.Width(), (uint8_t*)sLine.data(), sLine.length());
+        int64_t nChars = pFont->CalculateWordsThatFitInWidth(mrDocumentArea.Width(), (uint8_t*)sLine.data(), sLine.length());
 
         FormattedEntry entry;
         entry.type = FormattedEntry::Text;

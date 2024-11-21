@@ -255,7 +255,9 @@ bool ImageContest::HandleMessage(const ZMessage& message)
         tZBufferPtr backgroundBuf(new ZBuffer());
         backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
        //RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
-       gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(backgroundBuf.get(), grFullArea);
+       //gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(backgroundBuf.get(), grFullArea);
+        backgroundBuf->Blt(gpGraphicSystem->GetScreenBuffer(), grFullArea, grFullArea);
+
        backgroundBuf->FillAlpha(0xaa000000);
 
         tZBufferPtr p1(new ZBuffer());
