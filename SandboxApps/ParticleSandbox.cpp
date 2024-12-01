@@ -26,9 +26,8 @@ bool ParticleSandbox::Init()
     particleBuffers.resize(kParticleMaxSize);
 
 
-    enableCollisions = RANDBOOL;
-    gravFieldX = RANDI64(0, 4);
-    gravFieldY = RANDI64(0, 4);
+    gravFieldX = RANDI64(0, 10);
+    gravFieldY = RANDI64(0, 10);
 
     int64_t panelW = grFullArea.Width() / 8;
     int64_t panelH = grFullArea.Height() / 2;
@@ -44,6 +43,8 @@ bool ParticleSandbox::Init()
 
     mpControlPanel->Button("quit_app_confirmed", "Quit", "{quit_app_confirmed}");
     mpControlPanel->AddSpace(gM / 2);
+
+    mpControlPanel->Toggle("frame_clear", &frameClear, "Frame Clear");
 
 
     mpControlPanel->Caption("particles_caption", "Particles");
@@ -72,7 +73,7 @@ bool ParticleSandbox::Init()
     mpControlPanel->Toggle("draw_field_toggle", &drawGravField, "Draw Grav Field", "{reinit;target=particlesandbox}", "{reinit;target=particlesandbox}");
 
     mpControlPanel->Caption("term_caption", "Terminal Velocity");
-    mpControlPanel->Slider("termVel", &mTerminalVelocity, 0, 100, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("termVel", &mTerminalVelocity, 0, 100, 1, 0.2, "", true, false);
     
     mpControlPanel->AddSpace(gM / 2);
     mpControlPanel->Toggle("collisions_toggle", &enableCollisions, "Enable Collisions", "{reinit;target=particlesandbox}", "{reinit;target=particlesandbox}");
@@ -301,14 +302,17 @@ void ParticleSandbox::SpawnParticle(int64_t index)
     }
 }
 
-ZFPoint GetForceVector(Particle* p, const tParticleArray& particles, const tParticleArray& gravField, double atten)
+ZFPoint GetForceVector(Particle* p, tParticleArray& particles, const tParticleArray& gravField, double atten, Particle** pOutCollision)
 {
     ZFPoint force;
-    for (const auto& p2 : particles)
+    for (auto& p2 : particles)
     {
         if (p2.active && &p2 != p)
         {
             double fDist = sqrt((p2.pos.x - p->pos.x) * (p2.pos.x - p->pos.x) + (p2.pos.y - p->pos.y) * (p2.pos.y - p->pos.y));
+
+            if (sqrt(p->mass + p2.mass) > fDist)
+                *pOutCollision = &p2;
 
             if (fDist > 0)
             {
@@ -370,22 +374,39 @@ ZFPoint LimitMagnitude(ZFPoint v, double terminal)
 }
 
 
-void UpdateParticleDirs(tParticleArray& particles, tParticleArray& gravField, size_t i, size_t last, int64_t terminal, int64_t atten)
+void UpdateParticleDirs(tParticleArray& particles, tParticleArray& gravField, size_t i, size_t last, int64_t terminal, int64_t atten, bool bEnableCollide, bool bEnableAbsorb)
 {
     while (i != last)
     {
         auto& p = particles[i];
-        ZFPoint force = GetForceVector(&p, particles, gravField, atten/50.0);
 
-        double attenuation = 0.0;
-        if (atten > 0)
+        if (p.active)
         {
-            attenuation = 100.0 / (double)atten;
-        }
+            Particle* pCollision = nullptr;
 
-        p.dir.x += force.x * attenuation;
-        p.dir.y += force.y * attenuation;
-        p.dir = LimitMagnitude(p.dir, terminal / 10.0);
+            ZFPoint force = GetForceVector(&p, particles, gravField, atten / 50.0, &pCollision);
+
+            if (bEnableCollide && pCollision && pCollision->mass < p.mass)
+            {
+                pCollision->active = false;
+                continue;
+            }
+            else if (bEnableAbsorb && pCollision)
+            {
+                p.mass += pCollision->mass;
+                pCollision->active = false;
+            }
+
+            double attenuation = 0.0;
+            if (atten > 0)
+            {
+                attenuation = 100.0 / (double)atten;
+            }
+
+            p.dir.x += force.x * attenuation;
+            p.dir.y += force.y * attenuation;
+            p.dir = LimitMagnitude(p.dir, terminal / 10.0);
+        }
 
         i++;
     }
@@ -395,7 +416,7 @@ bool ParticleSandbox::Process()
 {
     if (!paused)
     {
-        // check for collisions
+/*        // check for collisions
         if (enableAbsorption)
         {
             for (int i = 1; i < particles.size(); i++)  // 0 is center so don't consider it for absorption
@@ -439,6 +460,7 @@ bool ParticleSandbox::Process()
                 }
             }
         }
+        */
 
         size_t threads = std::thread::hardware_concurrency();
         workers.resize(threads);
@@ -463,7 +485,7 @@ bool ParticleSandbox::Process()
 
             assert(first < particles.size());
             assert(last < particles.size()+1);
-            workers[i] = std::thread(UpdateParticleDirs, std::ref(particles), std::ref(gravField), first, last, mTerminalVelocity, Attenuation);
+            workers[i] = std::thread(UpdateParticleDirs, std::ref(particles), std::ref(gravField), first, last, mTerminalVelocity, Attenuation, enableCollisions, enableAbsorption);
         }
 
         for (int i = 0; i < batches; i++)
@@ -480,11 +502,14 @@ bool ParticleSandbox::Process()
             Particle* p = &particles[i];
             if (p->active /*&& !(p->dir.x == 0 && p->dir.y == 0)*/)
             {
+                if (p->mass > particleMassMax)
+                    p->active = false;
+
                 p->pos.x += p->dir.x * timeScale;
                 p->pos.y += p->dir.y * timeScale;
 
-                if (p->pos.x < -mAreaLocal.Width() * 1.5 || p->pos.x > mAreaLocal.Width() * 1.5 ||
-                    p->pos.y < -mAreaLocal.Height() * 1.5 || p->pos.y > mAreaLocal.Height() * 1.5)
+                if (p->pos.x < -mAreaLocal.Width() * 2 || p->pos.x > mAreaLocal.Width() * 2 ||
+                    p->pos.y < -mAreaLocal.Height() * 2 || p->pos.y > mAreaLocal.Height() * 2)
                     p->active = false;
             }
             else
@@ -499,7 +524,8 @@ bool ParticleSandbox::Process()
             for (int64_t i = 0; i < (int64_t)gravField.size(); i++)
             {
                 Particle* p = &gravField[i];
-                ZFPoint force = GetForceVector(p, particles, gravField, Attenuation / 50.0);
+                Particle* pCollision = nullptr;
+                ZFPoint force = GetForceVector(p, particles, gravField, Attenuation / 50.0, &pCollision);
                 double attenuation = (double)Attenuation / 50.0;
                 p->dir.x += force.x * attenuation;
                 p->dir.y += force.y * attenuation;
@@ -549,7 +575,9 @@ bool ParticleSandbox::Paint()
     {
         mpSurface->FillAlpha(0xee000000, &prevFrameRects[i]);
     }*/
-    //mpSurface->Fill(0xff000000);
+
+    if (frameClear)
+        mpSurface->Fill(0xff000000);
 
     for (int64_t i = 0; i < (int64_t)particles.size(); i++)
     {
@@ -574,6 +602,8 @@ bool ParticleSandbox::Paint()
 
 bool Particle::Draw(ZBuffer* pDest, Z3D::Vec3f lightPos, Z3D::Vec3f viewPos, Z3D::Vec3f ambient)
 {
+//    int64_t size = 10;
+
     int64_t size = (int64_t)(2.0 * sqrt(mass));
     limit<int64_t>(size, 1, kParticleMaxSize);
 
@@ -600,6 +630,7 @@ bool Particle::Draw(ZBuffer* pDest, Z3D::Vec3f lightPos, Z3D::Vec3f viewPos, Z3D
 
         rendering->Colorize(nH, nS);
     }
+    
 
     ZRect rDest((int64_t)pos.x, (int64_t)pos.y, (int64_t)pos.x + size, (int64_t)pos.y + size);
     rDest.OffsetRect(-size / 2, -size / 2);

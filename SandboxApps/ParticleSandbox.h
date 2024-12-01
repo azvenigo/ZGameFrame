@@ -68,10 +68,11 @@ protected:
 
 
 
-   int64_t mMaxParticles = 100;
-   int64_t mTerminalVelocity = 5;
+   int64_t mMaxParticles = 200;
+   int64_t mTerminalVelocity = 25;
 
    bool    shiftingGravField = false;
+   bool    frameClear = true;
    int64_t gravFieldX = 0;
    int64_t gravFieldY = 0;
 
@@ -91,10 +92,10 @@ protected:
 
    bool paused = false;
 
-   bool enableCollisions = false;
+   bool enableCollisions = true;
    bool enableAbsorption = false;
    bool drawArrows = false;
-   bool drawGravField = true;
+   bool drawGravField = false;
 
    std::vector<std::thread>  workers;
 };
