@@ -556,6 +556,67 @@ uint32_t ZRasterizer::SampleTexture_ZoomedOut(ZBuffer* pTexture, double fTexture
     return nFinalCol;
 }
 
+bool ZRasterizer::MultiSampleRasterizeRange(ZBuffer* pTexture, ZBuffer* pDestination, int64_t nTop, int64_t nBottom, double fClipLeft, double fClipRight, tUVVertexArray& vertexArray, bool isZoomedIn, uint32_t nSubsamples, uint8_t nAlpha)
+{
+    // For each scanline
+    for (int64_t nScanLine = nTop; nScanLine < nBottom; nScanLine++)
+    {
+        ZUVVertex scanLineMin;
+        ZUVVertex scanLineMax;
+
+        double fScanLineLength;
+
+        double fTextureU;
+        double fTextureV;
+        double fTextureDU;
+        double fTextureDV;
+
+        SetupScanline((double)nScanLine, fClipLeft, fClipRight, scanLineMin, scanLineMax, vertexArray, fScanLineLength, fTextureU, fTextureV, fTextureDU, fTextureDV);
+
+        // Rasterize the scanline using textureWalker as the source color
+        int64_t nStartX = (int64_t)scanLineMin.x;
+        int64_t nScanLinePixels = (int64_t)scanLineMax.x - (int64_t)scanLineMin.x;
+        int64_t nDestStride = pDestination->GetArea().Width();
+        uint32_t* pDestPixels = pDestination->GetPixels() + nScanLine * nDestStride + nStartX;
+
+
+        //		int64_t nRand = pDestination->GetArea().Width() * pDestination->GetArea().Height();
+
+        //ZASSERT(nStartX + nScanLinePixels <= rDest.right);
+
+        ZASSERT(pDestination->GetPixels() != nullptr);
+
+
+        if (isZoomedIn)
+        {
+            for (int64_t nCount = 0; nCount < nScanLinePixels; nCount++)
+            {
+                uint32_t nSampled = SampleTexture_ZoomedIn(pTexture, fTextureU, fTextureV, fTextureDU, fTextureDV, nSubsamples);
+                if (ARGB_A(nSampled) > 0)
+                    *pDestPixels = COL::AlphaBlend_Col2Alpha(nSampled, *pDestPixels, nAlpha);
+                pDestPixels++;
+                fTextureU += fTextureDU;
+                fTextureV += fTextureDV;
+            }
+        }
+        else
+        {
+            for (int64_t nCount = 0; nCount < nScanLinePixels; nCount++)
+            {
+                uint32_t nSampled = SampleTexture_ZoomedOut(pTexture, fTextureU, fTextureV, fTextureDU, fTextureDV, nSubsamples);
+                if (ARGB_A(nSampled) > 0)
+                    *pDestPixels = COL::AlphaBlend_Col2Alpha(nSampled, *pDestPixels, nAlpha);
+                pDestPixels++;
+                fTextureU += fTextureDU;
+                fTextureV += fTextureDV;
+            }
+        }
+
+        mnDrawnPixels += nScanLinePixels;
+    }
+
+    return true;
+}
 
 bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip, uint32_t nSubsamples, uint8_t nAlpha)
 {
@@ -590,62 +651,26 @@ bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* 
     // Determine if we're zoomed in or zoomed out
     bool isZoomedIn = (screenDist > textureDist);
 
+    int64_t threadCount = renderPool.size();
+    int64_t scanLinesPerThread = (nBottomScanLine - nTopScanLine + threadCount - 1) / threadCount;
 
+    std::vector< std::shared_future<bool> > threadRenderResults;
 
-    // For each scanline
-    for (int64_t nScanLine = nTopScanLine; nScanLine < nBottomScanLine; nScanLine++)
+    for (uint32_t i = 0; i < threadCount; i++)
     {
-        ZUVVertex scanLineMin;
-        ZUVVertex scanLineMax;
+        int64_t nTop = nTopScanLine + i * scanLinesPerThread;
+        int64_t nBottom = nTop + scanLinesPerThread;
 
-        double fScanLineLength;
+        // last thread? take the rest of the scanlines
+        if (i == threadCount - 1)
+            nBottom = nBottomScanLine;
 
-        double fTextureU;
-        double fTextureV;
-        double fTextureDU;
-        double fTextureDV;
+        threadRenderResults.emplace_back(renderPool.enqueue(&MultiSampleRasterizeRange, pTexture, pDestination, nTop, nBottom, fClipLeft, fClipRight, vertexArray, isZoomedIn, nSubsamples, nAlpha));
+    }
 
-        SetupScanline((double)nScanLine, fClipLeft, fClipRight, scanLineMin, scanLineMax, vertexArray, fScanLineLength, fTextureU, fTextureV, fTextureDU, fTextureDV);
-
-        // Rasterize the scanline using textureWalker as the source color
-        int64_t nStartX = (int64_t)scanLineMin.x;
-        int64_t nScanLinePixels = (int64_t)scanLineMax.x - (int64_t)scanLineMin.x;
-        uint32_t* pDestPixels = pDestination->GetPixels() + nScanLine * nDestStride + nStartX;
-
-
-        //		int64_t nRand = pDestination->GetArea().Width() * pDestination->GetArea().Height();
-
-        ZASSERT(nStartX + nScanLinePixels <= rDest.right);
-
-        ZASSERT(pDestination->GetPixels() != nullptr);
-
-
-        if (isZoomedIn)
-        {
-            for (int64_t nCount = 0; nCount < nScanLinePixels; nCount++)
-            {
-                uint32_t nSampled = SampleTexture_ZoomedIn(pTexture, fTextureU, fTextureV, fTextureDU, fTextureDV, nSubsamples);
-                if (ARGB_A(nSampled) > 0)
-                    *pDestPixels = COL::AlphaBlend_Col2Alpha(nSampled, *pDestPixels, nAlpha);
-                pDestPixels++;
-                fTextureU += fTextureDU;
-                fTextureV += fTextureDV;
-            }
-        }
-        else
-        {
-            for (int64_t nCount = 0; nCount < nScanLinePixels; nCount++)
-            {
-                uint32_t nSampled = SampleTexture_ZoomedOut(pTexture, fTextureU, fTextureV, fTextureDU, fTextureDV, nSubsamples);
-                if (ARGB_A(nSampled) > 0)
-                    *pDestPixels = COL::AlphaBlend_Col2Alpha(nSampled, *pDestPixels, nAlpha);
-                pDestPixels++;
-                fTextureU += fTextureDU;
-                fTextureV += fTextureDV;
-            }
-        }
-
-        mnDrawnPixels += nScanLinePixels;
+    for (const auto& result : threadRenderResults)
+    {
+        result.get();
     }
 
     mnProcessedVertices += vertexArray.size();

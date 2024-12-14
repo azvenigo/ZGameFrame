@@ -3,6 +3,7 @@
 #include "ZBuffer.h"
 #include "ZTypes.h"
 #include "ZDebug.h"
+#include "helpers/ThreadPool.h"
 #include <vector>
 
 
@@ -27,14 +28,17 @@ public:
 private:
     // UV
 
-    bool    FindScanlineIntersection(double fScanY, ZUVVertex& v1, ZUVVertex& v2, ZUVVertex& vIntersection);
-    void    SetupRasterization(ZBuffer* pDestination, tUVVertexArray& vertexArray, ZRect& rDest, ZRect* pClip, double& fClipLeft, double& fClipRight, int64_t& nTopScanline, int64_t& nBottomScanline);
-    void    SetupScanline(double fScanLine, double& fClipLeft, double& fClipRight, ZUVVertex& scanLineMin, ZUVVertex& scanLineMax, tUVVertexArray& vertexArray, double& fScanLineLength, double& fTextureU, double& fTextureV, double& fTextureDX, double& fTextureDV);
+    static bool    FindScanlineIntersection(double fScanY, ZUVVertex& v1, ZUVVertex& v2, ZUVVertex& vIntersection);
+    static void    SetupRasterization(ZBuffer* pDestination, tUVVertexArray& vertexArray, ZRect& rDest, ZRect* pClip, double& fClipLeft, double& fClipRight, int64_t& nTopScanline, int64_t& nBottomScanline);
+    static void    SetupScanline(double fScanLine, double& fClipLeft, double& fClipRight, ZUVVertex& scanLineMin, ZUVVertex& scanLineMax, tUVVertexArray& vertexArray, double& fScanLineLength, double& fTextureU, double& fTextureV, double& fTextureDX, double& fTextureDV);
 
     // Color
     bool    FindScanlineIntersection(double fScanY, ZColorVertex& v1, ZColorVertex& v2, ZColorVertex& vIntersection);
     void    SetupRasterization(ZBuffer* pDestination, tColorVertexArray& vertexArray, ZRect& rDest, ZRect* pClip, double& fClipLeft, double& fClipRight, int64_t& nTopScanline, int64_t& nBottomScanline);
     void    SetupScanline(double fScanLine, double& fClipLeft, double& fClipRight, ZColorVertex& scanLineMin, ZColorVertex& scanLineMax, tColorVertexArray& vertexArray, double& fScanLineLength, double& fA, double& fR, double& fG, double& fB, double& fDA, double& fDR, double& fDG, double& fDB);
+
+    static bool MultiSampleRasterizeRange(ZBuffer* pTexture, ZBuffer* pDestination, int64_t nTop, int64_t nBottom, double fClipLeft, double fClipRight, tUVVertexArray& vertexArray, bool isZoomedIn, uint32_t nSubsamples, uint8_t nAlpha);
+
 
 public:
 
@@ -45,6 +49,8 @@ public:
 	static uint64_t	mnPeakProcessedVertices;
 	static uint64_t	mnPeakDrawnPixels;
 
+
+    ThreadPool  renderPool;
 };
 
 extern ZRasterizer gRasterizer;
