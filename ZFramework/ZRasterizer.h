@@ -13,7 +13,7 @@ public:
     bool    Rasterize(ZBuffer* pDestination, tColorVertexArray& vertexArray, ZRect* pClip = NULL);
    
     bool    RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip = NULL, uint8_t nAlpha = 255);
-    bool    MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip, uint32_t nSubsamples, uint8_t nAlpha = 255);
+    bool    MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip, uint32_t nSubsamples, uint8_t nAlpha = 255, bool* pCancel = nullptr);
 
     // helper functions
     bool    RasterizeSimple(ZBuffer* pDestination, ZBuffer* pTexture, ZRect rDest, ZRect rSrc, ZRect* pClip = NULL);

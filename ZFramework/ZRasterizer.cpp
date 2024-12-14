@@ -557,7 +557,7 @@ uint32_t ZRasterizer::SampleTexture_ZoomedOut(ZBuffer* pTexture, double fTexture
 }
 
 
-bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip, uint32_t nSubsamples, uint8_t nAlpha)
+bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, tUVVertexArray& vertexArray, ZRect* pClip, uint32_t nSubsamples, uint8_t nAlpha, bool* pCancel)
 {
     if (nAlpha < 8)
         return true;
@@ -595,6 +595,9 @@ bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* 
     // For each scanline
     for (int64_t nScanLine = nTopScanLine; nScanLine < nBottomScanLine; nScanLine++)
     {
+        if (pCancel && *pCancel)    // if a pointer to a cancel flag is set, and the flag has been indicated, abort
+            return true;
+
         ZUVVertex scanLineMin;
         ZUVVertex scanLineMax;
 

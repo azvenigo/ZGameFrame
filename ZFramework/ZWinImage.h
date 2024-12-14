@@ -33,6 +33,17 @@ public:
         kZoomedOutOfLargeImage  = 4,
     };
 
+    enum eQualityRenderState : uint32_t
+    {
+        kDoNotRender            = 0,
+        kNeedsRender            = 1,
+        kRendering              = 2,
+        kRenderReady            = 3,
+
+        kCancelRender           = 4
+    };
+
+
     ZWinImage();
     ~ZWinImage();
 
@@ -78,7 +89,12 @@ public:
     std::string msSaveButtonMessage;
 
     tZBufferPtr mpImage;
+
     uint32_t    nSubsampling;
+    tZBufferPtr mpQualityRenderedImage; // if subsampling is enabled, perform background thread rendering
+    std::atomic<uint32_t>    mnQualityRenderReady;
+    bool        bAbortQualityRenderFlag;
+
 
 
     ZGUI::tTextboxMap   mCaptionMap;
@@ -90,6 +106,7 @@ public:
 protected:
     bool HandleMessage(const ZMessage& message);
     void ToImageCoords(ZRect& r);   // compute image coords
+    static void RenderQualityImageProc(tZBufferPtr pSourceImage, tZBufferPtr pQualityDestination, tUVVertexArray verts, ZRect rClip, ZWinImage* pContext);
 
 
 private:

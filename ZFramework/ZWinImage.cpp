@@ -28,6 +28,7 @@ ZWinImage::ZWinImage()
     mpTable = nullptr;
     mFillColor = 0;
     mIdleSleepMS = 10000;
+    bAbortQualityRenderFlag = false;
 
     mBehavior = eBehavior::kNone;
 
@@ -47,6 +48,8 @@ bool ZWinImage::Init()
     mCaptionMap["zoom"].style = gStyleCaption;
     mCaptionMap["zoom"].style.pos = ZGUI::LB;
 //    Clear();
+    mpQualityRenderedImage.reset(new ZBuffer);
+    mnQualityRenderReady = kNeedsRender;
     return ZWin::Init();
 }
 
@@ -96,6 +99,9 @@ bool ZWinImage::OnMouseUpL(int64_t x, int64_t y)
             gMessageSystem.Post(ZMessage("image_selection", mpParentWin, "r", RectToString(rImageCoords)));
         }
 
+
+        bAbortQualityRenderFlag = false;
+        mnQualityRenderReady = kNeedsRender;
         Invalidate();
         ReleaseCapture();
     }
@@ -109,6 +115,8 @@ bool ZWinImage::OnMouseDownL(int64_t x, int64_t y)
     ClearSelection();
     if (mpImage)
     {
+        bAbortQualityRenderFlag = true; // abort any existing render
+
         if ((mBehavior & kNotifyOnClick) != 0 && mpParentWin)
         {
             // convert coordinates to parent's
@@ -303,7 +311,10 @@ bool ZWinImage::OnKeyDown(uint32_t c)
     if (mpParentWin)
     {
         if (c == mZoomHotkey)
+        {
+            bAbortQualityRenderFlag = true; // abort any existing render
             mpParentWin->InvalidateChildren();
+        }
         return mpParentWin->OnKeyDown(c);
     }
 
@@ -315,12 +326,18 @@ bool ZWinImage::OnKeyUp(uint32_t c)
     if (AmCapturing() && (mBehavior & kSelectableArea) != 0 && c == VK_SHIFT)
     {
         ReleaseCapture();
+        bAbortQualityRenderFlag = false;
+        mnQualityRenderReady = kNeedsRender;
         mpParentWin->InvalidateChildren();
     }
 
 
     if (c == mZoomHotkey)
+    {
+        bAbortQualityRenderFlag = false;
+        mnQualityRenderReady = kNeedsRender;
         mpParentWin->InvalidateChildren();
+    }
 
     return mpParentWin->OnKeyUp(c);
 }
@@ -328,6 +345,8 @@ bool ZWinImage::OnKeyUp(uint32_t c)
 
 void ZWinImage::ScrollTo(int64_t nX, int64_t nY)
 {
+    bAbortQualityRenderFlag = true;
+
     const int32_t kSnapDistance = 10;
     if (abs(nX - mAreaLocal.left) < kSnapDistance)
     {
@@ -354,6 +373,7 @@ void ZWinImage::ScrollTo(int64_t nX, int64_t nY)
 bool ZWinImage::LoadImage(const string& sName)
 {
     mbVisible = false;
+    bAbortQualityRenderFlag = true;
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
     // if there's an old image, acquire the lock before freeing it
@@ -377,6 +397,8 @@ bool ZWinImage::LoadImage(const string& sName)
 
     FitImageToWindow();
     mbVisible = true;
+    bAbortQualityRenderFlag = false;
+    mnQualityRenderReady = kNeedsRender;
     return true;
 }
 
@@ -406,12 +428,16 @@ void ZWinImage::FitImageToWindow()
     mfZoom = (double)mImageArea.Width() / (double)mpImage->GetArea().Width();
     mfPerfectFitZoom = mfZoom;
 
+    bAbortQualityRenderFlag = false;
+    mnQualityRenderReady = kNeedsRender;
     Invalidate();
 }
 
 void ZWinImage::CenterImage()
 {
     mImageArea.SetRect(ZGUI::Arrange(mImageArea, mAreaLocal, ZGUI::C));
+    bAbortQualityRenderFlag = false;
+    mnQualityRenderReady = kNeedsRender;
     Invalidate();
 }
 
@@ -435,6 +461,8 @@ void ZWinImage::SetZoom(double fZoom)
     // Update image area
     if (mpImage)
     {
+        bAbortQualityRenderFlag = true;
+
         ZRect rImageArea(mpImage->GetArea());
         double fRatio = (double)rImageArea.Width() / (double)rImageArea.Height();
         int64_t nImageWidth = (int64_t)(rImageArea.Width() * mfZoom);
@@ -449,6 +477,9 @@ void ZWinImage::SetZoom(double fZoom)
             mViewState = kZoomedInToSmallImage;
         else if (rImageArea.Height() > mAreaInParent.Height() && mfZoom < 1.0)
             mViewState = kZoomedOutOfLargeImage;
+
+        bAbortQualityRenderFlag = false;
+        mnQualityRenderReady = kNeedsRender;
     }
 
     Invalidate(); 
@@ -462,6 +493,7 @@ double ZWinImage::GetZoom()
 
 void ZWinImage::SetImage(tZBufferPtr pImage)
 {
+    bAbortQualityRenderFlag = true;
     ZRect rOldImage;
     if (mpImage)
         rOldImage = mpImage->GetArea();
@@ -492,8 +524,29 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
 
 
 
+    bAbortQualityRenderFlag = false;
+    mnQualityRenderReady = kNeedsRender;
+
     Invalidate();
 }
+
+
+void ZWinImage::RenderQualityImageProc(tZBufferPtr pSourceImage, tZBufferPtr pQualityDestination, tUVVertexArray verts, ZRect rClip, ZWinImage* pContext)
+{
+    assert(pSourceImage);
+    assert(pQualityDestination);
+    if (!pSourceImage || !pQualityDestination)
+    {
+        pContext->mnQualityRenderReady = kNeedsRender;
+        return;
+    }
+
+    pContext->mnQualityRenderReady = kRendering;
+    gRasterizer.MultiSampleRasterizeWithAlpha(pQualityDestination.get(), pSourceImage.get(), verts, &rClip, pContext->nSubsampling, pContext->bAbortQualityRenderFlag);
+    pContext->mnQualityRenderReady = kRenderReady;
+    pContext->Invalidate();
+}
+
 
 bool ZWinImage::Paint()
 {
@@ -503,44 +556,79 @@ bool ZWinImage::Paint()
     //ZDEBUG_OUT_LOCKLESS("ZWinImage::Paint() - in...");
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
-
-
     ZASSERT(mpSurface.get()->GetPixels() != nullptr);
-
     ZRect rDest(mpSurface.get()->GetArea());
-
-      mpSurface.get()->Fill(mFillColor);
-
-    ZASSERT(mpSurface.get()->GetPixels() != nullptr);
 
     tZBufferPtr pRenderImage = mpImage;
     ZRect rRenderArea = mImageArea;
 
-//    ZOUT_LOCKLESS("mpimage");
-    if (pRenderImage)
+    if (nSubsampling == 0 || AmCapturing() || gInput.IsKeyDown(mZoomHotkey) || mfZoom == 1.00)
     {
-//        ZOUT_LOCKLESS("imageSurfaceLock get");
-        if (pRenderImage->GetPixels())
+        bAbortQualityRenderFlag = true;
+        mnQualityRenderReady = kDoNotRender;
+    }
+
+
+    if (mnQualityRenderReady == kNeedsRender)
+    {
+        if (pRenderImage)
         {
-//            ZOUT_LOCKLESS("getpixels");
-            ZRect rSource(pRenderImage->GetArea());
+            mpQualityRenderedImage->Init(rDest.Width(), rDest.Height());
+            tUVVertexArray verts;
+            gRasterizer.RectToVerts(rRenderArea, verts);
 
-//            ZOUT("Rendering image:", pRenderImage->GetEXIF().DateTime, "\n");
+            mnQualityRenderReady = kRendering;
+            // kick off render thread
 
-            if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
+            std::thread(RenderQualityImageProc, pRenderImage, mpQualityRenderedImage, verts, mAreaLocal, this).detach();
+        }
+    }
+
+    if (mnQualityRenderReady == kRenderReady)
+    {
+        ZRect rSrc(mpQualityRenderedImage->mSurfaceArea);
+        if (rSrc.Width() != rDest.Width() || rSrc.Height() != rDest.Height())
+            mnQualityRenderReady = kNeedsRender;
+    }
+
+    // Use low quality
+    mpSurface.get()->Fill(mFillColor);
+
+
+    if (mnQualityRenderReady == kRenderReady)
+    {
+        // Use previously rendered rendered image
+        assert(mpQualityRenderedImage);
+
+        ZRect rSrc(mpQualityRenderedImage->mSurfaceArea);
+        assert(rSrc.Width() == rDest.Width() && rSrc.Height() == rDest.Height());
+
+        mpSurface.get()->Blt(mpQualityRenderedImage.get(), rSrc, rDest);
+    }
+    else
+    {
+        //    ZOUT_LOCKLESS("mpimage");
+        if (pRenderImage)
+        {
+            //        ZOUT_LOCKLESS("imageSurfaceLock get");
+            if (pRenderImage->GetPixels())
             {
-                mpSurface.get()->Blt(pRenderImage.get(), rSource, rDest);
-            }
-            else
-            {
-                tUVVertexArray verts;
-                gRasterizer.RectToVerts(rRenderArea, verts);
-                ZASSERT(mpSurface.get()->GetPixels() != nullptr);
+                //            ZOUT_LOCKLESS("getpixels");
+                ZRect rSource(pRenderImage->GetArea());
 
-                if (nSubsampling == 0 || AmCapturing() || gInput.IsKeyDown(mZoomHotkey) || mfZoom == 1.00)
-                    gRasterizer.RasterizeWithAlpha(mpSurface.get(), pRenderImage.get(), verts, &mAreaLocal);
+                //            ZOUT("Rendering image:", pRenderImage->GetEXIF().DateTime, "\n");
+
+                if (mfZoom == 1.0f && rDest == rSource)  // simple blt?
+                {
+                    mpSurface.get()->Blt(pRenderImage.get(), rSource, rDest);
+                }
                 else
-                    gRasterizer.MultiSampleRasterizeWithAlpha(mpSurface.get(), pRenderImage.get(), verts, &mAreaLocal, nSubsampling);
+                {
+                    tUVVertexArray verts;
+                    gRasterizer.RectToVerts(rRenderArea, verts);
+                    ZASSERT(mpSurface.get()->GetPixels() != nullptr);
+                    gRasterizer.RasterizeWithAlpha(mpSurface.get(), pRenderImage.get(), verts, &mAreaLocal);
+                }
             }
         }
     }
@@ -559,7 +647,7 @@ bool ZWinImage::Paint()
     {
         ZGUI::TextBox::Paint(mpSurface.get(), mCaptionMap);
 
-        if (pRenderImage && mpTable)
+        if (mpImage && mpTable)
             mpTable->Paint(mpSurface.get());
     }
 
