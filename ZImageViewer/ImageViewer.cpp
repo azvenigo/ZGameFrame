@@ -1356,7 +1356,7 @@ bool ImageViewer::Init()
         mpWinImage->mZoomHotkey = VK_MENU;
         if (mbSubsample)
             mpWinImage->nSubsampling = 4;
-        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable|ZWinImage::kSelectableArea|ZWinImage::kLaunchGeolocation;
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable|ZWinImage::kSelectableArea|ZWinImage::kLaunchGeolocation|ZWinImage::kShowCaptionOnMouseOver;
 
 //        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
 

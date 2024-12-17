@@ -555,7 +555,15 @@ bool ZWinImage::Paint()
     Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
     mCaptionMap["zoom"].visible = gInput.IsKeyDown(mZoomHotkey);
 
-    if ((mBehavior & kShowCaption) != 0)
+    bool bPaintCaptions = (mBehavior & kShowCaption) != 0;
+    if ((mBehavior & kShowCaptionOnMouseOver) != 0)
+    {
+        if (gInput.lastMouseMove.x < 20 || gInput.lastMouseMove.x > mAreaLocal.right - 20 ||
+            gInput.lastMouseMove.y < 20 || gInput.lastMouseMove.y > mAreaLocal.bottom - 20)
+            bPaintCaptions = true;
+    }
+
+    if (bPaintCaptions)
     {
         ZGUI::TextBox::Paint(mpSurface.get(), mCaptionMap);
 

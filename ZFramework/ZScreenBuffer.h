@@ -73,15 +73,11 @@ protected:
     bool                mbRenderingEnabled; 
     bool                mbCurrentlyRendering;
 
-
-#ifdef USE_D3D
-	D3DSURFACE_DESC		mSurfaceDesc;
-	D3DLOCKED_RECT		mLockedRect;
-#endif
-
 #ifdef _WIN64
     PAINTSTRUCT			mPS;
     HDC					mDC;
+
+    ID3D11Texture2D*    mStagingTexture;
 #endif
 };
 
