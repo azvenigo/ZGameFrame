@@ -52,19 +52,20 @@ bool ZScreenBuffer::Init(int64_t nWidth, int64_t nHeight, ZGraphicSystem* pGraph
 	if (!ZBuffer::Init(nWidth, nHeight))
 		return false;
 
+
     D3D11_TEXTURE2D_DESC desc = {};
     desc.Width = nWidth;
     desc.Height = nHeight;
     desc.MipLevels = 1;
     desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;  // Matches ARGB layout
     desc.SampleDesc.Count = 1;
-    desc.Usage = D3D11_USAGE_DYNAMIC;              // Allow CPU writes
-    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;   // Allow GPU to sample it
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;  // Allow CPU write access
+    desc.Usage = D3D11_USAGE_DYNAMIC;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    desc.MiscFlags = 0;
 
-    
-    HRESULT hr = mpGraphicSystem->mD3DDevice->CreateTexture2D(&desc, nullptr, &mStagingTexture);
+    HRESULT hr = mpGraphicSystem->mD3DDevice->CreateTexture2D(&desc, nullptr, &mDynamicTexture);
     if (FAILED(hr)) 
     {
         throw std::runtime_error("Failed to create staging texture");
@@ -136,7 +137,7 @@ bool ZScreenBuffer::PaintToSystem()
     void* pBits = mpPixels;
 
     D3D11_MAPPED_SUBRESOURCE mapped;
-    HRESULT hr = mpGraphicSystem->mD3DContext->Map(mStagingTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+    HRESULT hr = mpGraphicSystem->mD3DContext->Map(mDynamicTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to map staging texture");
     }
@@ -144,22 +145,41 @@ bool ZScreenBuffer::PaintToSystem()
     // Assuming your ARGB buffer is stored in `argbBuffer`:
     UINT height = mSurfaceArea.Height();
     UINT width = mSurfaceArea.Width();
-    for (UINT row = 0; row < height; ++row)
+
+
+/*    for (UINT row = 0; row < height; ++row)
     {
         memcpy(static_cast<BYTE*>(mapped.pData) + row * mapped.RowPitch,
             (BYTE*)pBits + row * width * 4, // Assuming each pixel is 4 bytes
             width * 4);
-    }
+    }*/
+    assert(width * 4 == mapped.RowPitch);
+    memcpy(mapped.pData, pBits, (width * height * 4));
 
-    mpGraphicSystem->mD3DContext->Unmap(mStagingTexture, 0);
+
+    mpGraphicSystem->mD3DContext->Unmap(mDynamicTexture, 0);
 
     // Copy staging texture to back buffer
-    mpGraphicSystem->mD3DContext->CopyResource(mpGraphicSystem->mBackBuffer, mStagingTexture);
+    mpGraphicSystem->mD3DContext->CopyResource(mpGraphicSystem->mBackBuffer, mDynamicTexture);
 
     mpGraphicSystem->mSwapChain->Present(1, 0); // VSync: 1
 
-    uint64_t end = gTimer.GetUSSinceEpoch();
-    cout << "paint time: " << end - start << "\n";
+/*    uint64_t end = gTimer.GetUSSinceEpoch();
+
+
+    static uint64_t delay = 0;
+
+    static uint64_t frames = 0;
+    static uint64_t totalTime = 0;
+    delay++;
+
+    if (delay > 100)
+    {
+        frames++;
+        totalTime += (end - start);
+
+        cout << "frames:" << frames << " avg paint time: " << (totalTime) / frames << "\n";
+    }*/
 
 
     return true;

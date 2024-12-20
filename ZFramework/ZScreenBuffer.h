@@ -77,7 +77,7 @@ protected:
     PAINTSTRUCT			mPS;
     HDC					mDC;
 
-    ID3D11Texture2D*    mStagingTexture;
+    ID3D11Texture2D* mDynamicTexture;
 #endif
 };
 
