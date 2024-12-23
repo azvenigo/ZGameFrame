@@ -2339,6 +2339,17 @@ void ImageViewer::UpdateCaptions()
     mpWinImage->mCaptionMap["image_count"].Clear();
     mpWinImage->mCaptionMap["rank"].Clear();
 
+    mpWinImage->mpTable->mCellStyle = gStyleCaption;
+    mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
+    mpWinImage->mpTable->mCellStyle.paddingH = (int32_t)(gSpacer / 2);
+    mpWinImage->mpTable->mCellStyle.paddingV = (int32_t)(gSpacer / 2);
+
+    mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
+    mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
+    mpWinImage->mpTable->mTableStyle.paddingH = (int32_t)gSpacer;
+    mpWinImage->mpTable->mTableStyle.paddingV = (int32_t)gSpacer;
+
+
     if (mpWinImage)
     {
         int64_t topPadding = 0; // in case panel is visible
@@ -2364,16 +2375,6 @@ void ImageViewer::UpdateCaptions()
         {
             if (bShow)
             {
-                mpWinImage->mpTable->mCellStyle = gStyleCaption;
-                mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
-                mpWinImage->mpTable->mCellStyle.paddingH = (int32_t)(gSpacer / 2);
-                mpWinImage->mpTable->mCellStyle.paddingV = (int32_t)(gSpacer / 2);
-
-                mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
-                mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
-                mpWinImage->mpTable->mTableStyle.paddingH = (int32_t)gSpacer;
-                mpWinImage->mpTable->mTableStyle.paddingV = (int32_t)gSpacer;
-
                 if (ValidIndex(mViewingIndex))
                 {
                     if (mFilterState == kRanked)

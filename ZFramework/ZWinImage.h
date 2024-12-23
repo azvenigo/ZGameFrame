@@ -71,6 +71,7 @@ public:
 
     uint32_t    mBehavior;
     uint32_t    mZoomHotkey;
+    bool        mbConditionalPaintCaptions;
     double      mfMinZoom;
     double      mfMaxZoom;
     std::string msMouseUpLMessage;

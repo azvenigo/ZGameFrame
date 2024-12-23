@@ -17,6 +17,7 @@ ZWinImage::ZWinImage()
 {
 	mbAcceptsCursorMessages = true;
     mbAcceptsFocus = true;
+    mbConditionalPaintCaptions = false;
     mpImage.reset();
 	mfZoom = 1.0;
     mfPerfectFitZoom = 1.0;
@@ -209,7 +210,23 @@ bool ZWinImage::OnMouseDownR(int64_t x, int64_t y)
 
 bool ZWinImage::OnMouseMove(int64_t x, int64_t y)
 {
-    // x,y in window space
+    if ((mBehavior & kShowCaptionOnMouseOver) != 0)
+    {
+        if (gInput.lastMouseMove.x < 20 || gInput.lastMouseMove.x > mAreaLocal.right - 20 || gInput.lastMouseMove.y < 20 || gInput.lastMouseMove.y > mAreaLocal.bottom - 20)
+        {
+            if (mbConditionalPaintCaptions == false)
+                Invalidate();
+            mbConditionalPaintCaptions = true;
+        }
+        else
+        {
+            if (mbConditionalPaintCaptions == true)
+                Invalidate();
+            mbConditionalPaintCaptions = false;
+        }
+    }
+
+
 
     if (AmCapturing())
     {
@@ -555,13 +572,7 @@ bool ZWinImage::Paint()
     Sprintf(mCaptionMap["zoom"].sText, "%d%%", (int32_t)(mfZoom * 100.0));
     mCaptionMap["zoom"].visible = gInput.IsKeyDown(mZoomHotkey);
 
-    bool bPaintCaptions = (mBehavior & kShowCaption) != 0;
-    if ((mBehavior & kShowCaptionOnMouseOver) != 0)
-    {
-        if (gInput.lastMouseMove.x < 20 || gInput.lastMouseMove.x > mAreaLocal.right - 20 ||
-            gInput.lastMouseMove.y < 20 || gInput.lastMouseMove.y > mAreaLocal.bottom - 20)
-            bPaintCaptions = true;
-    }
+    bool bPaintCaptions = mbConditionalPaintCaptions || (mBehavior & kShowCaption) != 0;
 
     if (bPaintCaptions)
     {

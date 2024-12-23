@@ -26,8 +26,8 @@ bool ParticleSandbox::Init()
     particleBuffers.resize(kParticleMaxSize);
 
 
-    gravFieldX = RANDI64(0, 10);
-    gravFieldY = RANDI64(0, 10);
+    //gravFieldX = RANDI64(0, 10);
+    //gravFieldY = RANDI64(0, 10);
 
     int64_t panelW = grFullArea.Width() / 8;
     int64_t panelH = grFullArea.Height() / 2;
@@ -48,13 +48,13 @@ bool ParticleSandbox::Init()
 
 
     mpControlPanel->Caption("particles_caption", "Particles");
-    mpControlPanel->Slider("particles", &mMaxParticles, 0, 2500, 2, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("particles", &mMaxParticles, 0, 1000, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
 
     mpControlPanel->Caption("particles_min", "Particle Size Min");
-    mpControlPanel->Slider("particleMassMin", &particleMassMin, 0, 4000, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("particleMassMin", &particleMassMin, 0, 1000, 10, 0.2, "{reinit;target=particlesandbox}", true, false);
 
     mpControlPanel->Caption("particles_max", "Particle Size Max");
-    mpControlPanel->Slider("particleMassMax", &particleMassMax, 0, 4000, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("particleMassMax", &particleMassMax, 0, 1000, 10, 0.2, "{reinit;target=particlesandbox}", true, false);
 
     mpControlPanel->AddSpace(gM / 2);
 
@@ -73,7 +73,7 @@ bool ParticleSandbox::Init()
     mpControlPanel->Toggle("draw_field_toggle", &drawGravField, "Draw Grav Field", "{reinit;target=particlesandbox}", "{reinit;target=particlesandbox}");
 
     mpControlPanel->Caption("term_caption", "Terminal Velocity");
-    mpControlPanel->Slider("termVel", &mTerminalVelocity, 0, 100, 1, 0.2, "", true, false);
+    mpControlPanel->Slider("termVel", &mTerminalVelocity, 0, 1000, 1, 0.2, "", true, false);
     
     mpControlPanel->AddSpace(gM / 2);
     mpControlPanel->Toggle("collisions_toggle", &enableCollisions, "Enable Collisions", "{reinit;target=particlesandbox}", "{reinit;target=particlesandbox}");
@@ -86,7 +86,7 @@ bool ParticleSandbox::Init()
 
     mpControlPanel->AddSpace(gM / 2);
     mpControlPanel->Caption("atten_caption", "Attenuation");
-    mpControlPanel->Slider("atten_slider", &Attenuation, 0, 100, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
+    mpControlPanel->Slider("atten_slider", &Attenuation, 0, 200, 1, 0.2, "{reinit;target=particlesandbox}", true, false);
 
     
 
@@ -99,6 +99,15 @@ bool ParticleSandbox::Init()
     ChildAdd(mpControlPanel);
 
 
+    lightPos = Z3D::Vec3f((float)RANDDOUBLE(-5.0, 5.0), (float)RANDDOUBLE(-5.0, 5.0), (float)5);
+    viewPos = Z3D::Vec3f((float)RANDDOUBLE(-5.0, 5.0), (float)RANDDOUBLE(-5.0, 5.0), (float)1);
+    ambient = Z3D::Vec3f(0.05f, 0.05f, 0.05f);
+
+    lightPos.normalize();
+    viewPos.normalize();
+
+
+
     InitFromParams();
 
     return ZWin::Init();
@@ -108,18 +117,6 @@ void ParticleSandbox::InitFromParams()
 {
     particles.resize(mMaxParticles);
     prevFrameRects.resize(mMaxParticles);
-
-
-
-    lightPos = Z3D::Vec3f((float)RANDDOUBLE(-5.0,5.0), (float)RANDDOUBLE(-5.0, 5.0), (float)5);
-    viewPos = Z3D::Vec3f((float)RANDDOUBLE(-5.0, 5.0), (float)RANDDOUBLE(-5.0, 5.0), (float)1);
-    ambient = Z3D::Vec3f(0.05f, 0.05f, 0.05f);
-
-    lightPos.normalize();
-    viewPos.normalize();
-
-
-
 
 
     for (int i = 0; i < particles.size(); i++)
@@ -286,8 +283,8 @@ void ParticleSandbox::SpawnParticle(int64_t index)
     {
         if (particles[index].mass < 10.0 || particles[index].mass > particleMassMax)
             particles[index].mass = RANDEXP_DOUBLE((double)particleMassMin, (double)particleMassMax);
-        particles[index].dir.x = RANDDOUBLE((double)-10.0, (double)10.0);
-        particles[index].dir.y = RANDDOUBLE((double)-10.0, (double)10.0);
+        particles[index].dir.x = RANDDOUBLE((double)-mTerminalVelocity/2, (double)mTerminalVelocity/2);
+        particles[index].dir.y = RANDDOUBLE((double)-mTerminalVelocity/2, (double)mTerminalVelocity/2);
         //    particles[index].dir.x = 0;
         //    particles[index].dir.y = 0;
 
@@ -301,49 +298,65 @@ void ParticleSandbox::SpawnParticle(int64_t index)
         particles[index].active = true;
     }
 }
-
 ZFPoint GetForceVector(Particle* p, tParticleArray& particles, const tParticleArray& gravField, double atten, Particle** pOutCollision)
 {
     ZFPoint force;
+
     for (auto& p2 : particles)
     {
         if (p2.active && &p2 != p)
         {
-            double fDist = sqrt((p2.pos.x - p->pos.x) * (p2.pos.x - p->pos.x) + (p2.pos.y - p->pos.y) * (p2.pos.y - p->pos.y));
+            // Calculate displacement vector
+            double dx = p2.pos.x - p->pos.x;
+            double dy = p2.pos.y - p->pos.y;
 
-            if (sqrt(p->mass + p2.mass) > fDist)
+            // Calculate distance
+            double distanceSquared = dx * dx + dy * dy;
+            double distance = sqrt(distanceSquared);
+
+            if (distance < sqrt(p->mass + p2.mass)) // Collision check
                 *pOutCollision = &p2;
-
-            if (fDist > 0)
+            else
+            //if (distance > 10.0) // Avoid division by zero
             {
-                double fForce = (p2.mass*p->mass) / (fDist*fDist);
+                // Gravitational force magnitude
+                double fMassSquared = p->mass * p2.mass;
+/*                if (atten > 0.0)
+                    fMassSquared /= atten;*/
+                double fForce = (fMassSquared) / distanceSquared;
 
-                double dX = ((p2.pos.x - p->pos.x) * fForce) / (10000.0*atten);
-                double dY = ((p2.pos.y - p->pos.y) * fForce) / (10000.0*atten);
+                // Apply attenuation
+//                fForce /= (10000.0 * atten);
+                fForce *= 0.002;
+                fForce *= (p2.mass / p->mass);
 
-                force.x += dX;
-                force.y += dY;
+                // Normalize displacement vector and scale by force magnitude
+                force.x += fForce * (dx / distance);
+                force.y += fForce * (dy / distance);
             }
         }
     }
 
     for (const auto& p2 : gravField)
     {
-        double fDist = sqrt((p2.pos.x - p->pos.x) * (p2.pos.x - p->pos.x) + (p2.pos.y - p->pos.y) * (p2.pos.y - p->pos.y));
+        // Calculate displacement vector
+        double dx = p2.pos.x - p->pos.x;
+        double dy = p2.pos.y - p->pos.y;
 
-        if (fDist > 0)
+        // Calculate distance
+        double distanceSquared = dx * dx + dy * dy;
+        double distance = sqrt(distanceSquared);
+
+        if (distance > 0) // Avoid division by zero
         {
-            double fForce = (p2.mass + p->mass) / (fDist * fDist);
+            // Gravitational force magnitude (using p2.dir for directional influence)
+            double fForce = (p->mass + p2.mass) / distanceSquared;
 
-            double dX = ((p2.dir.x) * fForce) / 10.0;
-            double dY = ((p2.dir.y) * fForce) / 10.0;
-
-            force.x += dX;
-            force.y += dY;
+            // Normalize displacement vector and scale by force magnitude
+            force.x += (fForce * p2.dir.x) / 10.0;
+            force.y += (fForce * p2.dir.y) / 10.0;
         }
     }
-
-
 
     return force;
 }
@@ -393,19 +406,32 @@ void UpdateParticleDirs(tParticleArray& particles, tParticleArray& gravField, si
             }
             else if (bEnableAbsorb && pCollision)
             {
-                p.mass += pCollision->mass;
+                if (i != 0)
+                {
+                    p.mass += pCollision->mass;
+                }
                 pCollision->active = false;
             }
 
-            double attenuation = 0.0;
+/*            double attenuation = 1.0;
             if (atten > 0)
             {
                 attenuation = 100.0 / (double)atten;
+            }*/
+
+            if (terminal > 0)
+            {
+                force.x *= (double)terminal / 100.0;
+                force.y *= (double)terminal / 100.0;
             }
 
-            p.dir.x += force.x * attenuation;
-            p.dir.y += force.y * attenuation;
-            p.dir = LimitMagnitude(p.dir, terminal / 10.0);
+            p.dir.x += force.x/* * attenuation*/;
+            p.dir.y += force.y/* * attenuation*/;
+
+/*            if (terminal > 0)
+            {
+                p.dir = LimitMagnitude(p.dir, terminal / 10.0);
+            }*/
         }
 
         i++;
@@ -495,7 +521,7 @@ bool ParticleSandbox::Process()
 
 
         int64_t time = gTimer.GetUSSinceEpoch();
-        double timeScale = (time - mLastTimeStamp) / 16000.0;
+        double timeScale = (time - mLastTimeStamp) / 160000.0;
 
         for (int64_t i = 1; i < (int64_t)particles.size(); i++)  // 1 because particle 0 is the center big particle
         {
@@ -527,8 +553,8 @@ bool ParticleSandbox::Process()
                 Particle* pCollision = nullptr;
                 ZFPoint force = GetForceVector(p, particles, gravField, Attenuation / 50.0, &pCollision);
                 double attenuation = (double)Attenuation / 50.0;
-                p->dir.x += force.x * attenuation;
-                p->dir.y += force.y * attenuation;
+                p->dir.x += force.x/* * attenuation*/;
+                p->dir.y += force.y /* * attenuation*/;
 
                 p->dir = LimitMagnitude(p->dir, mTerminalVelocity/10.0);
             }
