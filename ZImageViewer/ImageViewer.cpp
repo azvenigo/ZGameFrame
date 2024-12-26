@@ -1392,8 +1392,11 @@ bool ImageViewer::Init()
 
         ZGUI::Style style(gDefaultPanelStyle);
         style.pos = ZGUI::CT;
-        style.paddingH = (int32_t)gSpacer/2;
-        style.paddingV = (int32_t)gSpacer/2;
+//        style.paddingH = (int32_t)gSpacer/2;
+//        style.paddingV = (int32_t)gSpacer/2;
+        style.paddingH = 0;
+        style.paddingV = 0;
+
 
         ZGUI::Style spacestyle(gDefaultPanelStyle);
         spacestyle.pos = ZGUI::CT;
@@ -1405,7 +1408,10 @@ bool ImageViewer::Init()
 
 
         mpPanel = new ZWinPanel();
-        mpPanel->mPanelLayout = "<panel show_init=1 style=\"" + SH::URL_Encode((string)style) + "\" rel_area_desc=\"" + SH::URL_Encode((string)rad) + "\"><row>";
+        mpPanel->mPanelLayout = "<panel show_init=1 show_on_mouse_enter=1 style=\"" + SH::URL_Encode((string)style) + "\" rel_area_desc=\"" + SH::URL_Encode((string)rad) + "\"><row>";
+
+        mpPanel->mrTrigger = mAreaLocal;
+        mpPanel->mrTrigger.bottom = mAreaLocal.top + 20;
 
         // file group
         string sFileGroupLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";

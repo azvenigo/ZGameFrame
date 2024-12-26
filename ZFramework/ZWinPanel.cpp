@@ -40,6 +40,8 @@ ZWinPanel::ZWinPanel() : mBehavior(kNone)
     mbAcceptsCursorMessages = true;
     mbMouseWasOver = false;
     mDrawBorder = false;
+    mbConditionalVisible = false;
+    mbSetVisibility = false;
     mSpacers = 0;        
 }
 
@@ -119,29 +121,65 @@ bool ZWinPanel::Process()
     {
         if (gInput.captureWin == nullptr)   // only process this if no window has capture
         {
-            if (mbVisible)
+            if (mbMouseWasOver && mbVisible)
             {
-                ZRect rOverArea(mAreaAbsolute);
-                if (rOverArea.PtInRect(gInput.lastMouseMove))
+                if (!mAreaAbsolute.PtInRect(gInput.lastMouseMove))
                 {
-                    mbMouseWasOver = true;
-                }
-                else
-                {
-                    if (mbMouseWasOver)
-                    {
-                        SetVisible(false);
-                        if (mpParentWin)
-                            mpParentWin->InvalidateChildren();
-                        return true;
-                    }
+                    mbMouseWasOver = false;
+                    mbConditionalVisible = false;
+                    SetVisible(false);
                 }
             }
+
+            if (mAreaAbsolute.PtInRect(gInput.lastMouseMove))
+            {
+                mbMouseWasOver = true;
+            }
+
+            if (mbConditionalVisible != mbVisible)
+                UpdateVisibility();
+        }
+    }
+
+    if (IsSet(kShowOnTrigger))
+    {
+        if (gInput.captureWin == nullptr)
+        {
+            mbConditionalVisible = mrTrigger.PtInRect(gInput.lastMouseMove) || mAreaAbsolute.PtInRect(gInput.lastMouseMove);
+            if (mbConditionalVisible != mbVisible)
+                UpdateVisibility();
         }
     }
 
     return ZWin::Process();
 }
+
+void ZWinPanel::UpdateVisibility()
+{
+    bool bShouldBeVisible = mbConditionalVisible || mbSetVisibility;
+    if (bShouldBeVisible != mbVisible)
+    {
+        if (mpParentWin)
+            mpParentWin->InvalidateChildren();
+        UpdateUI();
+
+        if (bShouldBeVisible)
+        {
+            mIdleSleepMS = 25;
+        }
+        else
+        {
+            if (IsSet(kShowOnTrigger))
+                mIdleSleepMS = 200;
+            else
+                mIdleSleepMS = 30000;
+        }
+
+    }
+
+    ZWin::SetVisible(bShouldBeVisible);
+}
+
 
 bool ZWinPanel::ParseLayout()
 {
@@ -156,6 +194,10 @@ bool ZWinPanel::ParseLayout()
 
 	// Panel Attributes
     //      Behavior
+    if (SH::ToBool(pPanel->GetAttribute("show_on_mouse_enter")))
+        mBehavior |= kShowOnTrigger;
+
+
     if (SH::ToBool(pPanel->GetAttribute("hide_on_mouse_exit")))
         mBehavior |= kHideOnMouseExit;
 
@@ -585,18 +627,8 @@ bool ZWinPanel::OnParentAreaChange()
 
 void ZWinPanel::SetVisible(bool bVisible)
 {
-    if (bVisible)
-    {
-        mIdleSleepMS = 250;
-        UpdateUI();
-    }
-    else
-    {
-        mIdleSleepMS = 30000;
-        mbMouseWasOver = false;
-    }
-
-    return ZWin::SetVisible(bVisible);
+    mbSetVisibility = bVisible;
+    UpdateVisibility();
 }
 
 string ZWinPanel::ResolveTokens(std::string full)

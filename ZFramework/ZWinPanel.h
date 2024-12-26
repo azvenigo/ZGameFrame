@@ -34,10 +34,11 @@ public:
         kNone               = 0,
         kDrawBorder         = 1,        // 1
         kRelativeArea       = 1 << 1,   // 2
-        kHideOnMouseExit    = 1 << 2,   // 4
-        kHideOnButton       = 1 << 3,   // 8
-        kCloseOnButton      = 1 << 4,   // 16
-        kDrawGroupFrames    = 1 << 5,   // 32
+        kShowOnTrigger      = 1 << 2,   // 4
+        kHideOnMouseExit    = 1 << 3,   // 8
+        kHideOnButton       = 1 << 4,   // 16
+        kCloseOnButton      = 1 << 5,   // 32
+        kDrawGroupFrames    = 1 << 6,   // 64
     };
 
     ZWinPanel();
@@ -56,6 +57,7 @@ public:
    ZGUI::Style          mStyle;
    uint32_t             mBehavior;
    ZGUI::RA_Descriptor  mRAD;
+   ZRect                mrTrigger;
 
    inline bool          IsSet(uint32_t flag) { return (mBehavior & flag) != 0; }
 
@@ -73,6 +75,7 @@ protected:
    tRowElements         GetRowElements(int32_t row, ZGUI::ePosition alignment = ZGUI::Unknown);
 
    void                 UpdateUI();
+   void                 UpdateVisibility();
 
    bool                 ParseLayout();
    bool                 ParseRow(ZXML* pRow);
@@ -86,6 +89,8 @@ protected:
    int32_t              mSpacers;            // number of gSpacers between controls
    int32_t              mDrawBorder;
    bool                 mbMouseWasOver;
+   bool                 mbSetVisibility;
+   bool                 mbConditionalVisible;
 };
 
 
