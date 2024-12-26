@@ -1501,23 +1501,20 @@ void ImageViewer::LimitIndex()
 
 void ImageViewer::UpdateControlPanel()
 {
+    ZMessage m;
+    gMessageSystem.Post(ZMessage("set_caption", "target", "filterall", "text", std::format("All ({})", mImageArray.size())));
+    gMessageSystem.Post(ZMessage("set_caption", "target", "filterfavs", "text", std::format("Favorites ({})", mFavImageArray.size())));
+    gMessageSystem.Post(ZMessage("set_caption", "target", "filterranked", "text", "Ranked"));
+    gMessageSystem.Post(ZMessage("set_caption", "text", std::format("To Be Deleted ({})", mToBeDeletedImageArray.size()), "target", "filterdel"));
+
     if (mbShowUI && mpPanel)
     {
-        ZMessage m;
-
         gMessageSystem.Post(ZMessage("set_enabled", "target", "copylink", "enabled", SH::FromInt((int)ValidIndex(mViewingIndex))));
 
-        gMessageSystem.Post(ZMessage("set_caption", "target", "filterall", "text", std::format("All ({})", mImageArray.size())));
-//        gMessageSystem.Post("set_enabled", "target", "filterall", "enabled", SH::FromInt((int)mFilterState == kAll));
-
-
-        gMessageSystem.Post(ZMessage("set_caption", "target", "filterfavs", "text", std::format("Favorites ({})", mFavImageArray.size())));
         gMessageSystem.Post(ZMessage("set_enabled", "target", "filterfavs", "enabled", SH::FromInt((int)!mFavImageArray.empty())));
 
-        gMessageSystem.Post(ZMessage("set_caption", "target", "filterranked", "text", "Ranked"));
         gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mRankedArray.empty()), "target", "filterranked"));
 
-        gMessageSystem.Post(ZMessage("set_caption", "text", std::format("To Be Deleted ({})", mToBeDeletedImageArray.size()), "target", "filterdel"));
         gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
 
         gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
