@@ -274,7 +274,7 @@ int main(int argc, char* argv[])
                 {
                     ZDEBUG_OUT("calling HandleModeChanges\n");
 
-                    if (gpGraphicSystem->HandleModeChanges())
+                    if (gpGraphicSystem->HandleModeChanges(grFullArea))
                     {
                         gbGraphicSystemResetNeeded = false;
                     }
@@ -589,7 +589,7 @@ void HandleWindowSizeChanged()
 
             gRegistry.Set("appwin", "fullscreen", gGraphicSystem.mbFullScreen);
 
-            gpGraphicSystem->HandleModeChanges();
+            gpGraphicSystem->HandleModeChanges(grFullArea);
             gpMainWin->SetArea(grFullArea);
             gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
         }

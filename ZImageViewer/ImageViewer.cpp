@@ -2194,11 +2194,6 @@ std::string ImageViewer::GetRankedFilename(int64_t nRank)
 
 bool ImageViewer::Process()
 {
-    // temp check
-
-    assert(gGraphicSystem.GetScreenBuffer());
-
-
     if (mpWinImage && !mImageArray.empty())
     {
         if (mOutstandingMetadataCount == 0)

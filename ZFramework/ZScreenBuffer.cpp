@@ -34,10 +34,7 @@ ZScreenBuffer::ZScreenBuffer()
 {
     mbRenderingEnabled = true;
     mbCurrentlyRendering = false;
-#ifdef USE_D3D
-	ZeroMemory((void*)&mLockedRect, sizeof(mLockedRect));
-	ZeroMemory((void*)&mSurfaceDesc, sizeof(mSurfaceDesc));
-#endif
+    mDynamicTexture = nullptr;
 }
 
 ZScreenBuffer::~ZScreenBuffer()
@@ -65,6 +62,9 @@ bool ZScreenBuffer::Init(int64_t nWidth, int64_t nHeight, ZGraphicSystem* pGraph
     desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     desc.MiscFlags = 0;
 
+    if (mDynamicTexture)
+        mDynamicTexture->Release();
+    mDynamicTexture = nullptr;
     HRESULT hr = mpGraphicSystem->mD3DDevice->CreateTexture2D(&desc, nullptr, &mDynamicTexture);
     if (FAILED(hr)) 
     {
@@ -76,6 +76,9 @@ bool ZScreenBuffer::Init(int64_t nWidth, int64_t nHeight, ZGraphicSystem* pGraph
 
 bool ZScreenBuffer::Shutdown()
 {
+    if (mDynamicTexture)
+        mDynamicTexture->Release();
+    mDynamicTexture = nullptr;
 	return ZBuffer::Shutdown();
 }
 
@@ -146,15 +149,19 @@ bool ZScreenBuffer::PaintToSystem()
     UINT height = mSurfaceArea.Height();
     UINT width = mSurfaceArea.Width();
 
-
-/*    for (UINT row = 0; row < height; ++row)
+    if (width * 4 == mapped.RowPitch)
     {
-        memcpy(static_cast<BYTE*>(mapped.pData) + row * mapped.RowPitch,
-            (BYTE*)pBits + row * width * 4, // Assuming each pixel is 4 bytes
-            width * 4);
-    }*/
-    assert(width * 4 == mapped.RowPitch);
-    memcpy(mapped.pData, pBits, (width * height * 4));
+        memcpy(mapped.pData, pBits, (width * height * 4));
+    }
+    else
+    {
+        for (UINT row = 0; row < height; ++row)
+        {
+            memcpy(static_cast<BYTE*>(mapped.pData) + row * mapped.RowPitch,
+                (BYTE*)pBits + row * width * 4, // Assuming each pixel is 4 bytes
+                width * 4);
+        }
+    }
 
 
     mpGraphicSystem->mD3DContext->Unmap(mDynamicTexture, 0);

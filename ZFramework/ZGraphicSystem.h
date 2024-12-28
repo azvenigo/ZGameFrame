@@ -42,11 +42,15 @@ public:
     ID3D11Texture2D*        mBackBuffer;
 #endif
 
-	bool					HandleModeChanges();
+	bool                    HandleModeChanges(ZRect& r);
 
     bool                    mbFullScreen;
 
 protected:
+
+    bool                    InitD3D();
+    bool                    ShutdownD3D();
+
 	bool                    mbInitted;
 	ZScreenBuffer*			mpScreenBuffer;
 	ZRect                   mrSurfaceArea;

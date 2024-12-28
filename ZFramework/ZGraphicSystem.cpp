@@ -92,6 +92,54 @@ bool ZGraphicSystem::Init()
         throw std::runtime_error("mFactory is not IDXGIFactory2 or later.");
     }
 
+    InitD3D();
+
+#endif
+
+	mpScreenBuffer = new ZScreenBuffer();
+	mpScreenBuffer->Init(mrSurfaceArea.Width(), mrSurfaceArea.Height(), this);
+	
+	return true;
+}
+
+void ZGraphicSystem::Shutdown()
+{
+	if (mbInitted)
+	{
+
+		if (mpScreenBuffer)
+		{
+			mpScreenBuffer->Shutdown();
+			delete mpScreenBuffer;
+			mpScreenBuffer = NULL;
+		}
+
+#ifdef _WIN64
+
+        ShutdownD3D();
+        if (mD3DContext);
+            mD3DContext->Release();
+        mD3DContext = nullptr;
+
+        if (mFactory)
+            mFactory->Release();
+        mFactory = nullptr;
+
+        if (mD3DDevice)
+            mD3DDevice->Release();
+        mD3DDevice = nullptr;
+
+
+		// GDI+ Shutdown
+		Gdiplus::GdiplusShutdown(mpGDIPlusToken);
+#endif
+	
+		mbInitted = false;
+	}
+}
+
+bool ZGraphicSystem::InitD3D()
+{
 
     ComPtr<IDXGIAdapter1> adapter;
     if (SUCCEEDED(mFactory->EnumAdapters1(0, &adapter))) {
@@ -99,9 +147,6 @@ bool ZGraphicSystem::Init()
         adapter->GetDesc1(&desc);
         wprintf(L"Adapter: %s\n", desc.Description);
     }
-
-
-
 
 
 
@@ -118,7 +163,7 @@ bool ZGraphicSystem::Init()
     swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
     swapChainDesc.Flags = 0;
 
-    hr = mFactory->CreateSwapChainForHwnd(
+    HRESULT hr = mFactory->CreateSwapChainForHwnd(
         mD3DDevice,
         mhWnd,
         &swapChainDesc,
@@ -142,16 +187,16 @@ bool ZGraphicSystem::Init()
         swapChain4->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_HDR10, sizeof(hdr10), &hdr10);
     }
 
-    
+
     hr = mSwapChain->GetBuffer(0, IID_PPV_ARGS(&mBackBuffer));
-    if (FAILED(hr)) 
+    if (FAILED(hr))
     {
         throw std::runtime_error("Failed to get swap chain back buffer");
     }
 
     // Create the render target view
     hr = mD3DDevice->CreateRenderTargetView(mBackBuffer, nullptr, &mRenderTargetView);
-    if (FAILED(hr)) 
+    if (FAILED(hr))
     {
         throw std::runtime_error("Failed to create render target view");
     }
@@ -161,54 +206,94 @@ bool ZGraphicSystem::Init()
     float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f }; // Black color
     mD3DContext->ClearRenderTargetView(mRenderTargetView, clearColor);
 
-#endif
-
-	mpScreenBuffer = new ZScreenBuffer();
-	mpScreenBuffer->Init(mrSurfaceArea.Width(), mrSurfaceArea.Height(), this);
-	
-	return true;
+    return true;
 }
 
-void ZGraphicSystem::Shutdown()
+bool ZGraphicSystem::ShutdownD3D()
 {
-	if (mbInitted)
-	{
-
-		if (mpScreenBuffer)
-		{
-			mpScreenBuffer->Shutdown();
-			delete mpScreenBuffer;
-			mpScreenBuffer = NULL;
-		}
-
-#ifdef _WIN64
-        // Cleanup
+    // Cleanup
+    if (mSwapChain)
         mSwapChain->Release();
-        mD3DContext->Release();
-        mD3DDevice->Release();
+    mSwapChain = nullptr;
 
-		// GDI+ Shutdown
-		Gdiplus::GdiplusShutdown(mpGDIPlusToken);
-#endif
-	
-		mbInitted = false;
-	}
+    if (mRenderTargetView)
+        mRenderTargetView->Release();
+    mRenderTargetView = nullptr;
+
+    if (mBackBuffer)
+        mBackBuffer->Release();
+    mBackBuffer = nullptr;
+
+    if (mD3DContext)
+    {
+        mD3DContext->ClearState();
+        mD3DContext->Flush();
+    }
+
+    return true;
 }
 
-bool ZGraphicSystem::HandleModeChanges()
+
+bool ZGraphicSystem::HandleModeChanges(ZRect& r)
 {
-	if (mpScreenBuffer)
-	{
-        if (mpScreenBuffer->GetArea() == mrSurfaceArea)
+    if (mpScreenBuffer && mpScreenBuffer->GetArea() == r)
+        return true;
+
+    if (mpScreenBuffer)
+    {
+        if (mpScreenBuffer->GetArea() == r)
             return true;
 
-		mpScreenBuffer->Shutdown();
-		delete mpScreenBuffer;
-		mpScreenBuffer = NULL;
-	}
+        mpScreenBuffer->Shutdown();
+        delete mpScreenBuffer;
+        mpScreenBuffer = NULL;
+    }
+
+    //Shutdown();
+//    ShutdownD3D();
+    SetArea(r);
+
+
+
+    if (mBackBuffer)
+        mBackBuffer->Release();
+    mBackBuffer = nullptr;
+    if (mRenderTargetView)
+        mRenderTargetView->Release();
+    mRenderTargetView = nullptr;
+
+    mSwapChain->ResizeBuffers(2, r.Width(), r.Height(), DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+
+    HRESULT hr = mSwapChain->GetBuffer(0, IID_PPV_ARGS(&mBackBuffer));
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("Failed to get swap chain back buffer");
+    }
+
+    // Create the render target view
+    hr = mD3DDevice->CreateRenderTargetView(mBackBuffer, nullptr, &mRenderTargetView);
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("Failed to create render target view");
+    }
+
+    mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, nullptr);
+
+    float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f }; // Black color
+    mD3DContext->ClearRenderTargetView(mRenderTargetView, clearColor);
+
+
+
+
+
+
+
+
+
+//    return InitD3D();
 
 	mpScreenBuffer = new ZScreenBuffer();
 	mpScreenBuffer->Init(mrSurfaceArea.Width(), mrSurfaceArea.Height(), this);
-
+    
     return true;
 }
