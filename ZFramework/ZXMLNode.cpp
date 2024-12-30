@@ -161,7 +161,7 @@ bool ZXML::Parse(const string& sRaw)
 {
 	// Find first non whitespace char.
 	int64_t nFindOffset = 0;
-	while (std::isspace(sRaw[nFindOffset]))
+	while (std::isspace((uint8_t)sRaw[nFindOffset]))
 		nFindOffset++;
 
 	// If this is a single named node:
@@ -236,7 +236,7 @@ std::list<string> ZXML::SplitAttributes(string sAttributes)
 	while (!bDone)
 	{
 		// skip whitespaces
-		while (std::isspace(sAttributes[nIndex]) && nIndex < sAttributes.length())
+		while (std::isspace((uint8_t)sAttributes[nIndex]) && nIndex < sAttributes.length())
 			nIndex++;
 
 		sAttributes = sAttributes.substr(nIndex);
@@ -247,7 +247,7 @@ std::list<string> ZXML::SplitAttributes(string sAttributes)
 			return attributeList;
 
 
-		while (!std::isspace(sAttributes[nIndex]) && sAttributes[nIndex] != '\"' && nIndex < sAttributes.length())
+		while (!std::isspace((uint8_t)sAttributes[nIndex]) && sAttributes[nIndex] != '\"' && nIndex < sAttributes.length())
 		{
 			nIndex++;
 		}

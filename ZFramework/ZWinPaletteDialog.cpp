@@ -462,8 +462,8 @@ ZWinPaletteDialog* ZWinPaletteDialog::ShowPaletteDialog(std::string sCaption, ZG
     pDialog->mBehavior |= ZWinDialog::eBehavior::Draggable | ZWinDialog::eBehavior::OKButton | ZWinDialog::eBehavior::CancelButton;
     pDialog->mStyle = gDefaultDialogStyle;
     pDialog->mStyle.fp = gStyleButton.fp;
-    pDialog->mStyle.paddingV = (int32_t)gSpacer;
-    pDialog->mStyle.paddingH = (int32_t)gSpacer;
+    pDialog->mStyle.pad.v = (int32_t)gSpacer;
+    pDialog->mStyle.pad.h = (int32_t)gSpacer;
 
     pDialog->mpColorMap = pColorMap;
     pDialog->mOriginalColorMap = *pColorMap;

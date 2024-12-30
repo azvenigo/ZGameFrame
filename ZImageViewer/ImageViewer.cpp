@@ -555,8 +555,8 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                 }
                 else
                 {
-                    mpRotationMenu->mStyle.paddingH = (int32_t)gSpacer;
-                    mpRotationMenu->mStyle.paddingV = (int32_t)gSpacer;
+                    mpRotationMenu->mStyle.pad.h = (int32_t)gSpacer;
+                    mpRotationMenu->mStyle.pad.v = (int32_t)gSpacer;
 
                     ZRect r = StringToRect(message.GetParam("r"));
                     r.InflateRect(gSpacer *2, gSpacer *2);
@@ -580,8 +580,8 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                 }
                 else
                 {
-                    mpManageMenu->mStyle.paddingH = (int32_t)gSpacer;
-                    mpManageMenu->mStyle.paddingV = (int32_t)gSpacer;
+                    mpManageMenu->mStyle.pad.h = (int32_t)gSpacer;
+                    mpManageMenu->mStyle.pad.v = (int32_t)gSpacer;
 
                     ZRect r = StringToRect(message.GetParam("r"));
                     r.InflateRect(gSpacer * 2, gSpacer * 2);
@@ -616,7 +616,7 @@ void ImageViewer::ShowTooltipMessage(const string& msg, uint32_t col)
 {
     ZGUI::Style messageStyle(gStyleCaption);
     messageStyle.bgCol = col;
-    messageStyle.paddingH = (int32_t)gM;
+    messageStyle.pad.h = (int32_t)gM;
 
     gInput.ShowTooltip(msg, messageStyle);
 }
@@ -721,8 +721,8 @@ void ImageViewer::ToggleShowHelpDialog()
     pHelp->SetArea(r);
     pHelp->mBehavior = ZWinDialog::Draggable | ZWinDialog::OKButton;
     pHelp->mStyle = gDefaultDialogStyle;
-    pHelp->mStyle.paddingH = (int32_t)gM;
-    pHelp->mStyle.paddingV = (int32_t)gM;
+    pHelp->mStyle.pad.h = (int32_t)gM;
+    pHelp->mStyle.pad.v = (int32_t)gM;
 
 
 
@@ -734,7 +734,7 @@ void ImageViewer::ToggleShowHelpDialog()
     pLabel->SetArea(rCaption);
     pLabel->mStyle = gStyleCaption;
     pLabel->mStyle.pos = ZGUI::CT;
-    pLabel->mStyle.paddingV = (int32_t)gM * 2;
+    pLabel->mStyle.pad.v = (int32_t)gM * 2;
     pLabel->mStyle.fp.nScalePoints = 2000;
     pLabel->mStyle.fp.nWeight = 800;
     pLabel->mStyle.look = ZGUI::ZTextLook::kShadowed;
@@ -748,7 +748,7 @@ void ImageViewer::ToggleShowHelpDialog()
 
     ZGUI::Style text(gStyleGeneralText);
     text.fp.nScalePoints = 1000;
-    text.paddingH = (int32_t)gM;
+    text.pad.h = (int32_t)gM;
 
     ZGUI::Style sectionText(gStyleGeneralText);
     sectionText.fp.nWeight = 800;
@@ -1356,9 +1356,9 @@ bool ImageViewer::Init()
         mpWinImage->mZoomHotkey = VK_MENU;
         if (mbSubsample)
             mpWinImage->nSubsampling = 4;
-        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable|ZWinImage::kSelectableArea|ZWinImage::kLaunchGeolocation;
+        mpWinImage->mBehavior |= ZWinImage::kHotkeyZoom|ZWinImage::kScrollable|ZWinImage::kSelectableArea|ZWinImage::kLaunchGeolocation|ZWinImage::kShowCaptionOnMouseOver;
 
-//        mpWinImage->mCaptionMap["zoom"].style.paddingV = gStyleCaption.fp.nHeight;
+//        mpWinImage->mCaptionMap["zoom"].style.pad.v = gStyleCaption.fp.nHeight;
 
         mpWinImage->mpTable = new ZGUI::ZTable();
         ChildAdd(mpWinImage);
@@ -1383,8 +1383,8 @@ bool ImageViewer::Init()
         mpFolderLabel->mCurPath = mCurrentFolder;
         mpFolderLabel->mStyle.bgCol = 0;
         mpFolderLabel->mStyle.pos = ZGUI::LC;
-        mpFolderLabel->mStyle.paddingH = (int32_t)gSpacer;
-        mpFolderLabel->mStyle.paddingV = (int32_t)gSpacer;
+        mpFolderLabel->mStyle.pad.h = (int32_t)gSpacer;
+        mpFolderLabel->mStyle.pad.v = (int32_t)gSpacer;
         mpFolderLabel->mStyle.fp.nScalePoints = 800;
         mpFolderLabel->SetArea(ZRect(0, 0, mAreaLocal.Width() / 4, gM));
         ChildAdd(mpFolderLabel, !mCurrentFolder.empty());
@@ -1392,20 +1392,26 @@ bool ImageViewer::Init()
 
         ZGUI::Style style(gDefaultPanelStyle);
         style.pos = ZGUI::CT;
-        style.paddingH = (int32_t)gSpacer/2;
-        style.paddingV = (int32_t)gSpacer/2;
+//        style.pad.h = (int32_t)gSpacer/2;
+//        style.pad.v = (int32_t)gSpacer/2;
+        style.pad.h = 0;
+        style.pad.v = 0;
+
 
         ZGUI::Style spacestyle(gDefaultPanelStyle);
         spacestyle.pos = ZGUI::CT;
-        spacestyle.paddingH = (int32_t)gSpacer;
-        spacestyle.paddingV = (int32_t)gSpacer;
+        spacestyle.pad.h = (int32_t)gSpacer;
+        spacestyle.pad.v = (int32_t)gSpacer;
 
 
         ZGUI::RA_Descriptor rad(ZRect(0, 0, grFullArea.right, gM * 2), "full", ZGUI::L|ZGUI::T|ZGUI::R, 1.0, 0.05f, -1, 64, -1, 128);
 
 
         mpPanel = new ZWinPanel();
-        mpPanel->mPanelLayout = "<panel show_init=1 style=\"" + SH::URL_Encode((string)style) + "\" rel_area_desc=\"" + SH::URL_Encode((string)rad) + "\"><row>";
+        mpPanel->mPanelLayout = "<panel show_init=1 show_on_mouse_enter=1 style=\"" + SH::URL_Encode((string)style) + "\" rel_area_desc=\"" + SH::URL_Encode((string)rad) + "\"><row>";
+
+        mpPanel->mrTrigger = mAreaLocal;
+        mpPanel->mrTrigger.bottom = mAreaLocal.top + 20;
 
         // file group
         string sFileGroupLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
@@ -1495,23 +1501,20 @@ void ImageViewer::LimitIndex()
 
 void ImageViewer::UpdateControlPanel()
 {
+    ZMessage m;
+    gMessageSystem.Post(ZMessage("set_caption", "target", "filterall", "text", std::format("All ({})", mImageArray.size())));
+    gMessageSystem.Post(ZMessage("set_caption", "target", "filterfavs", "text", std::format("Favorites ({})", mFavImageArray.size())));
+    gMessageSystem.Post(ZMessage("set_caption", "target", "filterranked", "text", "Ranked"));
+    gMessageSystem.Post(ZMessage("set_caption", "text", std::format("To Be Deleted ({})", mToBeDeletedImageArray.size()), "target", "filterdel"));
+
     if (mbShowUI && mpPanel)
     {
-        ZMessage m;
-
         gMessageSystem.Post(ZMessage("set_enabled", "target", "copylink", "enabled", SH::FromInt((int)ValidIndex(mViewingIndex))));
 
-        gMessageSystem.Post(ZMessage("set_caption", "target", "filterall", "text", std::format("All ({})", mImageArray.size())));
-//        gMessageSystem.Post("set_enabled", "target", "filterall", "enabled", SH::FromInt((int)mFilterState == kAll));
-
-
-        gMessageSystem.Post(ZMessage("set_caption", "target", "filterfavs", "text", std::format("Favorites ({})", mFavImageArray.size())));
         gMessageSystem.Post(ZMessage("set_enabled", "target", "filterfavs", "enabled", SH::FromInt((int)!mFavImageArray.empty())));
 
-        gMessageSystem.Post(ZMessage("set_caption", "target", "filterranked", "text", "Ranked"));
         gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mRankedArray.empty()), "target", "filterranked"));
 
-        gMessageSystem.Post(ZMessage("set_caption", "text", std::format("To Be Deleted ({})", mToBeDeletedImageArray.size()), "target", "filterdel"));
         gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
 
         gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
@@ -2191,11 +2194,6 @@ std::string ImageViewer::GetRankedFilename(int64_t nRank)
 
 bool ImageViewer::Process()
 {
-    // temp check
-
-    assert(gGraphicSystem.GetScreenBuffer());
-
-
     if (mpWinImage && !mImageArray.empty())
     {
         if (mOutstandingMetadataCount == 0)
@@ -2339,6 +2337,17 @@ void ImageViewer::UpdateCaptions()
     mpWinImage->mCaptionMap["image_count"].Clear();
     mpWinImage->mCaptionMap["rank"].Clear();
 
+    mpWinImage->mpTable->mCellStyle = gStyleCaption;
+    mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
+    mpWinImage->mpTable->mCellStyle.pad.h = (int32_t)(gSpacer / 2);
+    mpWinImage->mpTable->mCellStyle.pad.v = (int32_t)(gSpacer / 2);
+
+    mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
+    mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
+    mpWinImage->mpTable->mTableStyle.pad.h = (int32_t)gSpacer;
+    mpWinImage->mpTable->mTableStyle.pad.v = (int32_t)gSpacer;
+
+
     if (mpWinImage)
     {
         int64_t topPadding = 0; // in case panel is visible
@@ -2349,8 +2358,8 @@ void ImageViewer::UpdateCaptions()
         ZGUI::Style folderStyle(gStyleButton);
         folderStyle.pos = ZGUI::LT;
         folderStyle.look = ZGUI::ZTextLook::kShadowed;
-        folderStyle.paddingH = (int32_t) (gSpacer / 2);
-        folderStyle.paddingV = (int32_t)(gSpacer / 2);
+        folderStyle.pad.h = (int32_t) (gSpacer / 2);
+        folderStyle.pad.v = (int32_t)(gSpacer / 2);
 
 
         if (CountImagesMatchingFilter(mFilterState) == 0)
@@ -2364,16 +2373,6 @@ void ImageViewer::UpdateCaptions()
         {
             if (bShow)
             {
-                mpWinImage->mpTable->mCellStyle = gStyleCaption;
-                mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
-                mpWinImage->mpTable->mCellStyle.paddingH = (int32_t)(gSpacer / 2);
-                mpWinImage->mpTable->mCellStyle.paddingV = (int32_t)(gSpacer / 2);
-
-                mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
-                mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
-                mpWinImage->mpTable->mTableStyle.paddingH = (int32_t)gSpacer;
-                mpWinImage->mpTable->mTableStyle.paddingV = (int32_t)gSpacer;
-
                 if (ValidIndex(mViewingIndex))
                 {
                     if (mFilterState == kRanked)
@@ -2390,7 +2389,7 @@ void ImageViewer::UpdateCaptions()
                                 eloStyle.look.colBottom = 0xff9d8500;
                                 eloStyle.look.decoration = ZGUI::ZTextLook::kShadowed;
                                 eloStyle.pos = ZGUI::RT;
-                                eloStyle.paddingH += (int32_t)eloStyle.fp.Height();
+                                eloStyle.pad.h += (int32_t)eloStyle.fp.Height();
                                 Sprintf(mpWinImage->mCaptionMap["rank"].sText, "#%d\n%d", nRank, meta.elo);
                                 mpWinImage->mCaptionMap["rank"].visible = true;
                                 mpWinImage->mCaptionMap["rank"].style = eloStyle;
@@ -2414,7 +2413,7 @@ void ImageViewer::UpdateCaptions()
                     if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite() && mpFavoritesFont)
                     {
                         mpWinImage->mCaptionMap["favorite"].sText = "C";
-                        mpWinImage->mCaptionMap["favorite"].style = ZGUI::Style(mpFavoritesFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffe1b131, 0xffe1b131), ZGUI::LB, (int32_t)gM * 2, (int32_t)gM * 4, 0x88000000, true);
+                        mpWinImage->mCaptionMap["favorite"].style = ZGUI::Style(mpFavoritesFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffe1b131, 0xffe1b131), ZGUI::LB, ZGUI::Padding((int32_t)gM * 2, (int32_t)gM * 4), 0x88000000, true);
                         mpWinImage->mCaptionMap["favorite"].visible = true;
 
                         mpWinImage->mCaptionMap["image_count"].style.look.colTop = 0xffe1b131;
@@ -2425,7 +2424,7 @@ void ImageViewer::UpdateCaptions()
                     if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
                     {
                         mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5000, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, (int32_t)(gSpacer / 2), 100, 0x88000000, true);
+                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5000, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, ZGUI::Padding((int32_t)(gSpacer / 2), 100), 0x88000000, true);
                         mpWinImage->mCaptionMap["for_delete"].visible = true;
 
                         mpWinImage->mCaptionMap["image_count"].style.look.colTop = 0xffff0000;
@@ -2450,7 +2449,7 @@ void ImageViewer::UpdateCaptions()
         if (!mMoveToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["move_to_folder"].sText, "'M' -> move to:\n%s", mMoveToFolder.string().c_str());
-            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nScalePoints, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nScalePoints *8), 0x88000000, true);
+            mpWinImage->mCaptionMap["move_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nScalePoints, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, ZGUI::Padding((int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nScalePoints *8)), 0x88000000, true);
             mpWinImage->mCaptionMap["move_to_folder"].visible = bShow;
         }
         else
@@ -2461,7 +2460,7 @@ void ImageViewer::UpdateCaptions()
         if (!mCopyToFolder.empty())
         {
             Sprintf(mpWinImage->mCaptionMap["copy_to_folder"].sText, "'C' -> copy to:\n%s", mCopyToFolder.string().c_str());
-            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nScalePoints, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, (int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nScalePoints * 12), 0x88000000, true);
+            mpWinImage->mCaptionMap["copy_to_folder"].style = ZGUI::Style(ZFontParams("Ariel Bold", folderStyle.fp.nScalePoints, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff0088ff, 0xff0088ff), ZGUI::LT, ZGUI::Padding((int32_t)(gSpacer / 2), (int32_t)(gSpacer / 2 + folderStyle.fp.nScalePoints * 12)), 0x88000000, true);
             mpWinImage->mCaptionMap["copy_to_folder"].visible = bShow;
         }
         else

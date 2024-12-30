@@ -567,8 +567,8 @@ void ImageContest::UpdateControlPanel()
 
     pBtn = mpPanel->SVGButton("openfolder", sAppPath + "/res/openfolder.svg", ZMessage("selectfolder", this));
     pBtn->msTooltip = "Choose Folder";
-    pBtn->mSVGImage.style.paddingH = (int32_t)nButtonPadding;
-    pBtn->mSVGImage.style.paddingV = (int32_t)nButtonPadding;
+    pBtn->mSVGImage.style.pad.h = (int32_t)nButtonPadding;
+    pBtn->mSVGImage.style.pad.v = (int32_t)nButtonPadding;
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Folder";
 

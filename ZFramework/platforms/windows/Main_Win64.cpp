@@ -257,6 +257,7 @@ int main(int argc, char* argv[])
                     //pScreenBuffer->Fill(0xFF0000FF); // debug fill
                         int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
                         gAnimator.Paint(pScreenBuffer);
+                        gInput.Paint(pScreenBuffer);    // tooltips or any other overlays
                         pScreenBuffer->PaintToSystem();
                     //}
                     int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();
@@ -274,7 +275,7 @@ int main(int argc, char* argv[])
                 {
                     ZDEBUG_OUT("calling HandleModeChanges\n");
 
-                    if (gpGraphicSystem->HandleModeChanges())
+                    if (gpGraphicSystem->HandleModeChanges(grFullArea))
                     {
                         gbGraphicSystemResetNeeded = false;
                     }
@@ -589,7 +590,7 @@ void HandleWindowSizeChanged()
 
             gRegistry.Set("appwin", "fullscreen", gGraphicSystem.mbFullScreen);
 
-            gpGraphicSystem->HandleModeChanges();
+            gpGraphicSystem->HandleModeChanges(grFullArea);
             gpMainWin->SetArea(grFullArea);
             gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
         }

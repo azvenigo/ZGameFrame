@@ -673,7 +673,7 @@ bool ZChessWin::Init()
         mpStatusWin = new ZWinTextEdit(&msStatus);
         //mpStatusWin->msText = "Welcome to ZChess";
         msStatus = "Welcome to ZChess";
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::ScalePoints(mAreaLocal.Height()/28), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, false);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::ScalePoints(mAreaLocal.Height()/28), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff555555, 0xffffffff), ZGUI::C, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), gDefaultTextAreaFill, false);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, (int32_t)gSpacer, (int32_t)gSpacer));
         ChildAdd(mpStatusWin);
     }
@@ -752,7 +752,7 @@ void ZChessWin::UpdateSize()
     {
         ZRect rStatusPanel(0, 0, mrBoardArea.Width(), mnPieceHeight);
         mpStatusWin->SetArea(ZGUI::Arrange(rStatusPanel, mrBoardArea, ZGUI::ICOB, (int32_t)gSpacer, (int32_t)gSpacer));
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::ScalePoints(mnPieceHeight / 2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::ScalePoints(mnPieceHeight / 2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), gDefaultTextAreaFill, true);
     }
 
 
@@ -1170,7 +1170,7 @@ void ZChessWin::UpdateStatus(const std::string& sText, uint32_t col)
     {
         //mpStatusWin->msText = sText;
         msStatus = sText;
-        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::ScalePoints(mnPieceHeight/2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, 0, 0, gDefaultTextAreaFill, true);
+        mpStatusWin->mStyle = ZGUI::Style(ZFontParams("Ariel", ZFontParams::ScalePoints(mnPieceHeight/2), 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed), ZGUI::LT, ZGUI::Padding(), gDefaultTextAreaFill, true);
         mpStatusWin->Invalidate();
     }
 }

@@ -1,5 +1,6 @@
 #include "ZGUIElements.h"
 #include "helpers/StringHelpers.h"
+#include "ZScreenBuffer.h"
 
 using namespace std;
 
@@ -13,11 +14,33 @@ namespace ZGUI
         assert(pDst);
         // assuming pDst is locked
         ZRect rDraw(area);
+        ZRect rFill(area);
+
         if (rDraw.Width() == 0 || rDraw.Height() == 0)
+        {
             rDraw = pDst->GetArea();
+            rFill = style.Font()->Arrange(rDraw, sText, style.pos);
+        }
 
         if (style.pos == ZGUI::Fit)
             style.fp.nScalePoints = ZFontParams::ScalePoints(rDraw.Height()/2);
+
+        // Fill area if background style specifies
+        if (ARGB_A(style.bgCol) > 0xf0)
+        {
+            pDst->Fill(style.bgCol, &rFill);
+        }
+        else if (ARGB_A(style.bgCol) > 0x0f)
+        {
+            pDst->Blt(gpGraphicSystem->GetScreenBuffer(), rFill, rFill);
+            pDst->FillAlpha(style.bgCol, &rFill);
+            pDst->Blur(4, &rFill);
+        }
+
+        // Draw outline in padded area if style specifies
+        if (ARGB_A(style.pad.col) > 0x00)
+            pDst->DrawRectAlpha(style.pad.col, rFill);
+            
 
         return style.Font()->DrawTextParagraph(pDst, sText, rDraw, &style);
     }
@@ -55,7 +78,7 @@ namespace ZGUI
 
         ZRect rDest(0,0, (int64_t)mSVGDoc->width(), (int64_t)mSVGDoc->height());
         rDest = ZGUI::ScaledFit(rDest, area);
-        rDest.DeflateRect(style.paddingH, style.paddingV);
+        rDest.DeflateRect(style.pad.h, style.pad.v);
         rDest = ZGUI::Arrange(rDest, area, style.pos);
 
         if (mRendered == nullptr || rDest.Width() != mRendered->GetArea().Width() || rDest.Height() != mRendered->GetArea().Height())
@@ -151,15 +174,15 @@ namespace ZGUI
 
         mrAreaToDrawTo.SetRect(0, 0, 0, 0);
 
-        int32_t nTotalColumnWidths = mCellStyle.paddingH * 4;  // left and right margins
+        int32_t nTotalColumnWidths = mCellStyle.pad.h * 4;  // left and right margins
         for (auto& c : mColumnWidths)
-            mrAreaToDrawTo.right += (c + mCellStyle.paddingH);
+            mrAreaToDrawTo.right += (c + mCellStyle.pad.h);
 
-        int32_t nTotalRowHeights = mCellStyle.paddingV;    // top and bottom margins
+        int32_t nTotalRowHeights = mCellStyle.pad.v;    // top and bottom margins
         for (auto& r : mRowHeights)
-            mrAreaToDrawTo.bottom += (r + mCellStyle.paddingV);
+            mrAreaToDrawTo.bottom += (r + mCellStyle.pad.v);
 
-        mrAreaToDrawTo = ZGUI::Arrange(mrAreaToDrawTo, rTarget, mTableStyle.pos, mTableStyle.paddingH, mTableStyle.paddingV);
+        mrAreaToDrawTo = ZGUI::Arrange(mrAreaToDrawTo, rTarget, mTableStyle.pos, mTableStyle.pad.h, mTableStyle.pad.v);
 
         mbAreaNeedsComputing = false;
     }
@@ -175,7 +198,7 @@ namespace ZGUI
             pDest->FillAlpha(mTableStyle.bgCol, &mrAreaToDrawTo);
 
 
-        int64_t nY = mCellStyle.paddingV;
+        int64_t nY = mCellStyle.pad.v;
 
         // Draw top border
 
@@ -187,7 +210,7 @@ namespace ZGUI
 
             size_t nRowHeight = mRowHeights[nRow];
 
-            int32_t nX = mCellStyle.paddingH;
+            int32_t nX = mCellStyle.pad.h;
             for (int32_t nCol = 0; nCol < mColumns; nCol++)
             {
                 int32_t nColWidth = mColumnWidths[nCol];
@@ -195,14 +218,14 @@ namespace ZGUI
                 ZRect rCellArea(0, 0, nColWidth, nRowHeight);
                 rCellArea.OffsetRect(nX + mrAreaToDrawTo.left, nY + mrAreaToDrawTo.top);
 
-                ZRect rString = cell.style.Font()->Arrange(rCellArea, cell.val, mCellStyle.pos, mCellStyle.paddingH);
+                ZRect rString = cell.style.Font()->Arrange(rCellArea, cell.val, mCellStyle.pos, mCellStyle.pad.h);
                 cell.style.Font()->DrawText(pDest, cell.val, rString, &mCellStyle.look);
 
-                nX += nColWidth + mCellStyle.paddingH;
+                nX += nColWidth + mCellStyle.pad.h;
             }
 
             // Draw right border
-            nY += nRowHeight + mCellStyle.paddingV;
+            nY += nRowHeight + mCellStyle.pad.v;
             nRow++;
         }
 

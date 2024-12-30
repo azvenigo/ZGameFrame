@@ -19,9 +19,10 @@ public:
         kHotkeyZoom             = 1 << 2,   // 4
         kShowZoomCaption        = 1 << 3,   // 8
         kShowCaption            = 1 << 4,   // 16
-        kSelectableArea         = 1 << 5,   // 32
-        kNotifyOnClick          = 1 << 6,   // 64
-        kLaunchGeolocation      = 1 << 7,   // 128
+        kShowCaptionOnMouseOver = 1 << 5,   // 32
+        kSelectableArea         = 1 << 6,   // 64
+        kNotifyOnClick          = 1 << 7,   // 128
+        kLaunchGeolocation      = 1 << 8,   // 256
     };
 
     enum eViewState : uint32_t
@@ -70,6 +71,7 @@ public:
 
     uint32_t    mBehavior;
     uint32_t    mZoomHotkey;
+    bool        mbConditionalPaintCaptions;
     double      mfMinZoom;
     double      mfMaxZoom;
     std::string msMouseUpLMessage;

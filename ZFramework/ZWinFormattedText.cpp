@@ -120,7 +120,7 @@ bool ZWinFormattedDoc::OnMouseDownL(int64_t x, int64_t y)
 	rLocalTextBorderArea.InflateRect(6,6);
 
 	ZRect rLocalDocArea(mrDocumentArea);
-    rLocalDocArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+    rLocalDocArea.DeflateRect(mStyle.pad.h, mStyle.pad.v);
 
 
 	ZRect rClip(rLocalDocArea);
@@ -185,7 +185,7 @@ bool ZWinFormattedDoc::OnMouseDownL(int64_t x, int64_t y)
                         rLine.left += rText.Width();
                 }
 			}
-            rLine.left += mStyle.paddingH;
+            rLine.left += mStyle.pad.h;
             col++;
 		}
 
@@ -256,7 +256,7 @@ void ZWinFormattedDoc::UpdateScrollbar()
     mrDocumentBorderArea.SetRect(mAreaLocal);
 
     mrDocumentArea.SetRect(mrDocumentBorderArea);
-//    mrDocumentArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+//    mrDocumentArea.DeflateRect(mStyle.pad.h, mStyle.pad.v);
 
 
     if (IsBehaviorSet(kDrawBorder))
@@ -415,7 +415,7 @@ bool ZWinFormattedDoc::Paint()
                     }
                 }
                 col++;
-                rLine.left += mStyle.paddingH;
+                rLine.left += mStyle.pad.h;
 			}
 		}
 
@@ -440,7 +440,7 @@ int64_t ZWinFormattedDoc::GetLineHeight(tFormattedLine& line)
             nLargest = entry.style.fp.Height();
 	}
 
-    return nLargest + mStyle.paddingV;
+    return nLargest + mStyle.pad.v;
 }
 
 void ZWinFormattedDoc::CalculateFullDocumentHeight()

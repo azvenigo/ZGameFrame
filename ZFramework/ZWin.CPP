@@ -303,8 +303,8 @@ void ZWin::ArrangeWindows(tWinList windows, ZRect rArea, ZGUI::Style& style, int
         nRows = windows.size();
     }
 
-    int64_t nTotalHPadding = (nCols + 1) * style.paddingH;
-    int64_t nTotalVPadding = (nRows + 1) * style.paddingV;
+    int64_t nTotalHPadding = (nCols + 1) * style.pad.h;
+    int64_t nTotalVPadding = (nRows + 1) * style.pad.v;
 
     int64_t w = (rArea.Width() - nTotalHPadding) / nCols;
     int64_t h = (rArea.Height() - nTotalVPadding) / nRows;
@@ -317,8 +317,8 @@ void ZWin::ArrangeWindows(tWinList windows, ZRect rArea, ZGUI::Style& style, int
         for (int64_t col = 0; col < nCols; col++)
         {
             ZRect r(w, h);
-            r.OffsetRect(rArea.left + style.paddingH * (col + 1) + col * w,     // offset H by number of horizontal paddings by column number
-                rArea.top + style.paddingV * (row + 1) + row * h);    // same for V offset
+            r.OffsetRect(rArea.left + style.pad.h * (col + 1) + col * w,     // offset H by number of horizontal paddings by column number
+                rArea.top + style.pad.v * (row + 1) + row * h);    // same for V offset
 
             (*childIt)->SetArea(r);
 
@@ -1163,10 +1163,10 @@ bool ZWinDialog::Init()
     assert(gM > 0);
     //ZRect rButton(0, 0, gM * 4, gM * 2);
     ZRect rButtonArea(mAreaLocal);
-    rButtonArea.top = rButtonArea.bottom - (gM * 3 + mStyle.paddingV*2);
+    rButtonArea.top = rButtonArea.bottom - (gM * 3 + mStyle.pad.v *2);
     rButtonArea.left += gM * 2;
     rButtonArea.right -= gM * 2;
-    rButtonArea.bottom -= mStyle.paddingV;
+    rButtonArea.bottom -= mStyle.pad.v;
 
 //    rButton = ZGUI::Arrange(rButton, mAreaToDrawTo, ZGUI::RB, gSpacer, gSpacer);
 
@@ -1200,7 +1200,7 @@ bool ZWinDialog::Init()
 
     ZGUI::Style arrangeStyle(mStyle);
     if (arrangeList.size() == 1)
-        arrangeStyle.paddingH = (int32_t)(rButtonArea.right/3);
+        arrangeStyle.pad.h = (int32_t)(rButtonArea.right/3);
 
     if (!arrangeList.empty())
         ArrangeWindows(arrangeList, rButtonArea, arrangeStyle, -1, 1);

@@ -40,6 +40,8 @@ ZWinPanel::ZWinPanel() : mBehavior(kNone)
     mbAcceptsCursorMessages = true;
     mbMouseWasOver = false;
     mDrawBorder = false;
+    mbConditionalVisible = false;
+    mbSetVisibility = false;
     mSpacers = 0;        
 }
 
@@ -90,7 +92,7 @@ bool ZWinPanel::Paint()
         ZRect rBounds(GetBounds(group.second));
         ZRect rCaption(rBounds);
 
-        rBounds.InflateRect(gDefaultGroupingStyle.paddingH, gDefaultGroupingStyle.paddingV);
+        rBounds.InflateRect(gDefaultGroupingStyle.pad.h, gDefaultGroupingStyle.pad.v);
         rBounds.right--;
         rBounds.bottom--;
 
@@ -100,7 +102,7 @@ bool ZWinPanel::Paint()
 
 
 
-        rCaption.OffsetRect(gDefaultGroupingStyle.paddingH, -gDefaultGroupingStyle.fp.Height());
+        rCaption.OffsetRect(gDefaultGroupingStyle.pad.h, -gDefaultGroupingStyle.fp.Height());
         gDefaultGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rCaption);
 
 
@@ -119,29 +121,66 @@ bool ZWinPanel::Process()
     {
         if (gInput.captureWin == nullptr)   // only process this if no window has capture
         {
-            if (mbVisible)
+            if (mbMouseWasOver && mbVisible)
             {
-                ZRect rOverArea(mAreaAbsolute);
-                if (rOverArea.PtInRect(gInput.lastMouseMove))
+                if (!mAreaAbsolute.PtInRect(gInput.lastMouseMove))
                 {
-                    mbMouseWasOver = true;
-                }
-                else
-                {
-                    if (mbMouseWasOver)
-                    {
-                        SetVisible(false);
-                        if (mpParentWin)
-                            mpParentWin->InvalidateChildren();
-                        return true;
-                    }
+                    mbMouseWasOver = false;
+                    mbConditionalVisible = false;
+                    SetVisible(false);
                 }
             }
+
+            if (mAreaAbsolute.PtInRect(gInput.lastMouseMove))
+            {
+                mbMouseWasOver = true;
+            }
+
+            if (mbConditionalVisible != mbVisible)
+                UpdateVisibility();
+        }
+    }
+
+    if (IsSet(kShowOnTrigger))
+    {
+        if (gInput.captureWin == nullptr)
+        {
+            mbConditionalVisible = mrTrigger.PtInRect(gInput.lastMouseMove) || mAreaAbsolute.PtInRect(gInput.lastMouseMove);
+            if (mbConditionalVisible != mbVisible)
+                UpdateVisibility();
         }
     }
 
     return ZWin::Process();
 }
+
+void ZWinPanel::UpdateVisibility()
+{
+    bool bShouldBeVisible = mbConditionalVisible || mbSetVisibility;
+    if (bShouldBeVisible != mbVisible)
+    {
+        if (mpParentWin)
+            mpParentWin->InvalidateChildren();
+        if (bShouldBeVisible)
+            UpdateUI();
+
+        if (bShouldBeVisible)
+        {
+            mIdleSleepMS = 25;
+        }
+        else
+        {
+            if (IsSet(kShowOnTrigger))
+                mIdleSleepMS = 200;
+            else
+                mIdleSleepMS = 30000;
+        }
+
+    }
+
+    ZWin::SetVisible(bShouldBeVisible);
+}
+
 
 bool ZWinPanel::ParseLayout()
 {
@@ -156,6 +195,10 @@ bool ZWinPanel::ParseLayout()
 
 	// Panel Attributes
     //      Behavior
+    if (SH::ToBool(pPanel->GetAttribute("show_on_mouse_enter")))
+        mBehavior |= kShowOnTrigger;
+
+
     if (SH::ToBool(pPanel->GetAttribute("hide_on_mouse_exit")))
         mBehavior |= kHideOnMouseExit;
 
@@ -466,7 +509,7 @@ void ZWinPanel::UpdateUI()
             }
         }
 
-        SetArea(ZGUI::Align(mAreaAbsolute, ref, (ZGUI::ePosition)mRAD.alignment, mStyle.paddingH, mStyle.paddingV, mRAD.wRatio, mRAD.hRatio, mRAD.minWidth, mRAD.minHeight, mRAD.maxWidth, mRAD.maxHeight));
+        SetArea(ZGUI::Align(mAreaAbsolute, ref, (ZGUI::ePosition)mRAD.alignment, mStyle.pad.h, mStyle.pad.v, mRAD.wRatio, mRAD.hRatio, mRAD.minWidth, mRAD.minHeight, mRAD.maxWidth, mRAD.maxHeight));
         ref = mAreaLocal;
     }
 
@@ -475,9 +518,9 @@ void ZWinPanel::UpdateUI()
         ZRect controlArea = ref;
 
 //        if (mDrawBorder)
-//            controlArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+//            controlArea.DeflateRect(mStyle.pad.h, mStyle.pad.v);
 
-        int64_t spaceBetweenRows = mSpacers * mStyle.paddingV;
+        int64_t spaceBetweenRows = mSpacers * mStyle.pad.v;
         int64_t totalSpaceBetweenRows = (mRows - 1) * spaceBetweenRows;
 
         int64_t rowh = (controlArea.Height()-totalSpaceBetweenRows)/mRows;
@@ -488,7 +531,7 @@ void ZWinPanel::UpdateUI()
 
             if (IsSet(kDrawGroupFrames))
             {
-                rRowArea.DeflateRect(gDefaultGroupingStyle.paddingH * 2, gDefaultGroupingStyle.paddingV * 2);
+                rRowArea.DeflateRect(gDefaultGroupingStyle.pad.h * 2, gDefaultGroupingStyle.pad.v * 2);
             }
 
             tRowElements leftElements = GetRowElements(row, ZGUI::L);
@@ -505,7 +548,7 @@ void ZWinPanel::UpdateUI()
                     
                     bool bAddSpaceBetweenGroups = (i > 0) && leftElements[i - 1].groupname != element.groupname;    // if group name has changed from last element to current, add gap
                     if (bAddSpaceBetweenGroups)
-                        rRowArea.left += gDefaultGroupingStyle.paddingH * 4;
+                        rRowArea.left += gDefaultGroupingStyle.pad.h * 4;
 
                     assert(rRowArea.Width() > 0);
                     int64_t h = rRowArea.Height();
@@ -521,7 +564,7 @@ void ZWinPanel::UpdateUI()
                             pWin->SetArea(r);
                     }
 
-                    rRowArea.left += w + mStyle.paddingH;
+                    rRowArea.left += w + mStyle.pad.h;
                 }
             }
 
@@ -535,7 +578,7 @@ void ZWinPanel::UpdateUI()
 
                     bool bAddSpaceBetweenGroups = (i < (rightElements.size()-1) && (leftElements[i + 1].groupname != element.groupname));    // if group name has changed from last element to current, add gap
                     if (bAddSpaceBetweenGroups)
-                        rRowArea.left -= gDefaultGroupingStyle.paddingH * 4;
+                        rRowArea.left -= gDefaultGroupingStyle.pad.h * 4;
 #ifdef _DEBUG
                     if (rRowArea.Width() <= 0)
                     {
@@ -546,7 +589,7 @@ void ZWinPanel::UpdateUI()
                     assert(rRowArea.Width() > 0);
                     int64_t h = rRowArea.Height();
                     int64_t w = min<int64_t>(elementMaxWidth, (int64_t)((float)h * element.aspectratio));
-                    int64_t x = rRowArea.right - mStyle.paddingH - w;
+                    int64_t x = rRowArea.right - mStyle.pad.h - w;
                     int64_t y = rRowArea.top;
 
                     ZRect r(x, y, x + w, y + h);
@@ -554,7 +597,7 @@ void ZWinPanel::UpdateUI()
                     if (pWin)
                         pWin->SetArea(r);
 
-                    rRowArea.right -= (w + mStyle.paddingH);
+                    rRowArea.right -= (w + mStyle.pad.h);
                 }
             }
         }
@@ -585,18 +628,8 @@ bool ZWinPanel::OnParentAreaChange()
 
 void ZWinPanel::SetVisible(bool bVisible)
 {
-    if (bVisible)
-    {
-        mIdleSleepMS = 250;
-        UpdateUI();
-    }
-    else
-    {
-        mIdleSleepMS = 30000;
-        mbMouseWasOver = false;
-    }
-
-    return ZWin::SetVisible(bVisible);
+    mbSetVisibility = bVisible;
+    UpdateVisibility();
 }
 
 string ZWinPanel::ResolveTokens(std::string full)

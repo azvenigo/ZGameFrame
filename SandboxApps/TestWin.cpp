@@ -52,8 +52,8 @@ bool TestWin::Init()
 
     ZGUI::Style style(gDefaultPanelStyle);
     style.pos = ZGUI::CT;
-    style.paddingH = 0;
-    style.paddingV = 0;
+    style.pad.h = 0;
+    style.pad.v = 0;
 
     ZGUI::RA_Descriptor rad(ZRect(0, 0, grFullArea.right, gM * 2), msWinName, ZGUI::ICIT, 0.5f, 0.1f);
 

@@ -3,11 +3,12 @@
 
 using namespace std;
 
+uint32_t        gDefaultText(0xff575757);
 uint32_t        gDefaultDialogFill(0xff575757);
 uint32_t        gDefaultTextAreaFill(0xff888888);
 uint32_t        gDefaultTooltipFill(0xaa000088);
 uint32_t        gDefaultHighlight(0xff008800);
-uint32_t        gDefaultButtonUnchecked(0xff888888);
+uint32_t        gDefaultButtonUnchecked(0x00000000);
 
 int64_t         gM; // default measure defined by window diagonal ( diagonal / 100 )... all scaled GUI elements should be based off of this measure
 int64_t         gSpacer;
@@ -16,18 +17,18 @@ int64_t         gSpacer;
 ZFontParams     gDefaultTitleFont("Gadugi", 1500);
 ZFontParams     gDefaultTextFont("Gadugi", 500);
 
-ZGUI::Style gStyleTooltip(ZFontParams("Verdana", 1000), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, 8, 8, gDefaultTooltipFill);
-ZGUI::Style gStyleCaption(ZFontParams("Gadugi", 1200, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, 0, 0, gDefaultDialogFill);
-ZGUI::Style gStyleButton(ZFontParams("Verdana", 1200, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, 0, 0, gDefaultDialogFill);
-ZGUI::Style gStyleSlider(ZFontParams("Verdana", 600, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, 0, 0, gDefaultDialogFill);
-ZGUI::Style gStyleToggleChecked(ZFontParams("Verdana", 800, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, 0, 0, gDefaultDialogFill);
-ZGUI::Style gStyleToggleUnchecked(ZFontParams("Verdana", 800, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, 0, 0, gDefaultDialogFill);
-ZGUI::Style gStyleGeneralText(ZFontParams("Verdana", 1200), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, 0, 0, 0, true);
-ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultDialogFill, true);
-ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, (int32_t)gSpacer, (int32_t)gSpacer, gDefaultTextAreaFill);
-ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 500, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, 8, 8);
-ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, (int32_t)gSpacer, (int32_t)gSpacer, 0, false);
-ZGUI::Style gDefaultPanelStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Unknown, (int32_t)gSpacer, (int32_t)gSpacer);
+ZGUI::Style gStyleTooltip(ZFontParams("Verdana", 1000), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(8, 8, 0xff888888), gDefaultTooltipFill);
+ZGUI::Style gStyleCaption(ZFontParams("Gadugi", 1200, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(), 0x00000000);
+ZGUI::Style gStyleButton(ZFontParams("Verdana", 1200, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(), gDefaultDialogFill);
+ZGUI::Style gStyleSlider(ZFontParams("Verdana", 600, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(), gDefaultDialogFill);
+ZGUI::Style gStyleToggleChecked(ZFontParams("Verdana", 800, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, ZGUI::Padding(), 0x00000000);
+ZGUI::Style gStyleToggleUnchecked(ZFontParams("Verdana", 800, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, ZGUI::Padding(), 0x00000000);
+ZGUI::Style gStyleGeneralText(ZFontParams("Verdana", 1200), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, ZGUI::Padding(), 0x00000000, true);
+ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), gDefaultDialogFill, true);
+ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), gDefaultTextAreaFill);
+ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 500, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, ZGUI::Padding(8, 8));
+ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), 0, false);
+ZGUI::Style gDefaultPanelStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Unknown, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer));
 
 ZGUI::RA_Descriptor gDefaultRAD({}, "full", ZGUI::C, 0.25, 0.25);   
 
@@ -52,29 +53,27 @@ namespace ZGUI
         gSpacer = gM / 5;
         gSpacer = std::max<int64_t>(gSpacer, 4);
 
-        gStyleButton.paddingH = (int32_t)gSpacer;
-        gStyleButton.paddingV = (int32_t)gSpacer;
+        gStyleButton.pad.h = (int32_t)gSpacer;
+        gStyleButton.pad.v = (int32_t)gSpacer;
 
-        gStyleTooltip.paddingH = (int32_t)gSpacer;
-        gStyleTooltip.paddingV = (int32_t)gSpacer;
+        gStyleTooltip.pad.h = (int32_t)gSpacer;
+        gStyleTooltip.pad.v = (int32_t)gSpacer;
 
 
-        gDefaultGroupingStyle.paddingH = (int32_t)std::max<int64_t>(4, (int64_t)(gM / 4));
-        gDefaultGroupingStyle.paddingV = (int32_t)std::max<int64_t>(4, (int64_t)(gM / 4));
+        gDefaultGroupingStyle.pad.h = (int32_t)std::max<int64_t>(4, (int64_t)(gM / 4));
+        gDefaultGroupingStyle.pad.v = (int32_t)std::max<int64_t>(4, (int64_t)(gM / 4));
 
-        gDefaultFormattedDocStyle.paddingH = (int32_t)gSpacer;
-        gDefaultFormattedDocStyle.paddingV = (int32_t)gSpacer;
+        gDefaultFormattedDocStyle.pad.h = (int32_t)gSpacer;
+        gDefaultFormattedDocStyle.pad.v = (int32_t)gSpacer;
 
-        gDefaultPanelStyle.paddingH = (int32_t)gSpacer;
-        gDefaultPanelStyle.paddingV = (int32_t)gSpacer;
+        gDefaultPanelStyle.pad.h = (int32_t)gSpacer;
+        gDefaultPanelStyle.pad.v = (int32_t)gSpacer;
 
 
         // update colors
         gAppPalette.GetByName("Tooltip Fill", gStyleTooltip.bgCol);
-        gAppPalette.GetByName("Dialog Fill", gStyleCaption.bgCol);
         gAppPalette.GetByName("Dialog Fill", gStyleButton.bgCol);
         gAppPalette.GetByName("Highlight", gDefaultHighlight);
-        gAppPalette.GetByName("Toggle Unchecked", gStyleToggleUnchecked.bgCol);
         gAppPalette.GetByName("Dialog Fill", gDefaultDialogStyle.bgCol);
         gAppPalette.GetByName("Text Fill", gDefaultWinTextEditStyle.bgCol);
         gAppPalette.GetByName("Text Fill", gDefaultFormattedDocStyle.bgCol);
@@ -82,7 +81,7 @@ namespace ZGUI
         gAppPalette.GetByName("Dialog Fill", gDefaultPanelStyle.bgCol);
 
 
-        gStyleToggleChecked.bgCol = gDefaultHighlight;
+//        gStyleToggleChecked.bgCol = gDefaultHighlight;
     }
 
 
@@ -118,13 +117,44 @@ namespace ZGUI
     }
 
 
-    Style::Style(const ZFontParams& _fp, const ZTextLook& _look, ePosition _pos, int32_t _paddingH, int32_t _paddingV, uint32_t _bgCol, bool _wrap)
+    Padding::operator string() const
+    {
+        nlohmann::json j;
+        j["v"] = v;
+        j["h"] = h;
+        j["col"] = col;
+
+        return j.dump();
+    }
+
+    Padding::Padding(const std::string& s)
+    {
+        nlohmann::json j = nlohmann::json::parse(s);
+
+        if (j.contains("h"))
+            h = j["h"];
+
+        if (j.contains("v"))
+            v = j["v"];
+
+        if (j.contains("col"))
+            col = j["col"];
+    }
+
+    void Padding::operator = (const Padding& rhs)
+    {
+        h = rhs.h;
+        v = rhs.v;
+        col = rhs.col;
+    }
+
+
+    Style::Style(const ZFontParams& _fp, const ZTextLook& _look, ePosition _pos, Padding _pad, uint32_t _bgCol, bool _wrap)
     {
         fp = _fp;
         look = _look;
         pos = _pos;
-        paddingH = _paddingH;
-        paddingV = _paddingV;
+        pad = _pad;
         bgCol = _bgCol;
         wrap = _wrap;
     }
@@ -142,11 +172,8 @@ namespace ZGUI
         if (j.contains("pos"))
             pos = j["pos"];
 
-        if (j.contains("padH"))
-            paddingH = j["padH"];
-
-        if (j.contains("padV"))
-            paddingV = j["padV"];
+        if (j.contains("pad"))
+            pad = Padding((string)j["pad"]);
 
         if (j.contains("bg"))
             bgCol = j["bg"];
@@ -161,8 +188,7 @@ namespace ZGUI
         j["fp"] = (string)fp;
         j["look"] = (string)look;
         j["pos"] = pos;
-        j["padH"] = paddingH;
-        j["padV"] = paddingV;
+        j["pad"] = (string)pad;
         j["bg"] = bgCol;
 
         return j.dump();
@@ -173,8 +199,7 @@ namespace ZGUI
         fp = rhs.fp;
         look = rhs.look;
         pos = rhs.pos;
-        paddingH = rhs.paddingH;
-        paddingV = rhs.paddingV;
+        pad = rhs.pad;
         bgCol = rhs.bgCol;
         wrap = rhs.wrap;
         if (rhs.mpFont && rhs.mpFont->GetFontParams() == fp)

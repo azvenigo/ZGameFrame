@@ -34,10 +34,7 @@ ZScreenBuffer::ZScreenBuffer()
 {
     mbRenderingEnabled = true;
     mbCurrentlyRendering = false;
-#ifdef USE_D3D
-	ZeroMemory((void*)&mLockedRect, sizeof(mLockedRect));
-	ZeroMemory((void*)&mSurfaceDesc, sizeof(mSurfaceDesc));
-#endif
+    mDynamicTexture = nullptr;
 }
 
 ZScreenBuffer::~ZScreenBuffer()
@@ -52,11 +49,36 @@ bool ZScreenBuffer::Init(int64_t nWidth, int64_t nHeight, ZGraphicSystem* pGraph
 	if (!ZBuffer::Init(nWidth, nHeight))
 		return false;
 
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = nWidth;
+    desc.Height = nHeight;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;  // Matches ARGB layout
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_DYNAMIC;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    desc.MiscFlags = 0;
+
+    if (mDynamicTexture)
+        mDynamicTexture->Release();
+    mDynamicTexture = nullptr;
+    HRESULT hr = mpGraphicSystem->mD3DDevice->CreateTexture2D(&desc, nullptr, &mDynamicTexture);
+    if (FAILED(hr)) 
+    {
+        throw std::runtime_error("Failed to create staging texture");
+    }
+
 	return true;	
 }
 
 bool ZScreenBuffer::Shutdown()
 {
+    if (mDynamicTexture)
+        mDynamicTexture->Release();
+    mDynamicTexture = nullptr;
 	return ZBuffer::Shutdown();
 }
 
@@ -107,6 +129,133 @@ void ZScreenBuffer::EndRender()
 
 #ifdef _WIN64
 
+
+bool ZScreenBuffer::PaintToSystem()
+{
+    if (!mbRenderingEnabled)
+        return false;
+
+    uint64_t start = gTimer.GetUSSinceEpoch();
+
+    void* pBits = mpPixels;
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    HRESULT hr = mpGraphicSystem->mD3DContext->Map(mDynamicTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+    if (FAILED(hr)) {
+        throw std::runtime_error("Failed to map staging texture");
+    }
+
+    // Assuming your ARGB buffer is stored in `argbBuffer`:
+    UINT height = mSurfaceArea.Height();
+    UINT width = mSurfaceArea.Width();
+
+    if (width * 4 == mapped.RowPitch)
+    {
+        memcpy(mapped.pData, pBits, (width * height * 4));
+    }
+    else
+    {
+        for (UINT row = 0; row < height; ++row)
+        {
+            memcpy(static_cast<BYTE*>(mapped.pData) + row * mapped.RowPitch,
+                (BYTE*)pBits + row * width * 4, // Assuming each pixel is 4 bytes
+                width * 4);
+        }
+    }
+
+
+    mpGraphicSystem->mD3DContext->Unmap(mDynamicTexture, 0);
+
+    // Copy staging texture to back buffer
+    mpGraphicSystem->mD3DContext->CopyResource(mpGraphicSystem->mBackBuffer, mDynamicTexture);
+
+    mpGraphicSystem->mSwapChain->Present(1, 0); // VSync: 1
+
+/*    uint64_t end = gTimer.GetUSSinceEpoch();
+
+
+    static uint64_t delay = 0;
+
+    static uint64_t frames = 0;
+    static uint64_t totalTime = 0;
+    delay++;
+
+    if (delay > 100)
+    {
+        frames++;
+        totalTime += (end - start);
+
+        cout << "frames:" << frames << " avg paint time: " << (totalTime) / frames << "\n";
+    }*/
+
+
+    return true;
+}
+/*
+* 
+// Converts an sRGB value to linear space
+float SRGBToLinear(float c) {
+    return (c <= 0.04045f) ? (c / 12.92f) : powf((c + 0.055f) / 1.055f, 2.4f);
+}
+
+// Maps ARGB (0-255 per channel) to HDR float16 range (e.g., 0-1000)
+float MapToHDRRange(float linearColor, float maxHDRValue) {
+    return linearColor * maxHDRValue; // Scale to desired HDR range
+}
+
+bool ZScreenBuffer::PaintToSystem()
+{
+    if (!mbRenderingEnabled)
+        return false;
+
+    void* pBits = mpPixels;
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    HRESULT hr = mpGraphicSystem->mD3DContext->Map(mStagingTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+    if (FAILED(hr)) {
+        throw std::runtime_error("Failed to map staging texture");
+    }
+
+    UINT height = mSurfaceArea.Height();
+    UINT width = mSurfaceArea.Width();
+    float maxHDRValue = 1000.0f; // Example HDR range max luminance
+
+    for (UINT row = 0; row < height; ++row) {
+        auto* dest = reinterpret_cast<DirectX::PackedVector::XMHALF4*>(
+            (BYTE*) (mapped.pData) + row * mapped.RowPitch);
+        const uint32_t* src = reinterpret_cast<const uint32_t*>(
+            (BYTE*)(mpPixels) + row * width * 4);
+
+        for (UINT col = 0; col < width; ++col) {
+            // Decompose ARGB to individual channels
+            uint8_t A = (src[col] >> 24) & 0xFF;
+            uint8_t R = (src[col] >> 16) & 0xFF;
+            uint8_t G = (src[col] >> 8) & 0xFF;
+            uint8_t B = src[col] & 0xFF;
+
+            // Convert to normalized floats
+            float rLinear = MapToHDRRange(SRGBToLinear(R / 255.0f), maxHDRValue);
+            float gLinear = MapToHDRRange(SRGBToLinear(G / 255.0f), maxHDRValue);
+            float bLinear = MapToHDRRange(SRGBToLinear(B / 255.0f), maxHDRValue);
+            float aLinear = A / 255.0f; // Alpha typically remains normalized
+
+            // Write HDR values to destination
+            dest[col] = DirectX::PackedVector::XMHALF4(rLinear, gLinear, bLinear, aLinear);
+        }
+    }
+
+    mpGraphicSystem->mD3DContext->Unmap(mStagingTexture, 0);
+
+    // Copy staging texture to back buffer
+    mpGraphicSystem->mD3DContext->CopyResource(mpGraphicSystem->mBackBuffer, mStagingTexture);
+
+    mpGraphicSystem->mSwapChain->Present(1, 0); // VSync: 1
+    return true;
+}
+*/
+
+
+/*
 bool ZScreenBuffer::PaintToSystem()
 {
     if (!mbRenderingEnabled)
@@ -143,7 +292,7 @@ bool ZScreenBuffer::PaintToSystem()
 
     return true;
 }
-
+*/
 int32_t ZScreenBuffer::RenderVisibleRects()
 {
     if (!mbRenderingEnabled)

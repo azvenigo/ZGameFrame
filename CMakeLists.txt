@@ -86,7 +86,7 @@ list(APPEND INCLUDE_DIRS
 )
 
 list(APPEND LINK_DIRS ../../ZLibraries/Common/curl/lib ../external/lunasvg/build/debug)
-list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libcurl.lib lunasvg.lib)
+list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libcurl.lib lunasvg.lib DXGI.lib d3d11.lib)
 
 
 ####################
