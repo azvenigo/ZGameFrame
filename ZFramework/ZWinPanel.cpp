@@ -92,7 +92,7 @@ bool ZWinPanel::Paint()
         ZRect rBounds(GetBounds(group.second));
         ZRect rCaption(rBounds);
 
-        rBounds.InflateRect(gDefaultGroupingStyle.paddingH, gDefaultGroupingStyle.paddingV);
+        rBounds.InflateRect(gDefaultGroupingStyle.pad.h, gDefaultGroupingStyle.pad.v);
         rBounds.right--;
         rBounds.bottom--;
 
@@ -102,7 +102,7 @@ bool ZWinPanel::Paint()
 
 
 
-        rCaption.OffsetRect(gDefaultGroupingStyle.paddingH, -gDefaultGroupingStyle.fp.Height());
+        rCaption.OffsetRect(gDefaultGroupingStyle.pad.h, -gDefaultGroupingStyle.fp.Height());
         gDefaultGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rCaption);
 
 
@@ -161,7 +161,8 @@ void ZWinPanel::UpdateVisibility()
     {
         if (mpParentWin)
             mpParentWin->InvalidateChildren();
-        UpdateUI();
+        if (bShouldBeVisible)
+            UpdateUI();
 
         if (bShouldBeVisible)
         {
@@ -508,7 +509,7 @@ void ZWinPanel::UpdateUI()
             }
         }
 
-        SetArea(ZGUI::Align(mAreaAbsolute, ref, (ZGUI::ePosition)mRAD.alignment, mStyle.paddingH, mStyle.paddingV, mRAD.wRatio, mRAD.hRatio, mRAD.minWidth, mRAD.minHeight, mRAD.maxWidth, mRAD.maxHeight));
+        SetArea(ZGUI::Align(mAreaAbsolute, ref, (ZGUI::ePosition)mRAD.alignment, mStyle.pad.h, mStyle.pad.v, mRAD.wRatio, mRAD.hRatio, mRAD.minWidth, mRAD.minHeight, mRAD.maxWidth, mRAD.maxHeight));
         ref = mAreaLocal;
     }
 
@@ -517,9 +518,9 @@ void ZWinPanel::UpdateUI()
         ZRect controlArea = ref;
 
 //        if (mDrawBorder)
-//            controlArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
+//            controlArea.DeflateRect(mStyle.pad.h, mStyle.pad.v);
 
-        int64_t spaceBetweenRows = mSpacers * mStyle.paddingV;
+        int64_t spaceBetweenRows = mSpacers * mStyle.pad.v;
         int64_t totalSpaceBetweenRows = (mRows - 1) * spaceBetweenRows;
 
         int64_t rowh = (controlArea.Height()-totalSpaceBetweenRows)/mRows;
@@ -530,7 +531,7 @@ void ZWinPanel::UpdateUI()
 
             if (IsSet(kDrawGroupFrames))
             {
-                rRowArea.DeflateRect(gDefaultGroupingStyle.paddingH * 2, gDefaultGroupingStyle.paddingV * 2);
+                rRowArea.DeflateRect(gDefaultGroupingStyle.pad.h * 2, gDefaultGroupingStyle.pad.v * 2);
             }
 
             tRowElements leftElements = GetRowElements(row, ZGUI::L);
@@ -547,7 +548,7 @@ void ZWinPanel::UpdateUI()
                     
                     bool bAddSpaceBetweenGroups = (i > 0) && leftElements[i - 1].groupname != element.groupname;    // if group name has changed from last element to current, add gap
                     if (bAddSpaceBetweenGroups)
-                        rRowArea.left += gDefaultGroupingStyle.paddingH * 4;
+                        rRowArea.left += gDefaultGroupingStyle.pad.h * 4;
 
                     assert(rRowArea.Width() > 0);
                     int64_t h = rRowArea.Height();
@@ -563,7 +564,7 @@ void ZWinPanel::UpdateUI()
                             pWin->SetArea(r);
                     }
 
-                    rRowArea.left += w + mStyle.paddingH;
+                    rRowArea.left += w + mStyle.pad.h;
                 }
             }
 
@@ -577,7 +578,7 @@ void ZWinPanel::UpdateUI()
 
                     bool bAddSpaceBetweenGroups = (i < (rightElements.size()-1) && (leftElements[i + 1].groupname != element.groupname));    // if group name has changed from last element to current, add gap
                     if (bAddSpaceBetweenGroups)
-                        rRowArea.left -= gDefaultGroupingStyle.paddingH * 4;
+                        rRowArea.left -= gDefaultGroupingStyle.pad.h * 4;
 #ifdef _DEBUG
                     if (rRowArea.Width() <= 0)
                     {
@@ -588,7 +589,7 @@ void ZWinPanel::UpdateUI()
                     assert(rRowArea.Width() > 0);
                     int64_t h = rRowArea.Height();
                     int64_t w = min<int64_t>(elementMaxWidth, (int64_t)((float)h * element.aspectratio));
-                    int64_t x = rRowArea.right - mStyle.paddingH - w;
+                    int64_t x = rRowArea.right - mStyle.pad.h - w;
                     int64_t y = rRowArea.top;
 
                     ZRect r(x, y, x + w, y + h);
@@ -596,7 +597,7 @@ void ZWinPanel::UpdateUI()
                     if (pWin)
                         pWin->SetArea(r);
 
-                    rRowArea.right -= (w + mStyle.paddingH);
+                    rRowArea.right -= (w + mStyle.pad.h);
                 }
             }
         }

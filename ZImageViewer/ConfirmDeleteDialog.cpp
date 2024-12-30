@@ -61,8 +61,8 @@ bool ConfirmDeleteDialog::Init()
 
         ZGUI::Style style(gStyleButton);
         style.fp.nScalePoints = 1000;
-        style.paddingH = (int32_t)gSpacer;
-        style.paddingV = (int32_t)gSpacer;
+        style.pad.h = (int32_t)gSpacer;
+        style.pad.v = (int32_t)gSpacer;
         style.pos = ZGUI::C;
 
         tWinList arrangeList;
@@ -115,8 +115,8 @@ bool ConfirmDeleteDialog::Init()
             mpFilesList->AddLineNode(sListBoxEntry);
         }
 
-        mpFilesList->mStyle.paddingH = (int32_t)gM;
-        mpFilesList->mStyle.paddingV = (int32_t)gSpacer;
+        mpFilesList->mStyle.pad.h = (int32_t)gM;
+        mpFilesList->mStyle.pad.v = (int32_t)gSpacer;
         mpFilesList->SetScrollable();
         mpFilesList->SetBehavior(ZWinFormattedDoc::kUnderlineLinks, false);
 

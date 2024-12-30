@@ -65,11 +65,25 @@ namespace ZGUI
         eDeco       decoration;
     };
 
+    class Padding
+    {
+    public:
+        Padding(int32_t _h = 0, int32_t _v = 0, uint32_t _col = 0) : h(_h), v(_v), col(_col) {}
+        Padding(const std::string& s);
+
+        operator std::string() const;
+        void operator = (const Padding& rhs);
+
+        int32_t h;
+        int32_t v;
+        int32_t col;
+    };
+
 
     class Style
     {
     public:
-        Style(const ZFontParams& _fp = {}, const ZTextLook& _look = {}, ePosition _pos = ePosition::Unknown, int32_t _paddingH = 0, int32_t _paddingV = 0, uint32_t _bgCol = 0, bool _wrap = false);
+        Style(const ZFontParams& _fp = {}, const ZTextLook& _look = {}, ePosition _pos = ePosition::Unknown, Padding _pad = {}, uint32_t _bgCol = 0, bool _wrap = false);
         Style(const std::string& s);
 
         tZFontPtr Font();
@@ -81,8 +95,7 @@ namespace ZGUI
         ZFontParams fp;
         ZTextLook   look;
         ePosition   pos;
-        int32_t     paddingH;
-        int32_t     paddingV;
+        Padding     pad;
         uint32_t    bgCol;
         bool        wrap;
 

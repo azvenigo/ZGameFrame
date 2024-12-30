@@ -2,13 +2,13 @@
 #include "helpers/StringHelpers.h"
 #include "ZTimer.h"
 #include "ZMainWin.h"
-#include "ZWinText.H"
+//#include "ZWinText.H"
 
 using namespace std;
 
 ZInput::ZInput() : captureWin(nullptr), mouseOverWin(nullptr), keyboardFocusWin(nullptr), lastMouseMove(-1, -1), lastMouseMoveTime(0), bMouseHoverPosted(false), lButtonDown(false), rButtonDown(false)
 {
-    mpTooltipWin = new ZWinLabel();
+//    mpTooltipWin = new ZWinLabel();
 }
 
 
@@ -109,17 +109,23 @@ void ZInput::OnMouseMove(int64_t x, int64_t y)
         gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "move", "x", x, "y", y));
 
         CheckForMouseOverNewWindow();
-
-        if (mpTooltipWin->mbVisible)
-        {
-            UpdateTooltipLocation(lastMouseMove);
-        }
+        UpdateTooltipLocation(lastMouseMove);
     }
 }
 
 void ZInput::Process()
 {
     CheckMouseForHover();
+}
+
+bool ZInput::Paint(ZBuffer* pDst)
+{
+    if (mTooltipBox.visible)
+    {
+        return mTooltipBox.Paint(pDst);
+    }
+
+    return true;
 }
 
 
@@ -153,10 +159,8 @@ void ZInput::CheckForMouseOverNewWindow()
         if (pMouseOverWin)
             pMouseOverWin->OnMouseIn();
 
-        if (mpTooltipWin->mbVisible)
-        {
+        if (mTooltipBox.visible)
             ShowTooltip(pMouseOverWin->msTooltip);
-        }
     }
 }
 
@@ -189,40 +193,32 @@ void ZInput::CheckMouseForHover()
 
 bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
 {
-    if (!mpTooltipWin->mbInitted)
-    {
-        gpMainWin->ChildAdd(mpTooltipWin, false);
-    }
-
-
     if (tooltip.empty())
     {
-        mpTooltipWin->SetVisible(false);
+        mTooltipBox.visible = false;
     }
     else
     {
-        mpTooltipWin->msText = tooltip;
-        mpTooltipWin->mStyle = style;
+        mTooltipBox.sText = tooltip;
+        mTooltipBox.style = style;
         ZRect rTooltip;
-        tZFontPtr pTooltipFont = mpTooltipWin->mStyle.Font();
+        tZFontPtr pTooltipFont = mTooltipBox.style.Font();
         rTooltip = pTooltipFont->StringRect(tooltip);
-        rTooltip.InflateRect(style.paddingH, style.paddingV);
-        mpTooltipWin->SetArea(rTooltip);
-        mpTooltipWin->SetVisible();
-        gpMainWin->ChildToFront(mpTooltipWin);
+        rTooltip.InflateRect(style.pad.h, style.pad.v);
+        mTooltipBox.area = rTooltip;
+        mTooltipBox.visible = true;
         toolTipAppear = lastMouseMove;
         UpdateTooltipLocation(lastMouseMove);
-        mpTooltipWin->mIdleSleepMS = 100;
     }
     return true;
 }
 
 bool ZInput::UpdateTooltipLocation(ZPoint pt)
 {
-    if (!mpTooltipWin->mbVisible)
+    if (!mTooltipBox.visible)
         return true;
 
-    ZRect rTooltip(mpTooltipWin->GetArea());
+    ZRect rTooltip(mTooltipBox.area);
 
     // ensure the tooltip is entirely visible on the window + a little padding
     ZPoint adjustedPt(lastMouseMove.x - rTooltip.Width()/16, lastMouseMove.y + gM);
@@ -230,13 +226,14 @@ bool ZInput::UpdateTooltipLocation(ZPoint pt)
     limit<int64_t>(adjustedPt.x, grFullArea.left + gSpacer, grFullArea.right - (rTooltip.Width() - gSpacer));
     limit<int64_t>(adjustedPt.y, grFullArea.top + gSpacer, grFullArea.bottom - (rTooltip.Height() - gSpacer));
 
-    if ((toolTipAppear.x - pt.x) * (toolTipAppear.x - pt.x) + (toolTipAppear.y - pt.y) * (toolTipAppear.y - pt.y) > 3 * (gM * gM))
-        mpTooltipWin->SetVisible(false);
-    else
+/*    if ((toolTipAppear.x - pt.x) * (toolTipAppear.x - pt.x) + (toolTipAppear.y - pt.y) * (toolTipAppear.y - pt.y) > 3 * (gM * gM))
     {
-        mpTooltipWin->MoveTo(adjustedPt.x, adjustedPt.y);
-        mpTooltipWin->Invalidate();
+        mTooltipBox.visible = false;
     }
+    else
+    {*/
+        mTooltipBox.area.MoveRect(adjustedPt);
+ //   }
 
     return true;
 }

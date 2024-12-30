@@ -257,6 +257,7 @@ int main(int argc, char* argv[])
                     //pScreenBuffer->Fill(0xFF0000FF); // debug fill
                         int32_t nRenderedCount = pScreenBuffer->RenderVisibleRects();
                         gAnimator.Paint(pScreenBuffer);
+                        gInput.Paint(pScreenBuffer);    // tooltips or any other overlays
                         pScreenBuffer->PaintToSystem();
                     //}
                     int64_t nEndRenderVisible = gTimer.GetUSSinceEpoch();

@@ -1999,14 +1999,18 @@ bool ZBuffer::BltScaled(ZBuffer* pSrc)
 
 void ZBuffer::Blur(float sigma, ZRect* pRect)
 {
-    ZBuffer temp(this);
-
     ZRect rArea(mSurfaceArea);
     if (pRect)
         rArea = *pRect;
 
-    int64_t w = rArea.Width();
-    int64_t h = rArea.Height();
+    int64_t srcStride = mSurfaceArea.Width();
+    int64_t tempStride = rArea.Width();
+
+    ZBuffer temp;
+    temp.Init(rArea.Width(), rArea.Height());
+    temp.Blt(this, rArea, temp.GetArea(), nullptr, ZBuffer::eAlphaBlendType::kAlphaSource);
+
+
 
     // Calculate the size of the kernel based on sigma (standard deviation)
     int64_t kernelSize = int64_t(6 * sigma) + 1;
@@ -2044,16 +2048,18 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
             for (int64_t i = -kernelRadius; i <= kernelRadius; i++)
             {
                 int64_t newX = x + i;
-                if (newX < 0) 
-                {
-                    newX = 0;
-                }
-                else if (newX >= w) 
-                {
+                if (newX < rArea.left)
+                    continue;
+                /*                {
+                                    newX = 0;
+                                }*/
+                else if (newX >= rArea.right)
+                    continue;
+/*                {
                     newX = w - 1;
                 }
-
-                uint32_t pixel = mpPixels[y * w + newX];
+*/
+                uint32_t pixel = mpPixels[y * srcStride + newX];
                 float weight = kernel[i + kernelRadius];
 
                 r += ((pixel >> 16) & 0xFF) * weight;
@@ -2062,7 +2068,9 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
                 a += ((pixel >> 24) & 0xFF) * weight;
             }
 
-            temp.mpPixels[y * w + x] = ((uint32_t(a) & 0xFF) << 24) |
+            int64_t tempY = y - rArea.top;
+            int64_t tempX = x - rArea.left;
+            temp.mpPixels[tempY * tempStride + tempX] = ((uint32_t(a) & 0xFF) << 24) |
                 ((uint32_t(r) & 0xFF) << 16) |
                 ((uint32_t(g) & 0xFF) << 8) |
                 (uint32_t(b) & 0xFF);
@@ -2070,21 +2078,25 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
     }
 
     // Perform vertical convolution and store the result in the output buffer
-    for (int64_t x = 0; x < w; x++)
+    for (int64_t x = rArea.left; x < rArea.right; x++)
     {
-        for (int64_t y = 0; y < h; y++)
+        for (int64_t y = rArea.top; y < rArea.bottom; y++)
         {
             float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
 
             for (int64_t i = -kernelRadius; i <= kernelRadius; i++)
             {
                 int64_t newY = y + i;
-                if (newY < 0)
-                    newY = 0;
-                else if (newY >= h) 
-                    newY = h - 1;
+                if (newY < rArea.top)
+                    continue;
+                //                    newY = rArea.top;
+                else if (newY >= rArea.bottom)
+                    continue;
+//                    newY = rArea.bottom - 1;
 
-                uint32_t pixel = temp.mpPixels[newY * w + x];
+                int64_t tempY = newY - rArea.top;
+                int64_t tempX = x - rArea.left;
+                uint32_t pixel = temp.mpPixels[tempY * tempStride + tempX];
                 float weight = kernel[i + kernelRadius];
 
                 r += ((pixel >> 16) & 0xFF) * weight;
@@ -2093,7 +2105,7 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
                 a += ((pixel >> 24) & 0xFF) * weight;
             }
 
-            mpPixels[y * w + x] = ((uint32_t(a) & 0xFF) << 24) |
+            mpPixels[y * mSurfaceArea.Width() + x] = ((uint32_t(a) & 0xFF) << 24) |
                 ((uint32_t(r) & 0xFF) << 16) |
                 ((uint32_t(g) & 0xFF) << 8) |
                 (uint32_t(b) & 0xFF);

@@ -3,10 +3,10 @@
 #include "ZTypes.h"
 #include "ZMessageSystem.h"
 #include "ZGUIStyle.h"
+#include "ZGUIElements.h"
 #include <map>
 
 class ZWin;
-class ZWinLabel;
 typedef std::shared_ptr<ZWin> tZWinPtr;
 
 
@@ -31,6 +31,9 @@ public:
 
     void        Process();
 
+    bool        Paint(ZBuffer* pDst);    // for tooltips
+
+
     bool        IsKeyDown(uint8_t k) { return (keyState[k] & 0x80) != 0; }
 
     bool        ShowTooltip(const std::string& tooltip, const ZGUI::Style& style = gStyleTooltip);
@@ -51,7 +54,8 @@ public:
     ZWin*       mouseOverWin;
     ZWin*       keyboardFocusWin;
 
-    ZWinLabel*  mpTooltipWin;
+//    ZWinLabel*  mpTooltipWin;
+    ZGUI::TextBox mTooltipBox;
     ZPoint      toolTipAppear;
 
     std::string mClipboardText;

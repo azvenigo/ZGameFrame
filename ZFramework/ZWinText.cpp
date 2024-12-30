@@ -4,8 +4,8 @@
 #include "ZTimer.h"
 #include <cctype>
 #include "ZInput.h"
-//#include "ZGraphicSystem.h"
-//#include "ZScreenBuffer.h"
+#include "ZGraphicSystem.h"
+#include "ZScreenBuffer.h"
 
 
 using namespace std;
@@ -89,6 +89,9 @@ bool ZWinLabel::Paint()
         // Translucent fill.... (expensive render but should not be frequent or large)
         GetTopWindow()->RenderToBuffer(mpSurface, mAreaAbsolute, mAreaLocal, this);
 
+        //mpSurface->Blt(gpGraphicSystem->GetScreenBuffer(), mAreaAbsolute, mAreaLocal);
+
+
 //        gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(mpSurface.get(), mAreaAbsolute);
 
 //        ZDEBUG_OUT("x:", mAreaAbsolute.left, "y:", mAreaAbsolute.top, "\n");
@@ -142,7 +145,7 @@ bool ZWinLabel::Paint()
     ZRect rTextArea;
     tZFontPtr pTooltipFont = gpFontSystem->GetFont(pWin->mStyle.fp);
     rTextArea = pTooltipFont->StringRect(sTooltip);
-    rTextArea.InflateRect(style.paddingH, style.paddingV);
+    rTextArea.InflateRect(style.pad.h, style.pad.v);
 
 
     // ensure the tooltip is entirely visible on the window + a little padding
@@ -259,8 +262,8 @@ void ZWinTextEdit::SetArea(const ZRect& area)
 {
     ZWin::SetArea(area);
     mrVisibleTextArea = mAreaLocal;
-    mrVisibleTextArea.DeflateRect(mStyle.paddingH, mStyle.paddingV);
-    mrVisibleTextArea = ZGUI::Arrange(mrVisibleTextArea, mAreaLocal, mStyle.pos, mStyle.paddingH, mStyle.paddingV);
+    mrVisibleTextArea.DeflateRect(mStyle.pad.h, mStyle.pad.v);
+    mrVisibleTextArea = ZGUI::Arrange(mrVisibleTextArea, mAreaLocal, mStyle.pos, mStyle.pad.h, mStyle.pad.v);
 
     mnLeftBoundary = mrVisibleTextArea.Width() / 4; // 25%
     mnRightBoundary = (mrVisibleTextArea.Width() * 3) / 4;  // 75%

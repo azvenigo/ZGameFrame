@@ -39,7 +39,7 @@ bool ZWinFolderLabel::Paint()
 
     string sPath(VisiblePath());
     ZRect r(mStyle.Font()->StringRect(sPath));
-    r = ZGUI::Arrange(r, mAreaLocal, ZGUI::LC, mStyle.paddingH, mStyle.paddingV);
+    r = ZGUI::Arrange(r, mAreaLocal, ZGUI::LC, mStyle.pad.h, mStyle.pad.v);
 
     string sVisiblePath(VisiblePath());
 
@@ -141,7 +141,7 @@ std::string ZWinFolderLabel::VisiblePath()
 
 
 
-    int64_t nAvailWidth = mAreaLocal.Width() - mStyle.paddingH * 2;
+    int64_t nAvailWidth = mAreaLocal.Width() - mStyle.pad.h * 2;
     tZFontPtr pFont = mStyle.Font();
     int64_t nFullWidth = pFont->StringWidth(sPath);
 
@@ -159,7 +159,7 @@ std::string ZWinFolderLabel::VisiblePath()
 
 ZRect ZWinFolderLabel::PathRect()
 {
-    return ZRect(mStyle.paddingH*2+mStyle.Font()->StringWidth(VisiblePath()), mStyle.paddingV*2+mStyle.fp.Height());
+    return ZRect(mStyle.pad.h *2+mStyle.Font()->StringWidth(VisiblePath()), mStyle.pad.v *2+mStyle.fp.Height());
 }
 
 
@@ -178,8 +178,8 @@ ZRect ZWinFolderLabel::PathRect()
 void ZWinFolderLabel::MouseOver(int64_t x, std::filesystem::path& subPath, ZRect& rArea)
 {
     ZRect r(PathRect());
-    r.DeflateRect(mStyle.paddingH, mStyle.paddingV);
-    r.bottom -= mStyle.paddingV;
+    r.DeflateRect(mStyle.pad.h, mStyle.pad.v);
+    r.bottom -= mStyle.pad.v;
     tZFontPtr pFont = mStyle.Font();
 
 
@@ -192,7 +192,7 @@ void ZWinFolderLabel::MouseOver(int64_t x, std::filesystem::path& subPath, ZRect
     size_t slash = sPath.find('\\');
     do
     {
-        endW = pFont->StringWidth(sPath.substr(0, slash - 1)) + mStyle.paddingH * 2;
+        endW = pFont->StringWidth(sPath.substr(0, slash - 1)) + mStyle.pad.h * 2;
         if (x < endW)
         {
             subPath = sPath.substr(0, slash);
@@ -252,7 +252,7 @@ bool ZWinFolderSelector::Init()
         ChildAdd(mpOpenFolderBtn);
         int64_t nSide = gM;
         ZRect rBtn(nSide, nSide);
-        rBtn = ZGUI::Arrange(rBtn, mrList, ZGUI::RB, mStyle.paddingH, mStyle.paddingV);
+        rBtn = ZGUI::Arrange(rBtn, mrList, ZGUI::RB, mStyle.pad.h, mStyle.pad.v);
         mpOpenFolderBtn->SetArea(rBtn);
         mpOpenFolderBtn->SetVisible();
 

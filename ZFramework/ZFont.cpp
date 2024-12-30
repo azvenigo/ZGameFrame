@@ -264,7 +264,7 @@ int64_t ZFont::StringWidth(const uint8_t* pChar, size_t length)
 
 bool ZFont::DrawText(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, ZGUI::Style* pStyle, ZRect* pClip)
 {
-    ZRect r(ZGUI::Arrange(StringRect(sText), rAreaToDrawTo, pStyle->pos, pStyle->paddingH, pStyle->paddingV));
+    ZRect r(ZGUI::Arrange(StringRect(sText), rAreaToDrawTo, pStyle->pos, pStyle->pad.h, pStyle->pad.v));
     return DrawText(pBuffer, sText, r, &pStyle->look, pClip);
 }
 
@@ -688,7 +688,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
         pStyle = &gStyleGeneralText;
     ZRect rTextLine(rAreaToDrawTo);
     if (pStyle->pos != ZGUI::C)
-        rTextLine.DeflateRect(pStyle->paddingH, pStyle->paddingV);
+        rTextLine.DeflateRect(pStyle->pad.h, pStyle->pad.v);
 
     if (rTextLine.bottom <= rTextLine.top || rTextLine.right <= rTextLine.left)
         return false;
@@ -705,7 +705,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 	case ZGUI::LT:
 	case ZGUI::CT:
 	case ZGUI::RT:
-        rTextLine.top = rAreaToDrawTo.top + pStyle->paddingV;
+        rTextLine.top = rAreaToDrawTo.top + pStyle->pad.v;
 		break;
 	case ZGUI::LC:
 	case ZGUI::C:
@@ -716,7 +716,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 	case ZGUI::LB:
 	case ZGUI::CB:
 	case ZGUI::RB:
-		rTextLine.top = rAreaToDrawTo.bottom - (mFontHeight * nLines) - pStyle->paddingV;
+		rTextLine.top = rAreaToDrawTo.bottom - (mFontHeight * nLines) - pStyle->pad.v;
 		break;
 	}
 
