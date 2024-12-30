@@ -32,9 +32,11 @@ namespace ZGUI
         }
         else if (ARGB_A(style.bgCol) > 0x0f)
         {
-            pDst->Blt(gpGraphicSystem->GetScreenBuffer(), rFill, rFill);
+//            pDst->Blt(gpGraphicSystem->GetScreenBuffer(), rFill, rFill);
             pDst->FillAlpha(style.bgCol, &rFill);
-            pDst->Blur(4, &rFill);
+
+            if (blurBackground > 0)
+                pDst->Blur(blurBackground, &rFill);
         }
 
         // Draw outline in padded area if style specifies

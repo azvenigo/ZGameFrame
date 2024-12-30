@@ -22,12 +22,14 @@ namespace ZGUI
             sText.clear();
             style = {};
             area = {};
-            visible = true;
+            visible = false;
+            blurBackground = 0;
         }
 
         std::string sText;
         Style       style;
         ZRect       area;
+        int64_t     blurBackground;
         bool        visible;
     };
 

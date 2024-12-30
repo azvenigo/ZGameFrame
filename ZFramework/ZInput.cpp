@@ -201,6 +201,7 @@ bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
     {
         mTooltipBox.sText = tooltip;
         mTooltipBox.style = style;
+        mTooltipBox.blurBackground = 4;
         ZRect rTooltip;
         tZFontPtr pTooltipFont = mTooltipBox.style.Font();
         rTooltip = pTooltipFont->StringRect(tooltip);

@@ -261,6 +261,8 @@ bool ZScreenBuffer::PaintToSystem()
     if (!mbRenderingEnabled)
         return false;
 
+    uint64_t start = gTimer.GetUSSinceEpoch();
+
     BITMAPINFO bmpInfo;
     bmpInfo.bmiHeader.biBitCount = 32;
     bmpInfo.bmiHeader.biCompression = BI_RGB;
@@ -289,6 +291,24 @@ bool ZScreenBuffer::PaintToSystem()
         pBits,       // * pixels
         &bmpInfo,                          // BMPINFO
         DIB_RGB_COLORS);                    // Usage
+
+
+    uint64_t end = gTimer.GetUSSinceEpoch();
+
+
+    static uint64_t delay = 0;
+
+    static uint64_t frames = 0;
+    static uint64_t totalTime = 0;
+    delay++;
+
+    if (delay > 100)
+    {
+        frames++;
+        totalTime += (end - start);
+
+        cout << "frames:" << frames << " avg paint time: " << (totalTime) / frames << "\n";
+    }
 
     return true;
 }
