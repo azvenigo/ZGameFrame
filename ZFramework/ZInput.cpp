@@ -120,10 +120,7 @@ void ZInput::Process()
 
 bool ZInput::Paint(ZBuffer* pDst)
 {
-    if (mTooltipBox.visible)
-    {
-        return mTooltipBox.Paint(pDst);
-    }
+    mTooltip.Paint(pDst);
 
     return true;
 }
@@ -159,7 +156,7 @@ void ZInput::CheckForMouseOverNewWindow()
         if (pMouseOverWin)
             pMouseOverWin->OnMouseIn();
 
-        if (mTooltipBox.visible)
+        if (mTooltip.mTextbox.visible)
             ShowTooltip(pMouseOverWin->msTooltip);
     }
 }
@@ -195,19 +192,20 @@ bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
 {
     if (tooltip.empty())
     {
-        mTooltipBox.visible = false;
+        mTooltip.mTextbox.sText = tooltip;
+        mTooltip.mTextbox.visible = false;
     }
     else
     {
-        mTooltipBox.sText = tooltip;
-        mTooltipBox.style = style;
-        mTooltipBox.blurBackground = 4;
+        mTooltip.mTextbox.sText = tooltip;
+        mTooltip.mTextbox.style = style;
+        mTooltip.mTextbox.blurBackground = 2.0;
         ZRect rTooltip;
-        tZFontPtr pTooltipFont = mTooltipBox.style.Font();
+        tZFontPtr pTooltipFont = mTooltip.mTextbox.style.Font();
         rTooltip = pTooltipFont->StringRect(tooltip);
         rTooltip.InflateRect(style.pad.h, style.pad.v);
-        mTooltipBox.area = rTooltip;
-        mTooltipBox.visible = true;
+        mTooltip.mTextbox.area = rTooltip;
+        mTooltip.mTextbox.visible = true;
         toolTipAppear = lastMouseMove;
         UpdateTooltipLocation(lastMouseMove);
     }
@@ -216,10 +214,10 @@ bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
 
 bool ZInput::UpdateTooltipLocation(ZPoint pt)
 {
-    if (!mTooltipBox.visible)
+    if (!mTooltip.mTextbox.visible)
         return true;
 
-    ZRect rTooltip(mTooltipBox.area);
+    ZRect rTooltip(mTooltip.mTextbox.area);
 
     // ensure the tooltip is entirely visible on the window + a little padding
     ZPoint adjustedPt(lastMouseMove.x - rTooltip.Width()/16, lastMouseMove.y + gM);
@@ -233,7 +231,7 @@ bool ZInput::UpdateTooltipLocation(ZPoint pt)
     }
     else
     {*/
-        mTooltipBox.area.MoveRect(adjustedPt);
+    mTooltip.mTextbox.area.MoveRect(adjustedPt);
  //   }
 
     return true;

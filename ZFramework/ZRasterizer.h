@@ -23,8 +23,8 @@ public:
     void    RectToVerts(const ZRect& r, tUVVertexArray& vertexArray);     // returns the default vertex array with LTRB and UVs at 0.0-1.0
     void    RectToVerts(const ZRect& r, tColorVertexArray& vertexArray);     // returns the default vertex array with LTRB
 
-    static uint32_t SampleTexture_ZoomedIn(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, int32_t nSampleSubdivisions);
-    static uint32_t SampleTexture_ZoomedOut(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, int32_t nSampleSubdivisions);
+    static uint32_t SampleTexture_ZoomedIn(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, uint32_t nSampleSubdivisions);
+    static uint32_t SampleTexture_ZoomedOut(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, uint32_t nSampleSubdivisions);
 private:
     // UV
 

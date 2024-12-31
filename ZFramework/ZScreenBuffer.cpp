@@ -51,8 +51,8 @@ bool ZScreenBuffer::Init(int64_t nWidth, int64_t nHeight, ZGraphicSystem* pGraph
 
 
     D3D11_TEXTURE2D_DESC desc = {};
-    desc.Width = nWidth;
-    desc.Height = nHeight;
+    desc.Width = (UINT)nWidth;
+    desc.Height = (UINT)nHeight;
     desc.MipLevels = 1;
     desc.ArraySize = 1;
     desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;  // Matches ARGB layout
@@ -146,8 +146,8 @@ bool ZScreenBuffer::PaintToSystem()
     }
 
     // Assuming your ARGB buffer is stored in `argbBuffer`:
-    UINT height = mSurfaceArea.Height();
-    UINT width = mSurfaceArea.Width();
+    UINT height = (UINT)mSurfaceArea.Height();
+    UINT width = (UINT)mSurfaceArea.Width();
 
     if (width * 4 == mapped.RowPitch)
     {

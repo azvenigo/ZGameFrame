@@ -54,8 +54,8 @@ public:
     ZWin*       mouseOverWin;
     ZWin*       keyboardFocusWin;
 
-//    ZWinLabel*  mpTooltipWin;
-    ZGUI::TextBox mTooltipBox;
+//    ZGUI::TextBox mTooltipBox;
+    ZGUI::ToolTip   mTooltip;
     ZPoint      toolTipAppear;
 
     std::string mClipboardText;

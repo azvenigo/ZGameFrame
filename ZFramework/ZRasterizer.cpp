@@ -425,7 +425,7 @@ bool ZRasterizer::RasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* pTexture, t
 
 
 
-uint32_t ZRasterizer::SampleTexture_ZoomedIn(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, int32_t nSampleSubdivisions)
+uint32_t ZRasterizer::SampleTexture_ZoomedIn(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, uint32_t nSampleSubdivisions)
 {
     uint32_t* pSourcePixels = pTexture->GetPixels();
     int64_t nTextureStride = pTexture->GetArea().Width();
@@ -490,7 +490,7 @@ uint32_t ZRasterizer::SampleTexture_ZoomedIn(ZBuffer* pTexture, double fTextureP
     return nFinalCol;
 }
 
-uint32_t ZRasterizer::SampleTexture_ZoomedOut(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, int32_t nSampleSubdivisions)
+uint32_t ZRasterizer::SampleTexture_ZoomedOut(ZBuffer* pTexture, double fTexturePixelU, double fTexturePixelV, double fTexturePixelDU, double fTexturePixelDV, uint32_t nSampleSubdivisions)
 {
     uint32_t* pSourcePixels = pTexture->GetPixels();
     int64_t nTextureStride = pTexture->GetArea().Width();
@@ -510,8 +510,8 @@ uint32_t ZRasterizer::SampleTexture_ZoomedOut(ZBuffer* pTexture, double fTexture
     uint64_t nFinalG = 0;
     uint64_t nFinalB = 0;
 
-    double minIndex = -nSampleSubdivisions/2.0;
-    double maxIndex = nSampleSubdivisions/2.0;
+    double minIndex = (-(double)nSampleSubdivisions)/2.0;
+    double maxIndex = (double)nSampleSubdivisions/2.0;
 
     // Loop over the subdivisions to accumulate samples
     uint32_t nSamples = 0;
@@ -638,12 +638,12 @@ bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* 
     SetupRasterization(pDestination, vertexArray, rDest, pClip, fClipLeft, fClipRight, nTopScanLine, nBottomScanLine);
 
 
-    float screenDist = sqrt(
+    float screenDist = (float)sqrt(
         pow(vertexArray[0].x - vertexArray[1].x, 2) +
         pow(vertexArray[0].y - vertexArray[1].y, 2)
     );
 
-    float textureDist =  fTextureW * sqrt(
+    float textureDist = (float)fTextureW * (float)sqrt(
         pow(vertexArray[0].u - vertexArray[1].u, 2) +
         pow(vertexArray[0].v - vertexArray[1].v, 2)
     );

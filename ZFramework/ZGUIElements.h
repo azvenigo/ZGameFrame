@@ -23,15 +23,34 @@ namespace ZGUI
             style = {};
             area = {};
             visible = false;
-            blurBackground = 0;
+            blurBackground = 0.0;
         }
 
         std::string sText;
         Style       style;
         ZRect       area;
-        int64_t     blurBackground;
+        float       blurBackground;
         bool        visible;
     };
+
+
+    class ToolTip 
+    {
+    public:
+        ToolTip();
+        bool    Paint(ZBuffer* pDst);
+
+        TextBox mTextbox;
+
+        // to determine if textbox needs to be re-drawn
+        ZBuffer renderedImage;
+        ZRect renderedArea; 
+        std::string renderedText;
+    };
+
+
+
+
 
     typedef std::map<std::string, class SVGImageBox> tSVGImageMap; // named SVGImageBoxes
 

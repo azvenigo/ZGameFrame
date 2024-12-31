@@ -11,6 +11,7 @@
 #include "lunasvg.h"
 #include "mio/mmap.hpp"
 #include <intrin.h>
+#include <omp.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -367,13 +368,13 @@ bool ZBuffer::SaveBuffer(const std::string& sName)
 
     int ret = 0;
     if (sExt == ".png")
-        ret = stbi_write_png(sName.c_str(), w, h, 4, pSwizzled,w * 4);
+        ret = stbi_write_png(sName.c_str(), (int)w, (int)h, 4, pSwizzled,(int) (w * 4));
     else if (sExt == ".bmp")
-        ret = stbi_write_bmp(sName.c_str(), w, h, 4, pSwizzled);
+        ret = stbi_write_bmp(sName.c_str(), (int)w, (int)h, 4, pSwizzled);
     else if (sExt == ".tga")
-        ret = stbi_write_bmp(sName.c_str(), w, h, 4, pSwizzled);
+        ret = stbi_write_bmp(sName.c_str(), (int)w, (int)h, 4, pSwizzled);
     else if (sExt == ".jpg")
-        ret = stbi_write_jpg(sName.c_str(), w, h, 4, pSwizzled, 80);
+        ret = stbi_write_jpg(sName.c_str(), (int)w, (int)h, 4, pSwizzled, 80);
     else
     {
         ZERROR("ERROR: Unsupported image extension:", sName);
@@ -2011,7 +2012,6 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
     temp.Blt(this, rArea, temp.GetArea(), nullptr, ZBuffer::eAlphaBlendType::kAlphaSource);
 
 
-
     // Calculate the size of the kernel based on sigma (standard deviation)
     int64_t kernelSize = int64_t(6 * sigma) + 1;
     if (kernelSize % 2 == 0) 
@@ -2039,6 +2039,8 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
     }
 
     // Perform horizontal convolution
+#pragma omp parallel for
+//#pragma omp parallel num_threads(8)
     for (int64_t y = rArea.top; y < rArea.bottom; y++)
     {
         for (int64_t x = rArea.left; x < rArea.right; x++)
@@ -2050,15 +2052,10 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
                 int64_t newX = x + i;
                 if (newX < rArea.left)
                     continue;
-                /*                {
-                                    newX = 0;
-                                }*/
+
                 else if (newX >= rArea.right)
                     continue;
-/*                {
-                    newX = w - 1;
-                }
-*/
+
                 uint32_t pixel = mpPixels[y * srcStride + newX];
                 float weight = kernel[i + kernelRadius];
 
@@ -2078,8 +2075,11 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
     }
 
     // Perform vertical convolution and store the result in the output buffer
+#pragma omp parallel for
+//#pragma omp parallel num_threads(8)
     for (int64_t x = rArea.left; x < rArea.right; x++)
     {
+
         for (int64_t y = rArea.top; y < rArea.bottom; y++)
         {
             float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
@@ -2092,7 +2092,6 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
                 //                    newY = rArea.top;
                 else if (newY >= rArea.bottom)
                     continue;
-//                    newY = rArea.bottom - 1;
 
                 int64_t tempY = newY - rArea.top;
                 int64_t tempX = x - rArea.left;

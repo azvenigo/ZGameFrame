@@ -117,7 +117,7 @@ void ZGraphicSystem::Shutdown()
 #ifdef _WIN64
 
         ShutdownD3D();
-        if (mD3DContext);
+        if (mD3DContext)
             mD3DContext->Release();
         mD3DContext = nullptr;
 
@@ -151,8 +151,8 @@ bool ZGraphicSystem::InitD3D()
 
 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    swapChainDesc.Width = mrSurfaceArea.Width();
-    swapChainDesc.Height = mrSurfaceArea.Height();
+    swapChainDesc.Width = (UINT)mrSurfaceArea.Width();
+    swapChainDesc.Height = (UINT)mrSurfaceArea.Height();
     //swapChainDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; // HDR format
     swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -179,7 +179,7 @@ bool ZGraphicSystem::InitD3D()
 
         DXGI_HDR_METADATA_HDR10 hdr10 = {};
         hdr10.MaxMasteringLuminance = 1000;    // Display's max brightness (cd/m²)
-        hdr10.MinMasteringLuminance = 0.1;     // Display's min brightness (cd/m²)
+        hdr10.MinMasteringLuminance = 0;     // Display's min brightness (cd/m²)
         hdr10.MaxContentLightLevel = 1000;     // Peak brightness of content
         hdr10.MaxFrameAverageLightLevel = 500; // Average brightness of content
 
@@ -262,7 +262,7 @@ bool ZGraphicSystem::HandleModeChanges(ZRect& r)
         mRenderTargetView->Release();
     mRenderTargetView = nullptr;
 
-    mSwapChain->ResizeBuffers(2, r.Width(), r.Height(), DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+    mSwapChain->ResizeBuffers(2, (UINT)r.Width(), (UINT)r.Height(), DXGI_FORMAT_B8G8R8A8_UNORM, 0);
 
     HRESULT hr = mSwapChain->GetBuffer(0, IID_PPV_ARGS(&mBackBuffer));
     if (FAILED(hr))

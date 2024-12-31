@@ -35,7 +35,7 @@ namespace ZGUI
 //            pDst->Blt(gpGraphicSystem->GetScreenBuffer(), rFill, rFill);
             pDst->FillAlpha(style.bgCol, &rFill);
 
-            if (blurBackground > 0)
+            if (blurBackground > 0.0)
                 pDst->Blur(blurBackground, &rFill);
         }
 
@@ -52,6 +52,40 @@ namespace ZGUI
         for (auto& t : textBoxMap)
             t.second.Paint(pDst);
     }
+
+
+    ToolTip::ToolTip()
+    {
+    }
+
+    bool ToolTip::Paint(ZBuffer* pDst)
+    {
+        if (!mTextbox.visible || mTextbox.sText.empty())
+            return true;
+
+        // If the rendered image needs to be re-rendered, do so here
+        if (mTextbox.area != renderedArea || mTextbox.sText != renderedText)
+        {
+            mTextbox.Paint(pDst);
+            renderedImage.Init(mTextbox.area.Width(), mTextbox.area.Height());
+            renderedImage.Blt(pDst, mTextbox.area, renderedImage.GetArea());    // cache
+
+            renderedArea = mTextbox.area;
+            renderedText = mTextbox.sText;
+            cout << "rendering tooltip x:" << mTextbox.area.left << " y:" << mTextbox.area.top << "\n";
+            return true;
+        }
+
+        // just draw the 
+        pDst->Blt(&renderedImage, renderedImage.GetArea(), renderedArea);
+
+        return true;
+    }
+
+
+
+
+
 
 
     bool SVGImageBox::Load(const std::string& sFilename)
