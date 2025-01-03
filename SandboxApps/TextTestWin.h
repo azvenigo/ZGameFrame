@@ -22,6 +22,7 @@ public:
 
 private:
     void        UpdateFontByParams();
+    void        UpdateText();
     bool        LoadFont();
     bool        SaveFont();
 
@@ -34,7 +35,8 @@ private:
 
     tZBufferPtr  mpBackground;
 
-    std::string msText;
+    ZGUI::TextBox mTextBox;
+    int64_t         mShadowSpread;
 
     ZGUI::Palette mPalette;
 };

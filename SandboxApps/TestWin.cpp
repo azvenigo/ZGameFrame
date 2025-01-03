@@ -98,6 +98,25 @@ bool TestWin::Init()
     ChildAdd(pForm);*/
 
 
+    textBox.sText = "Cool Beans!";
+    textBox.style = gStyleCaption;
+
+    textBox.style.look.colTop = 0xffffff00;
+    textBox.style.look.colBottom = 0xffffff00;
+
+    textBox.style.fp.sFacename = "Stencil";
+    textBox.style.fp.nWeight = 800;
+    textBox.style.fp.nTracking = 10;
+    textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
+    textBox.style.fp.nScalePoints = 5000;
+    textBox.blurBackground = 2.0;
+    textBox.dropShadowColor = 0x880000ff;
+    textBox.dropShadowOffset = ZPoint(25, 25);
+    textBox.dropShadowBlur = 20.0;
+    textBox.area.SetRect(0, 0, 3000, 2000);
+
+
+
 
     return ZWin::Init();
 }
@@ -128,7 +147,21 @@ bool TestWin::Paint()
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
-    mpSurface.get()->Fill(0xff003300);
+    int64_t nSide = 64;
+    for (int64_t y = 0; y < mAreaLocal.bottom; y += nSide)
+    {
+        for (int64_t x = 0; x < mAreaLocal.right; x += nSide)
+        {
+            uint32_t nCol = 0xffaaaaaa;
+            if (((x/nSide) + (y/nSide) % 2) % 2)
+                nCol = 0xffeeeeee;
+            ZRect r(x, y, x + nSide, y + nSide);
+            mpSurface.get()->Fill(nCol, &r);
+        }
+    }
+
+
+    textBox.Paint(mpSurface.get());
 
     return ZWin::Paint();
 }

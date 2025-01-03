@@ -485,7 +485,7 @@ void ZFont::DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t n
                 if (nAlpha > 0xf0 && nDrawAlpha > 0xf0)
                     *pDest = nCol;
                 else
-				    *pDest = COL::AlphaBlend_Col2Alpha(nCol, *pDest, nAlpha);
+				    *pDest = COL::AlphaBlend_AddAlpha(nCol, *pDest, nAlpha);
 
 				// Advance the destination, wrapping around if necessary
 				pDest++;
@@ -559,7 +559,7 @@ void ZFont::DrawCharClipped(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t 
                     if (nAlpha > 0xf0 && nDrawAlpha > 0xf0)
                         *pDest = nCol;
                     else
-                        *pDest = COL::AlphaBlend_Col2Alpha(nCol, *pDest, nAlpha);
+                        *pDest = COL::AlphaBlend_AddAlpha(nCol, *pDest, nAlpha);
                 }
 
 				// Advance the destination, wrapping around if necessary
@@ -634,7 +634,7 @@ void ZFont::DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>&
 			while (nNumPixels > 0)
 			{
                 if (rClip.PtInRect(nDestX, nDestY))
-                    *pDest = COL::AlphaBlend_Col2Alpha(gradient[nScanLine], *pDest, nAlpha);
+                    *pDest = COL::AlphaBlend_AddAlpha(gradient[nScanLine], *pDest, nAlpha);
 
 				// Advance the destination, wrapping around if necessary
 				pDest++;
@@ -1138,6 +1138,8 @@ bool ZDynamicFont::Init(const ZFontParams& params, bool bInitGlyphs, bool bKearn
 
 
     SelectObject(mhWinTargetDC, mhWinTargetBitmap);
+
+
     SelectFont(mhWinTargetDC, mhWinFont);
     GetTextMetricsA(mhWinTargetDC, &mWinTextMetrics);
 

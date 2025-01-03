@@ -24,12 +24,23 @@ namespace ZGUI
             area = {};
             visible = false;
             blurBackground = 0.0;
+
+            dropShadowColor = 0x00000000;
+            dropShadowBlur = 0.0;
         }
 
         std::string sText;
         Style       style;
         ZRect       area;
         float       blurBackground;
+
+        ZPoint      dropShadowOffset;
+        uint32_t    dropShadowColor;    // if alpha of dropshadow is not 0, render a drop shadow
+        float       dropShadowBlur;
+
+
+        ZBuffer     renderedBuf;
+
         bool        visible;
     };
 
