@@ -224,7 +224,6 @@ namespace COL
 
     inline uint32_t AlphaBlend_Col1Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
     {
-        nBlend = nBlend * ARGB_A(nCol1) >> 8;
         uint32_t nInverseAlpha = 255 - nBlend;
         // Use Alpha value for the destination color (nCol1)
         // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
@@ -237,7 +236,6 @@ namespace COL
     }
     inline uint32_t AlphaBlend_Col2Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
     {
-        nBlend = nBlend * ARGB_A(nCol1) >> 8;
         uint32_t nInverseAlpha = 255 - nBlend;
         // Use Alpha value for the destination color (nCol2)
         // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
@@ -250,9 +248,12 @@ namespace COL
     }
     inline uint32_t AlphaBlend_AddAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
     {
-        nBlend = nBlend * ARGB_A(nCol1) >> 8;
+        nBlend = (nBlend * ARGB_A(nCol1)) >> 8;
         uint32_t nInverseAlpha = 255 - nBlend;
-        uint32_t nFinalA = (ARGB_A(nCol1) + ARGB_A(nCol2));
+
+        uint32_t bgAlpha = (nInverseAlpha * ARGB_A(nCol2)) >> 8;
+
+        uint32_t nFinalA = (nBlend + bgAlpha);
         if (nFinalA > 0x000000ff)
             nFinalA = 0x000000ff;
         // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2

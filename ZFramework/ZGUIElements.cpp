@@ -8,7 +8,7 @@ namespace ZGUI
 {
     bool TextBox::Paint(ZBuffer* pDst)
     {
-        if (sText.empty()/* || !visible*/)
+        if (sText.empty() || !visible || style.Uninitialized())
             return true;
 
         assert(pDst);
@@ -23,7 +23,7 @@ namespace ZGUI
         if (style.pos == ZGUI::Fit)
             style.fp.nScalePoints = ZFontParams::ScalePoints(rDraw.Height()/2);
 
-        rDraw = style.Font()->Arrange(rDraw, sText, style.pos);
+        rDraw = style.Font()->Arrange(rDraw, sText, style.pos, style.pad.h);
         ZRect rLabel(rDraw.Width(), rDraw.Height());
 
 
@@ -55,9 +55,11 @@ namespace ZGUI
         }
 
 
-        if (renderedBuf.GetArea().Width() != rDraw.Width() || renderedBuf.GetArea().Height() != rDraw.Height())
+        if (renderedBuf.GetArea().Width() != rDraw.Width() || renderedBuf.GetArea().Height() != rDraw.Height() || renderedText != sText || renderedStyle != style)
         {
             cout << "Rendering textbox\n";
+            renderedText = sText;
+            renderedStyle = style;
 
             renderedBuf.Init(rDraw.Width(), rDraw.Height());
 
@@ -183,7 +185,7 @@ namespace ZGUI
     {
         const std::lock_guard<std::recursive_mutex> lock(mDocMutex);
 
-        if (mSVGDoc == nullptr /*|| !visible*/)
+        if (mSVGDoc == nullptr || !visible)
         {
             return true;
         }

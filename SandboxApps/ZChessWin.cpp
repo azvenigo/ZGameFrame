@@ -544,7 +544,6 @@ ZChessWin::ZChessWin()
 {
     msWinName = "chesswin" + gMessageSystem.GenerateUniqueTargetName();
 
-    mpSymbolicFont = nullptr;
     mDraggingPiece = 0;
     mDraggingSourceGrid.Set(-1, -1);
     mHiddenSquare.Set(-1, -1);
@@ -692,24 +691,6 @@ bool ZChessWin::Shutdown()
 
 void ZChessWin::UpdateSize()
 {
-    if (mpSymbolicFont)
-        delete mpSymbolicFont;
-    mpSymbolicFont = new ZDynamicFont();
-    mpSymbolicFont->Init(ZFontParams("MS Gothic", ZFontParams::ScalePoints(mnPieceHeight), 400, mnPieceHeight / 4, true), false, false);
-    mpSymbolicFont->GenerateSymbolicGlyph('K', 9812);
-    mpSymbolicFont->GenerateSymbolicGlyph('Q', 9813);
-    mpSymbolicFont->GenerateSymbolicGlyph('R', 9814);
-    mpSymbolicFont->GenerateSymbolicGlyph('B', 9815);
-    mpSymbolicFont->GenerateSymbolicGlyph('N', 9816);
-    mpSymbolicFont->GenerateSymbolicGlyph('P', 9817);
-
-    mpSymbolicFont->GenerateSymbolicGlyph('k', 9818);
-    mpSymbolicFont->GenerateSymbolicGlyph('q', 9819);
-    mpSymbolicFont->GenerateSymbolicGlyph('r', 9820);
-    mpSymbolicFont->GenerateSymbolicGlyph('b', 9821);
-    mpSymbolicFont->GenerateSymbolicGlyph('n', 9822);
-    mpSymbolicFont->GenerateSymbolicGlyph('p', 9823);
-
     uint32_t whiteCol = mPalette.mColorMap[kWhiteCol].col;
     uint32_t blackCol = mPalette.mColorMap[kBlackCol].col;
 
@@ -1567,51 +1548,6 @@ bool ChessPiece::LoadImage(std::string path, int64_t nSize, uint32_t col)
     return true;
 }
 
-/*
-bool ChessPiece::GenerateImageFromSymbolicFont(char c, int64_t nSize, ZDynamicFont* pFont, bool bOutline, uint32_t whiteCol, uint32_t blackCol)
-{
-    mpImage.reset(new ZBuffer());
-    mpImage->Init(nSize, nSize);
-    mpImage->mbHasAlphaPixels = true;
-
-    std::string s(&c, 1);
-
-    ZRect rSquare(mpImage->GetArea());
-
-    uint32_t nCol = whiteCol;
-    uint32_t nOutline = 0xff000000;
-    if (c == 'q' || c == 'k' || c == 'r' || c == 'n' || c == 'b' || c == 'p')
-    {
-        nCol = blackCol;
-        nOutline = 0xffffffff;
-    }
-
-    ZGUI::Style style;
-    style.look = ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, nCol, nCol);
-    style.pos = ZGUI::Center;
-
-    if (bOutline)
-    {
-        ZGUI::Style outlineStyle(style);
-        outlineStyle.look = ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, nOutline, nOutline);
-
-
-        int64_t nOffset = nSize / 64;
-        ZRect rOutline(rSquare);
-        rOutline.OffsetRect(-nOffset, -nOffset);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, &outlineStyle);
-        rOutline.OffsetRect(nOffset * 2, 0);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, &outlineStyle);
-        rOutline.OffsetRect(0, nOffset * 2);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, &outlineStyle);
-        rOutline.OffsetRect(-nOffset * 2, 0);
-        pFont->DrawTextParagraph(mpImage.get(), s, rOutline, &outlineStyle);
-    }
-
-    pFont->DrawTextParagraph(mpImage.get(), s, rSquare, &style);
-    return true;
-}
-*/
 
 void ZChessWin::ClearHistory()
 {

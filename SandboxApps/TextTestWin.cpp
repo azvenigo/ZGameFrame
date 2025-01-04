@@ -121,7 +121,7 @@ bool TextTestWin::Init()
 
     mbEnableKerning = true;
 
-    ZDynamicFont* pNewFont = new ZDynamicFont();
+    ZFont* pNewFont = new ZFont();
     pNewFont->Init(mCustomFontParams);
     pNewFont->SetEnableKerning(mbEnableKerning);
     mpFont.reset(pNewFont);
@@ -370,7 +370,7 @@ void TextTestWin::UpdateText()
 void TextTestWin::UpdateFontByParams()
 {
 #ifdef _WIN64
-    ZDynamicFont* pNewFont = new ZDynamicFont();
+    ZFont* pNewFont = new ZFont();
     mCustomFontParams.nScalePoints = ZFontParams::ScalePoints(mCustomFontHeight);
     pNewFont->Init(mCustomFontParams);
 

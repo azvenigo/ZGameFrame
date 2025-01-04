@@ -43,7 +43,6 @@ ImageContest::ImageContest()
     mpRatedImagesStrip = nullptr;
     mToggleUIHotkey = 0;
     mbShowUI = true;
-    //mpSymbolicFont = nullptr;
     mState = kNone;
 }
  
@@ -71,8 +70,6 @@ void ImageContest::HandleQuitCommand()
     gMessageSystem.Post(ZMessage("set_visible", GetTopWindow()->GetChildWindowByWinName("ZWinImageViewer"), "visible", "1"));
     gMessageSystem.Post(ZMessage("kill_child", GetTopWindow(), "name", GetTargetName()));
     gMessageSystem.Post(ZMessage("set_focus", "target", "ZWinImageViewer"));
-
-//    gMessageSystem.Post("quit_app_confirmed");
 }
 
 void ImageContest::UpdateUI()
@@ -136,23 +133,6 @@ bool ImageContest::OnMouseDownL(int64_t x, int64_t y)
         PickRandomPair();
         UpdateUI();
     }
-
-/*    if (mpWinImage[kLeft]->GetArea().PtInRect(x, y))
-    {
-        if (mState == kSelectingFromPair)
-        {
-            return SelectWinner(kLeft);
-        }
-        else
-        {
-            PickRandomPair();
-            UpdateUI();
-        }
-    }
-    else if (mpWinImage[kRight]->GetArea().PtInRect(x, y))
-    {
-        return SelectWinner(kRight);
-    }*/
 
     return ZWin::OnMouseDownL(x, y);
 }
@@ -254,8 +234,6 @@ bool ImageContest::HandleMessage(const ZMessage& message)
 
         tZBufferPtr backgroundBuf(new ZBuffer());
         backgroundBuf->Init(grFullArea.Width(), grFullArea.Height());
-       //RenderToBuffer(backgroundBuf, grFullArea, grFullArea, this);
-       //gpGraphicSystem->GetScreenBuffer()->RenderVisibleRectsToBuffer(backgroundBuf.get(), grFullArea);
         backgroundBuf->Blt(gpGraphicSystem->GetScreenBuffer(), grFullArea, grFullArea);
 
        backgroundBuf->FillAlpha(0xaa000000);
@@ -269,8 +247,6 @@ bool ImageContest::HandleMessage(const ZMessage& message)
         }
 
         // add zoom animation
-
-
 
         ZRect rImageArea(mAreaLocal);
         if (mpPanel && mpPanel->mbVisible)
@@ -302,8 +278,6 @@ bool ImageContest::HandleMessage(const ZMessage& message)
 
         Sprintf(end.msCompletionMessage, "invalidate;children=1;target=%s", GetTopWindow()->GetTargetName().c_str());
         pImage->AddTransformation(end, 333);
-//        pImage->AddTransformation(lastTrans, 120);
-
         gAnimator.AddObject(pImage);
 
 
@@ -535,12 +509,12 @@ void ImageContest::UpdateControlPanel()
     int64_t nGroupSide = nControlPanelSide - gSpacer * 4;
     
 
-    mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", 1000, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+/*    mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", 1000, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     ZDynamicFont* pFont = (ZDynamicFont*)mSymbolicStyle.Font().get();
     
     pFont->GenerateSymbolicGlyph('F', 0x2750);
     pFont->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
-
+    */
     
     ZRect rPanelArea(mAreaLocal.left, mAreaLocal.top, mAreaLocal.right, mAreaLocal.top + nControlPanelSide);
     //mpPanel->mbHideOnMouseExit = true; // if UI is toggled on, then don't hide panel on mouse out

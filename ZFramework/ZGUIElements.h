@@ -22,7 +22,7 @@ namespace ZGUI
             sText.clear();
             style = {};
             area = {};
-            visible = false;
+            visible = true;
             blurBackground = 0.0;
 
             dropShadowColor = 0x00000000;
@@ -40,6 +40,8 @@ namespace ZGUI
 
 
         ZBuffer     renderedBuf;
+        std::string renderedText;
+        Style       renderedStyle;
 
         bool        visible;
     };

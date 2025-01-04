@@ -73,7 +73,6 @@ protected:
     ZWinControlPanel*       mpPanel;
     std::recursive_mutex    mPanelMutex;
 
-//    tZFontPtr               mpSymbolicFont;
     ZGUI::Style             mSymbolicStyle;
 
     ZWinImage*              mpWinImage[2];  // left and right
@@ -90,7 +89,6 @@ protected:
     uint32_t                mToggleUIHotkey;
 
     bool                    mbShowUI;
-//    ImageMeta               mMeta;
     tImageMetaList          mCurrentFolderImageMeta;
     ZWinBtn*                mpChooseBtn[2];
 
