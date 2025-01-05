@@ -211,7 +211,7 @@ public:
     }
 
     int32_t         GetSpaceBetweenChars(uint8_t c1, uint8_t c2);
-    ZRect           Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t nPadding = 0);
+    ZRect           Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t h_padding = 0, int64_t v_padding = 0);
 	int64_t         StringWidth(const std::string& sText);
     ZRect           StringRect(const std::string& sText);
     ZRect           StringRect(const std::string& sText, int64_t nLineWidth);                                   // returns the rectangle required to fully render a multi-line string given a width

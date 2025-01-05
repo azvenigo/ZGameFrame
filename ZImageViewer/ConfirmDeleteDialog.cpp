@@ -29,7 +29,7 @@ bool ConfirmDeleteDialog::Init()
         ZWinLabel* pLabel = new ZWinLabel();
         pLabel->msText = msCaption;
 
-        ZRect rLabel = gStyleCaption.Font()->Arrange(mAreaLocal, pLabel->msText, ZGUI::CT, gSpacer);
+        ZRect rLabel = gStyleCaption.Font()->Arrange(mAreaLocal, pLabel->msText, ZGUI::CT, gSpacer, gSpacer);
 
         pLabel->SetArea(rLabel);
         pLabel->mStyle = gStyleCaption;

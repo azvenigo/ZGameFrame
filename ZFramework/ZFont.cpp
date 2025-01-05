@@ -253,6 +253,9 @@ bool ZFont::SaveFont(const string& sFilename)
 
 int32_t ZFont::GetSpaceBetweenChars(uint8_t c1, uint8_t c2)
 {
+    if (c1 < 32 || c2 < 32)
+        return 0;
+
     if (mbEnableKerning)
     {
         if (mCharDescriptors[c1].nCharWidth == 0)
@@ -751,13 +754,13 @@ ZRect ZFont::StringRect(const std::string& sText, int64_t nLineWidth)
 
 // This function helps format text by returning a rectangle where the text should be output
 // It will not clip, however... That should be done by the caller if necessary
-ZRect ZFont::Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t nPadding)
+ZRect ZFont::Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t h_padding, int64_t v_padding)
 {
 //	ZRect rText(0,0, StringWidth(sText), mFontHeight);
     ZRect rText(StringRect(sText, rArea.Width()));
-    rText.InflateRect(nPadding, nPadding);
+    rText.InflateRect(h_padding, v_padding);
 
-    return ZGUI::Arrange(rText, rArea, pos, nPadding, nPadding);
+    return ZGUI::Arrange(rText, rArea, pos, h_padding, v_padding);
 }
 
 bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaToDrawTo, ZGUI::Style* pStyle, ZRect* pClip)
@@ -1292,18 +1295,18 @@ bool ZFont::ExtractChar(uint8_t c)
         int64_t nCharWidth = rExtents.right - rExtents.left;
         int64_t nPadding = (mnWidestCharacterWidth - nCharWidth) / 2;
 
-        rExtents.left = rExtents.left - nPadding;
+        rExtents.left -= nPadding;
         rExtents.right = rExtents.left + mnWidestCharacterWidth;
-        ZASSERT(rExtents.left > 0 && rExtents.right < mrScratchArea.right);
+        ZASSERT(rExtents.left >= 0 && rExtents.right < mrScratchArea.right);
     }
     else if (c >= '0' && c <= '9')  // otherwise numbers use fixed width based on their own widest char
     {
-        assert(mnWidestNumberWidth > 0);         // need to have this one already.....may need to look into this requirement
         int64_t nNumWidth = rExtents.right - rExtents.left;
         int64_t nPadding = (mnWidestNumberWidth - nNumWidth) / 2;
 
-        rExtents.left = rExtents.left - nPadding;
+        rExtents.left -= nPadding;
         rExtents.right = rExtents.left + mnWidestNumberWidth;
+        ZASSERT(rExtents.left >= 0 && rExtents.right < mrScratchArea.right);
     }
 
     
@@ -1372,15 +1375,14 @@ int32_t ZFont::FindWidestCharacterWidth()
         r.bottom = (LONG)mrScratchArea.bottom;
 
         SelectObject(mhWinTargetDC, mhWinTargetBitmap);
-        SetBkMode(mhWinTargetDC, TRANSPARENT);
-        BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int)mrScratchArea.Width(), (int)mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
+//        SetBkMode(mhWinTargetDC, TRANSPARENT);
+//        BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int)mrScratchArea.Width(), (int)mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
 
         SelectFont(mhWinTargetDC, mhWinFont);
-        ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_CENTER);
+        ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_CENTER | DT_CALCRECT);
 
-        ZRect rExtents = FindCharExtents();
-        if (rExtents.Width() > nWidest)
-            nWidest = (int)rExtents.Width();
+        if (nWidest < r.right - r.left)
+            nWidest = r.right - r.left;
     }
 
     return nWidest;
@@ -1399,15 +1401,14 @@ int32_t ZFont::FindWidestNumberWidth()
         r.bottom = (LONG) mrScratchArea.bottom;
 
         SelectObject(mhWinTargetDC, mhWinTargetBitmap);
-        SetBkMode(mhWinTargetDC, TRANSPARENT);
-        BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int) mrScratchArea.Width(), (int) mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
+//        SetBkMode(mhWinTargetDC, TRANSPARENT);
+//        BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int) mrScratchArea.Width(), (int) mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
 
         SelectFont(mhWinTargetDC, mhWinFont);
-        ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_CENTER);
+        ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_CENTER | DT_CALCRECT);
 
-        ZRect rExtents = FindCharExtents();
-        if (rExtents.Width() > nWidest)
-            nWidest = (int) rExtents.Width();
+        if (nWidest < r.right - r.left)
+            nWidest = r.right - r.left;
     }
 
     return nWidest;
@@ -1416,13 +1417,18 @@ int32_t ZFont::FindWidestNumberWidth()
 
 bool ZFont::GenerateGlyph(uint8_t c)
 {
+    if (c < 32)
+        return true;
+
     const std::lock_guard<std::mutex> lock(mGenerateGlyph);
 
     if (mCharDescriptors[c].nCharWidth > 0)
         return true;
 
+
+    DWORD overhang = mFontHeight; // indent by a significant amount to allow space for left overhang
     RECT r;
-    r.left = 0;
+    r.left = overhang;
     r.top = 0;
     r.right = (LONG) mrScratchArea.right;
     r.bottom = (LONG) mrScratchArea.bottom;
@@ -1431,7 +1437,7 @@ bool ZFont::GenerateGlyph(uint8_t c)
     BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int) mrScratchArea.Width(), (int) mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
 
     SelectFont(mhWinTargetDC, mhWinFont);
-    int nHeightReturned = ::DrawTextA(mhWinTargetDC, (LPCSTR) &c, 1, &r, DT_TOP|DT_CENTER);
+    ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_LEFT);
 
     if (c == ' ')
     {
@@ -1463,11 +1469,24 @@ bool ZFont::RetrieveKerningPairs()
     DWORD nResult = GetKerningPairs(mhWinTargetDC, nPairs, pKerningPairArray);
 
 
+
+    if (nPairs > 0)
+    {
+        // If pairs were retrieved, initialize all to 0
+        for (int first = 0; first < kMaxChars; first++)
+        {
+            for (int second = 0; second < kMaxChars; second++)
+            {
+                mCharDescriptors[first].kerningArray[second] = 0;
+            }
+        }
+    }
+
     for (int64_t i = 0; i < nPairs; i++)
     {
         uint8_t cFirst = (uint8_t) pKerningPairArray[i].wFirst;
         uint8_t cSecond = (uint8_t) pKerningPairArray[i].wSecond;
-        int16_t nKern = pKerningPairArray[i].iKernAmount-2;
+        int16_t nKern = pKerningPairArray[i].iKernAmount;
 
         if (cFirst > 0 && cSecond > 0)
         {

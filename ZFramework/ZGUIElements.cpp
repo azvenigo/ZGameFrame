@@ -23,7 +23,7 @@ namespace ZGUI
         if (style.pos == ZGUI::Fit)
             style.fp.nScalePoints = ZFontParams::ScalePoints(rDraw.Height()/2);
 
-        rDraw = style.Font()->Arrange(rDraw, sText, style.pos, style.pad.h);
+        rDraw = style.Font()->Arrange(rDraw, sText, style.pos, style.pad.h, style.pad.v);
         ZRect rLabel(rDraw.Width(), rDraw.Height());
 
 
@@ -32,22 +32,22 @@ namespace ZGUI
         {
             if (dropShadowOffset.x > 0)
             {
-                rDraw.right += (dropShadowOffset.x + dropShadowBlur);
+                rDraw.right += (dropShadowOffset.x + (int64_t)dropShadowBlur);
             }
             else
             {
-                int64_t offset = (dropShadowOffset.x - dropShadowBlur);
+                int64_t offset = (dropShadowOffset.x - (int64_t)dropShadowBlur);
                 rLabel.OffsetRect(-offset, 0);
                 rDraw.left += offset;
             }
 
             if (dropShadowOffset.y > 0)
             {
-                rDraw.bottom += (dropShadowOffset.y + dropShadowBlur);
+                rDraw.bottom += (dropShadowOffset.y + (int64_t)dropShadowBlur);
             }
             else
             {
-                int64_t offset = (dropShadowOffset.y - dropShadowBlur);
+                int64_t offset = (dropShadowOffset.y - (int64_t)dropShadowBlur);
                 rLabel.OffsetRect(0, -offset);
                 rDraw.top += offset;
                 
@@ -62,6 +62,7 @@ namespace ZGUI
             renderedStyle = style;
 
             renderedBuf.Init(rDraw.Width(), rDraw.Height());
+            renderedBuf.mbHasAlphaPixels = true;
 
             // Fill area if background style specifies
             if (ARGB_A(style.bgCol) > 0xf0)
@@ -70,13 +71,23 @@ namespace ZGUI
             }
             else if (ARGB_A(style.bgCol) > 0x0f)
             {
-                renderedBuf.FillAlpha(style.bgCol);
-
                 if (blurBackground > 0.0)
                 {
-                    renderedBuf.Blt(pDst, renderedBuf.GetArea(), rDraw);
-                    renderedBuf.Blur(blurBackground);
+                    renderedBuf.CopyPixels(pDst, rDraw, renderedBuf.GetArea());
+                    uint32_t* pStart = renderedBuf.mpPixels;
+                    uint32_t* pEnd = pStart + renderedBuf.GetArea().Width() * renderedBuf.GetArea().Height();
+                    while (pStart < pEnd)
+                    {
+                        *pStart = (*pStart | 0xff000000); // all alpha values to full opaque
+                        pStart++;
+                    }
+
+
+                    renderedBuf.Blur(blurBackground, &rLabel);
+                    renderedBuf.FillAlpha(style.bgCol, &rLabel);
                 }
+                else
+                    renderedBuf.Fill(style.bgCol);
             }
             else
                 renderedBuf.Fill(0);
@@ -94,7 +105,7 @@ namespace ZGUI
 
                 ZRect rShadow(rLabel);
                 rShadow.OffsetRect(dropShadowOffset);
-                shadowTemp.Blt(&renderedBuf, rLabel, rShadow);
+                shadowTemp.Blt(&renderedBuf, rLabel, rShadow, 0, ZBuffer::kAlphaSource);
 
 /*                uint8_t a;
                 uint32_t h;
@@ -108,7 +119,7 @@ namespace ZGUI
                 uint32_t* pEnd = pStart + shadowTemp.GetArea().Width() * shadowTemp.GetArea().Height();
                 while (pStart < pEnd)
                 {
-                    *pStart = (*pStart & 0xff000000); // set each pixel color to 0 but leave alpha
+                    *pStart = (*pStart & dropShadowColor); // set each pixel color to 0 but leave alpha
                     pStart++;
                 }
 
@@ -141,12 +152,23 @@ namespace ZGUI
         if (!mTextbox.visible || mTextbox.sText.empty())
             return true;
 
-        // If the rendered image needs to be re-rendered, do so here
         if (mTextbox.area != renderedArea || mTextbox.sText != renderedText)
         {
-            mTextbox.Paint(pDst);
+            renderedArea = mTextbox.area;
+            renderedText = mTextbox.sText;
+            mTextbox.renderedText.clear();  // force re-rendering this way
+        }
+
+        mTextbox.Paint(pDst);
+
+        // If the rendered image needs to be re-rendered, do so here
+/*        if (mTextbox.area != renderedArea || mTextbox.sText != renderedText)
+        {
             renderedImage.Init(mTextbox.area.Width(), mTextbox.area.Height());
+            renderedImage.mbHasAlphaPixels = true;
             renderedImage.Blt(pDst, mTextbox.area, renderedImage.GetArea());    // cache
+            mTextbox.Paint(&renderedImage);
+
 
             renderedArea = mTextbox.area;
             renderedText = mTextbox.sText;
@@ -155,7 +177,7 @@ namespace ZGUI
         }
 
         // just draw the 
-        pDst->Blt(&renderedImage, renderedImage.GetArea(), renderedArea);
+        pDst->Blt(&renderedImage, renderedImage.GetArea(), renderedArea);*/
 
         return true;
     }
@@ -332,7 +354,7 @@ namespace ZGUI
                 ZRect rCellArea(0, 0, nColWidth, nRowHeight);
                 rCellArea.OffsetRect(nX + mrAreaToDrawTo.left, nY + mrAreaToDrawTo.top);
 
-                ZRect rString = cell.style.Font()->Arrange(rCellArea, cell.val, mCellStyle.pos, mCellStyle.pad.h);
+                ZRect rString = cell.style.Font()->Arrange(rCellArea, cell.val, mCellStyle.pos, mCellStyle.pad.h, mCellStyle.pad.v);
                 cell.style.Font()->DrawText(pDest, cell.val, rString, &mCellStyle.look);
 
                 nX += nColWidth + mCellStyle.pad.h;
