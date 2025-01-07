@@ -15,8 +15,9 @@ class ZBuffer
 public:
 	enum eAlphaBlendType
 	{
-		kAlphaDest		= 0,
-		kAlphaSource	= 1
+		kAlphaDest      = 0,
+		kAlphaSource    = 1,
+        kAlphaBlend     = 2
 	};
 
     enum eRenderState : uint32_t

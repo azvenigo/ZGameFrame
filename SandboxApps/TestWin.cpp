@@ -109,10 +109,10 @@ bool TestWin::Init()
     textBox.style.fp.nTracking = 10;
     textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
     textBox.style.fp.nScalePoints = 5000;
-    textBox.blurBackground = 2.0;
-    textBox.dropShadowColor = 0x880000ff;
-    textBox.dropShadowOffset = ZPoint(25, 25);
-    textBox.dropShadowBlur = 20.0;
+//    textBox.blurBackground = 2.0;
+    textBox.dropShadowColor = 0xff0000ff;
+    textBox.dropShadowOffset = ZPoint(15, 15);
+    textBox.dropShadowBlur = 10.0;
     textBox.area.SetRect(0, 0, 3000, 2000);
 
 
@@ -162,6 +162,8 @@ bool TestWin::Paint()
 
 
     textBox.Paint(mpSurface.get());
+
+    textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &textBox.style);
 
     return ZWin::Paint();
 }

@@ -82,9 +82,8 @@ namespace ZGUI
                         pStart++;
                     }
 
-
-                    renderedBuf.Blur(blurBackground, &rLabel);
                     renderedBuf.FillAlpha(style.bgCol, &rLabel);
+                    renderedBuf.Blur(blurBackground, &rLabel);
                 }
                 else
                     renderedBuf.Fill(style.bgCol);
@@ -107,19 +106,12 @@ namespace ZGUI
                 rShadow.OffsetRect(dropShadowOffset);
                 shadowTemp.Blt(&renderedBuf, rLabel, rShadow, 0, ZBuffer::kAlphaSource);
 
-/*                uint8_t a;
-                uint32_t h;
-                uint32_t s;
-                uint32_t v;
-
-                COL::ARGB_To_AHSV(ARGB_A(dropShadowColor), ARGB_R(dropShadowColor), ARGB_G(dropShadowColor), ARGB_B(dropShadowColor), a, h, s, v);
-                shadowTemp.Colorize(h, s);*/
-
                 uint32_t* pStart = shadowTemp.mpPixels;
                 uint32_t* pEnd = pStart + shadowTemp.GetArea().Width() * shadowTemp.GetArea().Height();
+                uint32_t shadowAlphaMask = (0xff000000 & dropShadowColor);
                 while (pStart < pEnd)
                 {
-                    *pStart = (*pStart & dropShadowColor); // set each pixel color to 0 but leave alpha
+                    *pStart = (*pStart & shadowAlphaMask); // set each pixel color to 0 but leave alpha
                     pStart++;
                 }
 
@@ -127,13 +119,13 @@ namespace ZGUI
 
                 if (dropShadowBlur > 0.0)
                     shadowTemp.Blur(dropShadowBlur);
-                shadowTemp.Blt(&renderedBuf, rLabel, rLabel);
+                shadowTemp.Blt(&renderedBuf, rLabel, rLabel, 0, ZBuffer::kAlphaBlend);
 
                 renderedBuf.CopyPixels(&shadowTemp);
             }
         }
 
-        return pDst->Blt(&renderedBuf, renderedBuf.GetArea(), rDraw);
+        return pDst->Blt(&renderedBuf, renderedBuf.GetArea(), rDraw, nullptr, ZBuffer::kAlphaDest);
     }
 
     void TextBox::Paint(ZBuffer* pDst, tTextboxMap& textBoxMap)

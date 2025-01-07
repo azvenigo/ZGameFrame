@@ -736,6 +736,8 @@ bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType
                 {
                     if (type == kAlphaDest)
                         *pDstBits = COL::AlphaBlend_Col2Alpha(*pSrcBits, *pDstBits, nAlpha);
+                    else if (type == kAlphaBlend)
+                        *pDstBits = COL::AlphaBlend_BlendAlpha(*pSrcBits, *pDstBits, nAlpha);
                     else
                         *pDstBits = COL::AlphaBlend_Col1Alpha(*pSrcBits, *pDstBits, nAlpha);
                 }
@@ -2051,10 +2053,13 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
             {
                 int64_t newX = x + i;
                 if (newX < rArea.left)
-                    continue;
+                    newX = rArea.left;
+                //                    continue;
 
-                else if (newX >= rArea.right)
-                    continue;
+                else if (newX > rArea.right-1)
+                    newX = rArea.right - 1;
+
+//                    continue;
 
                 uint32_t pixel = mpPixels[y * srcStride + newX];
                 float weight = kernel[i + kernelRadius];
@@ -2088,10 +2093,12 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
             {
                 int64_t newY = y + i;
                 if (newY < rArea.top)
-                    continue;
-                //                    newY = rArea.top;
-                else if (newY >= rArea.bottom)
-                    continue;
+                    newY = rArea.top;
+                //                    continue;
+                                //                    newY = rArea.top;
+                else if (newY > rArea.bottom-1)
+                    newY = rArea.bottom - 1;
+//                    continue;
 
                 int64_t tempY = newY - rArea.top;
                 int64_t tempX = x - rArea.left;

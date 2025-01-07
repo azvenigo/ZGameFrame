@@ -2424,9 +2424,10 @@ void ImageViewer::UpdateCaptions()
                 if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
                 {
                     mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-                    mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5000, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, ZGUI::Padding((int32_t)(gSpacer / 2), 100), 0x88000000, true);
+                    mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5000, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, ZGUI::Padding(gM*8, gM*4), 0x88000000, true);
                     mpWinImage->mCaptionMap["for_delete"].visible = true;
-                    mpWinImage->mCaptionMap["for_delete"].blurBackground = 8.0;
+                    //mpWinImage->mCaptionMap["for_delete"].blurBackground = 8.0;
+                    mpWinImage->mCaptionMap["for_delete"].renderedText.clear(); // force re-render
 
                     mpWinImage->mCaptionMap["image_count"].style.look.colTop = 0xffff0000;
                     mpWinImage->mCaptionMap["image_count"].style.look.colBottom = 0xffff0000;

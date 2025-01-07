@@ -201,6 +201,7 @@ bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
         mTooltip.mTextbox.style = style;
         mTooltip.mTextbox.style.pad.h = 16;
         mTooltip.mTextbox.style.pad.v = 8;
+        mTooltip.mTextbox.style.pad.col = 0xffffffff;
         mTooltip.mTextbox.style.bgCol &= 0x88ffffff;
         mTooltip.mTextbox.blurBackground = 2.0;
         mTooltip.mTextbox.dropShadowColor = 0x44000000;

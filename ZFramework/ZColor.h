@@ -229,9 +229,9 @@ namespace COL
         // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
         return ARGB(
             ARGB_A(nCol1),
-            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha) + 128) >> 8
         );
     }
     inline uint32_t AlphaBlend_Col2Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
@@ -241,14 +241,14 @@ namespace COL
         // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
         return ARGB(
             ARGB_A(nCol2),
-            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha) + 128) >> 8
         );
     }
     inline uint32_t AlphaBlend_AddAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
     {
-        nBlend = (nBlend * ARGB_A(nCol1)) >> 8;
+/*        nBlend = (nBlend * ARGB_A(nCol1)) >> 8;
         uint32_t nInverseAlpha = 255 - nBlend;
 
         uint32_t bgAlpha = (nInverseAlpha * ARGB_A(nCol2)) >> 8;
@@ -259,9 +259,27 @@ namespace COL
         // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
         return ARGB(
             nFinalA,
-            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha) + 128) >> 8
+        );*/
+        nBlend = (nBlend * ARGB_A(nCol1)) >> 8;
+
+        uint32_t nInverseAlpha = 255 - nBlend;
+        uint32_t bgAlpha = (nInverseAlpha * ARGB_A(nCol2)) >> 8;
+
+        uint32_t nFinalA = nBlend + bgAlpha;
+        nFinalA = (nFinalA > 0x000000ff) ? 0x000000ff : nFinalA; // Clamp alpha if needed
+
+        // Avoid branch by conditionally masking out nCol2's components if its alpha is zero
+        uint32_t mask = (ARGB_A(nCol2) != 0) ? 0xFFFFFFFF : 0x00000000;
+
+        // Perform blending
+        return ARGB(
+            nFinalA,
+            ((ARGB_R(nCol1) * nBlend + (ARGB_R(nCol2) & mask) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_G(nCol1) * nBlend + (ARGB_G(nCol2) & mask) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_B(nCol1) * nBlend + (ARGB_B(nCol2) & mask) * nInverseAlpha) + 128) >> 8
         );
     }
 
