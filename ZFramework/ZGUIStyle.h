@@ -59,6 +59,10 @@ namespace ZGUI
         ZTextLook(eDeco _decoration = kNormal, uint32_t _colTop = 0xffffffff, uint32_t _colBottom = 0xffffffff);
         ZTextLook(const std::string& s);
         operator std::string() const;
+        bool operator == (const ZTextLook& rhs) const
+        {
+            return (colTop == rhs.colTop && colBottom == rhs.colBottom && decoration == rhs.decoration);
+        }
 
         uint32_t    colTop;
         uint32_t    colBottom;
@@ -73,6 +77,10 @@ namespace ZGUI
 
         operator std::string() const;
         void operator = (const Padding& rhs);
+        bool operator == (const Padding& rhs) const
+        {
+            return (h == rhs.h && v == rhs.v && col == rhs.col);
+        }
 
         int32_t h;
         int32_t v;
@@ -91,6 +99,16 @@ namespace ZGUI
 
         operator std::string() const;
         void operator = (const Style& rhs);
+        bool operator == (const Style& rhs) const
+        {
+            return (
+                fp == rhs.fp &&
+                look == rhs.look &&
+                pos == rhs.pos &&
+                pad == rhs.pad &&
+                bgCol == rhs.bgCol &&
+                wrap == rhs.wrap);
+        }
 
         ZFontParams fp;
         ZTextLook   look;

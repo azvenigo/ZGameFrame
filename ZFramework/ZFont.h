@@ -26,11 +26,23 @@ typedef std::vector<uint8_t> tPixelDataList;
 
 struct CharDesc
 {
+    static const int16_t kUnknown = -32768;
+
     CharDesc() 
     { 
         nCharWidth = 0; 
-        memset(kerningArray, 0, sizeof(kerningArray));
+        for (int i = 0; i < kMaxChars; i++)
+            kerningArray[i] = kUnknown;
     }
+
+    int16_t Kerning(uint8_t c2)
+    {
+        if (kerningArray[c2] == kUnknown)
+            return 0;
+
+        return kerningArray[c2];
+    }
+
 	uint16_t        nCharWidth;
     int16_t         kerningArray[kMaxChars];    // array of kernings against other ascii chars
 	tPixelDataList  pixelData;                  // The number of pixels from the current to the next (using the nCharWidth to determine when to wrap around)
@@ -129,6 +141,18 @@ public:
         return false;
     }
 
+    bool operator == (const ZFontParams& rhs) const
+    {
+        return (
+            nScalePoints == rhs.nScalePoints &&
+            nWeight == rhs.nWeight &&
+            nTracking == rhs.nTracking &&
+            nFixedWidth == rhs.nFixedWidth &&
+            bItalic == rhs.bItalic &&
+            bSymbolic == rhs.bSymbolic &&
+            sFacename == rhs.sFacename);               
+    }
+
     int64_t nScalePoints; // scaled height by ZGUI::gM    measure is scaled int 
     int64_t nWeight;
     int64_t nTracking;
@@ -146,6 +170,11 @@ namespace ZGUI
     class Style;
 };
 
+// Under windows the DynamicFont class can generate glyphs on demand
+#ifdef _WIN64
+extern std::vector<std::string> gWindowsFontFacenames;
+#endif
+
 class ZFont
 {
 public:
@@ -154,6 +183,10 @@ public:
 public:
 	ZFont();
 	~ZFont();
+
+    bool        Init(const ZFontParams& params);
+    void        Shutdown();
+
 
     virtual bool    LoadFont(const std::string& sFilename);
     virtual bool    SaveFont(const std::string& sFilename);
@@ -169,9 +202,16 @@ public:
     bool            DrawTextParagraph(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, ZGUI::Style* pStyle = nullptr, ZRect* pClip = NULL);
 
 
-    int64_t         CharWidth(uint8_t c);
+    inline int64_t  CharWidth(uint8_t c)
+    {
+        if (mCharDescriptors[c].nCharWidth == 0)
+            GenerateGlyph(c);
+
+        return mCharDescriptors[c].nCharWidth;
+    }
+
     int32_t         GetSpaceBetweenChars(uint8_t c1, uint8_t c2);
-    ZRect           Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t nPadding = 0);
+    ZRect           Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos, int64_t h_padding = 0, int64_t v_padding = 0);
 	int64_t         StringWidth(const std::string& sText);
     ZRect           StringRect(const std::string& sText);
     ZRect           StringRect(const std::string& sText, int64_t nLineWidth);                                   // returns the rectangle required to fully render a multi-line string given a width
@@ -200,50 +240,14 @@ protected:
 
 	CharDesc        mCharDescriptors[kMaxChars];  // lower 128 ascii chars
 	bool            mbInitted;
-};
 
-
-// Under windows the DynamicFont class can generate glyphs on demand
 #ifdef _WIN64
-
-extern std::vector<std::string> gWindowsFontFacenames;
-
-
-inline bool operator==(const ZFontParams& lhs, const ZFontParams& rhs)
-{
-    bool bEqual = 
-//        lhs.nScalePoints        == rhs.nScalePoints &&
-        lhs.Height()            == rhs.Height() &&
-        lhs.nWeight             == rhs.nWeight &&
-        lhs.nTracking           == rhs.nTracking &&
-        lhs.bItalic             == rhs.bItalic &&
-        lhs.bSymbolic           == rhs.bSymbolic &&
-        lhs.sFacename.compare(rhs.sFacename) == 0;
-
-    return bEqual;
-}
-
-// Font that generates glyphs on the fly
-class ZDynamicFont : public ZFont
-{
-public:
-    ZDynamicFont();
-    ~ZDynamicFont();
-
-    bool                Init(const ZFontParams& params, bool bInitGlyphs = true, bool bKearn = true);
-    bool                SaveFont(const std::string& sFilename);  // overload to first ensure all glyphs have been generated
-
-    bool                GenerateSymbolicGlyph(uint8_t c, uint32_t symbol);
-
-protected:
-    // overloads from ZFont that will generate glyphs if needed
-    virtual void        DrawCharNoClip(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY);
-    virtual void        DrawCharClipped(ZBuffer* pBuffer, uint8_t c, uint32_t nCol, int64_t nX, int64_t nY, ZRect* pClip);
-    virtual void        DrawCharGradient(ZBuffer* pBuffer, uint8_t c, std::vector<uint32_t>& gradient, int64_t nX, int64_t nY, ZRect* pClip);
 
 private:
 
     bool                GenerateGlyph(uint8_t c);
+    std::mutex          mGenerateGlyph;         // when held, a glyph is being generated
+
 
     bool                ExtractChar(uint8_t c);
     int32_t             FindWidestNumberWidth();
@@ -257,16 +261,31 @@ private:
     HDC                 mhWinTargetDC;
     HBITMAP             mhWinTargetBitmap;
     BITMAPINFO          mDIBInfo;
-    uint8_t*            mpBits;
+    uint8_t* mpBits;
     HDC                 mWinHDC;
     HFONT               mhWinFont;
     TEXTMETRICA         mWinTextMetrics;
     int32_t             mnWidestNumberWidth;
     int32_t             mnWidestCharacterWidth;
-
+#endif
 };
 
-#endif
+
+
+/*inline bool operator==(const ZFontParams& lhs, const ZFontParams& rhs)
+{
+    bool bEqual =
+        //        lhs.nScalePoints        == rhs.nScalePoints &&
+        lhs.Height() == rhs.Height() &&
+        lhs.nWeight == rhs.nWeight &&
+        lhs.nTracking == rhs.nTracking &&
+        lhs.bItalic == rhs.bItalic &&
+        lhs.bSymbolic == rhs.bSymbolic &&
+        lhs.sFacename.compare(rhs.sFacename) == 0;
+
+    return bEqual;
+}*/
+
 
 typedef std::shared_ptr<ZFont>              tZFontPtr;
 typedef std::map<ZFontParams, tZFontPtr>    tZFontMap;
@@ -309,6 +328,7 @@ private:
     std::recursive_mutex        mFontMapMutex;
 
     // caching
+    bool            mbCachingEnabled;
     std::string     msCacheFolder;
 };
 

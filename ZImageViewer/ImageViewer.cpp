@@ -61,7 +61,7 @@ ImageViewer::ImageViewer()
     //mpRotationMenu = nullptr;
     //mpManageMenu = nullptr;
     //mpSymbolicFont = nullptr;
-    mpFavoritesFont = nullptr;
+    //mpFavoritesFont = nullptr;
     mpWinImage = nullptr;
     mpImageLoaderPool = nullptr;
     mpMetadataLoaderPool = nullptr;
@@ -69,7 +69,7 @@ ImageViewer::ImageViewer()
     mCachingState = kWaiting;
     mbSubsample = true;
     mbShowUI = true;
-    mbShowFavOrDelState = true;
+    //mbShowFavOrDelState = true;
     mFilterState = kAll;
 /*    mpAllFilterButton = nullptr;
     mpFavsFilterButton = nullptr;
@@ -215,7 +215,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     if (key == mToggleUIHotkey)
     {
         mbShowUI = !mbShowUI;
-        mbShowFavOrDelState = mbShowUI;    // when UI gets hidden, also hide this indicator
+        //mbShowFavOrDelState = mbShowUI;    // when UI gets hidden, also hide this indicator
         UpdateUI();
         gRegistry["ZImageViewer"]["showui"] = mbShowUI;
         return true;
@@ -1319,31 +1319,18 @@ bool ImageViewer::Init()
     if (!mbInitted)
     {
         gRegistry.Get("ZImageViewer", "showui", mbShowUI);
-        mbShowFavOrDelState = mbShowUI;
+        //mbShowFavOrDelState = mbShowUI;
 
 
 //        int64_t nGroupSide = (gM * 2) - gSpacer * 4;
 
-        mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", 1500, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+//        mSymbolicStyle = ZGUI::Style(ZFontParams("Arial", 1500, 200, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
         //        mpSymbolicFont = gpFontSystem->CreateFont(unicodeStyle.fp);
-        ZDynamicFont* pFont = (ZDynamicFont*)mSymbolicStyle.Font().get();
-
-        pFont->GenerateSymbolicGlyph('<', 11119); // rotate left
-        pFont->GenerateSymbolicGlyph('>', 11118); // rotate right
-
-        pFont->GenerateSymbolicGlyph('-', 11108); // flip H
-        pFont->GenerateSymbolicGlyph('|', 11109); // flip V
-
-        pFont->GenerateSymbolicGlyph('u', 0x238c); // undo
 
 
-        pFont->GenerateSymbolicGlyph('F', 0x2750);
-        pFont->GenerateSymbolicGlyph('Q', 0x0F1C);  // quality rendering
-
-
-        ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", 8000, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
-        mpFavoritesFont = gpFontSystem->CreateFont(favorites.fp);
-        ((ZDynamicFont*)mpFavoritesFont.get())->GenerateSymbolicGlyph('C', 0x2655);  // crown
+//        ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", 8000, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+//        mpFavoritesFont = gpFontSystem->CreateFont(favorites.fp);
+//        mpFavoritesFont.get()->GenerateSymbolicGlyph('C', 0x2655);  // crown
 
 
 
@@ -1361,12 +1348,22 @@ bool ImageViewer::Init()
 //        mpWinImage->mCaptionMap["zoom"].style.pad.v = gStyleCaption.fp.nHeight;
 
         mpWinImage->mpTable = new ZGUI::ZTable();
+        mpWinImage->mIconMap["favorite"].Load("res/star.svg");
+        mpWinImage->mIconMap["favorite"].visible = false;
+
         ChildAdd(mpWinImage);
         mpWinImage->SetFocus();
 
         mToggleUIHotkey = VK_TAB;
 
         Clear();
+
+
+
+
+        mpFavoriteIcon.reset(new ZBuffer());
+        mpFavoriteIcon->LoadBuffer("res/star.svg");
+
 
         string sPersistedViewPath;
         if (gRegistry.Get("ZImageViewer", "image", sPersistedViewPath))
@@ -1537,10 +1534,10 @@ bool ImageViewer::OnParentAreaChange()
     ZWin::OnParentAreaChange();
     UpdateUI();
 
-    ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", 8000, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
+/*    ZGUI::Style favorites = ZGUI::Style(ZFontParams("Arial", 8000, 400, 0, 0, false, true), ZGUI::ZTextLook{}, ZGUI::C, 0);
     mpFavoritesFont = gpFontSystem->CreateFont(favorites.fp);
     ((ZDynamicFont*)mpFavoritesFont.get())->GenerateSymbolicGlyph('C', 0x2655);  // crown
-
+    */
 
     return true;
 }
@@ -2331,7 +2328,7 @@ void ImageViewer::UpdateCaptions()
 
     mpWinImage->mCaptionMap["filename"].Clear();
 //    mpWinImage->mCaptionMap["folder"].Clear();
-    mpWinImage->mCaptionMap["favorite"].Clear();
+    //mpWinImage->mCaptionMap["favorite"].Clear();
     mpWinImage->mCaptionMap["for_delete"].Clear();
     mpWinImage->mCaptionMap["no_image"].Clear();
     mpWinImage->mCaptionMap["image_count"].Clear();
@@ -2399,53 +2396,46 @@ void ImageViewer::UpdateCaptions()
                 }
             }
 
-            if (mbShowFavOrDelState)
+            if (ValidIndex(mViewingIndex))
             {
-                if (ValidIndex(mViewingIndex))
+                mpWinImage->mIconMap["favorite"].visible = mImageArray[mViewingIndex.absoluteIndex]->IsFavorite();
+
+                string sCountCaption("Image ");
+                if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite())
+                    sCountCaption = "Favorite ";
+                else if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
+                    sCountCaption = "To Be Deleted ";
+
+                string sImageCount = "[" + sCountCaption + SH::FromInt(IndexInCurMode() + 1) + "/" + SH::FromInt(CountInCurMode()) + "]";
+                mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
+                mpWinImage->mCaptionMap["image_count"].style = gStyleCaption;
+                mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::LB;
+                mpWinImage->mCaptionMap["image_count"].visible = true;
+
+                const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
+                if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite()/* && mpFavoritesFont*/)
                 {
-                    string sImageCount = "[" + SH::FromInt(IndexInCurMode() + 1) + "/" + SH::FromInt(CountInCurMode()) + "]";
-                    mpWinImage->mCaptionMap["image_count"].sText = sImageCount;
-                    mpWinImage->mCaptionMap["image_count"].style = folderStyle;
-                    mpWinImage->mCaptionMap["image_count"].style.pos = ZGUI::LB;
-                    mpWinImage->mCaptionMap["image_count"].visible = true;
+                    mpWinImage->mIconMap["favorite"].area = ZGUI::Arrange(ZRect(0, 0, gM * 4, gM * 4), mAreaLocal, ZGUI::RT, gSpacer, gSpacer);
+                    mpWinImage->mCaptionMap["image_count"].style.look.colTop = 0xffe1b131;
+                    mpWinImage->mCaptionMap["image_count"].style.look.colBottom = 0xffe1b131;
+                    bShow = mbShowUI;
+                }
 
-                    const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
-                    if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite() && mpFavoritesFont)
-                    {
-                        mpWinImage->mCaptionMap["favorite"].sText = "C";
-                        mpWinImage->mCaptionMap["favorite"].style = ZGUI::Style(mpFavoritesFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffe1b131, 0xffe1b131), ZGUI::LB, ZGUI::Padding((int32_t)gM * 2, (int32_t)gM * 4), 0x88000000, true);
-                        mpWinImage->mCaptionMap["favorite"].visible = true;
+                if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
+                {
+                    mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
+                    mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5000, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, ZGUI::Padding(gM*8, gM*4), 0x88000000, true);
+                    mpWinImage->mCaptionMap["for_delete"].visible = true;
+                    //mpWinImage->mCaptionMap["for_delete"].blurBackground = 8.0;
+                    mpWinImage->mCaptionMap["for_delete"].renderedText.clear(); // force re-render
 
-                        mpWinImage->mCaptionMap["image_count"].style.look.colTop = 0xffe1b131;
-                        mpWinImage->mCaptionMap["image_count"].style.look.colBottom = 0xffe1b131;
-                        bShow = true;
-                    }
+                    mpWinImage->mCaptionMap["image_count"].style.look.colTop = 0xffff0000;
+                    mpWinImage->mCaptionMap["image_count"].style.look.colBottom = 0xffff0000;
 
-                    if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
-                    {
-                        mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-                        mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5000, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, ZGUI::Padding((int32_t)(gSpacer / 2), 100), 0x88000000, true);
-                        mpWinImage->mCaptionMap["for_delete"].visible = true;
-                        mpWinImage->mCaptionMap["for_delete"].blurBackground = 8.0;
-
-                        mpWinImage->mCaptionMap["image_count"].style.look.colTop = 0xffff0000;
-                        mpWinImage->mCaptionMap["image_count"].style.look.colBottom = 0xffff0000;
-
-                        bShow = true;
-                    }
+                    bShow = true;
                 }
             }
-
-
         }
-
-/*        if (bShow)
-        {
-            mpWinImage->mCaptionMap["folder"].sText = mCurrentFolder.string();
-            mpWinImage->mCaptionMap["folder"].style = folderStyle;
-            mpWinImage->mCaptionMap["folder"].visible = true;
-        }*/
-
 
         if (!mMoveToFolder.empty())
         {
@@ -2541,7 +2531,7 @@ void ImageViewer::ToggleToBeDeleted()
     if (!ValidIndex(mViewingIndex))
         return;
 
-    mbShowFavOrDelState = true;
+    //mbShowFavOrDelState = true;
 
     filesystem::path toBeDeleted = mCurrentFolder;
     toBeDeleted.append(ksToBeDeleted);
@@ -2569,7 +2559,7 @@ void ImageViewer::ToggleFavorite()
     if (!ValidIndex(mViewingIndex))
         return;
 
-    mbShowFavOrDelState = true;
+    //mbShowFavOrDelState = true;
 
     const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
     if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite())

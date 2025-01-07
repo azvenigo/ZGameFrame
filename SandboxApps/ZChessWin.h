@@ -167,8 +167,6 @@ private:
     ZRect   SquareArea(const ZPoint& grid);
     uint32_t SquareColor(const ZPoint& grid);
 
-    ZDynamicFont*   mpSymbolicFont;
-
     bool            mbDemoMode;
     int64_t         mnDemoModeNextMoveTimeStamp;
 

@@ -581,6 +581,7 @@ bool ZWinImage::Paint()
         if (pRenderImage && mpTable)
             mpTable->Paint(mpSurface.get());
     }
+    ZGUI::SVGImageBox::Paint(mpSurface.get(), mIconMap);
 
 //    ZDEBUG_OUT_LOCKLESS("out...\n");
 

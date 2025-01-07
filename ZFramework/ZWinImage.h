@@ -84,6 +84,7 @@ public:
 
 
     ZGUI::tTextboxMap   mCaptionMap;
+    ZGUI::tSVGImageMap  mIconMap;
     ZGUI::ZTable*       mpTable;
 
     uint32_t            mFillColor;

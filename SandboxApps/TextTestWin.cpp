@@ -90,8 +90,6 @@ bool TextTestWin::Init()
     mIdleSleepMS = 10000;
     mPalette.mColorMap.push_back(ZGUI::EditableColor("font_col", 0xff88ff88));
 
-    msText = "Type here";
-
     SetFocus();
 
 #ifndef _WIN64
@@ -123,7 +121,7 @@ bool TextTestWin::Init()
 
     mbEnableKerning = true;
 
-    ZDynamicFont* pNewFont = new ZDynamicFont();
+    ZFont* pNewFont = new ZFont();
     pNewFont->Init(mCustomFontParams);
     pNewFont->SetEnableKerning(mbEnableKerning);
     mpFont.reset(pNewFont);
@@ -133,12 +131,10 @@ bool TextTestWin::Init()
 
     mIdleSleepMS = 10000;
 
-    msText = "Type here";
-
     SetFocus();
 
     int32_t nWidth = (int32_t) (mAreaLocal.Width() / 8);
-    int32_t nHeight = (int32_t)(mAreaLocal.Height() * 2) / 3;
+    int32_t nHeight = (int32_t)(mAreaLocal.Height()) / 2;
     int32_t nSpacer = (int32_t)mAreaLocal.right / 200;
     ZRect rFontSelectionWin(mAreaLocal.right - nWidth - nSpacer, mAreaLocal.top + nSpacer, mAreaLocal.right, mAreaLocal.top + nHeight - nSpacer);
     ZRect rTextAreaWin(10,10,rFontSelectionWin.Width()-10,rFontSelectionWin.Height()-10);
@@ -178,11 +174,30 @@ bool TextTestWin::Init()
     ChildAdd(pWin);
 
 
+    mTextBox.sText = "Cool Beans!";
+    mTextBox.style = gStyleCaption;
+    mTextBox.style.pos = ZGUI::LT;
+    mTextBox.style.look.colTop = 0xffffff00;
+    mTextBox.style.look.colBottom = 0xffffff00;
+    mTextBox.style.fp = mCustomFontParams;
+    mTextBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
+    mTextBox.dropShadowColor = 0x880000ff;
+    int64_t offset = std::max <int64_t>(mTextBox.style.fp.Height() / 32, 1);
+    mTextBox.dropShadowOffset = ZPoint(offset, offset);
+
+    mShadowSpread = 20;
+    mTextBox.dropShadowBlur = (float) mShadowSpread / 10.0f;
+    mTextBox.area.SetRect(0, 0, 3000, 2000);
+
+
     ZRect rControlPanel(rFontSelectionWin.left, rFontSelectionWin.bottom, rFontSelectionWin.right, mAreaLocal.bottom);     // upper right for now
 
     ZWinControlPanel* pCP = new ZWinControlPanel();
     pCP->SetArea(rControlPanel);
     //    pCP->SetTriggerRect(grControlPanelTrigger);
+
+
+
 
     pCP->Init();
 
@@ -212,6 +227,19 @@ bool TextTestWin::Init()
     pCP->AddSpace(16);
 
     pCP->Toggle("viewkerning", &mbEnableKerning, "View Kerning", "{togglekerning;enable=1;target=TextTestWin}", "{togglekerning;enable=0;target=TextTestWin}");
+
+    ZWinLabel* pCaption = pCP->Caption("shadow_offset", "View Shadow x/y");
+    pCaption->mStyle.look.colTop = 0xff00ff00;
+    pCaption->mStyle.look.colBottom = 0xff008800;
+    pCP->Slider("shadowoffset_x", &mTextBox.dropShadowOffset.x, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
+    pCP->Slider("shadowoffset_y", &mTextBox.dropShadowOffset.y, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
+
+    pCaption = pCP->Caption("shadow_blur", "View Shadow Spread");
+    pCaption->mStyle.look.colTop = 0xff00ff00;
+    pCaption->mStyle.look.colBottom = 0xff008800;
+
+    pCP->Slider("shadow_spread", &mShadowSpread, 0, 20, 10, 0.1, "{updatetext;target=TextTestWin}", true, false);
+
     pCP->AddSpace(16);
 
     pCP->Button("loadfont", "Load Font", "{loadfont;target=TextTestWin}");
@@ -242,8 +270,6 @@ bool TextTestWin::Paint()
         return false;
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
-	string sTemp;
-
 	ZRect rText(32, 32, mAreaLocal.right*4/5, mAreaLocal.bottom);
 
     if (mpBackground.get()->GetArea().Width() > 0)
@@ -255,19 +281,14 @@ bool TextTestWin::Paint()
     else
         mpSurface.get()->Fill(0xff595850);
 
-    sTemp = msText + '|';
 
-    assert(mpFont);
-    int32_t nLines = (int32_t) (mpFont->CalculateNumberOfLines(rText.Width(), (uint8_t*)sTemp.data(), sTemp.length()));
-    
-    ZGUI::Style style(mpFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::LT);
-    mpFont->DrawTextParagraph(mpSurface.get(), sTemp, rText, &style);
+    mTextBox.Paint(mpSurface.get());
 
 
 
 
-
-    rText.SetRect(32, 32+ nLines*mpFont->Height(), mAreaLocal.right * 4 / 5,mAreaLocal.bottom);
+    string sTemp;
+    rText.SetRect(32, 32+ mpFont->Height(), mAreaLocal.right * 4 / 5,mAreaLocal.bottom);
 
     
     Sprintf(sTemp, "Font: %s Size:%d", mpFont->GetFontParams().sFacename.c_str(), mpFont->Height());
@@ -297,7 +318,7 @@ bool TextTestWin::Paint()
 
 
     TIME_SECTION_START(TextTestLines);
-    mpFont->DrawTextParagraph(mpSurface.get(), sAliceText, rText, &style);
+    mpFont->DrawTextParagraph(mpSurface.get(), sAliceText, rText, &mTextBox.style);
 
   TIME_SECTION_END(TextTestLines);
   
@@ -312,19 +333,19 @@ bool TextTestWin::OnChar(char key)
 	switch (key)
 	{
     case VK_BACK:
-        if (!msText.empty())
-            msText = msText.substr(0, msText.length()-1);
+        if (!mTextBox.sText.empty())
+            mTextBox.sText = mTextBox.sText.substr(0, mTextBox.sText.length()-1);
         break;
 
     case VK_RETURN:
-        msText += '\n';
+        mTextBox.sText += '\n';
         break;
 
     case VK_ESCAPE:
         gMessageSystem.Post("{quit_app_confirmed}");
         break;
     default:
-        msText += key;
+        mTextBox.sText += key;
 		break;
 	}
 
@@ -333,11 +354,23 @@ bool TextTestWin::OnChar(char key)
 	return ZWin::OnKeyDown(key);
 }
 
+void TextTestWin::UpdateText()
+{
+    mTextBox.style.fp = mCustomFontParams;
+    mTextBox.dropShadowColor = 0xaa000000;
+    int64_t offset = std::max <int64_t>(mTextBox.style.fp.Height() / 32, 1);
+    //    mTextBox.dropShadowOffset = ZPoint(offset, offset);
+
+    mTextBox.dropShadowBlur = (float)mShadowSpread / 10.0f;
+    //    mTextBox.dropShadowBlur = (float)offset / 2.0;
+
+    Invalidate();
+}
 
 void TextTestWin::UpdateFontByParams()
 {
 #ifdef _WIN64
-    ZDynamicFont* pNewFont = new ZDynamicFont();
+    ZFont* pNewFont = new ZFont();
     mCustomFontParams.nScalePoints = ZFontParams::ScalePoints(mCustomFontHeight);
     pNewFont->Init(mCustomFontParams);
 
@@ -347,7 +380,8 @@ void TextTestWin::UpdateFontByParams()
     pNewFont->SetEnableKerning(mbEnableKerning);
 
     mpFont.reset(pNewFont);
-    Invalidate();
+
+    UpdateText();
 #endif
 
 }
@@ -372,6 +406,11 @@ bool TextTestWin::HandleMessage(const ZMessage& message)
 
         UpdateFontByParams();
 
+        return true;
+    }
+    else if (sType == "updatetext")
+    {
+        UpdateText();
         return true;
     }
     else if (sType == "setfonttracking")

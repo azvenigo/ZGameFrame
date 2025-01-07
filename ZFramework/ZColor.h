@@ -224,57 +224,83 @@ namespace COL
 
     inline uint32_t AlphaBlend_Col1Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
     {
-        nBlend = nBlend * ARGB_A(nCol1) >> 8;
         uint32_t nInverseAlpha = 255 - nBlend;
         // Use Alpha value for the destination color (nCol1)
         // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
         return ARGB(
             ARGB_A(nCol1),
-            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha) + 128) >> 8
         );
     }
     inline uint32_t AlphaBlend_Col2Alpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
     {
-        nBlend = nBlend * ARGB_A(nCol1) >> 8;
         uint32_t nInverseAlpha = 255 - nBlend;
         // Use Alpha value for the destination color (nCol2)
         // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
         return ARGB(
             ARGB_A(nCol2),
-            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha) + 128) >> 8
         );
     }
     inline uint32_t AlphaBlend_AddAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
     {
-        nBlend = nBlend * ARGB_A(nCol1) >> 8;
+/*        nBlend = (nBlend * ARGB_A(nCol1)) >> 8;
         uint32_t nInverseAlpha = 255 - nBlend;
-        uint32_t nFinalA = (ARGB_A(nCol1) + ARGB_A(nCol2));
+
+        uint32_t bgAlpha = (nInverseAlpha * ARGB_A(nCol2)) >> 8;
+
+        uint32_t nFinalA = (nBlend + bgAlpha);
         if (nFinalA > 0x000000ff)
             nFinalA = 0x000000ff;
         // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
         return ARGB(
             nFinalA,
-            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
+            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha) + 128) >> 8
+        );*/
+        nBlend = (nBlend * ARGB_A(nCol1)) >> 8;
+
+        uint32_t nInverseAlpha = 255 - nBlend;
+        uint32_t bgAlpha = (nInverseAlpha * ARGB_A(nCol2)) >> 8;
+
+        uint32_t nFinalA = nBlend + bgAlpha;
+        nFinalA = (nFinalA > 0x000000ff) ? 0x000000ff : nFinalA; // Clamp alpha if needed
+
+        // Avoid branch by conditionally masking out nCol2's components if its alpha is zero
+        uint32_t mask = (ARGB_A(nCol2) != 0) ? 0xFFFFFFFF : 0x00000000;
+
+        // Perform blending
+        return ARGB(
+            nFinalA,
+            ((ARGB_R(nCol1) * nBlend + (ARGB_R(nCol2) & mask) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_G(nCol1) * nBlend + (ARGB_G(nCol2) & mask) * nInverseAlpha) + 128) >> 8,
+            ((ARGB_B(nCol1) * nBlend + (ARGB_B(nCol2) & mask) * nInverseAlpha) + 128) >> 8
         );
     }
+
     inline uint32_t AlphaBlend_BlendAlpha(uint32_t nCol1, uint32_t nCol2, uint32_t nBlend)
     {
-        nBlend = nBlend * ARGB_A(nCol1) >> 8;
-        uint32_t nInverseAlpha = 255 - nBlend;
-        // Use Alpha value for the destination color (nCol2)
-        // Blend fAlpha of nCol1 and 1.0-fAlpha of nCol2
-        return ARGB(
-            ((ARGB_A(nCol1) * nBlend + ARGB_A(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_R(nCol1) * nBlend + ARGB_R(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_G(nCol1) * nBlend + ARGB_G(nCol2) * nInverseAlpha)) >> 8,
-            ((ARGB_B(nCol1) * nBlend + ARGB_B(nCol2) * nInverseAlpha)) >> 8
-        );
+        float alphaSrc = (nBlend * ARGB_A(nCol1)) / 65025.0f;
+        float alphaDst = ARGB_A(nCol2) / 255.0f;
+        float alphaResult = alphaSrc + alphaDst * (1 - alphaSrc);
+
+        uint8_t aResult = static_cast<uint8_t>(alphaResult * 255);
+        uint8_t rResult = static_cast<uint8_t>(
+            (ARGB_R(nCol1) * alphaSrc + ARGB_R(nCol2) * alphaDst * (1 - alphaSrc)) / alphaResult
+            );
+        uint8_t gResult = static_cast<uint8_t>(
+            (ARGB_G(nCol1) * alphaSrc + ARGB_G(nCol2) * alphaDst * (1 - alphaSrc)) / alphaResult
+            );
+        uint8_t bResult = static_cast<uint8_t>(
+            (ARGB_B(nCol1) * alphaSrc + ARGB_B(nCol2) * alphaDst * (1 - alphaSrc)) / alphaResult
+            );
+
+        return ARGB(aResult, rResult, gResult, bResult);
     }
 
     inline uint32_t AddColors(uint32_t nCol1, uint32_t nCol2)

@@ -8,43 +8,124 @@ namespace ZGUI
 {
     bool TextBox::Paint(ZBuffer* pDst)
     {
-        if (sText.empty()/* || !visible*/)
+        if (sText.empty() || !visible || style.Uninitialized())
             return true;
 
         assert(pDst);
         // assuming pDst is locked
         ZRect rDraw(area);
-        ZRect rFill(area);
 
         if (rDraw.Width() == 0 || rDraw.Height() == 0)
         {
             rDraw = pDst->GetArea();
-            rFill = style.Font()->Arrange(rDraw, sText, style.pos);
         }
 
         if (style.pos == ZGUI::Fit)
             style.fp.nScalePoints = ZFontParams::ScalePoints(rDraw.Height()/2);
 
-        // Fill area if background style specifies
-        if (ARGB_A(style.bgCol) > 0xf0)
+        rDraw = style.Font()->Arrange(rDraw, sText, style.pos, style.pad.h, style.pad.v);
+        ZRect rLabel(rDraw.Width(), rDraw.Height());
+
+
+        bool bDrawDropShadow = ARGB_A(dropShadowColor) > 0;
+        if (bDrawDropShadow)
         {
-            pDst->Fill(style.bgCol, &rFill);
+            if (dropShadowOffset.x > 0)
+            {
+                rDraw.right += (dropShadowOffset.x + (int64_t)dropShadowBlur);
+            }
+            else
+            {
+                int64_t offset = (dropShadowOffset.x - (int64_t)dropShadowBlur);
+                rLabel.OffsetRect(-offset, 0);
+                rDraw.left += offset;
+            }
+
+            if (dropShadowOffset.y > 0)
+            {
+                rDraw.bottom += (dropShadowOffset.y + (int64_t)dropShadowBlur);
+            }
+            else
+            {
+                int64_t offset = (dropShadowOffset.y - (int64_t)dropShadowBlur);
+                rLabel.OffsetRect(0, -offset);
+                rDraw.top += offset;
+                
+            }
         }
-        else if (ARGB_A(style.bgCol) > 0x0f)
+
+
+        if (renderedBuf.GetArea().Width() != rDraw.Width() || renderedBuf.GetArea().Height() != rDraw.Height() || renderedText != sText || renderedStyle != style)
         {
-//            pDst->Blt(gpGraphicSystem->GetScreenBuffer(), rFill, rFill);
-            pDst->FillAlpha(style.bgCol, &rFill);
+            cout << "Rendering textbox\n";
+            renderedText = sText;
+            renderedStyle = style;
 
-            if (blurBackground > 0.0)
-                pDst->Blur(blurBackground, &rFill);
+            renderedBuf.Init(rDraw.Width(), rDraw.Height());
+            renderedBuf.mbHasAlphaPixels = true;
+
+            // Fill area if background style specifies
+            if (ARGB_A(style.bgCol) > 0xf0)
+            {
+                renderedBuf.Fill(style.bgCol, &rLabel);
+            }
+            else if (ARGB_A(style.bgCol) > 0x0f)
+            {
+                if (blurBackground > 0.0)
+                {
+                    renderedBuf.CopyPixels(pDst, rDraw, renderedBuf.GetArea());
+                    uint32_t* pStart = renderedBuf.mpPixels;
+                    uint32_t* pEnd = pStart + renderedBuf.GetArea().Width() * renderedBuf.GetArea().Height();
+                    while (pStart < pEnd)
+                    {
+                        *pStart = (*pStart | 0xff000000); // all alpha values to full opaque
+                        pStart++;
+                    }
+
+                    renderedBuf.FillAlpha(style.bgCol, &rLabel);
+                    renderedBuf.Blur(blurBackground, &rLabel);
+                }
+                else
+                    renderedBuf.Fill(style.bgCol);
+            }
+            else
+                renderedBuf.Fill(0);
+
+            // Draw outline in padded area if style specifies
+            if (ARGB_A(style.pad.col) > 0x00)
+                renderedBuf.DrawRectAlpha(style.pad.col, rLabel);
+
+            style.Font()->DrawTextParagraph(&renderedBuf, sText, rLabel, &style);
+
+            if (bDrawDropShadow)
+            {
+                ZBuffer shadowTemp;
+                shadowTemp.Init(rDraw.Width(), rDraw.Height());
+
+                ZRect rShadow(rLabel);
+                rShadow.OffsetRect(dropShadowOffset);
+                shadowTemp.Blt(&renderedBuf, rLabel, rShadow, 0, ZBuffer::kAlphaSource);
+
+                uint32_t* pStart = shadowTemp.mpPixels;
+                uint32_t* pEnd = pStart + shadowTemp.GetArea().Width() * shadowTemp.GetArea().Height();
+                uint32_t shadowAlphaMask = (0xff000000 & dropShadowColor);
+                while (pStart < pEnd)
+                {
+                    *pStart = (*pStart & shadowAlphaMask); // set each pixel color to 0 but leave alpha
+                    pStart++;
+                }
+
+
+
+                if (dropShadowBlur > 0.0)
+                    shadowTemp.Blur(dropShadowBlur);
+                shadowTemp.Blt(&renderedBuf, rLabel, rLabel, 0, ZBuffer::kAlphaBlend);
+
+                renderedBuf.CopyPixels(&shadowTemp);
+            }
         }
 
-        // Draw outline in padded area if style specifies
-        if (ARGB_A(style.pad.col) > 0x00)
-            pDst->DrawRectAlpha(style.pad.col, rFill);
-            
-
-        return style.Font()->DrawTextParagraph(pDst, sText, rDraw, &style);
+        return pDst->Blt(&renderedBuf, renderedBuf.GetArea(), rDraw, nullptr, ZBuffer::kAlphaDest);
     }
 
     void TextBox::Paint(ZBuffer* pDst, tTextboxMap& textBoxMap)
@@ -63,12 +144,23 @@ namespace ZGUI
         if (!mTextbox.visible || mTextbox.sText.empty())
             return true;
 
-        // If the rendered image needs to be re-rendered, do so here
         if (mTextbox.area != renderedArea || mTextbox.sText != renderedText)
         {
-            mTextbox.Paint(pDst);
+            renderedArea = mTextbox.area;
+            renderedText = mTextbox.sText;
+            mTextbox.renderedText.clear();  // force re-rendering this way
+        }
+
+        mTextbox.Paint(pDst);
+
+        // If the rendered image needs to be re-rendered, do so here
+/*        if (mTextbox.area != renderedArea || mTextbox.sText != renderedText)
+        {
             renderedImage.Init(mTextbox.area.Width(), mTextbox.area.Height());
+            renderedImage.mbHasAlphaPixels = true;
             renderedImage.Blt(pDst, mTextbox.area, renderedImage.GetArea());    // cache
+            mTextbox.Paint(&renderedImage);
+
 
             renderedArea = mTextbox.area;
             renderedText = mTextbox.sText;
@@ -77,7 +169,7 @@ namespace ZGUI
         }
 
         // just draw the 
-        pDst->Blt(&renderedImage, renderedImage.GetArea(), renderedArea);
+        pDst->Blt(&renderedImage, renderedImage.GetArea(), renderedArea);*/
 
         return true;
     }
@@ -107,7 +199,7 @@ namespace ZGUI
     {
         const std::lock_guard<std::recursive_mutex> lock(mDocMutex);
 
-        if (mSVGDoc == nullptr /*|| !visible*/)
+        if (mSVGDoc == nullptr || !visible)
         {
             return true;
         }
@@ -254,7 +346,7 @@ namespace ZGUI
                 ZRect rCellArea(0, 0, nColWidth, nRowHeight);
                 rCellArea.OffsetRect(nX + mrAreaToDrawTo.left, nY + mrAreaToDrawTo.top);
 
-                ZRect rString = cell.style.Font()->Arrange(rCellArea, cell.val, mCellStyle.pos, mCellStyle.pad.h);
+                ZRect rString = cell.style.Font()->Arrange(rCellArea, cell.val, mCellStyle.pos, mCellStyle.pad.h, mCellStyle.pad.v);
                 cell.style.Font()->DrawText(pDest, cell.val, rString, &mCellStyle.look);
 
                 nX += nColWidth + mCellStyle.pad.h;

@@ -266,8 +266,8 @@ protected:
 
     uint32_t                mToggleUIHotkey;
     //tZFontPtr               mpSymbolicFont;
-    ZGUI::Style             mSymbolicStyle;
-    tZFontPtr               mpFavoritesFont;
+//    ZGUI::Style             mSymbolicStyle;
+//    tZFontPtr               mpFavoritesFont;
 
 /*    ZWinCheck*              mpAllFilterButton;
     ZWinCheck*              mpFavsFilterButton;
@@ -275,6 +275,8 @@ protected:
     ZWinCheck*              mpRankedFilterButton;
     ZWinBtn*                mpDeleteMarkedButton;
     ZWinBtn*                mpShowContestButton;*/
+
+    tZBufferPtr             mpFavoriteIcon;
     ZWinFolderLabel*        mpFolderLabel;
 
     WinTopWinners*          mpRatedImagesStrip;

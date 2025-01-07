@@ -20,7 +20,10 @@ public:
    bool     OnParentAreaChange();
 
 
+
   
 private:
     int64_t  mnSliderVal;
+
+    ZGUI::TextBox   textBox;
 };
