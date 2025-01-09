@@ -293,20 +293,26 @@ int64_t ZFont::StringWidth(const string& sText)
 
 int64_t ZFont::StringWidth(const uint8_t* pChar, size_t length)
 {
+    int64_t widest = 0;
     int64_t nWidth = 0;
     const uint8_t* pEnd = pChar + length-1;
     for (; pChar < pEnd; pChar++)   // add up all of the chars except last one
     {
         int32_t nBetween = GetSpaceBetweenChars(*pChar, *(pChar + 1));
-        nWidth += CharWidth(*pChar) + 1 + nBetween; // char width adjusted by kerning with next char
+        nWidth += CharWidth(*pChar) + 1;
+        if (nWidth > widest)
+            widest = nWidth;
+        nWidth += nBetween; // char width adjusted by kerning with next char
     }
 
     if (*pChar)
     {
         nWidth += CharWidth(*pChar);  // last char
+        if (nWidth > widest)
+            widest = nWidth;
     }
 
-    return nWidth;
+    return widest;
 }
 
 
