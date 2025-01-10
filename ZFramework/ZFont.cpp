@@ -1403,7 +1403,7 @@ bool ZFont::GenerateGlyph(uint8_t c)
     BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int) mrScratchArea.Width(), (int) mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
 
     SelectFont(mhWinTargetDC, mhWinFont);
-    ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_LEFT);
+    ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_CENTER);
 
     if (c == ' ')
     {
