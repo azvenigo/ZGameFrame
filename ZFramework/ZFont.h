@@ -250,8 +250,7 @@ private:
 
 
     bool                ExtractChar(uint8_t c);
-    int32_t             FindWidestNumberWidth();
-    int32_t             FindWidestCharacterWidth();
+    void                FindWidestCharacterWidth();
     bool                RetrieveKerningPairs();
     ZRect               FindCharExtents();
 

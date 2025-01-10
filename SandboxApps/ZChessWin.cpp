@@ -984,7 +984,7 @@ bool ZChessWin::Paint()
 
 
     if (mpDraggingPiece)
-        mpSurface->BltAlpha(mpDraggingPiece.get(), mpDraggingPiece->GetArea(), mrDraggingPiece, 255);
+        mpSurface->Blt(mpDraggingPiece.get(), mpDraggingPiece->GetArea(), mrDraggingPiece);
     else if (mbEditMode)
         DrawPalette();
 
@@ -1113,9 +1113,9 @@ void ZChessWin::DrawBoard()
             {
                 ZRect rSquare(SquareArea(grid));
                 if (mDraggingPiece && mDraggingSourceGrid == grid)
-                    mpSurface->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), rSquare, 64);
+                    mpSurface->Blt(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), rSquare);
                 else
-                    mpSurface->BltAlpha(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), rSquare, 255);
+                    mpSurface->Blt(mPieceData[c].mpImage.get(), mPieceData[c].mpImage->GetArea(), rSquare);
             }
         }
     }

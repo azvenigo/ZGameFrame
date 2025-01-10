@@ -32,22 +32,22 @@ namespace ZGUI
         {
             if (dropShadowOffset.x > 0)
             {
-                rDraw.right += (dropShadowOffset.x + (int64_t)dropShadowBlur);
+                rDraw.right += (dropShadowOffset.x + (int64_t)dropShadowBlur*2);
             }
             else
             {
-                int64_t offset = (dropShadowOffset.x - (int64_t)dropShadowBlur);
+                int64_t offset = (dropShadowOffset.x - (int64_t)dropShadowBlur*2);
                 rLabel.OffsetRect(-offset, 0);
                 rDraw.left += offset;
             }
 
             if (dropShadowOffset.y > 0)
             {
-                rDraw.bottom += (dropShadowOffset.y + (int64_t)dropShadowBlur);
+                rDraw.bottom += (dropShadowOffset.y + (int64_t)dropShadowBlur*2);
             }
             else
             {
-                int64_t offset = (dropShadowOffset.y - (int64_t)dropShadowBlur);
+                int64_t offset = (dropShadowOffset.y - (int64_t)dropShadowBlur*2);
                 rLabel.OffsetRect(0, -offset);
                 rDraw.top += offset;
                 

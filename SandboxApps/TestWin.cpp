@@ -98,17 +98,18 @@ bool TestWin::Init()
     ChildAdd(pForm);*/
 
 
-    textBox.sText = "Cool Beans!";
+    textBox.sText = "///\\";
     textBox.style = gStyleCaption;
 
-    textBox.style.look.colTop = 0xffffff00;
-    textBox.style.look.colBottom = 0xffffff00;
+    textBox.style.look.colTop = 0xff12ff00;
+    textBox.style.look.colBottom = 0xff500000;
 
-    textBox.style.fp.sFacename = "Stencil";
+    textBox.style.fp.sFacename = "Book Antiqua";
     textBox.style.fp.nWeight = 800;
+    textBox.style.fp.bItalic = true;
     textBox.style.fp.nTracking = 10;
     textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
-    textBox.style.fp.nScalePoints = 5000;
+    textBox.style.fp.nScalePoints = 15000;
 //    textBox.blurBackground = 2.0;
     textBox.dropShadowColor = 0xff0000ff;
     textBox.dropShadowOffset = ZPoint(15, 15);
@@ -163,7 +164,43 @@ bool TestWin::Paint()
 
     textBox.Paint(mpSurface.get());
 
-    textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &textBox.style);
+//    textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &textBox.style);
+
+
+    int iterations = 10;
+    
+    uint64_t start = gTimer.GetUSSinceEpoch();
+
+    for (int i = 0; i < iterations; i++)
+        textBox.Paint(mpSurface.get());
+//        mpSurface->BltNoClip(mpSurface.get(), mAreaLocal, mAreaLocal, ZBuffer::kAlphaDest);
+
+    uint64_t end = gTimer.GetUSSinceEpoch();
+
+    uint64_t result = (end - start)/ iterations;
+
+    cout << "paint time: " << result << "\n";
+
+
+
+    start = gTimer.GetUSSinceEpoch();
+
+    ZGUI::Style s(textBox.style);
+    s.look.colTop = 0xff12ff00;
+    s.look.colBottom = 0xff12ff00;
+        s.look.decoration = ZGUI::ZTextLook::kShadowed;
+    for (int i = 0; i < iterations; i++)
+        textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &s);
+//        mpSurface->BltAlphaNoClip(mpSurface.get(), mAreaLocal, mAreaLocal, 128, ZBuffer::kAlphaDest);
+
+    end = gTimer.GetUSSinceEpoch();
+
+    result = (end - start) / iterations;
+
+    cout << "text time: " << result << "\n";
+
+
+
 
     return ZWin::Paint();
 }
