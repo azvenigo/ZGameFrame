@@ -721,7 +721,14 @@ bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType
     {
         uint32_t* pSrcBits = pSrc->GetPixels() + (rSrc.top * pSrc->GetArea().Width()) + rSrc.left;
         uint32_t* pDstBits = mpPixels + (rDst.top * mSurfaceArea.Width()) + rDst.left;
-        
+    
+
+        auto alphaBlendFunction = (type == kAlphaDest)
+            ? &COL::AlphaBlend_Col2Alpha
+            : (type == kAlphaBlend)
+            ? &COL::AlphaBlend_BlendAlpha
+            : &COL::AlphaBlend_Col1Alpha;
+
         for (int64_t y = 0; y < nBltHeight; y++)
         {
             for (int64_t x = 0; x < nBltWidth; x++)
@@ -736,12 +743,7 @@ bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType
                     *pDstBits = *pSrcBits;
                 else if (nAlpha > 8)
                 {
-                    if (type == kAlphaDest)
-                        *pDstBits = COL::AlphaBlend_Col2Alpha(*pSrcBits, *pDstBits, nAlpha);
-                    else if (type == kAlphaBlend)
-                        *pDstBits = COL::AlphaBlend_BlendAlpha(*pSrcBits, *pDstBits, nAlpha);
-                    else
-                        *pDstBits = COL::AlphaBlend_Col1Alpha(*pSrcBits, *pDstBits, nAlpha);
+                    *pDstBits = alphaBlendFunction(*pSrcBits, *pDstBits, nAlpha);
                 }
 
                 pSrcBits++;

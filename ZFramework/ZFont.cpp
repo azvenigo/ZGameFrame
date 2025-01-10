@@ -52,6 +52,8 @@ ZFont::ZFont()
 {
 	mbInitted = false;
     mbEnableKerning = true;
+    mnWidestCharacterWidth = 0;
+    mnWidestNumberWidth = 0;
 
 #ifdef _WIN64
     mhWinTargetDC = 0;
@@ -1207,8 +1209,7 @@ bool ZFont::Init(const ZFontParams& params)
     int64_t nStart = gTimer.GetUSSinceEpoch();
     RetrieveKerningPairs();
 
-    mnWidestCharacterWidth = FindWidestCharacterWidth();
-    mnWidestNumberWidth = FindWidestNumberWidth();
+    FindWidestCharacterWidth();
 #endif
 
     int64_t nEnd = gTimer.GetUSSinceEpoch();
@@ -1295,7 +1296,6 @@ bool ZFont::ExtractChar(uint8_t c)
             mFontParams.nFixedWidth = mnWidestCharacterWidth;
     }
 
-
     if (mFontParams.nFixedWidth > 0 && rExtents.Width() > 0)   // for fixed width fonts
     {
         int64_t nCharWidth = rExtents.right - rExtents.left;
@@ -1307,6 +1307,11 @@ bool ZFont::ExtractChar(uint8_t c)
     }
     else if (c >= '0' && c <= '9')  // otherwise numbers use fixed width based on their own widest char
     {
+        if ((rExtents.right - rExtents.left) > mnWidestNumberWidth)
+        {
+            mnWidestNumberWidth = (int32_t)(rExtents.right - rExtents.left);
+        }
+
         int64_t nNumWidth = rExtents.right - rExtents.left;
         int64_t nPadding = (mnWidestNumberWidth - nNumWidth) / 2;
 
@@ -1366,60 +1371,15 @@ bool ZFont::ExtractChar(uint8_t c)
 }
 
 
-int32_t ZFont::FindWidestCharacterWidth()
+void ZFont::FindWidestCharacterWidth()
 {
-    int32_t nWidest = 0;
-
-    std::list<uint8_t> charsToTest = { 'W', 'M', '@', '_' };
+    std::list<uint8_t> charsToTest = { 'W', 'M', '@', '_', '0', '2', '6', '7'};
 
     for (auto c : charsToTest)
     {
-        RECT r;
-        r.left = 0;
-        r.top = 0;
-        r.right = (LONG)mrScratchArea.right;
-        r.bottom = (LONG)mrScratchArea.bottom;
-
-        SelectObject(mhWinTargetDC, mhWinTargetBitmap);
-//        SetBkMode(mhWinTargetDC, TRANSPARENT);
-//        BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int)mrScratchArea.Width(), (int)mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
-
-        SelectFont(mhWinTargetDC, mhWinFont);
-        ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_CENTER | DT_CALCRECT);
-
-        if (nWidest < r.right - r.left)
-            nWidest = r.right - r.left;
+        GenerateGlyph(c);
     }
-
-    return nWidest;
 }
-
-int32_t ZFont::FindWidestNumberWidth()
-{
-    int32_t nWidest = 0;
-
-    for (uint8_t c = '0'; c <= '9'; c++)
-    {
-        RECT r;
-        r.left = 0;
-        r.top = 0;
-        r.right = (LONG) mrScratchArea.right;
-        r.bottom = (LONG) mrScratchArea.bottom;
-
-        SelectObject(mhWinTargetDC, mhWinTargetBitmap);
-//        SetBkMode(mhWinTargetDC, TRANSPARENT);
-//        BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int) mrScratchArea.Width(), (int) mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
-
-        SelectFont(mhWinTargetDC, mhWinFont);
-        ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_CENTER | DT_CALCRECT);
-
-        if (nWidest < r.right - r.left)
-            nWidest = r.right - r.left;
-    }
-
-    return nWidest;
-}
-
 
 bool ZFont::GenerateGlyph(uint8_t c)
 {
