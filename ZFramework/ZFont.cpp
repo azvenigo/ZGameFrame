@@ -828,11 +828,12 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 	rTextLine.bottom = rTextLine.top + mFontHeight;
 
 	int64_t nCharsDrawn = 0;
+    int64_t nLinesDrawn = 0;
 
     const char* pChars = sText.data();
     const char* pEnd = pChars + sText.length();
 
-    while (pChars < pEnd && rTextLine.top < rTextLine.bottom)
+    while (pChars < pEnd && rTextLine.top < rTextLine.bottom && nLinesDrawn < nLines)
 	{
         int64_t nLettersToDraw = CalculateWordsThatFitInWidth(rTextLine.Width(), (uint8_t*) pChars, pEnd-pChars);
        
@@ -844,6 +845,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 
 		rTextLine.OffsetRect(0, mFontHeight);
 		pChars += nLettersToDraw;
+        nLinesDrawn++;
 	}
 
 	return nCharsDrawn == sText.length();

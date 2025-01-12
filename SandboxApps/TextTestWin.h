@@ -29,13 +29,14 @@ private:
 
     int32_t     mnSelectedFontIndex;
     bool        mbEnableKerning;
-    ZFontParams mCustomFontParams;
+    //ZFontParams mCustomFontParams;
     int64_t     mCustomFontHeight;
     tZFontPtr   mpFont;
 
     tZBufferPtr  mpBackground;
 
     ZGUI::TextBox mTextBox;
+    bool            mbViewShadow;
     int64_t         mShadowSpread;
 
     ZGUI::Palette mPalette;

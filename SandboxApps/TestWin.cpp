@@ -109,6 +109,7 @@ bool TestWin::Init()
     textBox.style.fp.bItalic = true;
     textBox.style.fp.nTracking = 10;
     textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
+    textBox.style.wrap = false;
     textBox.style.fp.nScalePoints = 20000;
 //    textBox.blurBackground = 2.0;
     textBox.dropShadowColor = 0xff0000ff;
