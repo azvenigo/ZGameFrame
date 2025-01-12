@@ -209,7 +209,7 @@ namespace ZGUI
 
     tZFontPtr Style::Font()
     {
-        assert(fp.nScalePoints > 100  && fp.nScalePoints < 50000.0f);
+        assert(fp.nScalePoints > 100  && fp.nScalePoints < 500000.0f);
         if (!mpFont || !(mpFont->GetFontParams() == fp))
             mpFont = gpFontSystem->GetFont(fp); // cache
 

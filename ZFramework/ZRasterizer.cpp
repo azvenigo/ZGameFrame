@@ -652,7 +652,7 @@ bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* 
     bool isZoomedIn = (screenDist > textureDist);
 
     int64_t threadCount = renderPool.size();
-    int64_t scanLinesPerThread = (nBottomScanLine - nTopScanLine + threadCount - 1) / threadCount;
+    int64_t scanLinesPerThread = (nBottomScanLine - nTopScanLine) / threadCount;
 
     std::vector< std::shared_future<bool> > threadRenderResults;
 
@@ -665,6 +665,7 @@ bool ZRasterizer::MultiSampleRasterizeWithAlpha(ZBuffer* pDestination, ZBuffer* 
         if (i == threadCount - 1)
             nBottom = nBottomScanLine;
 
+        ZASSERT(nBottom <= pDestination->GetArea().bottom);
         threadRenderResults.emplace_back(renderPool.enqueue(&MultiSampleRasterizeRange, pTexture, pDestination, nTop, nBottom, fClipLeft, fClipRight, vertexArray, isZoomedIn, nSubsamples, nAlpha));
     }
 

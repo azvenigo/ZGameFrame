@@ -382,8 +382,11 @@ public:
         }
         else if (sType == "toggleoverlay")
         {
-            gbShowOverlayWin = !gbShowOverlayWin;
-            Sandbox::ToggleOverlay();
+            if (gInput.IsKeyDown(VK_CONTROL))
+            {
+                gbShowOverlayWin = !gbShowOverlayWin;
+                Sandbox::ToggleOverlay();
+            }
         }
 
 		return true;

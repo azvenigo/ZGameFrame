@@ -7,7 +7,7 @@
 #include "ZZipAPI.h"
 #include "ZGUIStyle.h"
 #include <assert.h>
-
+#include "ZRasterizer.h"
 
 ZFontParams::ZFontParams()
 {
@@ -1147,18 +1147,26 @@ bool ZFont::Init(const ZFontParams& params)
     mFontHeight = params.Height();
 
 #ifdef _WIN64
-    mrScratchArea.SetRect(0, 0, mFontParams.Height() * 5, mFontHeight * 2);     // may need to grow this if the font requested is ever needed to be larger
+    rGDIScratchArea.SetRect(0,0,mFontParams.Height() * 3, mFontHeight);
+    mExtractBuffer.Init(rGDIScratchArea.right, rGDIScratchArea.bottom);
+
+    if (UseDoubleSizeFont())
+    {
+        rGDIScratchArea.right *= 2;
+        rGDIScratchArea.bottom *= 2;
+    }
+
 
 
     mDIBInfo.bmiHeader.biBitCount = 32;
     mDIBInfo.bmiHeader.biClrImportant = 0;
     mDIBInfo.bmiHeader.biClrUsed = 0;
     mDIBInfo.bmiHeader.biCompression = 0;
-    mDIBInfo.bmiHeader.biWidth = (LONG) mrScratchArea.Width();
-    mDIBInfo.bmiHeader.biHeight = (LONG) -mrScratchArea.Height();
+    mDIBInfo.bmiHeader.biWidth = (LONG)rGDIScratchArea.right;
+    mDIBInfo.bmiHeader.biHeight = (LONG) -rGDIScratchArea.bottom;
     mDIBInfo.bmiHeader.biPlanes = 1;
     mDIBInfo.bmiHeader.biSize = 40;
-    mDIBInfo.bmiHeader.biSizeImage = (DWORD) mrScratchArea.Width() * (DWORD) mrScratchArea.Height() * 4;
+    mDIBInfo.bmiHeader.biSizeImage = (DWORD)rGDIScratchArea.right * (DWORD)rGDIScratchArea.bottom * 4;
     mDIBInfo.bmiHeader.biXPelsPerMeter = 2835;
     mDIBInfo.bmiHeader.biYPelsPerMeter = 2835;
     mDIBInfo.bmiColors[0].rgbBlue = 0;
@@ -1180,11 +1188,21 @@ bool ZFont::Init(const ZFontParams& params)
     mWinHDC = GetDC(ghWnd);
     assert(mpBits == nullptr);
     mhWinTargetBitmap = CreateDIBSection(mWinHDC, &mDIBInfo, DIB_RGB_COLORS, (void**)&mpBits, NULL, 0);
-    assert(mpBits != nullptr);
+
+    if (mpBits == nullptr)
+    {
+        HRESULT hr = GetLastError();
+        cout << "hr: " << hr << "\n";
+    }
+
+
+    int createFontHeight = mFontHeight;
+    if (UseDoubleSizeFont())
+        createFontHeight *= 2;
 
     mhWinTargetDC = CreateCompatibleDC(mWinHDC);
     mhWinFont = CreateFontA( 
-        (int)mFontHeight,
+        (int)createFontHeight,
         0,                      /*nWidth*/
         0,                      /*nEscapement*/
         0,                      /*nOrientation*/
@@ -1220,62 +1238,67 @@ bool ZFont::Init(const ZFontParams& params)
     return true;
 }
 
-ZRect ZFont::FindCharExtents()
+bool ZFont::FindCharExtents(ZRect& rOutExtents)
 {
-    ZRect rExtents;
+    ZRect rExtents(mExtractBuffer.GetArea());
+
+    bool bFoundBottom = false;
+    bool bFoundRight = false;
+    bool bFoundLeft = false;
 
     // find bottom
-    for (int64_t y = mrScratchArea.bottom - 1; y >= 0; y--)
+    for (int64_t y = mExtractBuffer.GetArea().bottom - 1; y >= 0; y--)
     {
-        for (int64_t x = 0; x < mrScratchArea.right; x++)
+        for (int64_t x = 0; x < mExtractBuffer.GetArea().right; x++)
         {
-
-            uint32_t nCol = (uint32_t) *((uint32_t*) mpBits + y*mrScratchArea.right + x);
-            if (nCol != 0xFFFFFFFF)
+            if (mExtractBuffer.GetPixel(x, y) != 0xFFFFFFFF)
             {
                 rExtents.bottom = y;
                 // break out of both loops
                 y = -1;
-                x = mrScratchArea.right;
+                x = rExtents.right;
+                bFoundBottom = true;
             }
         }
     }
 
     // find right
-    for (int64_t x = mrScratchArea.right - 1; x >= 0; x--)
+    for (int64_t x = mExtractBuffer.GetArea().right - 1; x >= 0; x--)
     {
-        for (int64_t y = 0; y < mrScratchArea.bottom; y++)
+        for (int64_t y = 0; y < mExtractBuffer.GetArea().bottom; y++)
         {
-            uint32_t nCol = (uint32_t) * ((uint32_t*)mpBits + y * mrScratchArea.right + x);
-            if (nCol != 0xFFFFFFFF)
+            if (mExtractBuffer.GetPixel(x, y) != 0xFFFFFFFF)
             {
                 rExtents.right = x;
                 // break out of both loops
-                y = mrScratchArea.bottom;
+                y = rExtents.bottom;
                 x = -1;
+                bFoundRight = true;
             }
         }
     }
 
     // find left
-    for (int64_t x = 0; x < mrScratchArea.right; x++)
+    for (int64_t x = 0; x < mExtractBuffer.GetArea().right; x++)
     {
-        for (int64_t y = 0; y < mrScratchArea.bottom; y++)
+        for (int64_t y = 0; y < mExtractBuffer.GetArea().bottom; y++)
         {
-            uint32_t nCol = (uint32_t) * ((uint32_t*)mpBits + y * mrScratchArea.right + x);
-            if (nCol != 0xFFFFFFFF)
+            uint32_t nCol = (uint32_t) * ((uint32_t*)mpBits + y * rExtents.right + x);
+            if (mExtractBuffer.GetPixel(x, y) != 0xFFFFFFFF)
             {
                 rExtents.left = x;
                 // break out of both loops
-                y = mrScratchArea.bottom;
-                x = mrScratchArea.right;
+                y = rExtents.bottom;
+                x = rExtents.right;
+                bFoundLeft = true;
             }
         }
     }
 
     rExtents.bottom++;
 
-    return rExtents;
+    rOutExtents = rExtents;
+    return bFoundLeft && bFoundRight && bFoundBottom;
 }
 
 
@@ -1284,7 +1307,42 @@ bool ZFont::ExtractChar(uint8_t c)
     if (c <= 0)
         return false;
 
-    ZRect rExtents = FindCharExtents();
+
+    if (UseDoubleSizeFont())
+    {
+        mExtractBuffer.Fill(0);
+        uint32_t* pSrc = (uint32_t*)mpBits;
+        uint32_t* pDest = mExtractBuffer.mpPixels;
+        for (int y = 0; y < rGDIScratchArea.bottom-1; y+=2)
+        {
+            for (int x = 0; x < rGDIScratchArea.right-1; x+=2)
+            {
+                uint32_t col1 = *(pSrc + y * rGDIScratchArea.Width() + x);
+                uint32_t col2 = *(pSrc + y * rGDIScratchArea.Width() + x + 1);
+                uint32_t col3 = *(pSrc + (y+1) * rGDIScratchArea.Width() + x);
+                uint32_t col4 = *(pSrc + (y+1) * rGDIScratchArea.Width() + x + 1);
+
+                uint32_t total = (col1 & 0xff) + (col2 & 0xff) + (col3 & 0xff) + (col4 & 0xff);
+                uint32_t ave = total / 4;
+
+                if (ave != 255)
+                    int stophere = 5;
+
+                *pDest++ = (0xff000000 | (ave << 16) | (ave << 8) | ave);
+            }
+        }
+    }
+    else
+    {
+        memcpy(mExtractBuffer.mpPixels, mpBits, mExtractBuffer.GetArea().Width() * mExtractBuffer.GetArea().Height() * 4);
+    }
+
+
+    ZRect rExtents;
+    if (!FindCharExtents(rExtents))
+    {
+        return false;
+    }
 
     // if we've encountered a wider char than we've seen before
     if (rExtents.right - rExtents.left > mnWidestCharacterWidth)
@@ -1303,7 +1361,7 @@ bool ZFont::ExtractChar(uint8_t c)
 
         rExtents.left -= nPadding;
         rExtents.right = rExtents.left + mnWidestCharacterWidth;
-        ZASSERT(rExtents.left >= 0 && rExtents.right < mrScratchArea.right);
+        ZASSERT(rExtents.left >= 0 && rExtents.right <= rGDIScratchArea.right);
     }
     else if (c >= '0' && c <= '9')  // otherwise numbers use fixed width based on their own widest char
     {
@@ -1317,7 +1375,7 @@ bool ZFont::ExtractChar(uint8_t c)
 
         rExtents.left -= nPadding;
         rExtents.right = rExtents.left + mnWidestNumberWidth;
-        ZASSERT(rExtents.left >= 0 && rExtents.right < mrScratchArea.right);
+        ZASSERT(rExtents.left >= 0 && rExtents.right <= rGDIScratchArea.right);
     }
 
     
@@ -1329,11 +1387,11 @@ bool ZFont::ExtractChar(uint8_t c)
     uint8_t nPen = 0;
     uint8_t nOffset = 0;
 
-    for (int64_t y = 0; y <= rExtents.bottom; y++)
+    for (int64_t y = 0; y < rExtents.bottom; y++)
     {
         for (int64_t x = rExtents.left; x <= rExtents.right; x++)
         {
-            uint32_t nCol = (uint32_t) *((uint32_t*)mpBits + y * mrScratchArea.right + x);
+            uint32_t nCol = mExtractBuffer.GetPixel(x, y);
             uint8_t nBright = 255-nCol&0x000000ff;
 
 
@@ -1378,6 +1436,10 @@ void ZFont::FindWidestCharacterWidth()
     for (auto c : charsToTest)
     {
         GenerateGlyph(c);
+
+        // need to clear the data for the glyph since data would have changed if a new widest char is found
+        mCharDescriptors[c].nCharWidth = 0;
+        mCharDescriptors[c].pixelData.clear();
     }
 }
 
@@ -1396,11 +1458,11 @@ bool ZFont::GenerateGlyph(uint8_t c)
     RECT r;
     r.left = overhang;
     r.top = 0;
-    r.right = (LONG) mrScratchArea.right;
-    r.bottom = (LONG) mrScratchArea.bottom;
+    r.right = (LONG)rGDIScratchArea.right;
+    r.bottom = (LONG)rGDIScratchArea.bottom;
 
     SetBkMode(mhWinTargetDC, TRANSPARENT);
-    BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int) mrScratchArea.Width(), (int) mrScratchArea.Height(), NULL, 0, 0, WHITENESS);
+    BOOL bReturn = BitBlt(mhWinTargetDC, 0, 0, (int)rGDIScratchArea.Width(), (int)rGDIScratchArea.Height(), NULL, 0, 0, WHITENESS);
 
     SelectFont(mhWinTargetDC, mhWinFont);
     ::DrawTextA(mhWinTargetDC, (LPCSTR)&c, 1, &r, DT_TOP | DT_CENTER);
@@ -1480,7 +1542,7 @@ int CALLBACK EnumFontFamProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DW
 
 ZFontSystem::ZFontSystem()
 {
-    mbCachingEnabled = false;
+    mbCachingEnabled = true;
 }
 
 ZFontSystem::~ZFontSystem()
@@ -1668,7 +1730,7 @@ tZFontPtr ZFontSystem::GetFont(const ZFontParams& params)
     }
 
     int64_t height = params.Height();
-    assert(params.nScalePoints > 0 && params.nScalePoints < 50000);
+    assert(params.nScalePoints > 0 && params.nScalePoints < 500000);
 
     const std::lock_guard<std::recursive_mutex> lock(mFontMapMutex);
     auto findIt = mHeightToFontMap[height].find(params);

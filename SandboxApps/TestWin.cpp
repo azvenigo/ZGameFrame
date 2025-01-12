@@ -98,18 +98,18 @@ bool TestWin::Init()
     ChildAdd(pForm);*/
 
 
-    textBox.sText = "///\\";
+    textBox.sText = "Quite the pickles?";
     textBox.style = gStyleCaption;
 
     textBox.style.look.colTop = 0xff12ff00;
     textBox.style.look.colBottom = 0xff500000;
 
-    textBox.style.fp.sFacename = "Book Antiqua";
-    textBox.style.fp.nWeight = 800;
+    textBox.style.fp.sFacename = "Arial";
+    textBox.style.fp.nWeight = 100;
     textBox.style.fp.bItalic = true;
     textBox.style.fp.nTracking = 10;
     textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
-    textBox.style.fp.nScalePoints = 15000;
+    textBox.style.fp.nScalePoints = 20000;
 //    textBox.blurBackground = 2.0;
     textBox.dropShadowColor = 0xff0000ff;
     textBox.dropShadowOffset = ZPoint(15, 15);
@@ -167,7 +167,7 @@ bool TestWin::Paint()
 //    textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &textBox.style);
 
 
-    int iterations = 10;
+    int iterations = 1;
     
     uint64_t start = gTimer.GetUSSinceEpoch();
 
@@ -189,8 +189,8 @@ bool TestWin::Paint()
     s.look.colTop = 0xff12ff00;
     s.look.colBottom = 0xff12ff00;
         s.look.decoration = ZGUI::ZTextLook::kShadowed;
-    for (int i = 0; i < iterations; i++)
-        textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &s);
+//    for (int i = 0; i < iterations; i++)
+//        textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &s);
 //        mpSurface->BltAlphaNoClip(mpSurface.get(), mAreaLocal, mAreaLocal, 128, ZBuffer::kAlphaDest);
 
     end = gTimer.GetUSSinceEpoch();

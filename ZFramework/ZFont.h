@@ -108,7 +108,7 @@ public:
 
     int64_t Height() const 
     { 
-        assert(nScalePoints > 0 && nScalePoints < 100000.0);
+        assert(nScalePoints > 0 && nScalePoints < 500000.0);
         return (nScalePoints * gM)/1000;
     }
 
@@ -222,6 +222,7 @@ public:
     int64_t         CalculateWidestLine(int64_t nLineWidth, const uint8_t* pChars, size_t nNumChars);           // returns the widest line that would be visible drawing the text
 
 protected:
+    bool            UseDoubleSizeFont() { return mFontHeight > 400; }
 	bool            DrawText_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, ZRect* pClip);
 	bool            DrawText_Gradient_Helper(ZBuffer* pBuffer, const std::string& sText, const ZRect& rAreaToDrawTo, uint32_t nCol, uint32_t nCol2, ZRect* pClip);
 
@@ -252,15 +253,15 @@ private:
     bool                ExtractChar(uint8_t c);
     void                FindWidestCharacterWidth();
     bool                RetrieveKerningPairs();
-    ZRect               FindCharExtents();
+    bool                FindCharExtents(ZRect& rOutExtents);
 
-    ZRect               mrScratchArea;
-
+    ZBuffer             mExtractBuffer;
+    ZRect               rGDIScratchArea;
 
     HDC                 mhWinTargetDC;
     HBITMAP             mhWinTargetBitmap;
     BITMAPINFO          mDIBInfo;
-    uint8_t* mpBits;
+    uint8_t*            mpBits;
     HDC                 mWinHDC;
     HFONT               mhWinFont;
     TEXTMETRICA         mWinTextMetrics;

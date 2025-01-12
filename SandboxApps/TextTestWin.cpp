@@ -207,7 +207,7 @@ bool TextTestWin::Init()
 
     pCP->Caption("heightlabel", "Height");
 
-    pCP->Slider("fontheight", &mCustomFontHeight, 8, 200, 2, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
+    pCP->Slider("fontheight", &mCustomFontHeight, 8, 800, 2, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
 
     pCP->Caption("weight", "Weight");
     pCP->Slider("fontweight", &mCustomFontParams.nWeight, 2, 9, 100, 0.1, "{setcustomfont;target=TextTestWin}", true, false);
@@ -272,14 +272,13 @@ bool TextTestWin::Paint()
 
 	ZRect rText(32, 32, mAreaLocal.right*4/5, mAreaLocal.bottom);
 
+    mpSurface.get()->Fill(0xff8888ff);
     if (mpBackground.get()->GetArea().Width() > 0)
     {
         tUVVertexArray verts;
         gRasterizer.RectToVerts(mAreaLocal, verts);
         gRasterizer.Rasterize(mpSurface.get(), mpBackground.get(), verts);
     }
-    else
-        mpSurface.get()->Fill(0xff595850);
 
 
     mTextBox.Paint(mpSurface.get());
