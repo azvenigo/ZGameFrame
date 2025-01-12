@@ -1647,7 +1647,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
 
     if (mbCachingEnabled)
     {
-        ZDEBUG_OUT("ZFontSystem CACHING ENABLED\n");
+//        ZDEBUG_OUT("ZFontSystem CACHING ENABLED\n");
         if (IsCached(params))
         {
             tZFontPtr pLoaded = LoadFont(FontCacheFilename(params));
@@ -1668,7 +1668,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
     }
     else
     {
-        ZDEBUG_OUT("ZFontSystem CACHING ENABLED - Creating font\n");
+//        ZDEBUG_OUT("ZFontSystem CACHING ENABLED - Creating font\n");
     }
 
     ZFont* pNewFont = new ZFont();
@@ -1687,7 +1687,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
 
     if (mbCachingEnabled)
     {
-        ZDEBUG_OUT("ZFontSystem CACHING ENABLED\n");
+//        ZDEBUG_OUT("ZFontSystem CACHING ENABLED\n");
         if (!msCacheFolder.empty())
         {
             if (!params.bSymbolic) // no caching symbolic fonts
@@ -1699,7 +1699,7 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
     }
     else
     {
-        ZDEBUG_OUT("ZFontSystem CACHING DISABLED\n");
+//        ZDEBUG_OUT("ZFontSystem CACHING DISABLED\n");
     }
 
     return mHeightToFontMap[fp.Height()][fp];

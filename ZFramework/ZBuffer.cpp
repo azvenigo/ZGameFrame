@@ -2042,8 +2042,8 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
     }
 
     // Perform horizontal convolution
-#pragma omp parallel for
-//#pragma omp parallel num_threads(8)
+//#pragma omp parallel for
+//#pragma omp parallel num_threads(4)
     for (int64_t y = rArea.top; y < rArea.bottom; y++)
     {
         for (int64_t x = rArea.left; x < rArea.right; x++)
@@ -2081,8 +2081,8 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
     }
 
     // Perform vertical convolution and store the result in the output buffer
-#pragma omp parallel for
-//#pragma omp parallel num_threads(8)
+//#pragma omp parallel for
+//#pragma omp parallel num_threads(4)
     for (int64_t x = rArea.left; x < rArea.right; x++)
     {
 

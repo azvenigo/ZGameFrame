@@ -725,7 +725,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_KILLFOCUS:
 //		ZDEBUG_OUT("WM_KILLFOCUS\n");
-		gbPaused = true;
+//		gbPaused = true;
 		gTimer.Stop();
 		break;
 	case WM_SETFOCUS:
@@ -738,7 +738,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 //        if (gpMainWin)
 //            gpMainWin->InvalidateChildren();
-        gbPaused = false;
+//        gbPaused = false;
         gTimer.Start();
         gMessageSystem.Post(ZMessage("pause", "set", "0"));
     }
@@ -747,13 +747,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (LOWORD(wParam) == WA_INACTIVE)
 		{
 			gMessageSystem.Post(ZMessage("pause", "set", "1"));
-            gbPaused = true;
+//            gbPaused = true;
 			gTimer.Stop();
 		}
 		else
 		{
             gMessageSystem.Post(ZMessage("pause", "set", "0"));
-            gbPaused = false;
+//            gbPaused = false;
 			gTimer.Start();
 		}
 		break;

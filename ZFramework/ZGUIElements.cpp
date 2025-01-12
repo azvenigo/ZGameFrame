@@ -57,7 +57,7 @@ namespace ZGUI
 
         if (renderedBuf.GetArea().Width() != rDraw.Width() || renderedBuf.GetArea().Height() != rDraw.Height() || renderedText != sText || renderedStyle != style)
         {
-            cout << "Rendering textbox\n";
+//            cout << "Rendering textbox\n";
             renderedText = sText;
             renderedStyle = style;
 
