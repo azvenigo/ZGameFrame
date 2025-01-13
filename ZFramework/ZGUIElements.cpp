@@ -180,17 +180,20 @@ namespace ZGUI
 
 
 
-    bool SVGImageBox::Load(const std::string& sFilename)
+    bool SVGImageBox::Load()
     {
         const std::lock_guard<std::recursive_mutex> lock(mDocMutex);
         
-        mSVGDoc = lunasvg::Document::loadFromFile(sFilename);
+        mSVGDoc = lunasvg::Document::loadFromFile(imageFilename);
 
         if (!mSVGDoc)
         {
-            cerr << "Failed to load SVG:" << sFilename << "\n";
+            cerr << "Failed to load SVG:" << imageFilename << "\n";
             return false;
         }
+
+        loadedFilename = imageFilename;
+        mRendered.reset();  // will
 
         return true;
     }
@@ -199,10 +202,17 @@ namespace ZGUI
     {
         const std::lock_guard<std::recursive_mutex> lock(mDocMutex);
 
-        if (mSVGDoc == nullptr || !visible)
-        {
+        if (!visible)
             return true;
+
+        if (loadedFilename != imageFilename)
+        {
+            if (!Load())
+                return false;
         }
+
+        if (mSVGDoc == nullptr)
+            return true;
 
         ZRect rDest(0,0, (int64_t)mSVGDoc->width(), (int64_t)mSVGDoc->height());
         rDest = ZGUI::ScaledFit(rDest, area);

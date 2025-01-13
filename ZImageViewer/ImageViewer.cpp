@@ -205,6 +205,19 @@ bool ImageViewer::OnKeyDown(uint32_t key)
 #ifdef _WIN64
     if (key == VK_ESCAPE)
     {
+        // If a image selection panel is up, escape should just close it
+        ZWin* pTop = GetTopWindow();
+        if (pTop)
+        {
+            ZWinPanel* pWinPanel = (ZWinPanel*)pTop->GetChildWindowByWinName("image_selection_panel");
+            if (pWinPanel)
+            {
+                gMessageSystem.Post(ZMessage("clear_selection", mpWinImage));
+                pTop->ChildDelete(pWinPanel);
+                return true;
+            }
+        }
+
         HandleQuitCommand();
         return true;
     }
@@ -635,11 +648,11 @@ void ImageViewer::ShowImageSelectionPanel(ZRect rSelection)
 
     string sClearMsg = "{clear_selection;target=" + mpWinImage->GetTargetName() + "}";
     string sPanelLayout;
-    sPanelLayout = "<panel close_on_button=1 border=1 spacers=1>";
-    sPanelLayout += "<row><button id=cancel svgpath=$apppath$/res/exit.svg msg=" + sClearMsg + "/>";
+    sPanelLayout = "<panel close_on_button=1 border=1 spacers=1><row>";
     sPanelLayout += "<button id=save svgpath=$apppath$/res/save.svg msg=\"{save_selection;r=" + RectToString(rSelection) + ";target=" + GetTargetName() + "}" + sClearMsg + "\" tooltip=\"Save selection\"/>";
-    sPanelLayout += "<button id=copy svgpath=$apppath$/res/copy.svg msg=\"{copy_selection;r=" + RectToString(rSelection) + ";target=" + GetTargetName() + "}" + sClearMsg + "\" tooltip=\"Copy selection to clipboard\"/></row>";
-    sPanelLayout += "</panel>";
+    sPanelLayout += "<button id=copy svgpath=$apppath$/res/copy.svg msg=\"{copy_selection;r=" + RectToString(rSelection) + ";target=" + GetTargetName() + "}" + sClearMsg + "\" tooltip=\"Copy selection to clipboard\"/>";
+    sPanelLayout += "<button id=cancel svgpath=$apppath$/res/x.svg msg=" + sClearMsg + " tooltip=\"Cancel\"/>";
+    sPanelLayout += "</row></panel>";
 
     pWinPanel = new ZWinPanel();
     pWinPanel->msWinName = "image_selection_panel";
@@ -1348,7 +1361,7 @@ bool ImageViewer::Init()
 //        mpWinImage->mCaptionMap["zoom"].style.pad.v = gStyleCaption.fp.nHeight;
 
         mpWinImage->mpTable = new ZGUI::ZTable();
-        mpWinImage->mIconMap["favorite"].Load("res/star.svg");
+        mpWinImage->mIconMap["favorite"].imageFilename = "res/star.svg";
         mpWinImage->mIconMap["favorite"].visible = false;
 
         ChildAdd(mpWinImage);
@@ -1410,9 +1423,10 @@ bool ImageViewer::Init()
         mpPanel->mrTrigger = mAreaLocal;
         mpPanel->mrTrigger.bottom = mAreaLocal.top + 20;
 
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("openfile", "File", "", "$apppath$/res/openfile.svg", "Load Image", ZMessage("loadimg", this), 1.0, style, {});
+        
         // file group
         string sFileGroupLayout = "<panel hide_on_button=1 hide_on_mouse_exit=1 border=1 spacers=1>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("openfile", "", "", "$apppath$/res/openfile.svg", "Load Image", ZMessage("loadimg", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("savefile", "", "", "$apppath$/res/save.svg", "Save Image", ZMessage("saveimg", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("copyfile", "", "", "$apppath$/res/copy.svg", "Select a Copy Folder for quick-move with 'C'", ZMessage("set_copy_folder", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("set_move_folder", this), 1.0, style, {}) + "</row>";
@@ -1462,6 +1476,7 @@ bool ImageViewer::Init()
         bigFontStyle.pos = ZGUI::C;
         mpPanel->mPanelLayout += ZWinPanel::MakeButton("show_help", "", "?", "", "Help", ZMessage("show_help", this), 1.0, rightAligned, bigFontStyle);
         mpPanel->mPanelLayout += ZWinPanel::MakeButton("toggle_fullscreen", "", "", "$apppath$/res/fullscreen.svg", "Fullscreen/Windowed", ZMessage("toggle_fullscreen"), true, rightAligned, {});
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("quit_button", "", "", "$apppath$/res/x.svg", "Quit", ZMessage("quit", this), true, rightAligned, {});
 
         // Context
 
@@ -1504,6 +1519,12 @@ void ImageViewer::UpdateControlPanel()
     gMessageSystem.Post(ZMessage("set_caption", "target", "filterranked", "text", "Ranked"));
     gMessageSystem.Post(ZMessage("set_caption", "text", std::format("To Be Deleted ({})", mToBeDeletedImageArray.size()), "target", "filterdel"));
 
+    string sAppPath = gRegistry["apppath"];
+    if (gGraphicSystem.mbFullScreen)
+        gMessageSystem.Post(ZMessage("set_image", "target", "toggle_fullscreen", "image", sAppPath + "/res/windowed.svg"));
+    else
+        gMessageSystem.Post(ZMessage("set_image", "target", "toggle_fullscreen", "image", sAppPath + "/res/fullscreen.svg"));
+    
     if (mbShowUI && mpPanel)
     {
         gMessageSystem.Post(ZMessage("set_enabled", "target", "copylink", "enabled", SH::FromInt((int)ValidIndex(mViewingIndex))));
@@ -1517,7 +1538,6 @@ void ImageViewer::UpdateControlPanel()
         gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
 
         gMessageSystem.Post(ZMessage("set_visible", "visible", SH::FromInt((int)(mFilterState == kFavs || mFilterState == kRanked)), "target", "rank_favorites"));
-
     }
 
     if (mpPanel)
@@ -2424,7 +2444,7 @@ void ImageViewer::UpdateCaptions()
                 if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
                 {
                     mpWinImage->mCaptionMap["for_delete"].sText = /*mImageArray[mnViewingIndex].filename.filename().string() +*/ "\nMARKED FOR DELETE";
-                    mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5000, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, ZGUI::Padding(gM*8, gM*4), 0x88000000, true);
+                    mpWinImage->mCaptionMap["for_delete"].style = ZGUI::Style(ZFontParams("Ariel Bold", 5000, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffff0000, 0xffff0000), ZGUI::CB, ZGUI::Padding((int32_t)gM*8, (int32_t)gM*4), 0x88000000, true);
                     mpWinImage->mCaptionMap["for_delete"].visible = true;
                     //mpWinImage->mCaptionMap["for_delete"].blurBackground = 8.0;
                     mpWinImage->mCaptionMap["for_delete"].renderedText.clear(); // force re-render

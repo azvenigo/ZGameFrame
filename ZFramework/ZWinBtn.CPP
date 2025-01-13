@@ -186,6 +186,13 @@ bool ZWinBtn::HandleMessage(const ZMessage& message)
         }
         return true;
     }
+    else if (sType == "set_image")
+    {
+        mSVGImage.imageFilename = message.GetParam("image");    // set the image filename and invalidate....which will reload on next paint call
+        Invalidate();
+        return true;
+
+    }
     else if (sType == "set_enabled")
     {
         bool bNew = SH::ToBool(message.GetParam("enabled"));

@@ -385,7 +385,7 @@ bool ZWinPanel::ParseRow(ZXML* pRow)
             pWin = new ZWinPopupPanelBtn();
             ZWinPopupPanelBtn* pBtn = (ZWinPopupPanelBtn*)pWin;
             pBtn->mPanelLayout = control->GetAttribute("layout");
-            pBtn->mSVGImage.Load(ResolveTokens(control->GetAttribute("svgpath")));
+            pBtn->mSVGImage.imageFilename = ResolveTokens(control->GetAttribute("svgpath"));
 //            assert(control->HasAttribute("rad"));
             if (control->HasAttribute("rad"))
                 pBtn->panelRAD = control->GetAttribute("rad");
@@ -405,7 +405,7 @@ bool ZWinPanel::ParseRow(ZXML* pRow)
             }
             if (control->HasAttribute("svgpath"))
             {
-                pBtn->mSVGImage.Load(ResolveTokens(control->GetAttribute("svgpath")));
+                pBtn->mSVGImage.imageFilename = ResolveTokens(control->GetAttribute("svgpath"));
             }
 
             pBtn->msButtonMessage = control->GetAttribute("msg") + msgSuffix;

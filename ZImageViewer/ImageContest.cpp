@@ -430,13 +430,13 @@ bool ImageContest::Init()
         string sAppPath = gRegistry["apppath"];
 
         mpChooseBtn[kLeft] = new ZWinBtn();
-        mpChooseBtn[kLeft]->mSVGImage.Load(sAppPath + "/res/left2.svg");
+        mpChooseBtn[kLeft]->mSVGImage.imageFilename = sAppPath + "/res/left2.svg";
         mpChooseBtn[kLeft]->msTooltip = "Choose Left";
         mpChooseBtn[kLeft]->msButtonMessage = ZMessage("select_winner", this, "side", "left");
         ChildAdd(mpChooseBtn[kLeft]);
 
         mpChooseBtn[kRight] = new ZWinBtn();
-        mpChooseBtn[kRight]->mSVGImage.Load(sAppPath + "/res/right2.svg");
+        mpChooseBtn[kRight]->mSVGImage.imageFilename = sAppPath + "/res/right2.svg";
         mpChooseBtn[kRight]->msTooltip = "Choose Right";
         mpChooseBtn[kRight]->msButtonMessage = ZMessage("select_winner", this, "side", "right");
         ChildAdd(mpChooseBtn[kRight]);

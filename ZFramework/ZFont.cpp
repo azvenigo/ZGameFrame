@@ -1198,7 +1198,7 @@ bool ZFont::Init(const ZFontParams& params)
     }
 
 
-    int createFontHeight = mFontHeight;
+    int createFontHeight = (int)mFontHeight;
     if (UseDoubleSizeFont())
         createFontHeight *= 2;
 
@@ -1456,7 +1456,7 @@ bool ZFont::GenerateGlyph(uint8_t c)
         return true;
 
 
-    DWORD overhang = mFontHeight; // indent by a significant amount to allow space for left overhang
+    DWORD overhang = (DWORD)mFontHeight; // indent by a significant amount to allow space for left overhang
     RECT r;
     r.left = overhang;
     r.top = 0;

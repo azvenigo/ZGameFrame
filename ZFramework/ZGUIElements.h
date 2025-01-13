@@ -71,7 +71,6 @@ namespace ZGUI
     {
     public:
         SVGImageBox() { Clear(); }
-        bool    Load(const std::string& sFilename);
 
         bool    Paint(ZBuffer* pDst);
         static void Paint(ZBuffer* pDst, tSVGImageMap& svgImageBoxMap);
@@ -88,11 +87,15 @@ namespace ZGUI
         ZRect       area;
         bool        visible;
 
+        std::string imageFilename;  
+
     private:
+        bool    Load();
+
         std::recursive_mutex mDocMutex;
         std::unique_ptr<lunasvg::Document> mSVGDoc;
         tZBufferPtr mRendered;
-
+        std::string loadedFilename;
     };
 
 

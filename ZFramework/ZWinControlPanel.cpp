@@ -96,7 +96,7 @@ ZWinBtn* ZWinControlPanel::SVGButton(const std::string& sID, const string& sSVGF
     }
 
     if (!sSVGFilepath.empty())
-        pBtn->mSVGImage.Load(sSVGFilepath);
+        pBtn->mSVGImage.imageFilename = sSVGFilepath;
     
     if (!sMessage.empty())
     {
@@ -127,7 +127,7 @@ ZWinPopupPanelBtn* ZWinControlPanel::PopupPanelButton(const std::string& sID, co
     }
 
     if (!sSVGFilepath.empty())
-        pBtn->mSVGImage.Load(sSVGFilepath);
+        pBtn->mSVGImage.imageFilename = sSVGFilepath;
 
     return pBtn;
 }
