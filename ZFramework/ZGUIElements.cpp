@@ -8,6 +8,8 @@ namespace ZGUI
 {
     bool TextBox::Paint(ZBuffer* pDst)
     {
+        const std::lock_guard<std::mutex> lock(clearMutex);
+
         if (sText.empty() || !visible || style.Uninitialized())
             return true;
 
@@ -15,17 +17,22 @@ namespace ZGUI
         // assuming pDst is locked
         ZRect rDraw(area);
 
+        assert(!sText.empty());
         if (rDraw.Width() == 0 || rDraw.Height() == 0)
         {
             rDraw = pDst->GetArea();
         }
 
+        assert(!sText.empty());
         if (style.pos == ZGUI::Fit)
             style.fp.nScalePoints = ZFontParams::ScalePoints(rDraw.Height()/2);
 
+        assert(!sText.empty());
+        assert(style.fp.nScalePoints > 0);
         rDraw = style.Font()->Arrange(rDraw, sText, style.pos, style.pad.h, style.pad.v);
         ZRect rLabel(rDraw.Width(), rDraw.Height());
 
+        assert(!sText.empty());
 
         bool bDrawDropShadow = ARGB_A(dropShadowColor) > 0;
         if (bDrawDropShadow)
@@ -54,6 +61,7 @@ namespace ZGUI
             }
         }
 
+        assert(!sText.empty());
 
         if (renderedBuf.GetArea().Width() != rDraw.Width() || renderedBuf.GetArea().Height() != rDraw.Height() || renderedText != sText || renderedStyle != style)
         {
@@ -91,9 +99,13 @@ namespace ZGUI
             else
                 renderedBuf.Fill(0);
 
+            assert(!sText.empty());
+
             // Draw outline in padded area if style specifies
             if (ARGB_A(style.pad.col) > 0x00)
                 renderedBuf.DrawRectAlpha(style.pad.col, rLabel);
+
+            assert(!sText.empty());
 
             style.Font()->DrawTextParagraph(&renderedBuf, sText, rLabel, &style);
 

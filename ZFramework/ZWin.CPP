@@ -994,7 +994,8 @@ void ZWin::SetVisible(bool bVisible)
         }
         mbVisible = bVisible;
         InvalidateChildren();
-        gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
+        if (gpGraphicSystem && gpGraphicSystem->GetScreenBuffer())
+            gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
     }
 }
 

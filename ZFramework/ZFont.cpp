@@ -1632,16 +1632,18 @@ tZFontPtr ZFontSystem::LoadFont(const string& sFilename)
         return nullptr;
     }
     ZFontParams fp(pNewFont->GetFontParams());
+    assert(fp.nScalePoints > 0);
     int64_t height = fp.Height();
 
     tZFontMap& fontMap = mHeightToFontMap[height];
 
     fontMap[fp] = pNewFont;
+    assert(fp.nScalePoints > 0);
     return pNewFont;
 }
 
 #ifdef _WIN64
-tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
+tZFontPtr ZFontSystem::CreateFont(ZFontParams params)
 {
     ZASSERT(!params.sFacename.empty());
 
@@ -1650,9 +1652,12 @@ tZFontPtr ZFontSystem::CreateFont(const ZFontParams& params)
 //        ZDEBUG_OUT("ZFontSystem CACHING ENABLED\n");
         if (IsCached(params))
         {
+            assert(params.nScalePoints > 0);
             tZFontPtr pLoaded = LoadFont(FontCacheFilename(params));
+            assert(params.nScalePoints > 0);
             if (pLoaded)
             {
+                assert(params.nScalePoints > 0);
                 if (pLoaded->Height() == params.Height())
                 {
                     int64_t height = pLoaded->Height();

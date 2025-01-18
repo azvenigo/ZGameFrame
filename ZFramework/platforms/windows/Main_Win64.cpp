@@ -384,6 +384,7 @@ void SizeWindowToClientArea(HWND hWnd, int left, int top, int nWidth, int nHeigh
     ptDiff.x = (rcWindow.right - rcWindow.left) - rcClient.right;
     ptDiff.y = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
     MoveWindow(hWnd, left, top, nWidth + ptDiff.x, nHeight + ptDiff.y, TRUE);
+    cout << "MoveWindow in SizeWindowToClientArea\n";
 }
 
 
@@ -472,6 +473,7 @@ BOOL WinInitInstance(int argc, char* argv[])
         ghWnd = CreateWindow(szAppClass, szAppClass, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
         grFullArea.SetRect(0, 0, grWindowedArea.Width(), grWindowedArea.Height());
         SizeWindowToClientArea(ghWnd, (int)grWindowedArea.left, (int)grWindowedArea.top, (int)grWindowedArea.Width(), (int)grWindowedArea.Height());
+
     }
 
     if (!ghWnd)
@@ -497,9 +499,6 @@ void SwitchFullscreen(bool bFullscreen)
         return;
 
     gGraphicSystem.mbFullScreen = bFullscreen;
-
-//    PAINTSTRUCT ps;
-//    HDC hdc = BeginPaint(ghWnd, &ps);
     if (gGraphicSystem.mbFullScreen)
     {
         MONITORINFO mi;
@@ -515,7 +514,6 @@ void SwitchFullscreen(bool bFullscreen)
 
         SetWindowLongPtr(ghWnd, GWL_STYLE, nStyle);
         MoveWindow(ghWnd, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top, TRUE);
-
     }
     else
     {
@@ -534,8 +532,6 @@ void SwitchFullscreen(bool bFullscreen)
     }
 
     gbWindowSizeChanged = true;
-//    HandleWindowSizeChanged();
-//    EndPaint(ghWnd, &ps);
 }
 
 void HandleWindowSizeChanged()
@@ -545,14 +541,14 @@ void HandleWindowSizeChanged()
 
     gbWindowSizeChanged = false;
 
-    RECT rW;
-    GetWindowRect(ghWnd, &rW);
+    RECT rC;
+    GetClientRect(ghWnd, &rC);
     if (gGraphicSystem.mbFullScreen)
     {
-        grFullScreenArea.left = rW.left;
-        grFullScreenArea.top = rW.top;
-        grFullScreenArea.right = rW.right;
-        grFullScreenArea.bottom = rW.bottom;
+        grFullScreenArea.left = rC.left;
+        grFullScreenArea.top = rC.top;
+        grFullScreenArea.right = rC.right;
+        grFullScreenArea.bottom = rC.bottom;
 
         gRegistry.Set("appwin", "full_l", grFullScreenArea.left);
         gRegistry.Set("appwin", "full_t", grFullScreenArea.top);
@@ -561,10 +557,10 @@ void HandleWindowSizeChanged()
     }
     else
     {
-        grWindowedArea.left = rW.left;
-        grWindowedArea.top = rW.top;
-        grWindowedArea.right = rW.right;
-        grWindowedArea.bottom = rW.bottom;
+        grWindowedArea.left = rC.left;
+        grWindowedArea.top = rC.top;
+        grWindowedArea.right = rC.right;
+        grWindowedArea.bottom = rC.bottom;
 
         gRegistry.Set("appwin", "window_l", grWindowedArea.left);
         gRegistry.Set("appwin", "window_t", grWindowedArea.top);
@@ -572,8 +568,6 @@ void HandleWindowSizeChanged()
         gRegistry.Set("appwin", "window_b", grWindowedArea.bottom);
     }
 
-    RECT rC;
-    GetClientRect(ghWnd, &rC);
 
     // if minimized, stop rendering
     if (rC.right - rC.left == 0 || rC.bottom - rC.top == 0)
@@ -620,8 +614,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_WINDOWPOSCHANGED:
     {
-        WINDOWPOS* pPos = (WINDOWPOS*)lParam;
-        gbWindowSizeChanged = true;
+        RECT rC;
+        GetClientRect(ghWnd, &rC);
+        if (rC.right-rC.left != grFullArea.Width() ||
+            rC.bottom-rC.top != grFullArea.Height())
+            gbWindowSizeChanged = true; 
     }
         break;
     case WM_SYSCOMMAND:
@@ -639,7 +636,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_EXITSIZEMOVE:
         DefWindowProc(hWnd, message, wParam, lParam);
-        gbWindowSizeChanged = true;
+        RECT rC;
+        GetClientRect(ghWnd, &rC);
+        if (rC.right - rC.left != grFullArea.Width() || rC.bottom - rC.top != grFullArea.Height())
+            gbWindowSizeChanged = true;
         break;
 	case WM_COMMAND:
 		wmId    = LOWORD(wParam); 

@@ -6,6 +6,7 @@
 #include "ZGUIStyle.h"
 #include "lunasvg.h"
 #include <map>
+#include <mutex>
 
 namespace ZGUI
 {
@@ -19,6 +20,8 @@ namespace ZGUI
         static void Paint(ZBuffer* pDst, tTextboxMap& textBoxMap);
         void        Clear()
         {
+            const std::lock_guard<std::mutex> lock(clearMutex);
+
             sText.clear();
             style = {};
             area = {};
@@ -42,6 +45,8 @@ namespace ZGUI
         ZBuffer     renderedBuf;
         std::string renderedText;
         Style       renderedStyle;
+
+        std::mutex  clearMutex;
 
         bool        visible;
     };

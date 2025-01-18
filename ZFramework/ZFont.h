@@ -303,7 +303,7 @@ public:
 
     tZFontPtr   LoadFont(const std::string& sFilename);
 #ifdef _WIN64
-    tZFontPtr   CreateFont(const ZFontParams& params);
+    tZFontPtr   CreateFont(ZFontParams params);
 #endif
 
     size_t          GetFontCount();

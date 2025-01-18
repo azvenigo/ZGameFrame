@@ -142,6 +142,11 @@ bool ZWinFormattedDoc::OnMouseDownL(int64_t x, int64_t y)
 	}
 
     std::unique_lock<std::mutex> lk(mDocumentMutex);
+
+    if (IsBehaviorSet(kEvenColumns) && mColumnWidths.empty())
+        ComputeColumnWidths();
+
+
 	for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
 	{
 		tFormattedLine& line = *it;
