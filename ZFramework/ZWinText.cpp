@@ -102,7 +102,8 @@ bool ZWinLabel::Paint()
     else
     {
         // Transparent
-        PaintFromParent();
+        if (!PaintFromParent())
+            return false;   // need for parent to be 
     }
 
     if (!msText.empty())

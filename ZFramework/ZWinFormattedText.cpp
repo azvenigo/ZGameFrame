@@ -392,11 +392,13 @@ bool ZWinFormattedDoc::Paint()
                     if (!entry.text.empty())
                     {
                         tZFontPtr pFont(entry.style.Font());
-                        ZRect rText = pFont->Arrange(rLine, entry.text, entry.style.pos);
+
+                        string sVisibleText(entry.text.substr(0, pFont->CalculateLettersThatFitOnLine(rLine.Width(), (const uint8_t*)entry.text.c_str(), entry.text.length())));
+                        ZRect rText = pFont->Arrange(rLine, sVisibleText, entry.style.pos);
 
                         int64_t nShadowOffset = max((int)pFont->Height() / 16, (int)1);
 
-                        pFont->DrawText(mpSurface.get(), entry.text, rText, &entry.style.look, &rClip);
+                        pFont->DrawText(mpSurface.get(), sVisibleText, rText, &entry.style.look, &rClip);
 
                         if (IsBehaviorSet(kUnderlineLinks) && !entry.link.empty())
                         {
@@ -551,6 +553,7 @@ void ZWinFormattedDoc::AddLineNode(string sLine)
     ProcessLineNode(lineNode.GetChild("line"));
     mnFullDocumentHeight = 0;
     UpdateScrollbar();
+    Invalidate();
 }
 
 
@@ -585,6 +588,7 @@ void ZWinFormattedDoc::AddMultiLine(string sLine, ZGUI::Style style, const strin
     }
     mnFullDocumentHeight = 0;
     UpdateScrollbar();
+    Invalidate();
 }
 
 bool ZWinFormattedDoc::ProcessLineNode(ZXML* pTextNode)

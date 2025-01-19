@@ -145,7 +145,7 @@ public:
 
     virtual bool        OnParentAreaChange();       // Called recursively for any window that needs to rearrange itself due to parent area changing
     virtual void        RenderToBuffer(tZBufferPtr pTexture, const ZRect& rAbsSrc, const ZRect& rDst, ZWin* pThis = nullptr); // special function for drawing window and all children to a destination.... not part of normal rendering loop. pThis indicates window requesting paint which should be excluded if in child list
-    virtual void        PaintFromParent();          // copies pixels from parent texture into this one's for transparency support
+    virtual bool        PaintFromParent();          // copies pixels from parent texture into this one's for transparency support
     virtual void        TransformIn();
     virtual void        TransformOut();
     virtual void        TransformTo(ZTransformation& to, int64_t nDuration);

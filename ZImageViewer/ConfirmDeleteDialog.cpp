@@ -224,9 +224,9 @@ ConfirmDeleteDialog* ConfirmDeleteDialog::ShowDialog(const std::string& sCaption
     pDialog->SetArea(r);
     pDialog->msCaption = sCaption;
     pDialog->mFiles = fileList;
-    pDialog->mTransformIn = ZWin::kSlideDown;
-    pDialog->mTransformOut = ZWin::kSlideUp;
+//    pDialog->mTransformIn = ZWin::kSlideDown;
+//    pDialog->mTransformOut = ZWin::kSlideUp;
 
-    gpMainWin->ChildAdd(pDialog, false);
+    gpMainWin->ChildAdd(pDialog);
     return pDialog;
 }

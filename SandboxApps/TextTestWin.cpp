@@ -145,6 +145,7 @@ bool TextTestWin::Init()
     ZWinFormattedDoc* pWin = new ZWinFormattedDoc();
     pWin->SetArea(rFontSelectionWin);
     pWin->mStyle = gDefaultFormattedDocStyle;
+    pWin->mStyle.fp = gDefaultTextFont;
     pWin->mStyle.bgCol = 0xff444444;
     pWin->SetBehavior(ZWinFormattedDoc::kScrollable | ZWinFormattedDoc::kBackgroundFill, true);
 

@@ -69,7 +69,8 @@ bool ZWinCheck::Paint()
         mCaption.style = mUncheckedStyle;
     }
 
-	ZWinBtn::Paint();
+    if (!ZWinBtn::Paint())
+        return false;
 
     if (mbEnabled && mDrawState == kDown)
     {
@@ -231,7 +232,7 @@ bool ZWinBtn::Paint()
         return false;
 
     if (mpParentWin && !mpParentWin->mbVisible)
-        return true;
+        return false;
 
 	// Draw the button image
     tZBufferPtr pBufferToUse;
@@ -243,7 +244,10 @@ bool ZWinBtn::Paint()
     ZASSERT(pBufferToUse);
 
     if (pBufferToUse->mbHasAlphaPixels)
-        PaintFromParent();
+    {
+        if (!PaintFromParent())
+            return false;
+    }
     
     mpSurface.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaLocal, ZBuffer::kEdgeBltMiddle_Stretch|ZBuffer::kEdgeBltSides_Stretch);
 

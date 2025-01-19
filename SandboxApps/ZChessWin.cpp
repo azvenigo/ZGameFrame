@@ -206,6 +206,7 @@ bool ZChoosePGNWin::ListGamesFromPGN(string& sFilename, string& sPGNFile)
 
 void ZChoosePGNWin::RefreshList()
 {
+    mpGamesList->SetVisible(false);
     mpGamesList->Clear();
 
     ZFontParams fp = gDefaultTextFont;
@@ -225,6 +226,7 @@ void ZChoosePGNWin::RefreshList()
     msCaption = "Select from " + SH::FromInt(mPGNEntries.size()) + " games";
 
     mpGamesList->SetScrollable();
+    mpGamesList->SetVisible();
     InvalidateChildren();
 }
 

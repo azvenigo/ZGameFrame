@@ -110,12 +110,63 @@ bool TestWin::Init()
     textBox.style.fp.nTracking = 10;
     textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
     textBox.style.wrap = false;
-    textBox.style.fp.nScalePoints = 20000;
+    textBox.style.fp.nScalePoints = 2000;
 //    textBox.blurBackground = 2.0;
     textBox.dropShadowColor = 0xff0000ff;
     textBox.dropShadowOffset = ZPoint(15, 15);
     textBox.dropShadowBlur = 10.0;
     textBox.area.SetRect(0, 0, 3000, 2000);
+
+
+
+
+
+
+
+
+    ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
+
+    ZGUI::Style text(gStyleGeneralText);
+    text.fp.nScalePoints = 1000;
+    text.pad.h = (int32_t)gM;
+
+    ZGUI::Style sectionText(gStyleGeneralText);
+    sectionText.fp.nWeight = 800;
+    sectionText.fp.nScalePoints = 1000;
+    sectionText.look.colTop = 0xffaaaaaa;
+    sectionText.look.colBottom = 0xffaaaaaa;
+
+    ZRect rForm((int64_t)(grFullArea.Width() * 0.1), (int64_t)(grFullArea.Height() * 0.4));
+    rForm = ZGUI::Arrange(rForm, grFullArea, ZGUI::C, gSpacer, gSpacer);
+    pForm->SetArea(rForm);
+    pForm->SetScrollable();
+    pForm->mStyle.fp = text.fp;
+    ChildAdd(pForm);
+
+/*    pForm->AddMultiLine("\nOverview", sectionText);
+    pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text);
+    pForm->AddMultiLine("Loading, quickly zooming and exiting are prioritized.", text);
+    pForm->AddMultiLine("\nAnother key feature is to sort through which images are favorites, and which should be deleted.", text);
+    pForm->AddMultiLine("So that you have time to change your mind, images are moved into subfolders.", text);
+    */
+
+
+    for (int i = 1; i < 10000; i++)
+    {
+        string sMessage;
+        Sprintf(sMessage, "link={setcustomfont;fontindex=%d;target=TextTestWin}", i);
+
+        string sLine("<line wrap=0><text color=0xffffffff color2=0xffffffff deco=normal ");
+        //        sLine += sEncodedFontParams;
+        sLine += sMessage.c_str();
+        sLine += " position=lc>";
+        sLine += "Text " + SH::FromInt(i);
+        sLine += "</text></line>";
+
+        pForm->AddLineNode(sLine);
+    }
+
+
 
 
 
