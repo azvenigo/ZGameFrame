@@ -100,6 +100,7 @@ bool ZChoosePGNWin::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     mpSurface->Fill(mFillColor);
@@ -351,6 +352,7 @@ bool ZPGNWin::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     mpSurface->Fill(mFillColor);
@@ -935,6 +937,7 @@ bool ZChessWin::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     mpSurface->Fill(0xff444444);
@@ -1678,6 +1681,7 @@ bool ZPiecePromotionWin::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
 //    mpTransformTexture->Fill(mAreaToDrawTo, 0xff4444ff);

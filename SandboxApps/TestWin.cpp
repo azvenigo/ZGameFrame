@@ -132,7 +132,7 @@ bool TestWin::Init()
 
     ZGUI::Style sectionText(gStyleGeneralText);
     sectionText.fp.nWeight = 800;
-    sectionText.fp.nScalePoints = 1000;
+    sectionText.fp.nScalePoints = 10000;
     sectionText.look.colTop = 0xffaaaaaa;
     sectionText.look.colBottom = 0xffaaaaaa;
 
@@ -165,6 +165,7 @@ bool TestWin::Init()
 
         pForm->AddLineNode(sLine);
     }
+    pForm->Invalidate();
 
 
 

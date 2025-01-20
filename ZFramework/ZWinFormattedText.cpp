@@ -73,6 +73,7 @@ ZWinFormattedDoc::ZWinFormattedDoc()
 	mrDocumentBorderArea.SetRect(0,0,0,0);
 
 	mnFullDocumentHeight    = 0;
+    mbDocumentInvalid       = true;
 //	mbScrollable            = false;
 
 	mnScrollToOnInit        = 0;
@@ -97,7 +98,7 @@ bool ZWinFormattedDoc::Init()
 	if (ZWin::Init())
 	{
         mIdleSleepMS = 10000;
-		UpdateScrollbar();
+		UpdateDocumentAndScrollbar();
 	}
 
 	return true;
@@ -107,7 +108,7 @@ bool ZWinFormattedDoc::Init()
 void ZWinFormattedDoc::SetArea(const ZRect& newArea)
 {
 	ZWin::SetArea(newArea);
-	UpdateScrollbar();
+	UpdateDocumentAndScrollbar();
 }
 
 
@@ -248,21 +249,27 @@ bool ZWinFormattedDoc::OnMouseMove(int64_t x, int64_t y)
 
 int64_t ZWinFormattedDoc::GetFullDocumentHeight()
 {
-    if (mnFullDocumentHeight == 0)
-        CalculateFullDocumentHeight();
+    if (mbDocumentInvalid)
+        UpdateDocumentAndScrollbar();
 
     return mnFullDocumentHeight;
 }
 
-void ZWinFormattedDoc::UpdateScrollbar()
+void ZWinFormattedDoc::UpdateDocumentAndScrollbar()
 {
-	int64_t nFullTextHeight = GetFullDocumentHeight();
+    if (!mbDocumentInvalid)
+        return;
+
+    mbDocumentInvalid = false;
+
+    CalculateFullDocumentHeight();
+
+    if (IsBehaviorSet(kEvenColumns))
+        ComputeColumnWidths();
 
     mrDocumentBorderArea.SetRect(mAreaLocal);
 
     mrDocumentArea.SetRect(mrDocumentBorderArea);
-//    mrDocumentArea.DeflateRect(mStyle.pad.h, mStyle.pad.v);
-
 
     if (IsBehaviorSet(kDrawBorder))
     {
@@ -273,7 +280,7 @@ void ZWinFormattedDoc::UpdateScrollbar()
     }
 
 
-	if (IsBehaviorSet(kScrollable) && nFullTextHeight > mrDocumentArea.Height())
+	if (IsBehaviorSet(kScrollable) && mnFullDocumentHeight > mrDocumentArea.Height())
 	{
         if (!mpWinSlider)
         {
@@ -288,8 +295,8 @@ void ZWinFormattedDoc::UpdateScrollbar()
 
         mpWinSlider->SetArea(ZRect(mrDocumentArea.right, mrDocumentArea.top, mrDocumentArea.right+kSliderWidth, mrDocumentArea.bottom));
 
-        double fThumbRatio = (double)mrDocumentArea.Height()/(double)nFullTextHeight;
-        mpWinSlider->SetSliderRange(0, nFullTextHeight-mrDocumentArea.Height(), 1, fThumbRatio);
+        double fThumbRatio = (double)mrDocumentArea.Height()/(double)mnFullDocumentHeight;
+        mpWinSlider->SetSliderRange(0, mnFullDocumentHeight -mrDocumentArea.Height(), 1, fThumbRatio);
 
 		if (mnScrollToOnInit > 0)
 		{
@@ -323,8 +330,8 @@ bool ZWinFormattedDoc::Paint()
     if (!PrePaintCheck())
         return false;
 
-    if (IsBehaviorSet(kEvenColumns) && mColumnWidths.empty())
-        ComputeColumnWidths();
+    if (mbDocumentInvalid)
+        UpdateDocumentAndScrollbar();
 
 
 	// Get a local rect
@@ -467,7 +474,7 @@ void ZWinFormattedDoc::Clear()
 {
     std::unique_lock<std::mutex> lk(mDocumentMutex);
     mDocument.clear();
-	mnFullDocumentHeight = 0;
+    mbDocumentInvalid = true;
 }
 
 bool ZWinFormattedDoc::ParseDocument(ZXML* pNode)
@@ -510,6 +517,8 @@ bool ZWinFormattedDoc::ParseDocument(ZXML* pNode)
 		ProcessLineNode(pChild);
 	}
 
+    mbDocumentInvalid = true;
+
 	return true;
 }
 
@@ -551,9 +560,7 @@ void ZWinFormattedDoc::AddLineNode(string sLine)
     ZXML lineNode;
     lineNode.Init(sLine);
     ProcessLineNode(lineNode.GetChild("line"));
-    mnFullDocumentHeight = 0;
-    UpdateScrollbar();
-    Invalidate();
+    mbDocumentInvalid = true;
 }
 
 
@@ -586,9 +593,7 @@ void ZWinFormattedDoc::AddMultiLine(string sLine, ZGUI::Style style, const strin
 
         sLine = sLine.substr((int)nChars);
     }
-    mnFullDocumentHeight = 0;
-    UpdateScrollbar();
-    Invalidate();
+    mbDocumentInvalid = true;
 }
 
 bool ZWinFormattedDoc::ProcessLineNode(ZXML* pTextNode)
@@ -654,6 +659,7 @@ bool ZWinFormattedDoc::ProcessLineNode(ZXML* pTextNode)
 	{
         std::unique_lock<std::mutex> lk(mDocumentMutex);
 		mDocument.push_back(formattedLine);
+        mbDocumentInvalid = true;
 	}
 
 	return false;

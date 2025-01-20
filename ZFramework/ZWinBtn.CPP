@@ -246,7 +246,7 @@ bool ZWinBtn::Paint()
     if (pBufferToUse->mbHasAlphaPixels)
     {
         if (!PaintFromParent())
-            return false;
+            return true;
     }
     
     mpSurface.get()->BltEdge(pBufferToUse.get(), mrEdge, mAreaLocal, ZBuffer::kEdgeBltMiddle_Stretch|ZBuffer::kEdgeBltSides_Stretch);

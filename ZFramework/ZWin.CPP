@@ -1112,7 +1112,7 @@ bool ZWin::WindowThreadProc(void* pContext)
             break;
 
         bool bActive = pThis->Process();
-        bActive |= !pThis->Paint(); // if paint failed for any reason
+        bActive |= pThis->Paint();
         bActive |= pThis->mMessages.size() > 0;
 
         if (bActive)    // if either simulation was done or painting was done do a quick sleep
