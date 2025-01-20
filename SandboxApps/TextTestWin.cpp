@@ -116,10 +116,29 @@ bool TextTestWin::Init()
     mnSelectedFontIndex = (int32_t)(RANDU64(0, gWindowsFontFacenames.size()));
 
 
-    mTextBox.style.fp.nScalePoints = 1500;
-    mTextBox.style.fp.nWeight = 200;
+    mCustomFontHeight = 100;
     mTextBox.style.fp.sFacename = gWindowsFontFacenames[mnSelectedFontIndex];
     mbViewShadow = true;
+
+    mTextBox.sText = "Cool Beans!";
+    mTextBox.style = gStyleCaption;
+    mTextBox.style.pos = ZGUI::LT;
+    mTextBox.style.look.colTop = 0xffffff00;
+    mTextBox.style.look.colBottom = 0xffffff00;
+    mTextBox.style.fp = mTextBox.style.fp;
+    mTextBox.style.fp.nScalePoints = ZFontParams::ScalePoints(mCustomFontHeight);
+    mTextBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
+    int64_t offset = std::max <int64_t>(mTextBox.style.fp.Height() / 32, 1);
+    mTextBox.dropShadowOffset = ZPoint(offset, offset);
+    mShadowSpread = 20;
+
+
+
+
+
+
+
+
 
     mbEnableKerning = true;
 
@@ -144,7 +163,8 @@ bool TextTestWin::Init()
     //ZWinScriptedDialog* pWin = new ZWinScriptedDialog();
     ZWinFormattedDoc* pWin = new ZWinFormattedDoc();
     pWin->SetArea(rFontSelectionWin);
-    pWin->mStyle = gDefaultFormattedDocStyle;
+    pWin->mStyle = mTextBox.style;
+    pWin->mStyle.fp = gDefaultTextFont;
     pWin->mStyle.bgCol = 0xff444444;
     pWin->SetBehavior(ZWinFormattedDoc::kScrollable | ZWinFormattedDoc::kBackgroundFill, true);
 
@@ -176,16 +196,6 @@ bool TextTestWin::Init()
     ChildAdd(pWin);
 
 
-    mTextBox.sText = "Cool Beans!";
-    mTextBox.style = gStyleCaption;
-    mTextBox.style.pos = ZGUI::LT;
-    mTextBox.style.look.colTop = 0xffffff00;
-    mTextBox.style.look.colBottom = 0xffffff00;
-    mTextBox.style.fp = mTextBox.style.fp;
-    mTextBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
-    int64_t offset = std::max <int64_t>(mTextBox.style.fp.Height() / 32, 1);
-    mTextBox.dropShadowOffset = ZPoint(offset, offset);
-    mShadowSpread = 20;
 
     UpdateText();
     mTextBox.area.SetRect(0, 0, 3000, 2000);
@@ -275,6 +285,7 @@ bool TextTestWin::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
 	ZRect rText(32, 32, mAreaLocal.right*4/5, mAreaLocal.bottom);

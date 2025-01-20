@@ -75,6 +75,8 @@ bool ZWinLabel::Process()
 
 bool ZWinLabel::Paint()
 {
+    if (!mpParentWin || !mpParentWin->mbVisible)
+        return false;
     if (!PrePaintCheck())
         return false;
 
@@ -102,7 +104,8 @@ bool ZWinLabel::Paint()
     else
     {
         // Transparent
-        PaintFromParent();
+        if (!PaintFromParent())
+            return true;
     }
 
     if (!msText.empty())
@@ -273,6 +276,7 @@ bool ZWinTextEdit::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
     const lock_guard<recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     mpSurface.get()->Fill(mStyle.bgCol);

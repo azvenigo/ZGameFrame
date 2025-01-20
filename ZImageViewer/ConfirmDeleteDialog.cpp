@@ -191,6 +191,7 @@ bool ConfirmDeleteDialog::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     ZWinDialog::Paint();
@@ -224,9 +225,9 @@ ConfirmDeleteDialog* ConfirmDeleteDialog::ShowDialog(const std::string& sCaption
     pDialog->SetArea(r);
     pDialog->msCaption = sCaption;
     pDialog->mFiles = fileList;
-    pDialog->mTransformIn = ZWin::kSlideDown;
-    pDialog->mTransformOut = ZWin::kSlideUp;
+//    pDialog->mTransformIn = ZWin::kSlideDown;
+//    pDialog->mTransformOut = ZWin::kSlideUp;
 
-    gpMainWin->ChildAdd(pDialog, false);
+    gpMainWin->ChildAdd(pDialog);
     return pDialog;
 }

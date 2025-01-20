@@ -862,6 +862,7 @@ void ImageViewer::ToggleShowHelpDialog()
     Sprintf(sLine, sFormat.c_str(), "DEL", "Toggle Marked-for-Deletion");    pForm->AddLineNode(sLine);
     Sprintf(sLine, sFormat.c_str(), "'M'", "Set folder for move-to.");    pForm->AddLineNode(sLine);
     Sprintf(sLine, sFormat.c_str(), " ", "(After a folder is set, further presses move image instantly.)");    pForm->AddLineNode(sLine);
+    pForm->InvalidateChildren();
 
     ChildAdd(pHelp);
 }
@@ -1430,7 +1431,6 @@ bool ImageViewer::Init()
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("savefile", "", "", "$apppath$/res/save.svg", "Save Image", ZMessage("saveimg", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("copyfile", "", "", "$apppath$/res/copy.svg", "Select a Copy Folder for quick-move with 'C'", ZMessage("set_copy_folder", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("set_move_folder", this), 1.0, style, {}) + "</row>";
-        sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("show_confirm", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "</panel>";
 
         ZGUI::RA_Descriptor fileManageRAD({}, "file_manage_menu", ZGUI::VOutside | ZGUI::HC | ZGUI::T, 1.25, 6.0);
@@ -1459,6 +1459,7 @@ bool ImageViewer::Init()
         mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterfavs", "Filter", "FilterGroup", "Favorites", "", "Favorites (hit '1' to toggle current image)", ZMessage("filter_favs", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
         mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterranked", "Filter", "FilterGroup", "Ranked", "", "Images that have been ranked", ZMessage("filter_ranked", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
         mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterdel", "Filter", "FilterGroup", "To Be Deleted", "", "Flagged for deletion", ZMessage("filter_del", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("show_confirm", this), 1.0, style, {});
 
 
 
@@ -1535,7 +1536,7 @@ void ImageViewer::UpdateControlPanel()
 
         gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
 
-        gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
+        gMessageSystem.Post(ZMessage("set_visible", "visible", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "deletemarked"));
 
         gMessageSystem.Post(ZMessage("set_visible", "visible", SH::FromInt((int)(mFilterState == kFavs || mFilterState == kRanked)), "target", "rank_favorites"));
     }

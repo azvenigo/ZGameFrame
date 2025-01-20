@@ -72,10 +72,10 @@ public:
     { 
         SetBehavior(kScrollable, enable);
         mbAcceptsCursorMessages |= enable; 
-        UpdateScrollbar(); 
+        UpdateDocumentAndScrollbar(); 
     }
     void				ScrollTo(int64_t nSliderValue);		 // normalized 0.0 to 1.0
-	void				UpdateScrollbar();					// Creates a scrollbar if one is needed
+	void				UpdateDocumentAndScrollbar();					// Creates a scrollbar if one is needed
 
     void                SetBehavior(uint32_t flag, bool set)
     {
@@ -124,6 +124,7 @@ private:
 
 	tDocument    		mDocument;     // parsed document
     std::mutex          mDocumentMutex;		// when held, document may not be modified
+    bool                mbDocumentInvalid;
 
 
 	// Storage for text parameters while parsing the document

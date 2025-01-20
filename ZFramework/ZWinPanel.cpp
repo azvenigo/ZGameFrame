@@ -71,6 +71,7 @@ bool ZWinPanel::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface->GetMutex());
    
     if (ARGB_A(mStyle.bgCol) > 0x0f)

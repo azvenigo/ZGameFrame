@@ -85,7 +85,6 @@ bool ZWin::Init()
 		mbShutdownFlag = false;
 
         mbInvalid = true;
-        mbInitted = true;
         if (mAreaLocal.Width() > 0 && mAreaLocal.Height() > 0)
         {
             if (mbTransformable)
@@ -96,13 +95,13 @@ bool ZWin::Init()
                 mpSurface.reset(new ZBuffer());
                 mpSurface->Init(mAreaAbsolute.Width(), mAreaAbsolute.Height());
             }
-            Paint();        // TBD this may be desired since our texture may be requested before the threadproc has a chance to call paint
             if (mbTransformable)
                 TransformIn();
         }
 
 		mThread = std::thread(&WindowThreadProc, (void*)this);
-	}
+        mbInitted = true;
+    }
 	return true;
 }  
 
@@ -726,16 +725,21 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& 
     }
 }
 
-void ZWin::PaintFromParent()
+bool ZWin::PaintFromParent()
 {
-    if (!PrePaintCheck())
-        return;
+    if (!PrePaintCheck() || !mpParentWin || !mpParentWin->mpSurface)
+        return false;
 
-    if (mpParentWin && mpParentWin->mpSurface && mpParentWin->mbVisible)
+    tZBufferPtr parentBuffer = mpParentWin->mpSurface;
+    const lock_guard<recursive_mutex> surfaceLock(parentBuffer.get()->GetMutex());
+
+    if (mpParentWin->mbVisible && !mpParentWin->mbInvalid)
     {
-        tZBufferPtr parentBuffer = mpParentWin->mpSurface;
         mpSurface.get()->Blt(parentBuffer.get(), mAreaInParent, mAreaLocal, nullptr, ZBuffer::kAlphaSource);
+        return true;
     }
+
+    return false;
 }
 
 

@@ -263,6 +263,7 @@ bool ZWinPaletteDialog::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
     ZWinDialog::Paint();

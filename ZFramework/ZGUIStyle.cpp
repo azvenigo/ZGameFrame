@@ -14,21 +14,21 @@ int64_t         gM; // default measure defined by window diagonal ( diagonal / 1
 int64_t         gSpacer;
 
 //Fonts
-ZFontParams     gDefaultTitleFont("Gadugi", 1500);
-ZFontParams     gDefaultTextFont("Gadugi", 500);
+ZFontParams     gDefaultTitleFont;
+ZFontParams     gDefaultTextFont;
 
-ZGUI::Style gStyleTooltip(ZFontParams("Verdana", 1000), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(8, 8, 0xff888888), gDefaultTooltipFill);
-ZGUI::Style gStyleCaption(ZFontParams("Gadugi", 1200, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(), 0x00000000);
-ZGUI::Style gStyleButton(ZFontParams("Verdana", 1200, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(), gDefaultDialogFill);
-ZGUI::Style gStyleSlider(ZFontParams("Verdana", 600, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(), gDefaultDialogFill);
-ZGUI::Style gStyleToggleChecked(ZFontParams("Verdana", 800, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, ZGUI::Padding(), 0x00000000);
-ZGUI::Style gStyleToggleUnchecked(ZFontParams("Verdana", 800, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, ZGUI::Padding(), 0x00000000);
-ZGUI::Style gStyleGeneralText(ZFontParams("Verdana", 1200), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, ZGUI::Padding(), 0x00000000, true);
-ZGUI::Style gDefaultDialogStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), gDefaultDialogFill, true);
-ZGUI::Style gDefaultWinTextEditStyle(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), gDefaultTextAreaFill);
-ZGUI::Style gDefaultGroupingStyle(ZFontParams("Ariel Greek", 500, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, ZGUI::Padding(8, 8));
-ZGUI::Style gDefaultFormattedDocStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), 0, false);
-ZGUI::Style gDefaultPanelStyle(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Unknown, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer));
+ZGUI::Style gStyleTooltip;
+ZGUI::Style gStyleCaption;
+ZGUI::Style gStyleButton;
+ZGUI::Style gStyleSlider;
+ZGUI::Style gStyleToggleChecked;
+ZGUI::Style gStyleToggleUnchecked;
+ZGUI::Style gStyleGeneralText;
+ZGUI::Style gDefaultDialogStyle;
+ZGUI::Style gDefaultWinTextEditStyle;
+ZGUI::Style gDefaultGroupingStyle;
+ZGUI::Style gDefaultFormattedDocStyle;
+ZGUI::Style gDefaultPanelStyle;
 
 ZGUI::RA_Descriptor gDefaultRAD({}, "full", ZGUI::C, 0.25, 0.25);   
 
@@ -52,6 +52,37 @@ namespace ZGUI
         gM = (int64_t)grFullArea.Height() / 64;
         gSpacer = gM / 5;
         gSpacer = std::max<int64_t>(gSpacer, 4);
+
+
+        gDefaultTitleFont = ZFontParams("Gadugi", 1500);
+        gDefaultTextFont = ZFontParams("Gadugi", 500);
+
+
+        gStyleTooltip = ZGUI::Style(ZFontParams("Verdana", 1000), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(8, 8, 0xff888888), gDefaultTooltipFill);
+        gStyleCaption = ZGUI::Style(ZFontParams("Gadugi", 1200, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(), 0x00000000);
+        gStyleButton = ZGUI::Style(ZFontParams("Verdana", 1200, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(), gDefaultDialogFill);
+        gStyleSlider = ZGUI::Style(ZFontParams("Verdana", 600, 400), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::C, ZGUI::Padding(), gDefaultDialogFill);
+        gStyleToggleChecked = ZGUI::Style(ZFontParams("Verdana", 800, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xff00ff00, 0xff008800), ZGUI::C, ZGUI::Padding(), 0x00000000);
+        gStyleToggleUnchecked = ZGUI::Style(ZFontParams("Verdana", 800, 600), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xff888888), ZGUI::C, ZGUI::Padding(), 0x00000000);
+        gStyleGeneralText = ZGUI::Style(ZFontParams("Verdana", 1200), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::LT, ZGUI::Padding(), 0x00000000, true);
+        gDefaultDialogStyle = ZGUI::Style(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), gDefaultDialogFill, true);
+        gDefaultWinTextEditStyle = ZGUI::Style(gDefaultTextFont, ZGUI::ZTextLook(), ZGUI::LT, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), gDefaultTextAreaFill);
+        gDefaultGroupingStyle = ZGUI::Style(ZFontParams("Ariel Greek", 500, 200, 2), ZGUI::ZTextLook(ZGUI::ZTextLook::kEmbossed, 0xffffffff, 0xffffffff), ZGUI::LT, ZGUI::Padding(8, 8));
+        gDefaultFormattedDocStyle = ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kShadowed, 0xff000000, 0xff000000), ZGUI::Unknown, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer), 0, false);
+        gDefaultPanelStyle = ZGUI::Style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xff000000, 0xff000000), ZGUI::Unknown, ZGUI::Padding((int32_t)gSpacer, (int32_t)gSpacer));
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         gStyleButton.pad.h = (int32_t)gSpacer;
         gStyleButton.pad.v = (int32_t)gSpacer;

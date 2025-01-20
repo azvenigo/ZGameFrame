@@ -24,7 +24,8 @@ bool ZWinFolderLabel::Init()
 
 bool ZWinFolderLabel::Paint() 
 {
-    if (!PrePaintCheck()) return false;
+    if (!PrePaintCheck()) 
+        return false;
 
     const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
 
