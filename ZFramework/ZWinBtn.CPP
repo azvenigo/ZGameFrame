@@ -74,6 +74,7 @@ bool ZWinCheck::Paint()
 
     if (mbEnabled && mDrawState == kDown)
     {
+        const std::lock_guard<std::recursive_mutex> transformSurfaceLock(mpSurface.get()->GetMutex());
         mpSurface->FillAlpha(0x88000000|(gStyleToggleChecked.bgCol&0x00ffffff));    // 50% alpha
     }
 
@@ -96,6 +97,10 @@ bool ZWinCheck::HandleMessage(const ZMessage& message)
             {
                 // Part of our group but not us....and we're checked
                 SetState(false, true);
+            }
+            else if (sCheckedName == msWinName && !*mpbChecked)
+            {
+                SetState(true);
             }
         }
         return true;

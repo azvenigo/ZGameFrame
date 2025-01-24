@@ -195,7 +195,8 @@ protected:
     bool                    MoveImage(std::filesystem::path oldPath, std::filesystem::path newPath);
     bool                    CopyImage(std::filesystem::path curPath, std::filesystem::path newPath);
 
-    bool                    FindAndLaunchCR3();
+    std::filesystem::path   FindCR3();
+    bool                    LaunchCR3(std::filesystem::path cr3Path);
 
     bool                    RemoveImageArrayEntry(const ViewingIndex& vi);
 

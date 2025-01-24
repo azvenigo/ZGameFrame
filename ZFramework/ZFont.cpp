@@ -1141,7 +1141,7 @@ bool ZFont::Init(const ZFontParams& params)
     if (params.sFacename.empty())
         return false;
 
-    if (params.Height() < 6)
+    if (params.Height() < 4)
         return false;
 
 

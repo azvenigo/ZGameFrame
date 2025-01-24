@@ -293,7 +293,7 @@ bool ImageViewer::OnKeyDown(uint32_t key)
     case 'R':
         if (gInput.IsKeyDown(VK_CONTROL))
         {
-            FindAndLaunchCR3();
+            LaunchCR3(FindCR3());
             return true;
         }
         break;
@@ -370,6 +370,11 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
             if (ZWinFileDialog::ShowSaveDialog("Images", "*.jpg;*.jpeg;*.png;*.tga;*.bmp;*.hdr", sFilename))
                 SaveImage(sFilename);
         }
+        return true;
+    }
+    else if (sType == "opencr3")
+    {
+        LaunchCR3(FindCR3());
         return true;
     }
     else if (sType == "gotofolder")
@@ -862,7 +867,6 @@ void ImageViewer::ToggleShowHelpDialog()
     Sprintf(sLine, sFormat.c_str(), "DEL", "Toggle Marked-for-Deletion");    pForm->AddLineNode(sLine);
     Sprintf(sLine, sFormat.c_str(), "'M'", "Set folder for move-to.");    pForm->AddLineNode(sLine);
     Sprintf(sLine, sFormat.c_str(), " ", "(After a folder is set, further presses move image instantly.)");    pForm->AddLineNode(sLine);
-    pForm->InvalidateChildren();
 
     ChildAdd(pHelp);
 }
@@ -1379,16 +1383,6 @@ bool ImageViewer::Init()
         mpFavoriteIcon->LoadBuffer("res/star.svg");
 
 
-        string sPersistedViewPath;
-        if (gRegistry.Get("ZImageViewer", "image", sPersistedViewPath))
-        {
-            ViewImage(sPersistedViewPath);
-        }
-        else
-        {
-            gMessageSystem.Post(ZMessage("show_help", this));
-        }
-
         mpFolderLabel = new ZWinFolderLabel();
         mpFolderLabel->mBehavior = ZWinFolderLabel::kCollapsable;
         mpFolderLabel->mCurPath = mCurrentFolder;
@@ -1440,6 +1434,7 @@ bool ImageViewer::Init()
 
         mpPanel->mPanelLayout += ZWinPanel::MakeButton("gotofolder", "File", "", "$apppath$/res/gotofolder.svg", "Go to Image Folder", ZMessage("gotofolder", this), 1.0, style, {});
         mpPanel->mPanelLayout += ZWinPanel::MakeButton("copylink", "File", "", "$apppath$/res/linkcopy.svg", "Copy path to image to clipboard", ZMessage("copylink", this), 1.0, style, {});
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("psraw", "File", "", "$apppath$/res/ps_raw.svg", "Open CR3 in Photoshop", ZMessage("opencr3", this), 1.0, style, {});
 
         string sRotateGroupLayout = "<panel hide_on_mouse_exit=1 border=1 spacers=0>";
         sRotateGroupLayout += "<row>" + ZWinPanel::MakeButton("rot_left", "", "", "$apppath$/res/rot_left.svg", "Left", ZMessage("rotate_left", this), 1.0, style, {}) + "</row>";
@@ -1455,12 +1450,16 @@ bool ImageViewer::Init()
         mpPanel->mPanelLayout += "<space style=\"" + ZXML::Encode((string)spacestyle) + "\"/>";
 
         // Filter group
-        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterall", "Filter", "FilterGroup", "All", "", "All images", ZMessage("filter_all", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
-        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterfavs", "Filter", "FilterGroup", "Favorites", "", "Favorites (hit '1' to toggle current image)", ZMessage("filter_favs", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
-        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterranked", "Filter", "FilterGroup", "Ranked", "", "Images that have been ranked", ZMessage("filter_ranked", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
-        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterdel", "Filter", "FilterGroup", "To Be Deleted", "", "Flagged for deletion", ZMessage("filter_del", this), "", 3.0, gStyleToggleChecked, gStyleToggleUnchecked);
-        mpPanel->mPanelLayout += ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("show_confirm", this), 1.0, style, {});
+        ZGUI::Style checked(gStyleToggleChecked);
+        ZGUI::Style unchecked(gStyleToggleUnchecked);
+        checked.fp.nScalePoints = gM * 20;
+        unchecked.fp.nScalePoints = gM * 20;
 
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterall", "Filter", "FilterGroup", "All", "", "All images", ZMessage("filter_all", this), "", 3.0, checked, unchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterfavs", "Filter", "FilterGroup", "Favorites", "", "Favorites (hit '1' to toggle current image)", ZMessage("filter_favs", this), "", 3.0, checked, unchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterranked", "Filter", "FilterGroup", "Ranked", "", "Images that have been ranked", ZMessage("filter_ranked", this), "", 3.0, checked, unchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeRadio("filterdel", "Filter", "FilterGroup", "To Be Deleted", "", "Flagged for deletion", ZMessage("filter_del", this), "", 3.0, checked, unchecked);
+        mpPanel->mPanelLayout += ZWinPanel::MakeButton("deletemarked", "", "", "$apppath$/res/trash.svg", "Delete images marked for deletion (with confirmation)", ZMessage("show_confirm", this), 1.0, style, {});
 
 
 
@@ -1489,6 +1488,17 @@ bool ImageViewer::Init()
 //        ZRect rPanel = ZGUI::Align(mpPanel->mRAD.area, grFullArea, mpPanel->mRAD.alignment, 0, 0, 1.0, 0.05);
 //        mpPanel->SetArea(rPanel);
 
+        string sPersistedViewPath;
+        if (gRegistry.Get("ZImageViewer", "image", sPersistedViewPath))
+        {
+            ViewImage(sPersistedViewPath);
+        }
+        else
+        {
+            gMessageSystem.Post(ZMessage("show_help", this));
+        }
+
+        
         GetTopWindow()->ChildAdd(mpPanel);
     }
 
@@ -1514,11 +1524,9 @@ void ImageViewer::LimitIndex()
 
 void ImageViewer::UpdateControlPanel()
 {
-    ZMessage m;
-    gMessageSystem.Post(ZMessage("set_caption", "target", "filterall", "text", std::format("All ({})", mImageArray.size())));
-    gMessageSystem.Post(ZMessage("set_caption", "target", "filterfavs", "text", std::format("Favorites ({})", mFavImageArray.size())));
-    gMessageSystem.Post(ZMessage("set_caption", "target", "filterranked", "text", "Ranked"));
-    gMessageSystem.Post(ZMessage("set_caption", "text", std::format("To Be Deleted ({})", mToBeDeletedImageArray.size()), "target", "filterdel"));
+    std::filesystem::path cr3Path = FindCR3();
+    gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!cr3Path.empty()), "target", "psraw")); // if cr3Path is not empty, then a raw file is available to open
+
 
     string sAppPath = gRegistry["apppath"];
     if (gGraphicSystem.mbFullScreen)
@@ -1528,6 +1536,16 @@ void ImageViewer::UpdateControlPanel()
     
     if (mbShowUI && mpPanel)
     {
+        if (mFilterState == kRanked)
+            gMessageSystem.Post(ZMessage("radio_check", "target", "filterranked", "group", "FilterGroup", "checked", "filterranked"));
+        else if (mFilterState == kToBeDeleted)
+            gMessageSystem.Post(ZMessage("radio_check", "target", "filterdel", "group", "FilterGroup", "checked", "filterdel"));
+        else if (mFilterState == kFavs)
+            gMessageSystem.Post(ZMessage("radio_check", "target", "filterfavs", "group", "FilterGroup", "checked", "filterfavs"));
+        else
+            gMessageSystem.Post(ZMessage("radio_check", "target", "filterall", "group", "FilterGroup", "checked", "filterall"));
+
+
         gMessageSystem.Post(ZMessage("set_enabled", "target", "copylink", "enabled", SH::FromInt((int)ValidIndex(mViewingIndex))));
 
         gMessageSystem.Post(ZMessage("set_enabled", "target", "filterfavs", "enabled", SH::FromInt((int)!mFavImageArray.empty())));
@@ -1536,7 +1554,7 @@ void ImageViewer::UpdateControlPanel()
 
         gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "filterdel"));
 
-        gMessageSystem.Post(ZMessage("set_visible", "visible", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "deletemarked"));
+        gMessageSystem.Post(ZMessage("set_enabled", "enabled", SH::FromInt((int)!mToBeDeletedImageArray.empty()), "target", "deletemarked"));
 
         gMessageSystem.Post(ZMessage("set_visible", "visible", SH::FromInt((int)(mFilterState == kFavs || mFilterState == kRanked)), "target", "rank_favorites"));
     }
@@ -1573,14 +1591,15 @@ bool ImageViewer::ViewImage(const std::filesystem::path& filename)
     }
 
     mToggleUIHotkey = VK_TAB;
-    UpdateFilteredView(kAll);   // set filter to all and fill out del and fav arrays
+//    UpdateFilteredView(kAll);   // set filter to all and fill out del and fav arrays
 
     mViewingIndex = IndexFromPath(filename);
+    UpdateFilteredView(mFilterState);
 
-    if (mViewingIndex.favIndex >= 0) // if current image is fav, set that as the filter
+/*    if (mViewingIndex.favIndex >= 0) // if current image is fav, set that as the filter
         UpdateFilteredView(kFavs);
     else if (mViewingIndex.delIndex >= 0)   // same with del
-        UpdateFilteredView(kToBeDeleted);
+        UpdateFilteredView(kToBeDeleted);*/
 
     UpdateControlPanel();
     mCachingState = kReadingAhead;
@@ -1593,49 +1612,46 @@ bool ImageViewer::ViewImage(const std::filesystem::path& filename)
 // 1) look for cr3 version in cur folder
 // 2) look for cr3 version in 'raw' subfolder
 // 3) look for cr3 version in '../raw' subfolder
-bool ImageViewer::FindAndLaunchCR3()
+std::filesystem::path ImageViewer::FindCR3()
 {
-#ifdef _WIN64
-    if (!ValidIndex(mViewingIndex))
+    if (ValidIndex(mViewingIndex))
+    {
+
+        std::filesystem::path cr3Filename = mImageArray[mViewingIndex.absoluteIndex]->filename.filename();
+        cr3Filename.replace_extension(".cr3");
+
+        std::filesystem::path curFolderPath = mCurrentFolder;
+        curFolderPath.append(cr3Filename.string());
+
+        if (std::filesystem::exists(curFolderPath))
+            return curFolderPath;
+
+        std::filesystem::path curFolderRawPath = mCurrentFolder;
+        curFolderRawPath += "/raw/";
+        curFolderRawPath.append(cr3Filename.string());
+
+        if (std::filesystem::exists(curFolderRawPath))
+            return curFolderRawPath;
+
+        std::filesystem::path parentFolderRawPath = mCurrentFolder.parent_path();
+        parentFolderRawPath += "/raw/";
+        parentFolderRawPath.append(cr3Filename.string());
+
+        if (std::filesystem::exists(parentFolderRawPath))
+            return parentFolderRawPath;
+    }
+
+    return {};
+}
+
+bool ImageViewer::LaunchCR3(std::filesystem::path cr3Path)
+{
+    // launch from cur folder
+    if (cr3Path.empty() || !std::filesystem::exists(cr3Path))
         return false;
 
-    std::filesystem::path cr3Filename = mImageArray[mViewingIndex.absoluteIndex]->filename.filename();
-    cr3Filename.replace_extension(".cr3");
-
-    std::filesystem::path curFolderPath = mCurrentFolder;
-    curFolderPath.append(cr3Filename.string());
-
-    if (std::filesystem::exists(curFolderPath))
-    {
-        // launch from cur folder
-        ShellExecuteA(0, "open", curFolderPath.string().c_str(), 0, 0, SW_SHOWNORMAL);
-        return true;
-    }
-
-    std::filesystem::path curFolderRawPath = mCurrentFolder;
-    curFolderRawPath += "/raw/";
-    curFolderRawPath.append(cr3Filename.string());
-
-    if (std::filesystem::exists(curFolderRawPath))
-    {
-        // launch 
-        ShellExecuteA(0, "open", curFolderRawPath.string().c_str(), 0, 0, SW_SHOWNORMAL);
-        return true;
-    }
-
-    std::filesystem::path parentFolderRawPath = mCurrentFolder.parent_path();
-    parentFolderRawPath += "/raw/";
-    parentFolderRawPath.append(cr3Filename.string());
-
-    if (std::filesystem::exists(parentFolderRawPath))
-    {
-        // launch 
-        ShellExecuteA(0, "open", parentFolderRawPath.string().c_str(), 0, 0, SW_SHOWNORMAL);
-        return true;
-    }
-#endif
-
-    return false;
+    ShellExecuteA(0, "open", cr3Path.string().c_str(), 0, 0, SW_SHOWNORMAL);
+    return true;
 }
 
 
@@ -2308,14 +2324,15 @@ void ImageViewer::UpdateFilteredView(eFilterState state)
             mFavImageArray.push_back(i);
     }
 
-
     mFilterState = state;
+
     if (CountImagesMatchingFilter(mFilterState) == 0)
     {
-        mViewingIndex = {};
-        mpWinImage->Clear();
+        mFilterState = kAll;
     }
-    else
+
+    // filter state may have changed to kAll above.... check again if anything matches
+    if (CountImagesMatchingFilter(mFilterState) != 0)
     {
         mpWinImage->mCaptionMap["no_image"].Clear();
 
@@ -2334,6 +2351,11 @@ void ImageViewer::UpdateFilteredView(eFilterState state)
             if (!ImageMatchesCurFilter(mViewingIndex))
                 SetPrevImage();
         }
+    }
+    else
+    {
+        mViewingIndex = {};
+        mpWinImage->Clear();
     }
 
     UpdateUI();
@@ -2364,6 +2386,32 @@ void ImageViewer::UpdateCaptions()
     mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
     mpWinImage->mpTable->mTableStyle.pad.h = (int32_t)gSpacer;
     mpWinImage->mpTable->mTableStyle.pad.v = (int32_t)gSpacer;
+
+    string sCaption;
+    if (mViewingIndex.absoluteIndex >= 0)
+        sCaption = std::format("All\n({}/{})", mViewingIndex.absoluteIndex+1, mImageArray.size());
+    else
+        sCaption = std::format("All\n({})", mImageArray.size());
+    gMessageSystem.Post(ZMessage("set_caption", "target", "filterall", "text", sCaption));
+
+
+    if (mViewingIndex.favIndex >= 0)
+        sCaption = std::format("Favorites\n({}/{})", mViewingIndex.favIndex+1, mFavImageArray.size());
+    else
+        sCaption = std::format("Favorites\n({})", mFavImageArray.size());
+    gMessageSystem.Post(ZMessage("set_caption", "target", "filterfavs", "text", sCaption));
+
+    if (mViewingIndex.rankedIndex >= 0)
+        sCaption = std::format("Ranked\n({}/{})", mViewingIndex.rankedIndex+1, mRankedArray.size());
+    else
+        sCaption = std::format("Ranked\n({})", mRankedArray.size());
+    gMessageSystem.Post(ZMessage("set_caption", "target", "filterranked", "text", sCaption));
+
+    if (mViewingIndex.delIndex >= 0)
+        sCaption = std::format("To Be Deleted\n({}/{})", mViewingIndex.delIndex+1, mToBeDeletedImageArray.size());
+    else
+        sCaption = std::format("To Be Deleted\n({})", mToBeDeletedImageArray.size());
+    gMessageSystem.Post(ZMessage("set_caption", "text", sCaption, "target", "filterdel"));
 
 
     if (mpWinImage)
