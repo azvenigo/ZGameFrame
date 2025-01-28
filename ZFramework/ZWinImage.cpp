@@ -365,6 +365,7 @@ void ZWinImage::ScrollTo(int64_t nX, int64_t nY)
     }
 
     mImageArea.MoveRect(nX, nY);
+    UpdateZoomIcon();
     Invalidate();
 }
 
@@ -422,6 +423,7 @@ void ZWinImage::FitImageToWindow()
     mImageArea = ZGUI::ScaledFit(mpImage->GetArea(), mAreaLocal);
     mfZoom = (double)mImageArea.Width() / (double)mpImage->GetArea().Width();
     mfPerfectFitZoom = mfZoom;
+    UpdateZoomIcon();
 
     Invalidate();
 }
@@ -429,6 +431,7 @@ void ZWinImage::FitImageToWindow()
 void ZWinImage::CenterImage()
 {
     mImageArea.SetRect(ZGUI::Arrange(mImageArea, mAreaLocal, ZGUI::C));
+    UpdateZoomIcon();
     Invalidate();
 }
 
@@ -442,6 +445,61 @@ bool ZWinImage::IsSizedToWindow()
     return (mAreaInParent.Width() == mImageArea.Width() || mAreaInParent.Height() == mImageArea.Height());  // if either width or height matches window, then it's sized
 }
 
+
+void ZWinImage::UpdateZoomIcon()
+{
+    // zoom icon
+    ZRect rImageArea = mAreaInParent;
+    ZRect rZoomedImageArea = mImageArea;
+
+    ZGUI::ImageBox& imgBox = mIconMap["zoomicon"];
+
+    if (rImageArea.Width() == 0 || rImageArea.Height() == 0 || rZoomedImageArea.Width() == 0 || rZoomedImageArea.Height() == 0)
+    {
+        imgBox.visible = false;
+        return;
+    }
+
+    rZoomedImageArea.OffsetRect(mAreaInParent.TL());  // adjust to local image coordinates
+
+    ZRect rBounds(rZoomedImageArea);
+    rBounds.UnionRect(rImageArea);
+
+    double fBoundsRatio = (double)rBounds.Height() / (double)rBounds.Width();
+
+    int64_t iconW = gM * 4;
+    int64_t iconH = iconW * fBoundsRatio;
+
+    double fIconScale = (double)iconH / (double)rBounds.Height();
+
+    ZRect rScreenIcon(rImageArea.left * fIconScale, rImageArea.top * fIconScale, rImageArea.right * fIconScale, rImageArea.bottom * fIconScale);
+    ZRect rImageIcon(rZoomedImageArea.left * fIconScale, rZoomedImageArea.top * fIconScale, rZoomedImageArea.right * fIconScale, rZoomedImageArea.bottom * fIconScale);
+
+    rScreenIcon.OffsetRect(-rBounds.left * fIconScale, -rBounds.top * fIconScale);
+    rImageIcon.OffsetRect(-rBounds.left * fIconScale, -rBounds.top * fIconScale);
+
+
+
+    imgBox.area = ZGUI::Arrange(ZRect(0, 0, iconW, iconH), rImageArea, ZGUI::LB, gSpacer, gSpacer);
+    ZRect rDest(imgBox.RenderRect());
+
+    if (!imgBox.mRendered || imgBox.mRendered->GetArea().Width() != rDest.Width() || imgBox.mRendered->GetArea().Height() != rDest.Height())
+    {
+        imgBox.mRendered.reset(new ZBuffer());
+        imgBox.mRendered->Init(rDest.Width(), rDest.Height());
+    }
+
+    imgBox.mRendered->Fill(0);
+    ZRect r(imgBox.mRendered->GetArea());
+
+    imgBox.mRendered->DrawRectAlpha(0x99ffffff, rScreenIcon, ZBuffer::kAlphaSource);
+
+    imgBox.mRendered->DrawRectAlpha(0xff0000ff, rImageIcon, ZBuffer::kAlphaSource);
+
+
+    imgBox.visible = true;
+
+}
 
 
 void ZWinImage::SetZoom(double fZoom)
@@ -466,6 +524,8 @@ void ZWinImage::SetZoom(double fZoom)
             mViewState = kZoomedInToSmallImage;
         else if (rImageArea.Height() > mAreaInParent.Height() && mfZoom < 1.0)
             mViewState = kZoomedOutOfLargeImage;
+
+        UpdateZoomIcon();
     }
 
     Invalidate(); 
@@ -496,6 +556,7 @@ void ZWinImage::SetImage(tZBufferPtr pImage)
             SetZoom(1.0);
             mImageArea = pImage->GetArea();
             mImageArea = mImageArea.CenterInRect(mAreaLocal);
+            UpdateZoomIcon();
         }
     }
     else if (mViewState == kFitToWindow)
@@ -581,7 +642,7 @@ bool ZWinImage::Paint()
         if (pRenderImage && mpTable)
             mpTable->Paint(mpSurface.get());
     }
-    ZGUI::SVGImageBox::Paint(mpSurface.get(), mIconMap);
+    ZGUI::ImageBox::Paint(mpSurface.get(), mIconMap);
 
 //    ZDEBUG_OUT_LOCKLESS("out...\n");
 

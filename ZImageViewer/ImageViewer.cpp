@@ -127,6 +127,7 @@ void ImageViewer::HandleQuitCommand()
     gMessageSystem.Post(ZMessage("quit_app_confirmed"));
 }
 
+
 void ImageViewer::UpdateUI()
 {
     //ZDEBUG_OUT("UpdateUI() mbShowUI:", mbShowUI, "\n");
@@ -179,8 +180,9 @@ void ImageViewer::UpdateUI()
 
 //    gGraphicSystem.GetScreenBuffer()->EnableRendering(false);
     if (mpWinImage && mbInitted)
+    {
         mpWinImage->SetArea(rImageArea);
-//    gGraphicSystem.GetScreenBuffer()->EnableRendering(true);
+    }
 
     UpdateControlPanel();
     UpdateCaptions();
@@ -2369,24 +2371,6 @@ void ImageViewer::UpdateCaptions()
     if (gInput.IsKeyDown(VK_MENU))
         bShow = true;
 
-    mpWinImage->mCaptionMap["filename"].Clear();
-//    mpWinImage->mCaptionMap["folder"].Clear();
-    //mpWinImage->mCaptionMap["favorite"].Clear();
-    mpWinImage->mCaptionMap["for_delete"].Clear();
-    mpWinImage->mCaptionMap["no_image"].Clear();
-    mpWinImage->mCaptionMap["image_count"].Clear();
-    mpWinImage->mCaptionMap["rank"].Clear();
-
-    mpWinImage->mpTable->mCellStyle = gStyleCaption;
-    mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
-    mpWinImage->mpTable->mCellStyle.pad.h = (int32_t)(gSpacer / 2);
-    mpWinImage->mpTable->mCellStyle.pad.v = (int32_t)(gSpacer / 2);
-
-    mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
-    mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
-    mpWinImage->mpTable->mTableStyle.pad.h = (int32_t)gSpacer;
-    mpWinImage->mpTable->mTableStyle.pad.v = (int32_t)gSpacer;
-
     string sCaption;
     if (mViewingIndex.absoluteIndex >= 0)
         sCaption = std::format("All\n({}/{})", mViewingIndex.absoluteIndex+1, mImageArray.size());
@@ -2416,6 +2400,25 @@ void ImageViewer::UpdateCaptions()
 
     if (mpWinImage)
     {
+        mpWinImage->mCaptionMap["filename"].Clear();
+        //    mpWinImage->mCaptionMap["folder"].Clear();
+            //mpWinImage->mCaptionMap["favorite"].Clear();
+        mpWinImage->mCaptionMap["for_delete"].Clear();
+        mpWinImage->mCaptionMap["no_image"].Clear();
+        mpWinImage->mCaptionMap["image_count"].Clear();
+        mpWinImage->mCaptionMap["rank"].Clear();
+
+        mpWinImage->mpTable->mCellStyle = gStyleCaption;
+        mpWinImage->mpTable->mCellStyle.pos = ZGUI::LC;
+        mpWinImage->mpTable->mCellStyle.pad.h = (int32_t)(gSpacer / 2);
+        mpWinImage->mpTable->mCellStyle.pad.v = (int32_t)(gSpacer / 2);
+
+        mpWinImage->mpTable->mTableStyle.pos = ZGUI::RB;
+        mpWinImage->mpTable->mTableStyle.bgCol = 0x88000000;
+        mpWinImage->mpTable->mTableStyle.pad.h = (int32_t)gSpacer;
+        mpWinImage->mpTable->mTableStyle.pad.v = (int32_t)gSpacer;
+
+
         int64_t topPadding = 0; // in case panel is visible
         if (mpPanel)
             topPadding = mpPanel->GetArea().Height();

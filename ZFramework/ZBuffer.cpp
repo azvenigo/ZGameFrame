@@ -174,7 +174,7 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 //    cout << "LoadBuffer() After init\n";
 
 
-    uint64_t nAlphaSum = 0;
+    mbHasAlphaPixels = false;
 
     uint32_t* pDest = mpPixels;
     for (uint32_t* pSrc = (uint32_t*)pImage; pSrc < (uint32_t*)(pImage + width * height * 4); pSrc++)
@@ -187,15 +187,13 @@ bool ZBuffer::LoadBuffer(const string& sFilename)
 
         uint32_t newCol = a | r | g | b;
 
-        nAlphaSum += (a >> 24); // add up all alpha values
-
         *pDest = newCol;
         pDest++;
+        if (a != 0xff000000)
+        {
+            mbHasAlphaPixels = true;    // found a non fully opaque alpha
+        }
     }
-
-    // if the sum of all pixel alphas is less than number of pixels * 0xff, then there are alpha pixels
-    if (nAlphaSum < width * height * 0xff)
-        mbHasAlphaPixels = true;
 
     stbi_image_free(pImage);
 
@@ -1057,7 +1055,7 @@ bool ZBuffer::Colorize(uint32_t nH, uint32_t nS, ZRect* pRect)
 }
 
 
-void  ZBuffer::DrawRectAlpha(uint32_t nCol, ZRect rRect)
+void  ZBuffer::DrawRectAlpha(uint32_t nCol, ZRect rRect, eAlphaBlendType type)
 {
     // Bottom and right are inclusive, so -1
     rRect.right--;
@@ -1071,6 +1069,17 @@ void  ZBuffer::DrawRectAlpha(uint32_t nCol, ZRect rRect)
         int64_t nFillHeight = rClipped.Height();
         int64_t nAlpha = ARGB_A(nCol);
 
+
+
+        auto alphaBlendFunction = (type == kAlphaDest)
+            ? &COL::AlphaBlend_Col2Alpha
+            : (type == kAlphaBlend)
+            ? &COL::AlphaBlend_BlendAlpha
+            : &COL::AlphaBlend_Col1Alpha;
+
+
+
+
         uint32_t* pDstBits;
 
         // draw top 
@@ -1079,7 +1088,7 @@ void  ZBuffer::DrawRectAlpha(uint32_t nCol, ZRect rRect)
             pDstBits = (uint32_t*)(mpPixels + (rClipped.top * nDstStride) + rClipped.left);
             for (int64_t x = 0; x < nFillWidth; x++)
             {
-                *pDstBits++ = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
+                *pDstBits++ = alphaBlendFunction(nCol, *pDstBits, ARGB_A(nCol));
             }
         }
 
@@ -1089,7 +1098,7 @@ void  ZBuffer::DrawRectAlpha(uint32_t nCol, ZRect rRect)
             pDstBits = (uint32_t*)(mpPixels + (rClipped.top * nDstStride) + rClipped.left);
             for (int64_t y = 0; y < nFillHeight; y++)
             {
-                *pDstBits = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
+                *pDstBits = alphaBlendFunction(nCol, *pDstBits, ARGB_A(nCol));
                 pDstBits += nDstStride;
             }
         }
@@ -1100,7 +1109,7 @@ void  ZBuffer::DrawRectAlpha(uint32_t nCol, ZRect rRect)
             pDstBits = (uint32_t*)(mpPixels + (rClipped.top * nDstStride) + rClipped.right);
             for (int64_t y = 0; y < nFillHeight; y++)
             {
-                *pDstBits = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
+                *pDstBits = alphaBlendFunction(nCol, *pDstBits, ARGB_A(nCol));
                 pDstBits += nDstStride;
             }
         }
@@ -1111,7 +1120,7 @@ void  ZBuffer::DrawRectAlpha(uint32_t nCol, ZRect rRect)
             pDstBits = (uint32_t*)(mpPixels + (rClipped.bottom * nDstStride) + rClipped.left);
             for (int64_t x = 0; x < nFillWidth; x++)
             {
-                *pDstBits++ = COL::AlphaBlend_Col2Alpha(nCol, *pDstBits, ARGB_A(nCol));
+                *pDstBits++ = alphaBlendFunction(nCol, *pDstBits, ARGB_A(nCol));
             }
         }
     }

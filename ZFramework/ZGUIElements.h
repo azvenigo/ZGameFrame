@@ -70,19 +70,19 @@ namespace ZGUI
 
 
 
-    typedef std::map<std::string, class SVGImageBox> tSVGImageMap; // named SVGImageBoxes
+    typedef std::map<std::string, class ImageBox> tSVGImageMap; // named SVGImageBoxes
 
-    class SVGImageBox
+    class ImageBox
     {
     public:
-        SVGImageBox() { Clear(); }
+        ImageBox() { Clear(); }
 
         bool    Paint(ZBuffer* pDst);
         static void Paint(ZBuffer* pDst, tSVGImageMap& svgImageBoxMap);
 
+        ZRect       RenderRect();
         void        Clear()
         {
-            mSVGDoc.reset();
             style = {};
             area = {};
             visible = true;
@@ -93,13 +93,11 @@ namespace ZGUI
         bool        visible;
 
         std::string imageFilename;  
+        tZBufferPtr mRendered;
 
     private:
         bool    Load();
 
-        std::recursive_mutex mDocMutex;
-        std::unique_ptr<lunasvg::Document> mSVGDoc;
-        tZBufferPtr mRendered;
         std::string loadedFilename;
     };
 

@@ -96,7 +96,7 @@ public:
 
 
 	virtual void            DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, double thickness = 2.0, ZRect* pClip = NULL);
-    virtual void            DrawRectAlpha(uint32_t nCol, ZRect rDst);
+    virtual void            DrawRectAlpha(uint32_t nCol, ZRect rDst, eAlphaBlendType type = kAlphaDest);
 
     virtual void            DrawCircle(ZPoint center, int64_t radius, uint32_t col);
     virtual void            DrawSphere(ZPoint center, int64_t radius, const Z3D::Vec3f& lightPos, const Z3D::Vec3f& viewPos, const Z3D::Vec3f& ambient, const Z3D::Vec3f& diffuse, const Z3D::Vec3f& specular, float shininess);

@@ -192,70 +192,72 @@ namespace ZGUI
 
 
 
-    bool SVGImageBox::Load()
+    bool ImageBox::Load()
     {
-        const std::lock_guard<std::recursive_mutex> lock(mDocMutex);
-        
-        mSVGDoc = lunasvg::Document::loadFromFile(imageFilename);
+        ZDEBUG_OUT("ImageBox::Loading image:", imageFilename, "\n");
 
-        if (!mSVGDoc)
+        tZBufferPtr buf(new ZBuffer());
+
+        ZRect rDest(RenderRect());
+
+        // for loading SVG, this sets the desired dimensions
+        buf->Init(rDest.Width(), rDest.Height());
+        if (!buf->LoadBuffer(imageFilename))
         {
-            cerr << "Failed to load SVG:" << imageFilename << "\n";
+            cerr << "Failed to load image:" << imageFilename << "\n";
             return false;
         }
 
-        loadedFilename = imageFilename;
-        mRendered.reset();  // will
+        // non-svg images may have loaded at a different dimmension.....if so, scale
+        if (buf->GetArea().Width() == rDest.Width() && buf->GetArea().Height() == rDest.Height())
+        {
+            mRendered = buf;
+        }
+        else
+        {
+            mRendered.reset(new ZBuffer());
+            mRendered->Init(rDest.Width(), rDest.Height());
+            mRendered->BltScaled(buf.get());
+        }
 
+        loadedFilename = imageFilename;
         return true;
     }
 
-    bool SVGImageBox::Paint(ZBuffer* pDest)
+    ZRect ImageBox::RenderRect()
     {
-        const std::lock_guard<std::recursive_mutex> lock(mDocMutex);
+        ZRect rDest(area);
+        rDest.DeflateRect(style.pad.h, style.pad.v);
+        return  ZGUI::Arrange(rDest, area, style.pos);
+    }
 
+
+    bool ImageBox::Paint(ZBuffer* pDest)
+    {
         if (!visible)
             return true;
 
-        if (loadedFilename != imageFilename)
-        {
-            if (!Load())
-                return false;
-        }
-
-        if (mSVGDoc == nullptr)
-            return true;
-
-        ZRect rDest(0,0, (int64_t)mSVGDoc->width(), (int64_t)mSVGDoc->height());
-        rDest = ZGUI::ScaledFit(rDest, area);
-        rDest.DeflateRect(style.pad.h, style.pad.v);
-        rDest = ZGUI::Arrange(rDest, area, style.pos);
+        ZRect rDest(RenderRect());
 
         if (mRendered == nullptr || rDest.Width() != mRendered->GetArea().Width() || rDest.Height() != mRendered->GetArea().Height())
         {
-            mRendered.reset(new ZBuffer());
-            auto svgbitmap = mSVGDoc->renderToBitmap((uint32_t)rDest.Width(), (uint32_t)rDest.Height());
-
-            int64_t w = (int64_t)svgbitmap.width();
-            int64_t h = (int64_t)svgbitmap.height();
-            uint32_t s = svgbitmap.stride();
-            //ZDEBUG_OUT("Rendering SVG at:", w, "x", h, "\n");
-
-            mRendered->Init(w, h);
-            uint32_t* pPixels = mRendered->GetPixels();
-            for (int64_t y = 0; y < h; y++)
+            if (loadedFilename != imageFilename)
             {
-                memcpy(pPixels + y * w, svgbitmap.data() + y * s, w * 4);
+                if (!Load())
+                {
+                    cerr << "Can't load then paint imagebox\n";
+                    return false;
+                }
             }
-            mRendered->mbHasAlphaPixels = true;
         }
 
-        pDest->Blt(mRendered.get(), mRendered->GetArea(), rDest);
+        if (mRendered)
+            pDest->Blt(mRendered.get(), mRendered->GetArea(), rDest);
 
         return true;
     }
 
-    void SVGImageBox::Paint(ZBuffer* pDst, tSVGImageMap& svgImageBoxMap)
+    void ImageBox::Paint(ZBuffer* pDst, tSVGImageMap& svgImageBoxMap)
     {
         for (auto& i : svgImageBoxMap)
             i.second.Paint(pDst);

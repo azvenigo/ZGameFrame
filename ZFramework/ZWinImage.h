@@ -18,11 +18,12 @@ public:
         kZoom                   = 1 << 1,   // 2
         kHotkeyZoom             = 1 << 2,   // 4
         kShowZoomCaption        = 1 << 3,   // 8
-        kShowCaption            = 1 << 4,   // 16
-        kShowCaptionOnMouseOver = 1 << 5,   // 32
-        kSelectableArea         = 1 << 6,   // 64
-        kNotifyOnClick          = 1 << 7,   // 128
-        kLaunchGeolocation      = 1 << 8,   // 256
+        kShowZoomIcon           = 1 << 4,   // 16
+        kShowCaption            = 1 << 5,   // 32
+        kShowCaptionOnMouseOver = 1 << 6,   // 64
+        kSelectableArea         = 1 << 7,   // 128
+        kNotifyOnClick          = 1 << 8,   // 256
+        kLaunchGeolocation      = 1 << 9,   // 512
     };
 
     enum eViewState : uint32_t
@@ -53,6 +54,8 @@ public:
     void        FitImageToWindow();
     void        CenterImage();
     bool        IsSizedToWindow();
+    void        UpdateZoomIcon();
+//    ZRect       GetImageArea() { return mImageArea; }   // computed area with zoom and pan based on local coordinates
 
     void        SetZoom(double fZoom);
     double      GetZoom();

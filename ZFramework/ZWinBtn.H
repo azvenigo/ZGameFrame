@@ -116,7 +116,7 @@ public:
 	virtual bool            OnMouseMove(int64_t x, int64_t y);
 
     ZGUI::TextBox           mCaption;
-    ZGUI::SVGImageBox       mSVGImage;
+    ZGUI::ImageBox       mSVGImage;
 
     ZGUI::Style             mBtnStyle;
     bool                    mbEnabled;
