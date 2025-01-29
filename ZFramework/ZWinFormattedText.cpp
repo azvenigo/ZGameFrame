@@ -142,7 +142,7 @@ bool ZWinFormattedDoc::OnMouseDownL(int64_t x, int64_t y)
 		nY -=  mnMouseDownSliderVal;
 	}
 
-    std::unique_lock<std::mutex> lk(mDocumentMutex);
+    std::unique_lock<std::recursive_mutex> lk(mDocumentMutex);
 
     if (IsBehaviorSet(kEvenColumns) && mColumnWidths.empty())
         ComputeColumnWidths();
@@ -262,6 +262,7 @@ void ZWinFormattedDoc::UpdateDocumentAndScrollbar()
 
     mbDocumentInvalid = false;
 
+    std::unique_lock<std::recursive_mutex> lk(mDocumentMutex);
     CalculateFullDocumentHeight();
 
     if (IsBehaviorSet(kEvenColumns))
@@ -303,7 +304,6 @@ void ZWinFormattedDoc::UpdateDocumentAndScrollbar()
 			int64_t nLine = 0;
 			int64_t nHeight = 0;
 
-            std::unique_lock<std::mutex> lk(mDocumentMutex);
 			for (tDocument::iterator it = mDocument.begin(); it != mDocument.end() && nLine < mnScrollToOnInit; it++, nLine++)
 			{
 				tFormattedLine& textLine = *it;
@@ -329,6 +329,8 @@ bool ZWinFormattedDoc::Paint()
 {
     if (!PrePaintCheck())
         return false;
+
+    std::unique_lock<std::recursive_mutex> lk(mDocumentMutex);
 
     if (mbDocumentInvalid)
         UpdateDocumentAndScrollbar();
@@ -369,7 +371,6 @@ bool ZWinFormattedDoc::Paint()
 		nY -= mnSliderVal;
 	}
 
-    std::unique_lock<std::mutex> lk(mDocumentMutex);
     for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
 	{
 		tFormattedLine& line = *it;
@@ -461,7 +462,7 @@ void ZWinFormattedDoc::CalculateFullDocumentHeight()
 {
 	mnFullDocumentHeight = 0;
 
-    std::unique_lock<std::mutex> lk(mDocumentMutex);
+    std::unique_lock<std::recursive_mutex> lk(mDocumentMutex);
     for (tDocument::iterator it = mDocument.begin(); it != mDocument.end(); it++)
 	{
 		tFormattedLine& textLine = *it;
@@ -472,7 +473,7 @@ void ZWinFormattedDoc::CalculateFullDocumentHeight()
 
 void ZWinFormattedDoc::Clear()
 {
-    std::unique_lock<std::mutex> lk(mDocumentMutex);
+    std::unique_lock<std::recursive_mutex> lk(mDocumentMutex);
     mDocument.clear();
     mbDocumentInvalid = true;
 }
@@ -587,7 +588,7 @@ void ZWinFormattedDoc::AddMultiLine(string sLine, ZGUI::Style style, const strin
         line.push_back(entry);
 
         // Add it to the document, and on to the next line
-        std::unique_lock<std::mutex> lk(mDocumentMutex);
+        std::unique_lock<std::recursive_mutex> lk(mDocumentMutex);
         mDocument.push_back(line);
         line.clear();
 
@@ -657,7 +658,7 @@ bool ZWinFormattedDoc::ProcessLineNode(ZXML* pTextNode)
 
 	if (formattedLine.size() > 0)
 	{
-        std::unique_lock<std::mutex> lk(mDocumentMutex);
+        std::unique_lock<std::recursive_mutex> lk(mDocumentMutex);
 		mDocument.push_back(formattedLine);
         mbDocumentInvalid = true;
 	}

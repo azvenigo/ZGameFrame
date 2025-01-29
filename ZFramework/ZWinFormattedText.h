@@ -123,7 +123,7 @@ private:
 	ZRect        		mrDocumentBorderArea;
 
 	tDocument    		mDocument;     // parsed document
-    std::mutex          mDocumentMutex;		// when held, document may not be modified
+    std::recursive_mutex mDocumentMutex;		// when held, document may not be modified
     bool                mbDocumentInvalid;
 
 

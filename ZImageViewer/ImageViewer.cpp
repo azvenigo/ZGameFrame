@@ -2470,10 +2470,12 @@ void ImageViewer::UpdateCaptions()
 
             if (ValidIndex(mViewingIndex))
             {
-                mpWinImage->mIconMap["favorite"].visible = mImageArray[mViewingIndex.absoluteIndex]->IsFavorite();
+                mpWinImage->mIconMap["favorite"].visible = mImageArray[mViewingIndex.absoluteIndex]->IsFavorite() && mFilterState != kRanked;
 
                 string sCountCaption("Image ");
-                if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite())
+                if (mFilterState == kRanked)
+                    sCountCaption = "Ranked ";
+                else if (mImageArray[mViewingIndex.absoluteIndex]->IsFavorite())
                     sCountCaption = "Favorite ";
                 else if (mImageArray[mViewingIndex.absoluteIndex]->ToBeDeleted())
                     sCountCaption = "To Be Deleted ";

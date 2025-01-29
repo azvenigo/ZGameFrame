@@ -449,7 +449,7 @@ bool ZWinImage::IsSizedToWindow()
 void ZWinImage::UpdateZoomIcon()
 {
     // zoom icon
-    ZRect rImageArea = mAreaInParent;
+    ZRect rImageArea = mAreaLocal;
     ZRect rZoomedImageArea = mImageArea;
 
     ZGUI::ImageBox& imgBox = mIconMap["zoomicon"];
