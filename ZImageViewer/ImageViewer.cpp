@@ -1399,8 +1399,6 @@ bool ImageViewer::Init()
 
         ZGUI::Style style(gDefaultPanelStyle);
         style.pos = ZGUI::CT;
-//        style.pad.h = (int32_t)gSpacer/2;
-//        style.pad.v = (int32_t)gSpacer/2;
         style.pad.h = 0;
         style.pad.v = 0;
 
@@ -1429,7 +1427,7 @@ bool ImageViewer::Init()
         sFileGroupLayout += "<row>" + ZWinPanel::MakeButton("movefile", "", "", "$apppath$/res/move.svg", "Select a Move Folder for quick-move with 'M'", ZMessage("set_move_folder", this), 1.0, style, {}) + "</row>";
         sFileGroupLayout += "</panel>";
 
-        ZGUI::RA_Descriptor fileManageRAD({}, "file_manage_menu", ZGUI::VOutside | ZGUI::HC | ZGUI::T, 1.25, 6.0);
+        ZGUI::RA_Descriptor fileManageRAD({}, "file_manage_menu", ZGUI::VOutside | ZGUI::HC | ZGUI::T, 1.25, 3.75);
         mpPanel->mPanelLayout += ZWinPanel::MakeSubmenu("file_manage_menu", "File", "", "$apppath$/res/manage.svg", "Manage File", sFileGroupLayout, fileManageRAD, 1.0, style);
 
 
@@ -1454,6 +1452,8 @@ bool ImageViewer::Init()
         // Filter group
         ZGUI::Style checked(gStyleToggleChecked);
         ZGUI::Style unchecked(gStyleToggleUnchecked);
+        checked.wrap = true;
+        unchecked.wrap = true;
         checked.fp.nScalePoints = gM * 20;
         unchecked.fp.nScalePoints = gM * 20;
 
@@ -2377,7 +2377,6 @@ void ImageViewer::UpdateCaptions()
     else
         sCaption = std::format("All\n({})", mImageArray.size());
     gMessageSystem.Post(ZMessage("set_caption", "target", "filterall", "text", sCaption));
-
 
     if (mViewingIndex.favIndex >= 0)
         sCaption = std::format("Favorites\n({}/{})", mViewingIndex.favIndex+1, mFavImageArray.size());

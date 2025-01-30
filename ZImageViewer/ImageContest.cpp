@@ -276,7 +276,7 @@ bool ImageContest::HandleMessage(const ZMessage& message)
         ZTransformation lastTrans(end);
 
 
-        Sprintf(end.msCompletionMessage, "invalidate;children=1;target=%s", GetTopWindow()->GetTargetName().c_str());
+        end.msCompletionMessage = ZMessage("invalidate", "children", "1", "target", GetTopWindow()->GetTargetName().c_str());
         pImage->AddTransformation(end, 333);
         gAnimator.AddObject(pImage);
 

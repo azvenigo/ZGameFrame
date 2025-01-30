@@ -221,6 +221,7 @@ namespace ZGUI
         j["pos"] = pos;
         j["pad"] = (string)pad;
         j["bg"] = bgCol;
+        j["wrap"] = wrap;
 
         return j.dump();
     }

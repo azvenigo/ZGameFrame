@@ -1081,7 +1081,8 @@ bool ZAnimObject_TransformingImage::Paint(ZBuffer* pDest)
             assert(mpWorkingBuffer && mpBackground && mpWorkingBuffer->GetArea() == grFullArea && mpBackground->GetArea() == grFullArea);
             mpWorkingBuffer->CopyPixels(mpBackground.get());
             gRasterizer.RasterizeWithAlpha(mpWorkingBuffer.get(), mpImage.get(), mVerts, nullptr, mCurTransform.mnAlpha);
-            gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpWorkingBuffer.get(), grFullArea, grFullArea);
+//            gpGraphicSystem->GetScreenBuffer()->RenderBuffer(mpWorkingBuffer.get(), grFullArea, grFullArea);
+            gpGraphicSystem->GetScreenBuffer()->CopyPixels(mpWorkingBuffer.get());
             return true;
         }
         else
