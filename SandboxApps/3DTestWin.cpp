@@ -945,6 +945,46 @@ bool Z3DTestWin::Init()
         gRegistry.SetDefault("3dtestwin", "render_size", mnRenderSize);
     }
 
+    if (!gRegistry.Get("3dtestwin", "render_cubes", mbRenderCube))
+    {
+        mbRenderCube = false;
+        gRegistry.SetDefault("3dtestwin", "render_cubes", mbRenderCube);
+    }
+
+    if (!gRegistry.Get("3dtestwin", "render_spheres", mbRenderSpheres))
+    {
+        mbRenderSpheres = true;
+        gRegistry.SetDefault("3dtestwin", "render_spheres", mbRenderSpheres);
+    }
+
+
+    if (!gRegistry.Get("3dtestwin", "outersphere", mbOuterSphere))
+    {
+        mbOuterSphere = true;
+        gRegistry.SetDefault("3dtestwin", "outersphere", mbOuterSphere);
+    }
+
+    if (!gRegistry.Get("3dtestwin", "centersphere", mbCenterSphere))
+    {
+        mbCenterSphere = true;
+        gRegistry.SetDefault("3dtestwin", "centersphere", mbCenterSphere);
+    }
+
+    if (!gRegistry.Get("3dtestwin", "rotatespeed", mnRotateSpeed))
+    {
+        mnRotateSpeed = true;
+        gRegistry.SetDefault("3dtestwin", "rotatespeed", mnRotateSpeed);
+    }
+
+    if (!gRegistry.Get("3dtestwin", "raydepth", mnRayDepth))
+    {
+        mnRayDepth = true;
+        gRegistry.SetDefault("3dtestwin", "raydepth", mnRayDepth);
+    }
+
+
+
+
 
     mCubeVertices.resize(8);
 
@@ -1046,20 +1086,20 @@ bool Z3DTestWin::Init()
         pCP->Slider("maxspheresize", &mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.25, sUpdateSphereCountMsg, true, false);
 
         pCP->Caption("speed", "Speed");
-        pCP->Slider("rotatespeed", &mnRotateSpeed, 0, 500, 1, 0.25, "", true, false);
+        pCP->Slider("rotatespeed", &mnRotateSpeed, 0, 500, 1, 0.25, ZMessage("updatesettings", this), true, false);
 
         pCP->Caption("fov", "FOV");
-        pCP->Slider("fov", &mnFOVTime100, 100, 18000, 1, 0.25, "", false, false);
+        pCP->Slider("fov", &mnFOVTime100, 100, 18000, 1, 0.25, ZMessage("updatesettings", this), false, false);
 
 
         pCP->Caption("raydepth", "Ray Depth");
-        pCP->Slider("raydepth", &mnRayDepth, 0, 10, 1, 0.25, "", true, false);
+        pCP->Slider("raydepth", &mnRayDepth, 0, 10, 1, 0.25, ZMessage("updatesettings", this), true, false);
 
 
 
         pCP->AddSpace(16);
         pCP->Caption("rendersize", "Render Size");
-        pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("updaterendersize", this), true);
+        pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("updatesettings", this), true);
 
         ZGUI::ZTextLook toggleLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
@@ -1067,10 +1107,10 @@ bool Z3DTestWin::Init()
 
         ZWinCheck* pToggle;
 
-        pToggle = pCP->Toggle("rendercubes", &mbRenderCube, "Render Cubes");
+        pToggle = pCP->Toggle("rendercubes", &mbRenderCube, "Render Cubes", ZMessage("updatesettings", this), ZMessage("updatesettings", this));
         pToggle->msWinGroup = "rendermode";
 
-        pToggle = pCP->Toggle("renderspheres", &mbRenderSpheres, "Render Spheres");
+        pToggle = pCP->Toggle("renderspheres", &mbRenderSpheres, "Render Spheres", ZMessage("updatesettings", this), ZMessage("updatesettings", this));
         pToggle->msWinGroup = "rendermode";
 
         pCP->Toggle("outersphere", &mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg);
@@ -1318,15 +1358,23 @@ bool Z3DTestWin::Paint()
 
         setProjectionMatrix(fFoV, fNear, fFar, mtxProjection);
 
-
         vector<Vec3d> worldVerts;
         worldVerts.resize(4);
 
-        int i = 1;
-        //    for (; i < 100; i++)
+        int cubenum = 1;
+        for (; cubenum < 10; cubenum++)
         {
             //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
-            setOrientationMatrix(4.0, 0.0, mfBaseAngle, mObjectToWorld);
+
+            Matrix44d mtxRotation;
+            setOrientationMatrix(4.0, 0.0, mfBaseAngle, mtxRotation);
+
+
+            Matrix44d mtxTranslation;
+            setTranslationMatrix(0, -cubenum * 2.0, 120-cubenum * sin(mfBaseAngle), mtxTranslation);
+            mObjectToWorld = mtxRotation * mtxTranslation;
+
+
 
             std::vector<Vec3d> cubeWorldVerts;
             cubeWorldVerts.resize(8);
@@ -1387,9 +1435,20 @@ bool Z3DTestWin::HandleMessage(const ZMessage& message)
         UpdateSphereCount();
         return true;
     }
-    else if (sType == "updaterendersize")
+    else if (sType == "updatesettings")
     {
         gRegistry["3dtestwin"]["render_size"] = mnRenderSize;
+        gRegistry["3dtestwin"]["render_cubes"] = mbRenderCube;
+        gRegistry["3dtestwin"]["render_spheres"] = mbRenderSpheres;
+
+        gRegistry["3dtestwin"]["outersphere"] = mbOuterSphere;
+        gRegistry["3dtestwin"]["centersphere"] = mbCenterSphere;
+        gRegistry["3dtestwin"]["rotatespeed"] = mnRotateSpeed;
+        gRegistry["3dtestwin"]["raydepth"] = mnRayDepth;
+
+        
+        
+
         return true;
     }
 

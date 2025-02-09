@@ -497,6 +497,25 @@ bool cFloatLinesWin::Paint()
     if (!PrePaintCheck())
         return false;
 
+    ZRect r(mpSurface->GetArea());
+
+//    double dX = 10.0 * (1.0 + cos(gTimer.GetMSSinceEpoch() / 10000.0));
+//    double dY = 10.0 * (1.0 + cos(gTimer.GetMSSinceEpoch() / 9000.0));
+//    r.OffsetRect(dX, dY);
+//    r.OffsetRect(1, 1);
+//    mpSurface->Blt(mpSurface.get(), r, mpSurface->GetArea());
+
+/*    size_t bytes = r.Width() * 4;
+    for (int64_t y = r.top; y < r.bottom - 1; y++)
+    {
+        uint8_t* pSrc = (uint8_t*)mpSurface->mpPixels + (y+1) * bytes;
+        uint8_t* pDst = (uint8_t*)mpSurface->mpPixels + y * bytes;
+        memcpy(pDst, pSrc, bytes);
+    }
+    memset(mpSurface->mpPixels + (r.bottom-2) * bytes, 0, bytes);
+    */
+
+
     for (int64_t i = 0; i < mnProcessPerFrame; i++)
     {
         if (mbReset)

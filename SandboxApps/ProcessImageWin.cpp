@@ -153,10 +153,10 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
             {
                 pOriginalImageWin->msWinName = filename;
 
-                Sprintf(pOriginalImageWin->msMouseUpLMessage, "selectimg;name=%s;target=imageprocesswin", filename.c_str());
-                Sprintf(pOriginalImageWin->msCloseButtonMessage, "closeimg;name=%s;target=imageprocesswin", filename.c_str());
+                pOriginalImageWin->msMouseUpLMessage = ZMessage("selectimg", "name", filename, "target", "imageprocesswin");
+                pOriginalImageWin->msCloseButtonMessage = ZMessage("closeimg", "name", filename, "target", "imageprocesswin");
 
-                pOriginalImageWin->mFillColor = 0x00000000;
+                pOriginalImageWin->mFillColor = 0xff000000;
                 ChildAdd(pOriginalImageWin);
 
                 mChildImageWins.push_back(pOriginalImageWin);

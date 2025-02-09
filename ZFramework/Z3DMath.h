@@ -446,6 +446,15 @@ namespace Z3D
     }
 
 
+    inline void setTranslationMatrix(double fX, double fY, double fZ, Matrix44d& M)
+    {
+        M[3][0] = fX;
+        M[3][1] = fY;
+        M[3][2] = fZ;
+    }
+
+
+
     inline uint32_t calculateLighting(float x, float y, float centerX, float centerY, float radius, const Vec3f& lightPos, const Vec3f& viewPos, const Vec3f& ambient, const Vec3f& diffuse, const Vec3f& specular, float shininess)
     {
         // Calculate normal vector
