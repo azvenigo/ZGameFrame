@@ -1,7 +1,5 @@
 #pragma once
 
-//#define USE_D3D
-
 #include "ZTypes.h"
 #include "ZDebug.h"
 #include "ZBuffer.h"
@@ -19,27 +17,11 @@ typedef std::map<std::string, ID3D11InputLayout*> tInputLayoutMap;
 
 
 
-class ZGraphicSystem
+namespace ZD3D
 {
-public:
-    ZGraphicSystem();
-    ~ZGraphicSystem();
-    
-    bool                    Init();
-    void                    Shutdown();
-    
-    // Init settings
-    void                    SetArea(ZRect& r)           	{ mrSurfaceArea = r; }
-    double                  GetAspectRatio()                { return (double)mrSurfaceArea.Width() / (double)mrSurfaceArea.Height(); }
-    ZScreenBuffer*          GetScreenBuffer() 				{ return mpScreenBuffer; }
-    
-#ifdef _WIN64
-    void                    SetHWND(HWND hwnd) { mhWnd = hwnd; }
-    HWND                    GetMainHWND() { return mhWnd; }
+    bool                    InitD3D();
+    bool                    ShutdownD3D();
 
-    // GDI+
-    ULONG_PTR               mpGDIPlusToken;
-    HWND                    mhWnd;
 
     IDXGISwapChain1*        mSwapChain;
     ID3D11Device*           mD3DDevice;
@@ -50,7 +32,6 @@ public:
     ID3D11SamplerState*     mSamplerState;
 
 
-
     ID3D11Texture2D*        CreateDynamicTexture(ZPoint size);
     bool                    UpdateTexture(ID3D11Texture2D* pTexture, ZBuffer* pSource);
     bool                    CreateShaderResourceView(ID3D11Texture2D* texture, ID3D11ShaderResourceView** pTextureSRV);
@@ -58,33 +39,11 @@ public:
     ID3D11PixelShader*      GetPixelShader(const std::string& sName);
     ID3D11InputLayout*      GetInputLayout(const std::string& sName);
 
-#endif
-
-	bool                    HandleModeChanges(ZRect& r);
-
-    bool                    mbFullScreen;
-
-protected:
     bool                    CompileShaders();
     tVertexShaderMap        mVertexShaderMap;
     tPixelShaderMap         mPixelShaderMap;
     tInputLayoutMap         mInputLayoutMap;
 
     bool                    LoadPixelShader(const std::string& sName, const std::string& sPath);
-    bool                    LoadVertexShader(const std::string& sName, const std::string& sPath);
-
-
-
-
-
-    bool                    InitD3D();
-    bool                    ShutdownD3D();
-
-    bool                    mbInitted;
-    ZScreenBuffer*          mpScreenBuffer;
-    ZRect                   mrSurfaceArea;
-    
+    bool                    LoadVertexShader(const std::string& sName, const std::string& sPath);  
 };
-
-extern ZGraphicSystem gGraphicSystem;
-extern ZGraphicSystem* gpGraphicSystem;

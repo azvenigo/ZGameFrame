@@ -3,6 +3,14 @@
 #include "ZBuffer.h"
 #include "ZGraphicSystem.h"
 
+#ifdef _WIN64
+#include <DirectXMath.h>
+struct Vertex {
+    DirectX::XMFLOAT3 position; // Already in screen space (x, y, z)
+    DirectX::XMFLOAT2 uv;       // Texture coordinates
+};
+#endif
+
 class ZScreenRect
 {
 public:
@@ -32,8 +40,6 @@ typedef std::list<ZScreenRect> tScreenRectList;
 
 
 
-
-
 class ZScreenBuffer : public ZBuffer
 {
 public:
@@ -57,6 +63,7 @@ public:
 	size_t	GetVisibilityCount() { return mScreenRectList.size(); }
 
 	int32_t	RenderVisibleRects();   // returns number of rects that needed rendering
+    void    RenderScreenSpaceTriangle(ID3D11ShaderResourceView* textureSRV, const std::array<Vertex, 3>& triangleVertices);
 //    int32_t RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rClip);  // shouldn't be needed any longer since screenbuffer will collect all visible...this can just be a blt
 
     bool    RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst);

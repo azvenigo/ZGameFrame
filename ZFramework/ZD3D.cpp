@@ -1,19 +1,11 @@
-#include "ZGraphicSystem.h"
-#include "ZBuffer.h"
-#include "ZScreenBuffer.h"
-#include "helpers/StringHelpers.h"
-#include <filesystem>
-#include "ZDebug.h"
+#include "ZD3D.h"
 
 
-
-#ifdef _WIN64
 #include <GdiPlus.h>
 #include <wrl.h> 
 using Microsoft::WRL::ComPtr;
 #pragma comment(lib, "d3dcompiler.lib") // Link the D3DCompiler library
 
-#endif
 
 #ifdef _DEBUG
 #define new new(_NORMAL_BLOCK, THIS_FILE, __LINE__)
@@ -24,42 +16,9 @@ static char THIS_FILE[] = __FILE__;
 using namespace std;
 namespace fs = std::filesystem;
 
-#ifdef _WIN64
-void InterpretError(HRESULT hr)
+
+bool ZD3D::InitD3D()
 {
-	char buf[256];
-	sprintf_s(buf, "UNKNOWN ERROR:%x", (long) hr);
-
-	MessageBoxA(NULL, buf, "error", MB_OK);
-	ZDEBUG_OUT(buf);
-}
-#endif
-
-ZGraphicSystem::ZGraphicSystem()
-{
-	mbInitted				= false;
-	mpScreenBuffer			= NULL;
-    mbFullScreen             = true;  
-}
-
-ZGraphicSystem::~ZGraphicSystem()
-{
-	Shutdown();
-}
-
-bool ZGraphicSystem::Init()
-{
-	mbInitted = true;
-
-#ifdef _WIN64
-	// GDI+ Init
-	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-	Gdiplus::GdiplusStartup(&mpGDIPlusToken, &gdiplusStartupInput, NULL);
-
-
-
-
-
     UINT createDeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 
 #ifdef _DEBUG
@@ -101,56 +60,8 @@ bool ZGraphicSystem::Init()
         throw runtime_error("mFactory is not IDXGIFactory2 or later.");
     }
 
-    InitD3D();
-
-    CompileShaders();
-
-#endif
-
-	mpScreenBuffer = new ZScreenBuffer();
-	mpScreenBuffer->Init(mrSurfaceArea.Width(), mrSurfaceArea.Height(), this);
-	
-	return true;
-}
-
-void ZGraphicSystem::Shutdown()
-{
-	if (mbInitted)
-	{
-
-		if (mpScreenBuffer)
-		{
-			mpScreenBuffer->Shutdown();
-			delete mpScreenBuffer;
-			mpScreenBuffer = NULL;
-		}
-
-#ifdef _WIN64
-
-        ShutdownD3D();
-        if (mD3DContext)
-            mD3DContext->Release();
-        mD3DContext = nullptr;
-
-        if (mFactory)
-            mFactory->Release();
-        mFactory = nullptr;
-
-        if (mD3DDevice)
-            mD3DDevice->Release();
-        mD3DDevice = nullptr;
 
 
-		// GDI+ Shutdown
-		Gdiplus::GdiplusShutdown(mpGDIPlusToken);
-#endif
-	
-		mbInitted = false;
-	}
-}
-
-bool ZGraphicSystem::InitD3D()
-{
 
     ComPtr<IDXGIAdapter1> adapter;
     if (SUCCEEDED(mFactory->EnumAdapters1(0, &adapter))) {
@@ -244,11 +155,12 @@ bool ZGraphicSystem::InitD3D()
     mD3DDevice->CreateRasterizerState(&rasterDesc, &rasterizerState);
     mD3DContext->RSSetState(rasterizerState);
 
+    CompileShaders();
     
     return true;
 }
 
-bool ZGraphicSystem::ShutdownD3D()
+bool ZD3D::ShutdownD3D()
 {
     // Cleanup
 
@@ -288,33 +200,24 @@ bool ZGraphicSystem::ShutdownD3D()
     {
         mD3DContext->ClearState();
         mD3DContext->Flush();
+        mD3DContext->Release();
     }
+    mD3DContext = nullptr;
+
+    if (mFactory)
+        mFactory->Release();
+    mFactory = nullptr;
+
+    if (mD3DDevice)
+        mD3DDevice->Release();
+    mD3DDevice = nullptr;
 
     return true;
 }
 
 
-bool ZGraphicSystem::HandleModeChanges(ZRect& r)
+bool ZD3D::HandleModeChanges(ZRect& r)
 {
-    if (mpScreenBuffer && mpScreenBuffer->GetArea() == r)
-        return true;
-
-    if (mpScreenBuffer)
-    {
-        if (mpScreenBuffer->GetArea() == r)
-            return true;
-
-        mpScreenBuffer->Shutdown();
-        delete mpScreenBuffer;
-        mpScreenBuffer = NULL;
-    }
-
-    //Shutdown();
-//    ShutdownD3D();
-    SetArea(r);
-
-
-
     if (mBackBuffer)
         mBackBuffer->Release();
     mBackBuffer = nullptr;
@@ -359,7 +262,7 @@ bool ZGraphicSystem::HandleModeChanges(ZRect& r)
 }
 
 
-bool ZGraphicSystem::CompileShaders()
+bool ZD3D::CompileShaders()
 {
     // enumerate shaders in subfolder and map them into our members
     tStringList shaderFiles;
@@ -392,7 +295,7 @@ bool ZGraphicSystem::CompileShaders()
 }
 
 
-ID3D11Texture2D* ZGraphicSystem::CreateDynamicTexture(ZPoint size)
+ID3D11Texture2D* ZD3D::CreateDynamicTexture(ZPoint size)
 {
     D3D11_TEXTURE2D_DESC textureDesc = {};
     textureDesc.Width = size.x;
@@ -417,7 +320,7 @@ ID3D11Texture2D* ZGraphicSystem::CreateDynamicTexture(ZPoint size)
     return texture;
 }
 
-bool ZGraphicSystem::UpdateTexture(ID3D11Texture2D* pTexture, ZBuffer* pSource)
+bool ZD3D::UpdateTexture(ID3D11Texture2D* pTexture, ZBuffer* pSource)
 {
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     HRESULT hr = mD3DContext->Map(pTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -438,7 +341,7 @@ bool ZGraphicSystem::UpdateTexture(ID3D11Texture2D* pTexture, ZBuffer* pSource)
     mD3DContext->Unmap(pTexture, 0);
 }
 
-bool ZGraphicSystem::CreateShaderResourceView( ID3D11Texture2D* texture, ID3D11ShaderResourceView** pTextureSRV)
+bool ZD3D::CreateShaderResourceView( ID3D11Texture2D* texture, ID3D11ShaderResourceView** pTextureSRV)
 {
     assert(mD3DDevice);
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -455,7 +358,7 @@ bool ZGraphicSystem::CreateShaderResourceView( ID3D11Texture2D* texture, ID3D11S
     return true;
 }
 
-bool ZGraphicSystem::LoadPixelShader(const string& sName, const string& sPath)
+bool ZD3D::LoadPixelShader(const string& sName, const string& sPath)
 {
     assert(mD3DDevice);
 
@@ -491,7 +394,7 @@ bool ZGraphicSystem::LoadPixelShader(const string& sName, const string& sPath)
     return true;
 }
 
-bool ZGraphicSystem::LoadVertexShader(const string& sName, const string& sPath)
+bool ZD3D::LoadVertexShader(const string& sName, const string& sPath)
 {
     assert(mD3DDevice);
 
@@ -553,7 +456,7 @@ bool ZGraphicSystem::LoadVertexShader(const string& sName, const string& sPath)
     return true;
 }
 
-ID3D11VertexShader* ZGraphicSystem::GetVertexShader(const std::string& sName)
+ID3D11VertexShader* ZD3D::GetVertexShader(const std::string& sName)
 {
     tVertexShaderMap::iterator it = mVertexShaderMap.find(sName);
     if (it == mVertexShaderMap.end())
@@ -562,7 +465,7 @@ ID3D11VertexShader* ZGraphicSystem::GetVertexShader(const std::string& sName)
     return (*it).second;
 }
 
-ID3D11PixelShader* ZGraphicSystem::GetPixelShader(const std::string& sName)
+ID3D11PixelShader* ZD3D::GetPixelShader(const std::string& sName)
 {
     tPixelShaderMap::iterator it = mPixelShaderMap.find(sName);
     if (it == mPixelShaderMap.end())
@@ -571,7 +474,7 @@ ID3D11PixelShader* ZGraphicSystem::GetPixelShader(const std::string& sName)
     return (*it).second;
 }
 
-ID3D11InputLayout* ZGraphicSystem::GetInputLayout(const std::string& sName)
+ID3D11InputLayout* ZD3D::GetInputLayout(const std::string& sName)
 {
     tInputLayoutMap::iterator it = mInputLayoutMap.find(sName);
     if (it == mInputLayoutMap.end())

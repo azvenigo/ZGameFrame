@@ -130,12 +130,125 @@ void ZScreenBuffer::EndRender()
 #ifdef _WIN64
 
 
+
+
+
+
+using namespace DirectX;
+
+//void ZScreenBuffer::RenderScreenSpaceTriangle(ID3D11RenderTargetView* backBufferRTV, ID3D11ShaderResourceView* textureSRV, ID3D11SamplerState* sampler, float screenWidth, float screenHeight, const std::array<Vertex, 3>& triangleVertices)
+void ZScreenBuffer::RenderScreenSpaceTriangle(ID3D11ShaderResourceView* textureSRV, const std::array<Vertex, 3>& triangleVertices)
+{
+    // Bind the back buffer as the render target
+//    ID3D11RenderTargetView* backBufferRTV = (ID3D11RenderTargetView*)mpGraphicSystem->mBackBuffer;
+//    mpGraphicSystem->mD3DContext->OMSetRenderTargets(1, &backBufferRTV, nullptr);
+
+    // Convert screen-space coordinates to Normalized Device Coordinates (NDC)
+    std::array<Vertex, 3> ndcVertices;
+    for (int i = 0; i < 3; ++i)
+    {
+        //ndcVertices[i].position.x = (triangleVertices[i].position.x / (float)mSurfaceArea.Width()) * 2.0f - 1.0f;
+        //ndcVertices[i].position.y = 1.0f - (triangleVertices[i].position.y / (float)mSurfaceArea.Height()) * 2.0f;
+        ndcVertices[i].position.x = (triangleVertices[i].position.x / (float)mSurfaceArea.Width()) * 2.0f - 1.0f;
+        ndcVertices[i].position.y = 1.0f - (triangleVertices[i].position.y / (float)mSurfaceArea.Height()) * 2.0f;
+
+
+        ndcVertices[i].position.z = triangleVertices[i].position.z; // Keep Z value
+        ndcVertices[i].uv = triangleVertices[i].uv;
+    }
+
+/*    Vertex ndcVertices[] =
+    {
+        { XMFLOAT3(-0.5f, -0.5f, 0), XMFLOAT2(0.0f, 1.0f) }, // Bottom-left
+        { XMFLOAT3(0.5f, -0.5f, 0), XMFLOAT2(1.0f, 1.0f) }, // Bottom-right
+        { XMFLOAT3(0.0f,  0.5f, 0), XMFLOAT2(0.5f, 0.0f) }  // Top
+    };*/
+
+    // Create vertex buffer
+    D3D11_BUFFER_DESC vertexBufferDesc = {};
+    vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    vertexBufferDesc.ByteWidth = sizeof(ndcVertices);
+    vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+    D3D11_SUBRESOURCE_DATA vertexData = {};
+    vertexData.pSysMem = ndcVertices.data();
+    //vertexData.pSysMem = &ndcVertices[0];
+
+    ID3D11Buffer* vertexBuffer = nullptr;
+    mpGraphicSystem->mD3DDevice->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
+
+    // Bind vertex buffer
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    mpGraphicSystem->mD3DContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+    mpGraphicSystem->mD3DContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+    ID3D11VertexShader* vertexShader = mpGraphicSystem->GetVertexShader("ScreenSpaceShader");
+    ID3D11PixelShader* pixelShader = mpGraphicSystem->GetPixelShader("ScreenSpaceShader");
+    ID3D11InputLayout* layout = mpGraphicSystem->GetInputLayout("ScreenSpaceShader");
+
+
+    assert(vertexShader);
+    assert(pixelShader);
+
+    // Set shaders
+    mpGraphicSystem->mD3DContext->VSSetShader(vertexShader, nullptr, 0);
+    mpGraphicSystem->mD3DContext->PSSetShader(pixelShader, nullptr, 0);
+
+    mpGraphicSystem->mD3DContext->IASetInputLayout(layout);
+
+
+    // Set texture and sampler
+    mpGraphicSystem->mD3DContext->PSSetShaderResources(0, 1, &textureSRV);
+
+
+    ID3D11Debug* debugInterface;
+    mpGraphicSystem->mD3DDevice->QueryInterface(__uuidof(ID3D11Debug), (void**)&debugInterface);
+    debugInterface->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+    debugInterface->Release();
+
+
+
+
+
+
+
+
+
+    // Draw triangle
+    mpGraphicSystem->mD3DContext->Draw(3, 0);
+
+    // Cleanup
+    vertexBuffer->Release();
+}
+
+
+
+tZBufferPtr gTestBuf;
+ID3D11Texture2D* gTestTexture = nullptr;
+
+
 bool ZScreenBuffer::PaintToSystem()
 {
     if (!mbRenderingEnabled)
         return false;
 
     uint64_t start = gTimer.GetUSSinceEpoch();
+
+
+    D3D11_VIEWPORT viewport = {};
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.Width = static_cast<FLOAT>(mSurfaceArea.Width());
+    viewport.Height = static_cast<FLOAT>(mSurfaceArea.Height());
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+
+    mpGraphicSystem->mD3DContext->RSSetViewports(1, &viewport);
+
+
 
     void* pBits = mpPixels;
 
@@ -169,25 +282,57 @@ bool ZScreenBuffer::PaintToSystem()
     // Copy staging texture to back buffer
     mpGraphicSystem->mD3DContext->CopyResource(mpGraphicSystem->mBackBuffer, mDynamicTexture);
 
-    mpGraphicSystem->mSwapChain->Present(1, 0); // VSync: 1
-
-/*    uint64_t end = gTimer.GetUSSinceEpoch();
 
 
-    static uint64_t delay = 0;
 
-    static uint64_t frames = 0;
-    static uint64_t totalTime = 0;
-    delay++;
 
-    if (delay > 100)
+    if (!gTestBuf)
     {
-        frames++;
-        totalTime += (end - start);
+        gTestBuf.reset(new ZBuffer());
+        gTestBuf->LoadBuffer("res/brick-texture.jpg");
+        gTestTexture = mpGraphicSystem->CreateDynamicTexture(gTestBuf->GetArea().BR());
+    }
+    mpGraphicSystem->UpdateTexture(gTestTexture, gTestBuf.get());
 
-        cout << "frames:" << frames << " avg paint time: " << (totalTime) / frames << "\n";
-    }*/
+    std::array<Vertex, 3> verts;
 
+    verts[0].position.x = 0;
+    verts[0].position.y = 1000;
+    verts[0].position.z = 0;
+    verts[0].uv.x = 0;
+    verts[0].uv.y = 0;
+
+
+
+    verts[1].position.x = 1800;
+    verts[1].position.y = 1000;
+    verts[1].position.z = 0;
+    verts[1].uv.x = 1.0;
+    verts[1].uv.y = 0;
+
+
+    verts[2].position.x = 900;
+    verts[2].position.y = 100;
+    verts[2].position.z = 0;
+    verts[2].uv.x = 0.5;
+    verts[2].uv.y = 1.0;
+
+
+    mpGraphicSystem->mD3DContext->OMSetRenderTargets(1, &mpGraphicSystem->mRenderTargetView, nullptr);
+
+//    float clearColor[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
+//    mpGraphicSystem->mD3DContext->ClearRenderTargetView(mpGraphicSystem->mRenderTargetView, clearColor);
+
+    ID3D11ShaderResourceView* pShaderResourceView = nullptr;
+    if (mpGraphicSystem->CreateShaderResourceView(gTestTexture, &pShaderResourceView))
+    {
+        RenderScreenSpaceTriangle(pShaderResourceView, verts);
+    }
+    pShaderResourceView->Release();
+    
+
+
+    mpGraphicSystem->mSwapChain->Present(1, 0); // VSync: 1
 
     return true;
 }

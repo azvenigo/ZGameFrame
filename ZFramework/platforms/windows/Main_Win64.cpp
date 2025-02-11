@@ -30,7 +30,7 @@ namespace ZFrameworkApp
 extern ZTickManager     gTickManager;
 
 using namespace std;
-
+namespace fs = std::filesystem;
 
 ATOM					MyRegisterClass(HINSTANCE, LPTSTR);
 BOOL					WinInitInstance(int argc, char* argv[]);
@@ -78,9 +78,6 @@ public:
         return true;
     }
 };
-
-
-namespace fs = std::filesystem;
 
 int processFolder(const fs::path& folderPath) 
 {
