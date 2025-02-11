@@ -2,14 +2,8 @@
 
 #include "ZBuffer.h"
 #include "ZGraphicSystem.h"
+#include "ZD3D.h"
 
-#ifdef _WIN64
-#include <DirectXMath.h>
-struct Vertex {
-    DirectX::XMFLOAT3 position; // Already in screen space (x, y, z)
-    DirectX::XMFLOAT2 uv;       // Texture coordinates
-};
-#endif
 
 class ZScreenRect
 {
@@ -63,8 +57,6 @@ public:
 	size_t	GetVisibilityCount() { return mScreenRectList.size(); }
 
 	int32_t	RenderVisibleRects();   // returns number of rects that needed rendering
-    void    RenderScreenSpaceTriangle(ID3D11ShaderResourceView* textureSRV, const std::array<Vertex, 3>& triangleVertices);
-//    int32_t RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rClip);  // shouldn't be needed any longer since screenbuffer will collect all visible...this can just be a blt
 
     bool    RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst);
     bool    PaintToSystem(const ZRect& rClip);
@@ -72,19 +64,20 @@ public:
     bool    PaintToSystem();    // final transfer from internal surface
 
 protected:
-	ZGraphicSystem*		mpGraphicSystem;
+	ZGraphicSystem*     mpGraphicSystem;
 
-	tScreenRectList		mScreenRectList;
+	tScreenRectList     mScreenRectList;
     std::mutex          mScreenRectListMutex;
-	bool				mbVisibilityNeedsComputing;
+	bool                mbVisibilityNeedsComputing;
     bool                mbRenderingEnabled; 
     bool                mbCurrentlyRendering;
 
 #ifdef _WIN64
-    PAINTSTRUCT			mPS;
-    HDC					mDC;
+    PAINTSTRUCT         mPS;
+    HDC                 mDC;
 
-    ID3D11Texture2D* mDynamicTexture;
+//    ID3D11Texture2D*    mDynamicTexture;
+    ZD3D::DynamicTexture  mDynamicTexture;
 #endif
 };
 

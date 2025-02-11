@@ -42,6 +42,7 @@ set (GUI_FILES
 ../ZFramework/ZFloatColorBuffer.h   ../ZFramework/ZFloatColorBuffer.cpp
 
 ../ZFramework/ZGraphicSystem.h      ../ZFramework/ZGraphicSystem.cpp
+../ZFramework/ZD3D.h      					../ZFramework/ZD3D.cpp
 ../ZFramework/ZGUIHelpers.h         ../ZFramework/ZGUIHelpers.cpp
 ../ZFramework/ZGUIStyle.h           ../ZFramework/ZGUIStyle.cpp
 ../ZFramework/ZGUIElements.h        ../ZFramework/ZGUIElements.cpp
