@@ -62,18 +62,28 @@ bool ZScreenBuffer::Init(int64_t nWidth, int64_t nHeight, ZGraphicSystem* pGraph
     desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     desc.MiscFlags = 0;
 
-    if (!mDynamicTexture.Init(mSurfaceArea.BR()))
+    mpSSPrim = ZD3D::ReservePrimitive();
+    mpSSPrim->verts.resize(4);
+
+    mpSSPrim->texture.reset(new ZD3D::DynamicTexture);
+    if (!mpSSPrim->texture->Init(mSurfaceArea.BR()))
     {
         assert(false);
         return false;
     }
+
+
 
 	return true;	
 }
 
 bool ZScreenBuffer::Shutdown()
 {
-    mDynamicTexture.Shutdown();
+    if (mpSSPrim)
+    {
+        mpSSPrim->clear();
+        mpSSPrim = nullptr;
+    }
 	return ZBuffer::Shutdown();
 }
 
@@ -140,12 +150,13 @@ bool ZScreenBuffer::PaintToSystem()
     if (!mbRenderingEnabled)
         return false;
 
-    mDynamicTexture.UpdateTexture(this);
-
-    void* pBits = mpPixels;
+    
+    mpSSPrim->texture->UpdateTexture(this);
+    HRESULT hr;
+/*    void* pBits = mpPixels;
 
     D3D11_MAPPED_SUBRESOURCE mapped;
-    HRESULT hr = ZD3D::mD3DContext->Map(mDynamicTexture.mpTexture2D, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+    hr = ZD3D::mD3DContext->Map(mDynamicTexture.mpTexture2D, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to map staging texture");
     }
@@ -157,7 +168,7 @@ bool ZScreenBuffer::PaintToSystem()
     if (width * 4 == mapped.RowPitch)
     {
         memcpy(mapped.pData, pBits, (width * height * 4));
-    }
+    } 
     else
     {
         for (UINT row = 0; row < height; ++row)
@@ -169,27 +180,33 @@ bool ZScreenBuffer::PaintToSystem()
     }
 
 
-    ZD3D::mD3DContext->Unmap(mDynamicTexture.mpTexture2D, 0);
+    ZD3D::mD3DContext->Unmap(mDynamicTexture.mpTexture2D, 0);*/
 
 
-    hr = ZD3D::mSwapChain->GetBuffer(0, IID_PPV_ARGS(&ZD3D::mBackBuffer));
+/*    hr = ZD3D::mSwapChain->GetBuffer(0, IID_PPV_ARGS(&ZD3D::mBackBuffer));
     if (FAILED(hr))
     {
         throw runtime_error("Failed to get swap chain back buffer");
-    }
+    }*/
+
 
     // Copy staging texture to back buffer
-    ZD3D::mD3DContext->CopyResource(ZD3D::mBackBuffer, mDynamicTexture.mpTexture2D);
+//    ZD3D::mD3DContext->CopyResource(ZD3D::mBackBuffer, mDynamicTexture.GetTexture(ZD3D::mD3DContext));
 
+    mpSSPrim->SetScreenRect(mSurfaceArea, 0.9);
+    mpSSPrim->state = ZD3D::ScreenSpacePrimitive::eState::kVisible;
 
-
-
-
+//    ZD3D::AddPrim(ZD3D::GetVertexShader("ScreenSpaceShader"), ZD3D::GetPixelShader("ScreenSpaceShader"), &mDynamicTexture, verts);
 
 
 
 
     ZD3D::Present();
+
+    static int frame = 0;
+    frame++;
+    if (frame % 100 == 0)
+        ZDEBUG_OUT_LOCKLESS("frame:", frame, "\n");
 
     return true;
 }

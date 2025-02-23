@@ -20,20 +20,48 @@ namespace fs = std::filesystem;
 
 namespace ZD3D
 {
-    IDXGISwapChain1*        mSwapChain;
-    ID3D11Device*           mD3DDevice;
-    ID3D11DeviceContext*    mD3DContext;
-    IDXGIFactory2*          mFactory;
-    ID3D11RenderTargetView* mRenderTargetView;
-    ID3D11Texture2D*        mBackBuffer;
-    ID3D11SamplerState*     mSamplerState;
+    IDXGISwapChain1*        mSwapChain = nullptr;
+    ID3D11Device*           mD3DDevice = nullptr;
+    ID3D11DeviceContext*    mD3DContext = nullptr;
+    ID3D11DeviceContext*    mImmediateD3DContext = nullptr;
+    IDXGIFactory2*          mFactory = nullptr;
+    ID3D11RenderTargetView* mRenderTargetView = nullptr;
+    //ID3D11Texture2D*        mBackBuffer = nullptr;
+    ID3D11SamplerState*     mSamplerState = nullptr;
     D3D11_VIEWPORT          mViewport;
     tVertexShaderMap        mVertexShaderMap;
     tPixelShaderMap         mPixelShaderMap;
     tInputLayoutMap         mInputLayoutMap;
 
+    ID3D11Buffer*           mVertexBuffer = nullptr;
+    ID3D11Texture2D*        mDepthStencilBuffer = nullptr;
+    ID3D11DepthStencilView* mDepthStencilView = nullptr;
+    tSSPrimArray            mSSPrimArray;
+    std::mutex              mPrimitiveMutex;
 
+    ScreenSpacePrimitive*   ReservePrimitive()
+    {
+        std::unique_lock<mutex> lock(mPrimitiveMutex);
 
+        // if any free primitives return that
+        for (auto p : mSSPrimArray)
+        {
+            if (p->state == ScreenSpacePrimitive::eState::kFree)
+            {
+                p->state = ScreenSpacePrimitive::eState::kHidden;
+                return p.get();
+            }
+        }
+
+        // reserve more space for primitives
+        size_t nextIndex = mSSPrimArray.size();
+        mSSPrimArray.resize(mSSPrimArray.size() + 1024);
+        for (size_t i = nextIndex; i < nextIndex + 1024; i++)
+            mSSPrimArray[i].reset(new ScreenSpacePrimitive);
+
+        mSSPrimArray[nextIndex]->state = ScreenSpacePrimitive::eState::kHidden;
+        return mSSPrimArray[nextIndex].get();
+    }
 
 
 
@@ -70,14 +98,15 @@ namespace ZD3D
             &mD3DContext                 // Returns the device context
         );
 
-
         // Create the DXGI Factory
         hr = CreateDXGIFactory1(__uuidof(IDXGIFactory2), (void**)&mFactory);
 
         ComPtr<IDXGIFactory2> dxgiFactory2;
         hr = mFactory->QueryInterface(__uuidof(IDXGIFactory2), &dxgiFactory2);
-        if (FAILED(hr)) {
-            throw runtime_error("mFactory is not IDXGIFactory2 or later.");
+        if (FAILED(hr)) 
+        {
+            assert(false);
+            return false;
         }
 
 
@@ -129,25 +158,6 @@ namespace ZD3D
             swapChain4->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_HDR10, sizeof(hdr10), &hdr10);
         }
 
-
-        hr = mSwapChain->GetBuffer(0, IID_PPV_ARGS(&mBackBuffer));
-        if (FAILED(hr))
-        {
-            throw runtime_error("Failed to get swap chain back buffer");
-        }
-
-        // Create the render target view
-        hr = mD3DDevice->CreateRenderTargetView(mBackBuffer, nullptr, &mRenderTargetView);
-        if (FAILED(hr))
-        {
-            throw runtime_error("Failed to create render target view");
-        }
-
-        mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, nullptr);
-
-        float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f }; // Black color
-        mD3DContext->ClearRenderTargetView(mRenderTargetView, clearColor);
-
         D3D11_SAMPLER_DESC sampDesc = {};
         sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -160,16 +170,19 @@ namespace ZD3D
         hr = mD3DDevice->CreateSamplerState(&sampDesc, &mSamplerState);
         if (FAILED(hr))
         {
-            throw std::runtime_error("Failed to create sampler state");
+            assert(false);
+            return false;
         }
-        mD3DContext->PSSetSamplers(0, 1, &mSamplerState);
-
 
         D3D11_RASTERIZER_DESC rasterDesc = {};
         rasterDesc.FillMode = D3D11_FILL_SOLID;
         rasterDesc.CullMode = D3D11_CULL_BACK;
-        rasterDesc.FrontCounterClockwise = TRUE;
+        //rasterDesc.CullMode = D3D11_CULL_NONE;
+        rasterDesc.FrontCounterClockwise = false;
         rasterDesc.DepthClipEnable = TRUE;
+        rasterDesc.DepthBias = 0;  // Increase if you need to push geometry forward
+        rasterDesc.DepthBiasClamp = 0.0f;
+        rasterDesc.SlopeScaledDepthBias = 0.0f;
 
         ID3D11RasterizerState* rasterizerState;
         mD3DDevice->CreateRasterizerState(&rasterDesc, &rasterizerState);
@@ -186,12 +199,48 @@ namespace ZD3D
         mViewport.MaxDepth = 1.0f;
 
 
+//        mSSPrimArray.resize(16*1024);
+
+
+        D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
+        depthStencilBufferDesc.Width = swapChainDesc.Width;      // Match your backbuffer width
+        depthStencilBufferDesc.Height = swapChainDesc.Height;    // Match your backbuffer height
+        depthStencilBufferDesc.MipLevels = 1;      // No mip levels
+        depthStencilBufferDesc.ArraySize = 1;      // Not a texture array
+        depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;  // 24-bit depth, 8-bit stencil
+        depthStencilBufferDesc.SampleDesc.Count = 1;  // No MSAA (or match swap chain settings)
+        depthStencilBufferDesc.SampleDesc.Quality = 0;
+        depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+        depthStencilBufferDesc.CPUAccessFlags = 0;
+        depthStencilBufferDesc.MiscFlags = 0;
+
+        hr = mD3DDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr, &mDepthStencilBuffer);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
+        hr = mD3DDevice->CreateDepthStencilView(mDepthStencilBuffer, nullptr, &mDepthStencilView);
+        if (FAILED(hr))
+        {
+            assert(false);
+            return false;
+        }
+
         return true;
     }
 
     bool ShutdownD3D()
     {
         // Cleanup
+
+        if (mDepthStencilView)
+            mDepthStencilView->Release();
+
+        if (mDepthStencilBuffer)
+            mDepthStencilBuffer->Release();
 
         for (auto p : mVertexShaderMap)
         {
@@ -211,6 +260,8 @@ namespace ZD3D
         }
         mInputLayoutMap.clear();
 
+        if (mVertexBuffer)
+            mVertexBuffer->Release();
 
 
         if (mSwapChain)
@@ -221,9 +272,9 @@ namespace ZD3D
             mRenderTargetView->Release();
         mRenderTargetView = nullptr;
 
-        if (mBackBuffer)
-            mBackBuffer->Release();
-        mBackBuffer = nullptr;
+//        if (mBackBuffer)
+//            mBackBuffer->Release();
+//        mBackBuffer = nullptr;
 
         if (mD3DContext)
         {
@@ -245,18 +296,70 @@ namespace ZD3D
     }
 
 
+    void UpdateRenderTarget()
+    {
+        // Release previous render target
+        if (mRenderTargetView)
+        {
+            mRenderTargetView->Release();
+            mRenderTargetView = nullptr;
+        }
+
+        // Resize swap chain (if needed)
+        HRESULT hr = mSwapChain->ResizeBuffers(0, mViewport.Width, mViewport.Height, DXGI_FORMAT_UNKNOWN, 0);
+        if (FAILED(hr))
+        {
+            return;
+        }
+
+        // Get new back buffer
+        ID3D11Texture2D* pBackBuffer = nullptr;
+        hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBuffer);
+        if (FAILED(hr))
+        {
+            return;
+        }
+
+        // Create a new Render Target View
+        hr = mD3DDevice->CreateRenderTargetView(pBackBuffer, nullptr, &mRenderTargetView);
+        pBackBuffer->Release(); // Done with back buffer
+
+        if (FAILED(hr))
+        {
+            return;
+        }
+
+        D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
+        depthStencilDesc.DepthEnable = TRUE;  // Enable depth testing
+        depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+        depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS; // Typical depth function
+
+        ID3D11DepthStencilState* depthStencilState = nullptr;
+        mD3DDevice->CreateDepthStencilState(&depthStencilDesc, &depthStencilState);
+        mD3DContext->OMSetDepthStencilState(depthStencilState, 1);
+
+
+
+        // Set new render target
+//        mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, nullptr);
+        mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
+
+
+        mD3DContext->RSSetViewports(1, &mViewport);
+    }
+
     bool HandleModeChanges(ZRect& r)
     {
-        if (mBackBuffer)
-            mBackBuffer->Release();
-        mBackBuffer = nullptr;
-        if (mRenderTargetView)
-            mRenderTargetView->Release();
-        mRenderTargetView = nullptr;
+//        if (mBackBuffer)
+//            mBackBuffer->Release();
+//        mBackBuffer = nullptr;
+//        if (mRenderTargetView)
+//            mRenderTargetView->Release();
+//        mRenderTargetView = nullptr;
 
         mSwapChain->ResizeBuffers(2, (UINT)r.Width(), (UINT)r.Height(), DXGI_FORMAT_B8G8R8A8_UNORM, 0);
 
-        HRESULT hr = mSwapChain->GetBuffer(0, IID_PPV_ARGS(&mBackBuffer));
+/*        HRESULT hr = mSwapChain->GetBuffer(0, IID_PPV_ARGS(&mBackBuffer));
         if (FAILED(hr))
         {
             throw runtime_error("Failed to get swap chain back buffer");
@@ -269,10 +372,11 @@ namespace ZD3D
             throw runtime_error("Failed to create render target view");
         }
 
-        mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, nullptr);
+        mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, nullptr);*/
+        //UpdateRenderTarget();
 
-        float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f }; // Black color
-        mD3DContext->ClearRenderTargetView(mRenderTargetView, clearColor);
+//        float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f }; // Black color
+//        mD3DContext->ClearRenderTargetView(mRenderTargetView, clearColor);
 
 
 
@@ -287,72 +391,71 @@ namespace ZD3D
         return true;
     }
 
-    tZBufferPtr gTestBuf;
-    //ID3D11Texture2D* gTestTexture = nullptr;
-    DynamicTexture gTestTexture;
-
     bool Present()
     {
-        mD3DContext->RSSetViewports(1, &mViewport);
+        UpdateRenderTarget();
+
+        const FLOAT clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        mD3DContext->ClearRenderTargetView(mRenderTargetView, clearColor);
+        mD3DContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+        // run through queued commands. Lock the mutex so that no additional commands can come in the mean time
+        std::unique_lock<mutex> lock(mPrimitiveMutex);
 
 
-        if (!gTestBuf)
+        // Set shaders
+        mD3DContext->VSSetShader(GetVertexShader("ScreenSpaceShader"), nullptr, 0);
+        mD3DContext->PSSetShader(GetPixelShader("ScreenSpaceShader"), nullptr, 0);
+        ID3D11InputLayout* layout = GetInputLayout("ScreenSpaceShader");
+        mD3DContext->IASetInputLayout(layout);
+
+
+        for (auto& p : mSSPrimArray)
         {
-            gTestBuf.reset(new ZBuffer());
-            gTestBuf->LoadBuffer("res/brick-texture.jpg");
-            //gTestTexture = CreateDynamicTexture(gTestBuf->GetArea().BR());
-            gTestTexture.Init(gTestBuf->GetArea().BR());
+            if (p->state == ScreenSpacePrimitive::eState::kVisible)
+                RenderPrimitive(p.get());
         }
-        gTestTexture.UpdateTexture(gTestBuf.get());
 
-        std::array<Vertex, 3> verts;
+        
+        HRESULT hr = mSwapChain->Present(1, 0); // VSync: 1
+        if (FAILED(hr))
+        {
+            assert(false);
+        }
 
-        verts[0].position.x = 0;
-        verts[0].position.y = 1000;
-        verts[0].position.z = 0;
-        verts[0].uv.x = 0;
-        verts[0].uv.y = 0;
-
-
-
-        verts[1].position.x = 1800;
-        verts[1].position.y = 1000;
-        verts[1].position.z = 0;
-        verts[1].uv.x = 1.0;
-        verts[1].uv.y = 0;
-
-
-        verts[2].position.x = 900;
-        verts[2].position.y = 100;
-        verts[2].position.z = 0;
-        verts[2].uv.x = 0.5;
-        verts[2].uv.y = 1.0;
-
-
-        mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, nullptr);
-
-        //    float clearColor[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
-        //    mpGraphicSystem->mD3DContext->ClearRenderTargetView(mpGraphicSystem->mRenderTargetView, clearColor);
-
-
-
-
-
-        RenderScreenSpaceTriangle(gTestTexture.mpSRV, verts);
-
-
-        mSwapChain->Present(1, 0); // VSync: 1
         return true;
     }
 
-    //void ZScreenBuffer::RenderScreenSpaceTriangle(ID3D11RenderTargetView* backBufferRTV, ID3D11ShaderResourceView* textureSRV, ID3D11SamplerState* sampler, float screenWidth, float screenHeight, const std::array<Vertex, 3>& triangleVertices)
-    void RenderScreenSpaceTriangle(ID3D11ShaderResourceView* textureSRV, const std::array<Vertex, 3>& triangleVertices)
+/*    void AddPrim(ID3D11VertexShader* vs, ID3D11PixelShader* ps, DynamicTexture* tex, const std::vector<Vertex>& verts)
     {
-        // Bind the back buffer as the render target
-    //    ID3D11RenderTargetView* backBufferRTV = (ID3D11RenderTargetView*)mpGraphicSystem->mBackBuffer;
-    //    mpGraphicSystem->mD3DContext->OMSetRenderTargets(1, &backBufferRTV, nullptr);
-
         // Convert screen-space coordinates to Normalized Device Coordinates (NDC)
+        std::vector<Vertex> ndcVertices(verts.size());
+        for (int i = 0; i < verts.size(); ++i)
+        {
+            ndcVertices[i].position.x = (verts[i].position.x / (float)mViewport.Width) * 2.0f - 1.0f;
+            ndcVertices[i].position.y = 1.0f - (verts[i].position.y / (float)mViewport.Height) * 2.0f;
+            ndcVertices[i].position.z = verts[i].position.z; // Keep Z value
+            ndcVertices[i].uv = verts[i].uv;
+        }
+
+
+        std::unique_lock<mutex> lock(mPrimitiveMutex);
+
+        ScreenSpacePrimitive* pPrim = ReservePrimitive();
+        if (!pPrim)
+            return;
+
+        pPrim->ps = ps;
+        pPrim->vs = vs;
+        pPrim->verts = std::move(ndcVertices);
+        pPrim->texture = tex;
+    }*/
+
+    void RenderPrimitive(ScreenSpacePrimitive* pPrim)
+    {
+
+
+        /*
         std::array<Vertex, 3> ndcVertices;
         for (int i = 0; i < 3; ++i)
         {
@@ -362,74 +465,58 @@ namespace ZD3D
             ndcVertices[i].position.y = 1.0f - (triangleVertices[i].position.y / (float)mViewport.Height) * 2.0f;
 
 
+
             ndcVertices[i].position.z = triangleVertices[i].position.z; // Keep Z value
             ndcVertices[i].uv = triangleVertices[i].uv;
-        }
+        }*/
 
-        /*    Vertex ndcVertices[] =
-            {
-                { XMFLOAT3(-0.5f, -0.5f, 0), XMFLOAT2(0.0f, 1.0f) }, // Bottom-left
-                { XMFLOAT3(0.5f, -0.5f, 0), XMFLOAT2(1.0f, 1.0f) }, // Bottom-right
-                { XMFLOAT3(0.0f,  0.5f, 0), XMFLOAT2(0.5f, 0.0f) }  // Top
-            };*/
 
-            // Create vertex buffer
+        // Create vertex buffer
         D3D11_BUFFER_DESC vertexBufferDesc = {};
         vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-        vertexBufferDesc.ByteWidth = sizeof(ndcVertices);
+        vertexBufferDesc.ByteWidth = pPrim->verts.size() * sizeof(Vertex);
         vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
         vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
         D3D11_SUBRESOURCE_DATA vertexData = {};
-        vertexData.pSysMem = ndcVertices.data();
-        //vertexData.pSysMem = &ndcVertices[0];
+        vertexData.pSysMem = pPrim->verts.data();
 
         ID3D11Buffer* vertexBuffer = nullptr;
-        mD3DDevice->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
+        HRESULT hr = mD3DDevice->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
+        if (FAILED(hr))
+        {
+            HRESULT reason = mD3DDevice->GetDeviceRemovedReason();
+            assert(false);
+        }
+
+
+
 
         // Bind vertex buffer
         UINT stride = sizeof(Vertex);
         UINT offset = 0;
         mD3DContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-        mD3DContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-
-        ID3D11VertexShader* vertexShader = GetVertexShader("ScreenSpaceShader");
-        ID3D11PixelShader* pixelShader = GetPixelShader("ScreenSpaceShader");
-        ID3D11InputLayout* layout = GetInputLayout("ScreenSpaceShader");
-
-
-        assert(vertexShader);
-        assert(pixelShader);
+        mD3DContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
         // Set shaders
-        mD3DContext->VSSetShader(vertexShader, nullptr, 0);
-        mD3DContext->PSSetShader(pixelShader, nullptr, 0);
+        if (pPrim->vs)
+            mD3DContext->VSSetShader(pPrim->vs, nullptr, 0);
 
-        mD3DContext->IASetInputLayout(layout);
+        if (pPrim->ps)
+            mD3DContext->PSSetShader(pPrim->ps, nullptr, 0);
 
+//        ID3D11InputLayout* layout = GetInputLayout("ScreenSpaceShader");
+//        mD3DContext->IASetInputLayout(layout);
+
+        
 
         // Set texture and sampler
-        mD3DContext->PSSetShaderResources(0, 1, &textureSRV);
-
-
-        ID3D11Debug* debugInterface;
-        mD3DDevice->QueryInterface(__uuidof(ID3D11Debug), (void**)&debugInterface);
-        debugInterface->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-        debugInterface->Release();
-
-
-
-
-
-
-
-
+        ID3D11ShaderResourceView* pSRV = pPrim->texture->GetSRV(mD3DContext);
+        mD3DContext->PSSetShaderResources(0, 1, &pSRV);
+        mD3DContext->PSSetSamplers(0, 1, &mSamplerState);
 
         // Draw triangle
-        mD3DContext->Draw(3, 0);
-
-        // Cleanup
+        mD3DContext->Draw(pPrim->verts.size(), 0);
         vertexBuffer->Release();
     }
 
@@ -496,17 +583,10 @@ namespace ZD3D
         }
 
         assert(mD3DDevice);
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; // Make sure this matches the texture format
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MostDetailedMip = 0;
-        srvDesc.Texture2D.MipLevels = -1; // Use all MIP levels
 
-        hr = mD3DDevice->CreateShaderResourceView(mpTexture2D, &srvDesc, &mpSRV);
-        if (FAILED(hr))
-        {
-            return false;
-        }
+        mSourceTexture.Init(size.x, size.y);
+
+        mbNeedsTransferring = true;
 
         return true;
     }
@@ -521,15 +601,33 @@ namespace ZD3D
             mpTexture2D->Release();
         mpTexture2D = nullptr;
 
-        // tbd
+        mSourceTexture.Shutdown();
         return false;
     }
 
-
-    bool DynamicTexture::UpdateTexture(ZBuffer* pSource)
+    ID3D11ShaderResourceView* DynamicTexture::GetSRV(ID3D11DeviceContext* pContext)
     {
+        if (mbNeedsTransferring)
+            Transfer(pContext);
+
+        return mpSRV;
+    }
+
+    ID3D11Texture2D* DynamicTexture::GetTexture(ID3D11DeviceContext* pContext)
+    {
+        if (mbNeedsTransferring)
+            Transfer(pContext);
+
+        return mpTexture2D;
+    }
+
+
+
+    bool DynamicTexture::Transfer(ID3D11DeviceContext* pContext)
+    {
+
         D3D11_MAPPED_SUBRESOURCE mappedResource;
-        HRESULT hr = mD3DContext->Map(mpTexture2D, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+        HRESULT hr = pContext->Map(mpTexture2D, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
         if (FAILED(hr))
         {
             assert(false);
@@ -537,15 +635,52 @@ namespace ZD3D
         }
 
         // Copy pixel data
-        int64_t width = pSource->GetArea().Width();
-        for (UINT row = 0; row < pSource->GetArea().bottom; ++row)
+        int64_t width = mSourceTexture.GetArea().Width();
+        for (UINT row = 0; row < mSourceTexture.GetArea().bottom; ++row)
         {
             memcpy((BYTE*)mappedResource.pData + row * mappedResource.RowPitch,
-                (BYTE*)pSource->mpPixels + row * width * 4,
+                (BYTE*)mSourceTexture.mpPixels + row * width * 4,
                 width * 4);
         }
 
-        mD3DContext->Unmap(mpTexture2D, 0);
+        pContext->Unmap(mpTexture2D, 0);
+//        pContext->CopyResource(ZD3D::mBackBuffer, mpTexture2D);
+
+        if (mpSRV)
+            mpSRV->Release();
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; // Make sure this matches the texture format
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+        srvDesc.Texture2D.MipLevels = -1; // Use all MIP levels
+
+        hr = mD3DDevice->CreateShaderResourceView(mpTexture2D, &srvDesc, &mpSRV);
+        if (FAILED(hr))
+        {
+            return false;
+        }
+
+
+
+
+
+        mbNeedsTransferring = false;
+        return true;
+    }
+
+
+    bool DynamicTexture::UpdateTexture(ZBuffer* pSource)
+    {
+        // if new texture is different dimmensions, need to recreate d3d texture
+        if (mSourceTexture.GetArea() != pSource->GetArea())
+        {
+            Shutdown();
+            Init(pSource->GetArea().BR());
+        }
+
+        mSourceTexture.CopyPixels(pSource);
+        mbNeedsTransferring = true;
 
         return true;
     }

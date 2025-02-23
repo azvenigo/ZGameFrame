@@ -6,6 +6,7 @@
 #include "ZTimer.h"
 #include <vector>
 #include "Z3DMath.h"
+#include "ZD3D.h"
 
 /////////////////////////////////////////////////////////////////////////
 // 
@@ -47,6 +48,7 @@ public:
     Z3DTestWin();
 
     bool    Init();
+    bool    Shutdown();
     bool    Paint();
     bool    Process();
     bool    OnChar(char key);
@@ -54,7 +56,7 @@ public:
     void    SetControlPanelEnabled(bool bEnabled = true) { mbControlPanelEnabled = bEnabled; }
 
     void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, uint32_t nCol);
-    void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, tZBufferPtr pTexture);
+    void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, ZD3D::tDynamicTexturePtr pTexture);
     bool	HandleMessage(const ZMessage& message);
 
 private:
@@ -66,7 +68,11 @@ private:
     Z3D::Matrix44d mWorldToObject;
 
     tZBufferPtr mpTexture;
+    ZD3D::tDynamicTexturePtr mpDynTexture;
     bool mbControlPanelEnabled;
+
+    size_t mFramePrimCount;
+    std::vector<ZD3D::ScreenSpacePrimitive*> mReservedPrims;
 
 #ifdef RENDER_TEAPOT
     tZBufferPtr mpTeapotRender;

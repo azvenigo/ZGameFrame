@@ -76,8 +76,7 @@ protected:
     PAINTSTRUCT         mPS;
     HDC                 mDC;
 
-//    ID3D11Texture2D*    mDynamicTexture;
-    ZD3D::DynamicTexture  mDynamicTexture;
+    ZD3D::ScreenSpacePrimitive* mpSSPrim;
 #endif
 };
 

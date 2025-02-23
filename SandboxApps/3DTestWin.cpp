@@ -14,6 +14,7 @@
 #include "helpers/Registry.h"
 #include "ZWinBtn.H"
 #include "ZInput.h"
+#include "ZD3D.h"
 
 using namespace std;
 using namespace Z3D;
@@ -1044,6 +1045,10 @@ bool Z3DTestWin::Init()
     mpTexture.reset(new ZBuffer());
     mpTexture.get()->LoadBuffer("res/brick-texture.jpg");
 
+    mpDynTexture.reset(new ZD3D::DynamicTexture);
+    mpDynTexture->Init(mpTexture->GetArea().BR());
+    mpDynTexture->UpdateTexture(mpTexture.get());
+
     SetFocus();
 
 
@@ -1138,6 +1143,16 @@ bool Z3DTestWin::Init()
     return ZWin::Init();
 }
 
+
+bool Z3DTestWin::Shutdown()
+{
+    for (auto& p : mReservedPrims)
+        p->clear();
+    mReservedPrims.clear();
+
+    return ZWin::Shutdown();
+}
+
 void Z3DTestWin::UpdateSphereCount()
 {
     ZASSERT(mnTargetSphereCount > 0 && mnTargetSphereCount < 10000);
@@ -1227,7 +1242,6 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
 
 
 
-
     for (int i = 0; i < worldVerts.size(); i++)
     {
         Vec3d v = worldVerts[i];
@@ -1256,10 +1270,24 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
     gRasterizer.Rasterize(mpSurface.get(), screenVerts);
 }
 
-void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection, Matrix44d& mtxWorldToCamera, tZBufferPtr pTexture)
+void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection, Matrix44d& mtxWorldToCamera, ZD3D::tDynamicTexturePtr pTexture)
 {
-    tUVVertexArray screenVerts;
-    screenVerts.resize(worldVerts.size());
+//    tUVVertexArray screenVerts;
+//    screenVerts.resize(worldVerts.size());
+
+
+    if (mReservedPrims.size() <= mFramePrimCount)
+    {
+        mReservedPrims.push_back(ZD3D::ReservePrimitive());
+    }
+
+    ZD3D::ScreenSpacePrimitive* pPrim = mReservedPrims[mFramePrimCount];
+    mFramePrimCount++;
+
+
+//    std::vector<Vertex> verts(4);
+
+    pPrim->verts.resize(4);
 
     for (int i = 0; i < worldVerts.size(); i++)
     {
@@ -1274,31 +1302,36 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
         /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
                     continue;*/
 
-        screenVerts[i].x = (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10));
-        screenVerts[i].y = (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10));
+        pPrim->SetVertex(i, (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10)), (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10)), 0.0, 0.0, 0.0);
+
+/*        pPrim->verts[i].position.x = (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10));
+        pPrim->verts[i].position.y = (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10));
+        pPrim->verts[i].position.z = 0.0;*/
     }
 
-    Vec3d planeX(screenVerts[1].x - screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
+/*    Vec3d planeX(screenVerts[1].x - screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
     Vec3d planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
     Vec3d normal = planeX.crossProduct(planeY);
     if (normal.z > 0)
         return;
+        */
 
+    pPrim->verts[0].uv.x = 0.0;
+    pPrim->verts[0].uv.y = 0.0;
 
-    screenVerts[0].u = 0.0;
-    screenVerts[0].v = 0.0;
+    pPrim->verts[1].uv.x = 1.0;
+    pPrim->verts[1].uv.y = 0.0;
 
-    screenVerts[1].u = 1.0;
-    screenVerts[1].v = 0.0;
+    pPrim->verts[2].uv.x = 1.0;
+    pPrim->verts[2].uv.y = 1.0;
 
-    screenVerts[2].u = 1.0;
-    screenVerts[2].v = 1.0;
+    pPrim->verts[3].uv.x = 0.0;
+    pPrim->verts[3].uv.y = 1.0;
 
-    screenVerts[3].u = 0.0;
-    screenVerts[3].v = 1.0;
+    pPrim->texture = pTexture;
+    pPrim->state = ZD3D::ScreenSpacePrimitive::eState::kVisible;
 
-    gRasterizer.Rasterize(mpSurface.get(), pTexture.get(), screenVerts);
-//    gRasterizer.MultiSampleRasterizeWithAlpha(mpSurface.get(), pTexture.get(), screenVerts, nullptr, 1);
+//    ZD3D::AddPrim(ZD3D::GetVertexShader("ScreenSpaceShader"), ZD3D::GetPixelShader("ScreenSpaceShader"), &mDynTexture, verts);
 }
 
 
@@ -1361,6 +1394,7 @@ bool Z3DTestWin::Paint()
         vector<Vec3d> worldVerts;
         worldVerts.resize(4);
 
+        mFramePrimCount = 0;
         int cubenum = 1;
         for (; cubenum < 10; cubenum++)
         {
@@ -1391,7 +1425,7 @@ bool Z3DTestWin::Paint()
 #define RENDER_TEXTURE
 
 #ifdef RENDER_TEXTURE
-                RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpTexture);
+                RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpDynTexture);
 #else
                 RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mSides[i].mColor);
 #endif
