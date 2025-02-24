@@ -920,6 +920,11 @@ Z3DTestWin::Z3DTestWin()
     mnRayDepth = 3;
     mfBaseAngle = 0.0;
 
+    mnCameraX = 0;
+    mnCameraY = 200;
+    mnCameraZ = 1310;
+
+
     mbRenderCube = false;
     mbRenderSpheres = true;
     mbOuterSphere = true;
@@ -1106,6 +1111,17 @@ bool Z3DTestWin::Init()
         pCP->Caption("rendersize", "Render Size");
         pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("updatesettings", this), true);
 
+        pCP->AddSpace(16);
+        pCP->Caption("camera", "camera");
+        pCP->Slider("camerax", &mnCameraX, -1000, 1000, 10, 0.25, {}, true);
+        pCP->Slider("cameray", &mnCameraY, -1000, 1000, 10, 0.25, {}, true);
+        pCP->Slider("cameraz", &mnCameraZ, -1000, 1000, 10, 0.25, {}, true);
+
+
+
+
+
+
         ZGUI::ZTextLook toggleLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
         pCP->AddSpace(16);
@@ -1218,8 +1234,8 @@ void multPointMatrix(const Vec3d& in, Vec3d& out, const Matrix44d& M)
     out.z = in.x * M[0][2] + in.y * M[1][2] + in.z * M[2][2] + /* in.z = 1 */ M[3][2];
     double w = in.x * M[0][3] + in.y * M[1][3] + in.z * M[2][3] + /* in.z = 1 */ M[3][3];
 
-    // normalize if w is different than 1 (convert from homogeneous to Cartesian coordinates)
-    if (w != 1) {
+    if (w != 0.0) 
+    {
         out.x /= w;
         out.y /= w;
         out.z /= w;
@@ -1289,32 +1305,20 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
 
     pPrim->verts.resize(4);
 
+    int mapping[4] = { 0, 1, 3, 2 };
+
     for (int i = 0; i < worldVerts.size(); i++)
     {
-        Vec3d v = worldVerts[i];
+        Vec3d v = worldVerts[mapping[i]];
 
         Vec3d vertCamera;
         Vec3d vertProjected;
 
         multPointMatrix(v, vertCamera, mtxWorldToCamera);
         multPointMatrix(vertCamera, vertProjected, mtxProjection);
-
-        /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
-                    continue;*/
-
-        pPrim->SetVertex(i, (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10)), (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10)), 0.0, 0.0, 0.0);
-
-/*        pPrim->verts[i].position.x = (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10));
-        pPrim->verts[i].position.y = (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10));
-        pPrim->verts[i].position.z = 0.0;*/
+        pPrim->SetVertex(i, (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10)), (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10)), vertProjected.z-1.0, 0.0, 0.0);
     }
 
-/*    Vec3d planeX(screenVerts[1].x - screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
-    Vec3d planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
-    Vec3d normal = planeX.crossProduct(planeY);
-    if (normal.z > 0)
-        return;
-        */
 
     pPrim->verts[0].uv.x = 0.0;
     pPrim->verts[0].uv.y = 0.0;
@@ -1322,10 +1326,10 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
     pPrim->verts[1].uv.x = 1.0;
     pPrim->verts[1].uv.y = 0.0;
 
-    pPrim->verts[2].uv.x = 1.0;
+    pPrim->verts[2].uv.x = 0.0;
     pPrim->verts[2].uv.y = 1.0;
 
-    pPrim->verts[3].uv.x = 0.0;
+    pPrim->verts[3].uv.x = 1.0;
     pPrim->verts[3].uv.y = 1.0;
 
     pPrim->texture = pTexture;
@@ -1381,57 +1385,63 @@ bool Z3DTestWin::Paint()
         Matrix44d mtxProjection;
         Matrix44d mtxWorldToCamera;
 
-        //    Z3D::LookAt(Vec3d(10*sin(gTimer.GetMSSinceEpoch() / 1000.0), 0, -10-10*cos(gTimer.GetMSSinceEpoch()/1000.0)), Vec3d(0, 0, 0), Vec3d(0, 1, 0), mtxWorldToCamera);
-        //    Z3D::LookAt(Vec3d(0, 1, -20 - 10 * cos(gTimer.GetMSSinceEpoch() / 1000.0)), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
-        Z3D::LookAt(Vec3d(0, 1, -20), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
+//        Z3D::LookAt(Vec3d(0, 1, -20), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
+        Z3D::LookAt(Vec3d(mnCameraX / 10.0, mnCameraY / 10.0, mnCameraZ/10.0), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
 
         double fFoV = 90;
-        double fNear = 0.1;
-        double fFar = 100;
+        double fNear = 1.0;
+        double fFar = 500;
 
-        setProjectionMatrix(fFoV, fNear, fFar, mtxProjection);
+        double fAspect = (double)grFullArea.Width() / (double)grFullArea.Height();
+
+        setProjectionMatrix(fFoV, fAspect, fNear, fFar, mtxProjection);
 
         vector<Vec3d> worldVerts;
         worldVerts.resize(4);
 
         mFramePrimCount = 0;
-        int cubenum = 1;
-        for (; cubenum < 10; cubenum++)
+        int cubenum = 0;
+        for (int x = 0; x < 20; x++)
         {
-            //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
 
-            Matrix44d mtxRotation;
-            setOrientationMatrix(4.0, 0.0, mfBaseAngle, mtxRotation);
-
-
-            Matrix44d mtxTranslation;
-            setTranslationMatrix(0, -cubenum * 2.0, 120-cubenum * sin(mfBaseAngle), mtxTranslation);
-            mObjectToWorld = mtxRotation * mtxTranslation;
-
-
-
-            std::vector<Vec3d> cubeWorldVerts;
-            cubeWorldVerts.resize(8);
-            for (int i = 0; i < 8; i++)
-                multPointMatrix(mCubeVertices[i], cubeWorldVerts[i], mObjectToWorld);
-
-            for (int i = 0; i < 6; i++)
+            for (int y = 0; y < 20; y++)
             {
-                worldVerts[0] = cubeWorldVerts[mSides[i].mSide[0]];
-                worldVerts[1] = cubeWorldVerts[mSides[i].mSide[1]];
-                worldVerts[2] = cubeWorldVerts[mSides[i].mSide[2]];
-                worldVerts[3] = cubeWorldVerts[mSides[i].mSide[3]];
+                int cubenum = y * 20 + x;
+                //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
+
+                Matrix44d mtxRotation;
+                setOrientationMatrix(4.0, 0.0, mfBaseAngle + cubenum, mtxRotation);
+
+
+                Matrix44d mtxTranslation;
+                //            setTranslationMatrix(0, -cubenum * 2.0, 120 - cubenum * sin(mfBaseAngle), mtxTranslation);
+                setTranslationMatrix(-y * 2.0, -x * 2.0, y * 2.0, mtxTranslation);
+                mObjectToWorld = mtxRotation * mtxTranslation;
+
+
+
+                std::vector<Vec3d> cubeWorldVerts;
+                cubeWorldVerts.resize(8);
+                for (int i = 0; i < 8; i++)
+                    multPointMatrix(mCubeVertices[i], cubeWorldVerts[i], mObjectToWorld);
+
+                for (int i = 0; i < 6; i++)
+                {
+                    worldVerts[0] = cubeWorldVerts[mSides[i].mSide[0]];
+                    worldVerts[1] = cubeWorldVerts[mSides[i].mSide[1]];
+                    worldVerts[2] = cubeWorldVerts[mSides[i].mSide[2]];
+                    worldVerts[3] = cubeWorldVerts[mSides[i].mSide[3]];
 
 #define RENDER_TEXTURE
 
 #ifdef RENDER_TEXTURE
-                RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpDynTexture);
+                    RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpDynTexture);
 #else
-                RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mSides[i].mColor);
+                    RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mSides[i].mColor);
 #endif
+                }
             }
         }
-
     }
 
 #ifdef RENDER_TEAPOT

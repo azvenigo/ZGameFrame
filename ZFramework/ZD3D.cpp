@@ -37,6 +37,7 @@ namespace ZD3D
     ID3D11Texture2D*        mDepthStencilBuffer = nullptr;
     ID3D11DepthStencilView* mDepthStencilView = nullptr;
     tSSPrimArray            mSSPrimArray;
+    size_t                  mReservedHighWaterMark = 0;
     std::mutex              mPrimitiveMutex;
 
     ScreenSpacePrimitive*   ReservePrimitive()
@@ -44,10 +45,14 @@ namespace ZD3D
         std::unique_lock<mutex> lock(mPrimitiveMutex);
 
         // if any free primitives return that
-        for (auto p : mSSPrimArray)
+
+        for (size_t i = 0; i < mSSPrimArray.size(); i++)
         {
+            auto& p = mSSPrimArray[i];
             if (p->state == ScreenSpacePrimitive::eState::kFree)
             {
+                if (mReservedHighWaterMark < i+1)
+                    mReservedHighWaterMark = i+1;
                 p->state = ScreenSpacePrimitive::eState::kHidden;
                 return p.get();
             }
@@ -58,6 +63,8 @@ namespace ZD3D
         mSSPrimArray.resize(mSSPrimArray.size() + 1024);
         for (size_t i = nextIndex; i < nextIndex + 1024; i++)
             mSSPrimArray[i].reset(new ScreenSpacePrimitive);
+
+        mReservedHighWaterMark = nextIndex+1;
 
         mSSPrimArray[nextIndex]->state = ScreenSpacePrimitive::eState::kHidden;
         return mSSPrimArray[nextIndex].get();
@@ -304,13 +311,13 @@ namespace ZD3D
             mRenderTargetView->Release();
             mRenderTargetView = nullptr;
         }
-
+        HRESULT hr;
         // Resize swap chain (if needed)
-        HRESULT hr = mSwapChain->ResizeBuffers(0, mViewport.Width, mViewport.Height, DXGI_FORMAT_UNKNOWN, 0);
+/*        hr = mSwapChain->ResizeBuffers(0, mViewport.Width, mViewport.Height, DXGI_FORMAT_UNKNOWN, 0);
         if (FAILED(hr))
         {
             return;
-        }
+        }*/
 
         // Get new back buffer
         ID3D11Texture2D* pBackBuffer = nullptr;
@@ -410,8 +417,9 @@ namespace ZD3D
         mD3DContext->IASetInputLayout(layout);
 
 
-        for (auto& p : mSSPrimArray)
+        for (size_t i = 0; i < mReservedHighWaterMark; i++)
         {
+            auto& p = mSSPrimArray[i];
             if (p->state == ScreenSpacePrimitive::eState::kVisible)
                 RenderPrimitive(p.get());
         }

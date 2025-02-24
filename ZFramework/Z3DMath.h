@@ -403,28 +403,31 @@ namespace Z3D
 
     inline void LookAt(const Vec3d& from, const Vec3d& to, const Vec3d& up, Matrix44d& m)
     {
-        Vec3d forward = (from - to).normalize();
-        Vec3d right = up.crossProduct(forward).normalize();
+        Vec3d forward = (to - from).normalize();  // Camera forward
+        Vec3d right = up.crossProduct(forward).normalize();  // Camera right
+        Vec3d newup = forward.crossProduct(right);  // Camera up (recomputed for orthogonality)
 
+        // **Rotation Matrix**
+        m[0][0] = right.x;    m[0][1] = right.y;    m[0][2] = right.z;    m[0][3] = 0;
+        m[1][0] = newup.x;    m[1][1] = newup.y;    m[1][2] = newup.z;    m[1][3] = 0;
+        m[2][0] = -forward.x; m[2][1] = -forward.y; m[2][2] = -forward.z; m[2][3] = 0;
 
-        Vec3d newup = forward.crossProduct(right);
-
-        m[0][0] = right.x;      m[0][1] = right.y;      m[0][2] = right.z;
-        m[1][0] = newup.x;      m[1][1] = newup.y;      m[1][2] = newup.z;
-        m[2][0] = forward.x;    m[2][1] = forward.y;    m[2][2] = forward.z;
-        m[3][0] = from.x;       m[3][1] = from.y;       m[3][2] = from.z;
+        // **Translation (moves world relative to camera)**
+        m[3][0] = -right.dotProduct(from);
+        m[3][1] = -newup.dotProduct(from);
+        m[3][2] = forward.dotProduct(from);
+        m[3][3] = 1;
     }
 
-    inline void setProjectionMatrix(const double& angleOfView, const double& fNear, const double& fFar, Matrix44d& M)
+    inline void setProjectionMatrix(const double& angleOfView, const double& aspectRatio, const double& fNear, const double& fFar, Matrix44d& M)
     {
-        // set the basic projection matrix
-        double scale = 1.0 / tan(angleOfView * 0.5 * M_PI / 180);
-        M[0][0] = scale;  //scale the x coordinates of the projected point 
-        M[1][1] = scale;  //scale the y coordinates of the projected point 
-        M[2][2] = (-fFar / (fFar - fNear));  //used to remap z to [0,1] 
-        M[3][2] = (-fFar * fNear / (fFar - fNear));  //used to remap z [0,1] 
-        M[2][3] = -1;  //set w = -z 
-        M[3][3] = 0;
+        double scale = 1.0 / tan(angleOfView * 0.5 * M_PI / 180.0); // FOV scaling
+        M[0][0] = scale / aspectRatio;  // Correct X scaling
+        M[1][1] = scale;  // Y scaling
+        M[2][2] = fFar / (fFar - fNear);  // Depth remap (DirectX style)
+        M[3][2] = (-fFar * fNear) / (fFar - fNear);  // Depth offset
+        M[2][3] = 1.0;  // Set W = +Z (not -Z)
+        M[3][3] = 0.0;
     }
 
     inline void setOrientationMatrix(double fX, double fY, double fZ, Matrix44d& M)

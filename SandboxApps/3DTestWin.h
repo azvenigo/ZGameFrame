@@ -92,6 +92,11 @@ private:
     int64_t     mnRotateSpeed;
     int64_t     mnRayDepth;
     int64_t     mnFOVTime100;
+
+    int64_t     mnCameraX;
+    int64_t     mnCameraY;
+    int64_t     mnCameraZ;
+
     double      mfBaseAngle;
 
     bool        mbRenderCube;
