@@ -56,7 +56,7 @@ public:
     void    SetControlPanelEnabled(bool bEnabled = true) { mbControlPanelEnabled = bEnabled; }
 
     void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, uint32_t nCol);
-    void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, ZD3D::tDynamicTexturePtr pTexture);
+    void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, ZD3D::tDynamicTexturePtr pTexture, ZD3D::Light* pLight = nullptr);
     bool	HandleMessage(const ZMessage& message);
 
 private:
@@ -69,6 +69,16 @@ private:
 
     tZBufferPtr mpTexture;
     ZD3D::tDynamicTexturePtr mpDynTexture;
+
+    tZBufferPtr mpGrassTexture;
+    ZD3D::tDynamicTexturePtr mpGrassDynTexture;
+
+
+    ZD3D::Light   mLight;
+    ID3D11Buffer* pLightBuffer; // todo, create containing class like texture
+
+
+
     bool mbControlPanelEnabled;
 
     size_t mFramePrimCount;

@@ -19,6 +19,7 @@ typedef std::map<std::string, ID3D11InputLayout*> tInputLayoutMap;
 
 struct Vertex {
     DirectX::XMFLOAT3 position; // Already in screen space (x, y, z)
+    DirectX::XMFLOAT3 normal;
     DirectX::XMFLOAT2 uv;       // Texture coordinates
 };
 
@@ -61,6 +62,33 @@ namespace ZD3D
 
     typedef std::shared_ptr<DynamicTexture> tDynamicTexturePtr;
 
+    class Light
+    {
+    public:
+        Light() 
+        {
+            clear();
+        }
+
+        inline void clear()
+        {
+            direction = { 0, 0, 0 };
+            color = { 0, 0, 0 };
+            intensity = 0;
+        }
+
+        DirectX::XMFLOAT3 direction;    // Direction of the light
+        float intensity;                // Light strength
+        DirectX::XMFLOAT3 color;        // Light color (R, G, B)
+        float padding;                  // 16 byte alignment;
+    };
+
+    struct TimeBufferType 
+    {
+        float time;
+        float padding[3]; // Ensure 16-byte alignment (HLSL requires float4 alignment)
+    };
+
     class ScreenSpacePrimitive
     {
     public:
@@ -82,12 +110,13 @@ namespace ZD3D
             verts.clear();
             texture.reset();
             texture = nullptr;
+            light = nullptr;
             vs = nullptr;
             ps = nullptr;
             state = kFree;
         }
 
-        void SetScreenRect(ZRect r, float z)
+        void SetScreenRect(ZRect r, float z, Light* pLight = nullptr)
         {
             verts.resize(4);
 
@@ -116,17 +145,17 @@ namespace ZD3D
             verts[3].uv.x = 1.0;
             verts[3].uv.y = 1.0;
 
-
-
+            light = pLight;
         }
 
-        void SetVertex(size_t index, float screenX, float screenY, float screenZ, float u, float v)
+        void SetVertex(size_t index, float screenX, float screenY, float screenZ, DirectX::XMFLOAT3 normal, float u, float v)
         {
             if (index > verts.size())
                 verts.resize(index);
             verts[index].position.x = (screenX / (float)mViewport.Width) * 2.0f - 1.0f;
             verts[index].position.y = 1.0f - (screenY / (float)mViewport.Height) * 2.0f;
             verts[index].position.z = screenZ;
+            verts[index].normal = normal;
             verts[index].uv.x = u;
             verts[index].uv.y = v;
         }
@@ -136,6 +165,7 @@ namespace ZD3D
         ID3D11VertexShader*     vs;
         ID3D11PixelShader*      ps;
         tDynamicTexturePtr      texture;
+        Light*                  light;
     };
 
     typedef std::shared_ptr<ScreenSpacePrimitive> tScreenSpacePrimitivePtr;
@@ -165,9 +195,14 @@ namespace ZD3D
     extern tInputLayoutMap          mInputLayoutMap;
 
     extern ID3D11Buffer*            mVertexBuffer;
+    extern TimeBufferType           mTime;
+    extern ID3D11Buffer*            mTimeBuffer;
 
     extern tSSPrimArray             mSSPrimArray;
     ScreenSpacePrimitive*           ReservePrimitive();
+
+
+    extern ID3D11Buffer* pD3DLightBuffer;   // temp light
 
     bool                    LoadPixelShader(const std::string& sName, const std::string& sPath);
     bool                    LoadVertexShader(const std::string& sName, const std::string& sPath);  

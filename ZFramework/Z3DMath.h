@@ -403,7 +403,7 @@ namespace Z3D
 
     inline void LookAt(const Vec3d& from, const Vec3d& to, const Vec3d& up, Matrix44d& m)
     {
-        Vec3d forward = (to - from).normalize();  // Camera forward
+/*        Vec3d forward = (to - from).normalize();  // Camera forward
         Vec3d right = up.crossProduct(forward).normalize();  // Camera right
         Vec3d newup = forward.crossProduct(right);  // Camera up (recomputed for orthogonality)
 
@@ -413,6 +413,20 @@ namespace Z3D
         m[2][0] = -forward.x; m[2][1] = -forward.y; m[2][2] = -forward.z; m[2][3] = 0;
 
         // **Translation (moves world relative to camera)**
+        m[3][0] = -right.dotProduct(from);
+        m[3][1] = -newup.dotProduct(from);
+        m[3][2] = forward.dotProduct(from);
+        m[3][3] = 1;*/
+        Vec3d forward = (to - from).normalize();  // Forward direction (camera negative Z)
+        Vec3d right = up.crossProduct(forward).normalize();  // Right (camera X)
+        Vec3d newup = forward.crossProduct(right);  // Corrected Up (camera Y)
+
+        // Rotation Matrix
+        m[0][0] = right.x;    m[0][1] = newup.x;    m[0][2] = -forward.x;    m[0][3] = 0;
+        m[1][0] = right.y;    m[1][1] = newup.y;    m[1][2] = -forward.y;    m[1][3] = 0;
+        m[2][0] = right.z;    m[2][1] = newup.z;    m[2][2] = -forward.z;    m[2][3] = 0;
+
+        // Translation
         m[3][0] = -right.dotProduct(from);
         m[3][1] = -newup.dotProduct(from);
         m[3][2] = forward.dotProduct(from);

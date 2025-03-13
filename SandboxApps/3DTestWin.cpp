@@ -931,6 +931,7 @@ Z3DTestWin::Z3DTestWin()
     mbCenterSphere = true;
     mnRenderSize = 256;
     mbControlPanelEnabled = true;
+//    pLightBuffer = nullptr;
 
     mIdleSleepMS = 16;
 
@@ -988,8 +989,28 @@ bool Z3DTestWin::Init()
         gRegistry.SetDefault("3dtestwin", "raydepth", mnRayDepth);
     }
 
+    
+    mLight.color = { 1.0f, 0.5f, 0.2f };
+    mLight.direction = { 1.0f, 0.0f, -1.0f };
+    mLight.intensity = 0.8;
 
 
+    D3D11_BUFFER_DESC bufferDesc = {};
+    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    bufferDesc.ByteWidth = sizeof(mLight);
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    bufferDesc.MiscFlags = 0;
+    bufferDesc.StructureByteStride = 0;
+
+    HRESULT hr = ZD3D::mD3DDevice->CreateBuffer(&bufferDesc, nullptr, &ZD3D::pD3DLightBuffer);
+    if (FAILED(hr))
+    {
+        assert(false);
+    }
+//    mLight.pD3DBuffer = pLightBuffer;
+
+    
 
 
     mCubeVertices.resize(8);
@@ -1053,6 +1074,17 @@ bool Z3DTestWin::Init()
     mpDynTexture.reset(new ZD3D::DynamicTexture);
     mpDynTexture->Init(mpTexture->GetArea().BR());
     mpDynTexture->UpdateTexture(mpTexture.get());
+
+    mpGrassTexture.reset(new ZBuffer());
+    mpGrassTexture.get()->LoadBuffer("res/grass-texture.jpg");
+    mpGrassDynTexture.reset(new ZD3D::DynamicTexture);
+    mpGrassDynTexture->Init(mpGrassTexture->GetArea().BR());
+    mpGrassDynTexture->UpdateTexture(mpGrassTexture.get());
+
+
+
+
+
 
     SetFocus();
 
@@ -1165,6 +1197,10 @@ bool Z3DTestWin::Shutdown()
     for (auto& p : mReservedPrims)
         p->clear();
     mReservedPrims.clear();
+
+//    if (pLightBuffer)
+//        pLightBuffer->Release();
+    //pLightBuffer = nullptr;
 
     return ZWin::Shutdown();
 }
@@ -1286,7 +1322,7 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
     gRasterizer.Rasterize(mpSurface.get(), screenVerts);
 }
 
-void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection, Matrix44d& mtxWorldToCamera, ZD3D::tDynamicTexturePtr pTexture)
+void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection, Matrix44d& mtxWorldToCamera, ZD3D::tDynamicTexturePtr pTexture, ZD3D::Light* pLight)
 {
 //    tUVVertexArray screenVerts;
 //    screenVerts.resize(worldVerts.size());
@@ -1299,13 +1335,41 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
 
     ZD3D::ScreenSpacePrimitive* pPrim = mReservedPrims[mFramePrimCount];
     mFramePrimCount++;
-
+    
 
 //    std::vector<Vertex> verts(4);
 
     pPrim->verts.resize(4);
 
     int mapping[4] = { 0, 1, 3, 2 };
+    
+    Vec3d planeX(worldVerts[1].x - worldVerts[0].x, worldVerts[1].y - worldVerts[0].y, worldVerts[1].z - worldVerts[0].z);
+    Vec3d planeY(worldVerts[0].x - worldVerts[3].x, worldVerts[0].y - worldVerts[3].y, worldVerts[0].z - worldVerts[3].z);
+    Vec3d normal = planeX.crossProduct(planeY).normalize();
+    
+    DirectX::XMFLOAT3 d3dNormal;
+    d3dNormal.x = normal.x;
+    d3dNormal.y = normal.y;
+    d3dNormal.z = normal.z;
+
+/*    d3dNormal.x = (float)(rand()%1000-500);
+    d3dNormal.y = (float)(rand()%1000-500);
+    d3dNormal.z = (float)(rand()%1000-500);*/
+
+
+    float f = sqrt(d3dNormal.x * d3dNormal.x + d3dNormal.y * d3dNormal.y + d3dNormal.z * d3dNormal.z);
+
+    d3dNormal.x /= f;
+    d3dNormal.y /= f;
+    d3dNormal.z /= f;
+
+
+/*    XMVECTOR lightVec = XMLoadFloat3(&mLight.direction);
+    lightVec = XMVector3Normalize(lightVec);
+    XMStoreFloat3(&mLight.direction, lightVec);*/
+    
+
+
 
     for (int i = 0; i < worldVerts.size(); i++)
     {
@@ -1316,9 +1380,11 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
 
         multPointMatrix(v, vertCamera, mtxWorldToCamera);
         multPointMatrix(vertCamera, vertProjected, mtxProjection);
-        pPrim->SetVertex(i, (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10)), (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10)), vertProjected.z-1.0, 0.0, 0.0);
+        pPrim->SetVertex(i, (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10)), (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10)), vertProjected.z-1.0, d3dNormal, 0.0, 0.0);
     }
 
+
+    pPrim->light = pLight;
 
     pPrim->verts[0].uv.x = 0.0;
     pPrim->verts[0].uv.y = 0.0;
@@ -1328,13 +1394,13 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
 
     pPrim->verts[2].uv.x = 0.0;
     pPrim->verts[2].uv.y = 1.0;
-
+    
     pPrim->verts[3].uv.x = 1.0;
     pPrim->verts[3].uv.y = 1.0;
 
     pPrim->texture = pTexture;
     pPrim->state = ZD3D::ScreenSpacePrimitive::eState::kVisible;
-
+    pPrim->ps = ZD3D::GetPixelShader("GrassShader");
 //    ZD3D::AddPrim(ZD3D::GetVertexShader("ScreenSpaceShader"), ZD3D::GetPixelShader("ScreenSpaceShader"), &mDynTexture, verts);
 }
 
@@ -1380,13 +1446,15 @@ bool Z3DTestWin::Paint()
     gpFontSystem->GetDefaultFont()->DrawText(mpSurface.get(), sTime, mAreaLocal);
     mLastTimeStamp = nTime;
 
+
+
     if (mbRenderCube)
     {
         Matrix44d mtxProjection;
         Matrix44d mtxWorldToCamera;
 
-//        Z3D::LookAt(Vec3d(0, 1, -20), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
-        Z3D::LookAt(Vec3d(mnCameraX / 10.0, mnCameraY / 10.0, mnCameraZ/10.0), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
+        Z3D::LookAt(Vec3d(0, 0, -20), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
+//        Z3D::LookAt(Vec3d(mnCameraX / 100.0, mnCameraY / 100.0, mnCameraZ/100.0), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
 
         double fFoV = 90;
         double fNear = 1.0;
@@ -1401,27 +1469,47 @@ bool Z3DTestWin::Paint()
 
         mFramePrimCount = 0;
         int cubenum = 0;
-        for (int x = 0; x < 20; x++)
-        {
+        Matrix44d mtxRotation;
+        Matrix44d mtxTranslation;
 
-            for (int y = 0; y < 20; y++)
+        // plane
+        setOrientationMatrix(4.0, 0.0, mfBaseAngle + cubenum, mtxRotation);
+        setTranslationMatrix(mnCameraX / 10.0, mnCameraY / 10.0, mnCameraZ / 10.0, mtxTranslation);
+        mObjectToWorld = mtxRotation * mtxTranslation;
+
+        std::vector<Vec3d> verts(4);
+        verts[0] = Vec3d(-10, 10, 500);
+        verts[1] = Vec3d(-10, -10, 500);
+        verts[3] = Vec3d(10, 10, 1500);
+        verts[2] = Vec3d(10, -10, 1500);
+
+        std::vector<Vec3d> transformedVerts(4);
+        for (int i = 0; i < 4; i++)
+            multPointMatrix(verts[i], transformedVerts[i], mtxTranslation);
+
+        RenderPoly(transformedVerts, mtxProjection, mtxWorldToCamera, mpGrassDynTexture, &mLight);
+
+
+
+
+
+        for (int x = 0; x < 10; x++)
+        {
+            for (int y = 0; y < 10; y++)
             {
                 int cubenum = y * 20 + x;
                 //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
 
-                Matrix44d mtxRotation;
                 setOrientationMatrix(4.0, 0.0, mfBaseAngle + cubenum, mtxRotation);
 
 
-                Matrix44d mtxTranslation;
                 //            setTranslationMatrix(0, -cubenum * 2.0, 120 - cubenum * sin(mfBaseAngle), mtxTranslation);
                 setTranslationMatrix(-y * 2.0, -x * 2.0, y * 2.0, mtxTranslation);
                 mObjectToWorld = mtxRotation * mtxTranslation;
 
 
 
-                std::vector<Vec3d> cubeWorldVerts;
-                cubeWorldVerts.resize(8);
+                std::vector<Vec3d> cubeWorldVerts(8);
                 for (int i = 0; i < 8; i++)
                     multPointMatrix(mCubeVertices[i], cubeWorldVerts[i], mObjectToWorld);
 
@@ -1435,7 +1523,7 @@ bool Z3DTestWin::Paint()
 #define RENDER_TEXTURE
 
 #ifdef RENDER_TEXTURE
-                    RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpDynTexture);
+                    RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpDynTexture, &mLight);
 #else
                     RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mSides[i].mColor);
 #endif

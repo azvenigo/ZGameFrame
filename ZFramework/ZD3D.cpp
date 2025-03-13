@@ -4,6 +4,7 @@
 #include <array>
 #include <filesystem>
 #include "helpers/StringHelpers.h"
+#include "ZTimer.h"
 
 using Microsoft::WRL::ComPtr;
 #pragma comment(lib, "d3dcompiler.lib") // Link the D3DCompiler library
@@ -33,13 +34,16 @@ namespace ZD3D
     tPixelShaderMap         mPixelShaderMap;
     tInputLayoutMap         mInputLayoutMap;
 
+    ID3D11Buffer* pD3DLightBuffer;   // temp light
+
     ID3D11Buffer*           mVertexBuffer = nullptr;
     ID3D11Texture2D*        mDepthStencilBuffer = nullptr;
     ID3D11DepthStencilView* mDepthStencilView = nullptr;
     tSSPrimArray            mSSPrimArray;
     size_t                  mReservedHighWaterMark = 0;
     std::mutex              mPrimitiveMutex;
-
+    TimeBufferType           mTime;
+    ID3D11Buffer*           mTimeBuffer;
     ScreenSpacePrimitive*   ReservePrimitive()
     {
         std::unique_lock<mutex> lock(mPrimitiveMutex);
@@ -236,6 +240,23 @@ namespace ZD3D
             return false;
         }
 
+
+
+        D3D11_BUFFER_DESC timeBufferDesc = {};
+        timeBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+        timeBufferDesc.ByteWidth = sizeof(TimeBufferType);
+        timeBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        timeBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        timeBufferDesc.MiscFlags = 0;
+        timeBufferDesc.StructureByteStride = 0;
+
+        HRESULT result = mD3DDevice->CreateBuffer(&timeBufferDesc, nullptr, &mTimeBuffer);
+        if (FAILED(result)) {
+            assert(false);
+            return false;
+        }
+
+
         return true;
     }
 
@@ -345,7 +366,7 @@ namespace ZD3D
         mD3DDevice->CreateDepthStencilState(&depthStencilDesc, &depthStencilState);
         mD3DContext->OMSetDepthStencilState(depthStencilState, 1);
 
-
+        
 
         // Set new render target
 //        mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, nullptr);
@@ -410,12 +431,29 @@ namespace ZD3D
         std::unique_lock<mutex> lock(mPrimitiveMutex);
 
 
+        float currentTime = static_cast<float>(gTimer.GetElapsedSecondsSinceEpoch()); // Replace with your timing function
+
+        mTime.time = currentTime;
+
+        // Map the buffer and copy data
+        D3D11_MAPPED_SUBRESOURCE mappedResource;
+        HRESULT result = mD3DContext->Map(mTimeBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+        if (FAILED(result)) 
+        {
+            // Handle error
+        }
+        memcpy(mappedResource.pData, &mTime.time, sizeof(TimeBufferType));
+        mD3DContext->Unmap(mTimeBuffer, 0);
+
+        // Set the buffer to the shader
+        mD3DContext->PSSetConstantBuffers(1, 1, &mTimeBuffer);
+
+
         // Set shaders
         mD3DContext->VSSetShader(GetVertexShader("ScreenSpaceShader"), nullptr, 0);
         mD3DContext->PSSetShader(GetPixelShader("ScreenSpaceShader"), nullptr, 0);
         ID3D11InputLayout* layout = GetInputLayout("ScreenSpaceShader");
         mD3DContext->IASetInputLayout(layout);
-
 
         for (size_t i = 0; i < mReservedHighWaterMark; i++)
         {
@@ -461,24 +499,6 @@ namespace ZD3D
 
     void RenderPrimitive(ScreenSpacePrimitive* pPrim)
     {
-
-
-        /*
-        std::array<Vertex, 3> ndcVertices;
-        for (int i = 0; i < 3; ++i)
-        {
-            //ndcVertices[i].position.x = (triangleVertices[i].position.x / (float)mSurfaceArea.Width()) * 2.0f - 1.0f;
-            //ndcVertices[i].position.y = 1.0f - (triangleVertices[i].position.y / (float)mSurfaceArea.Height()) * 2.0f;
-            ndcVertices[i].position.x = (triangleVertices[i].position.x / (float)mViewport.Width) * 2.0f - 1.0f;
-            ndcVertices[i].position.y = 1.0f - (triangleVertices[i].position.y / (float)mViewport.Height) * 2.0f;
-
-
-
-            ndcVertices[i].position.z = triangleVertices[i].position.z; // Keep Z value
-            ndcVertices[i].uv = triangleVertices[i].uv;
-        }*/
-
-
         // Create vertex buffer
         D3D11_BUFFER_DESC vertexBufferDesc = {};
         vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -505,19 +525,26 @@ namespace ZD3D
         UINT offset = 0;
         mD3DContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
         mD3DContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-
+        
         // Set shaders
         if (pPrim->vs)
             mD3DContext->VSSetShader(pPrim->vs, nullptr, 0);
 
         if (pPrim->ps)
             mD3DContext->PSSetShader(pPrim->ps, nullptr, 0);
-
-//        ID3D11InputLayout* layout = GetInputLayout("ScreenSpaceShader");
-//        mD3DContext->IASetInputLayout(layout);
-
         
+        if (pPrim->light && pD3DLightBuffer)
+        {
+            D3D11_MAPPED_SUBRESOURCE mappedResource;
 
+            mD3DContext->Map(pD3DLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+
+            memcpy(mappedResource.pData, pPrim->light, sizeof(Light));
+            mD3DContext->Unmap(pD3DLightBuffer, 0);
+
+            mD3DContext->PSSetConstantBuffers(0, 1, &pD3DLightBuffer);
+        }
+        
         // Set texture and sampler
         ID3D11ShaderResourceView* pSRV = pPrim->texture->GetSRV(mD3DContext);
         mD3DContext->PSSetShaderResources(0, 1, &pSRV);
@@ -533,6 +560,12 @@ namespace ZD3D
 
     bool CompileShaders()
     {
+        if (!fs::exists("res/shaders/"))
+        {
+            cout << "No shaders folder\n";
+            return true;
+        }
+
         // enumerate shaders in subfolder and map them into our members
         tStringList shaderFiles;
         for (auto const& dir_entry : fs::directory_iterator("res/shaders/"))
@@ -559,7 +592,7 @@ namespace ZD3D
                 }
             }
         }
-
+        
         return true;
     }
 
@@ -708,12 +741,13 @@ namespace ZD3D
             if (errorBlob)
             {
                 cerr << (char*)errorBlob->GetBufferPointer() << "\n";
+                assert(false);
                 errorBlob->Release();
             }
 
             return false;
         }
-
+        
         // Create Pixel Shader
         ID3D11PixelShader* pixelShader = nullptr;
         hr = mD3DDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
@@ -722,7 +756,7 @@ namespace ZD3D
             assert(false);
             return false;
         }
-
+        
         mPixelShaderMap[sName] = pixelShader;
 
         psBlob->Release();
@@ -766,6 +800,7 @@ namespace ZD3D
         D3D11_INPUT_ELEMENT_DESC layout[] =
         {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, position), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, normal), D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(Vertex, uv), D3D11_INPUT_PER_VERTEX_DATA, 0 }
         };
 
