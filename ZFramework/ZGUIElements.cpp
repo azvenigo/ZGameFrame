@@ -17,13 +17,11 @@ namespace ZGUI
         // assuming pDst is locked
         ZRect rDraw(area);
 
-        assert(!sText.empty());
         if (rDraw.Width() == 0 || rDraw.Height() == 0)
         {
             rDraw = pDst->GetArea();
         }
 
-        assert(!sText.empty());
         if (style.pos == ZGUI::Fit)
             style.fp.nScalePoints = ZFontParams::ScalePoints(rDraw.Height()/2);
 
@@ -32,7 +30,6 @@ namespace ZGUI
         rDraw = style.Font()->Arrange(rDraw, sText, style.pos, style.pad.h, style.pad.v);
         ZRect rLabel(rDraw.Width(), rDraw.Height());
 
-        assert(!sText.empty());
 
         bool bDrawDropShadow = ARGB_A(dropShadowColor) > 0;
         if (bDrawDropShadow)
@@ -61,7 +58,6 @@ namespace ZGUI
             }
         }
 
-        assert(!sText.empty());
 
         if (renderedBuf.GetArea().Width() != rDraw.Width() || renderedBuf.GetArea().Height() != rDraw.Height() || renderedText != sText || renderedStyle != style)
         {
@@ -98,13 +94,10 @@ namespace ZGUI
             else
                 renderedBuf.Fill(0);
 
-            assert(!sText.empty());
 
             // Draw outline in padded area if style specifies
             if (ARGB_A(style.pad.col) > 0x00)
                 renderedBuf.DrawRectAlpha(style.pad.col, rLabel);
-
-            assert(!sText.empty());
 
             style.Font()->DrawTextParagraph(&renderedBuf, sText, rLabel, &style);
 
@@ -120,9 +113,10 @@ namespace ZGUI
                 uint32_t* pStart = shadowTemp.mpPixels;
                 uint32_t* pEnd = pStart + shadowTemp.GetArea().Width() * shadowTemp.GetArea().Height();
                 uint32_t shadowAlphaMask = (0xff000000 & dropShadowColor);
+                uint32_t shadowColor = (0x00ffffff & dropShadowColor);
                 while (pStart < pEnd)
                 {
-                    *pStart = (*pStart & shadowAlphaMask); // set each pixel color to 0 but leave alpha
+                    *pStart = (*pStart & shadowAlphaMask)|shadowColor; // set each pixel color to shadowColor but leave alpha
                     pStart++;
                 }
 
@@ -240,7 +234,8 @@ namespace ZGUI
 
         if (mRendered == nullptr || rDest.Width() != mRendered->GetArea().Width() || rDest.Height() != mRendered->GetArea().Height())
         {
-            if (loadedFilename != imageFilename)
+//            if (loadedFilename != imageFilename)
+            if (!imageFilename.empty())
             {
                 if (!Load())
                 {

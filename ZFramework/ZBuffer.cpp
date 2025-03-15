@@ -715,6 +715,8 @@ bool ZBuffer::BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType
 	int64_t nBltWidth = rDst.Width();
 	int64_t nBltHeight = rDst.Height();
 
+    assert(rSrc.Width() == rDst.Width() && rSrc.Height() == rDst.Height());
+
     if (pSrc->mbHasAlphaPixels)
     {
         uint32_t* pSrcBits = pSrc->GetPixels() + (rSrc.top * pSrc->GetArea().Width()) + rSrc.left;
