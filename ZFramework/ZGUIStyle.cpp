@@ -289,6 +289,16 @@ namespace ZGUI
         return false;
     }
 
+    uint32_t Palette::Get(const string& name)
+    {
+        uint32_t col = 0xffff8888;  // some debug default color if name not found
+        if (!GetByName(name, col))
+        {
+            assert(false);
+        }
+
+        return col;
+    }
 
 
 

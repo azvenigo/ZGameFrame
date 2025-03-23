@@ -84,7 +84,7 @@ bool TestWin::Init()
 //    sPanelLayout += "<row><label id=label1 caption=\"A label\"></label></row>";
 //    sPanelLayout += "<row><button id=test9 group=group1 caption=hello></button><button id=test10 group=group1 svgpath=%apppath%/res/test.svg></button></row>";
     pPanel->mPanelLayout += "</panel>";
-    ChildAdd(pPanel);
+    //ChildAdd(pPanel);
     
 /*    ZWinFormattedDoc* pForm = new ZWinFormattedDoc();
     pForm->SetArea(ZRect(1010, 500, 1610, 2000));
@@ -101,8 +101,8 @@ bool TestWin::Init()
     textBox.sText = "Quite the pickles?";
     textBox.style = gStyleCaption;
 
-    textBox.style.look.colTop = 0xff12ff00;
-    textBox.style.look.colBottom = 0xff500000;
+    textBox.style.look.colTop = 0xaaffff00;
+    textBox.style.look.colBottom = 0xaaffff00;
 
     textBox.style.fp.sFacename = "Arial";
     textBox.style.fp.nWeight = 100;
@@ -110,16 +110,30 @@ bool TestWin::Init()
     textBox.style.fp.nTracking = 10;
     textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
     textBox.style.wrap = false;
-    textBox.style.fp.nScalePoints = 2000;
+    textBox.style.fp.nScalePoints = 10000;
 //    textBox.blurBackground = 2.0;
-    textBox.dropShadowColor = 0xff0000ff;
-    textBox.dropShadowOffset = ZPoint(15, 15);
-    textBox.dropShadowBlur = 10.0;
+    textBox.shadow.col = 0xff000000;
+    textBox.shadow.offset   = ZPoint(15, 15);
+    textBox.shadow.spread = 15.0;
+    textBox.shadow.falloff = .5;
     textBox.area.SetRect(0, 0, 3000, 2000);
+    
+    ZBuffer temp;
+    ZRect r(textBox.style.Font()->Arrange(textBox.area, textBox.sText, textBox.style.pos, textBox.style.pad.h, textBox.style.pad.v));
+    temp.Init(r.Width(), r.Height());
+    temp.Fill(0x00000000);
 
+    ZGUI::Style style2(textBox.style);
+    style2.look.colTop = 0xffffffff;
+    style2.look.colBottom = 0xffffffff;
+    textBox.style.Font()->DrawTextParagraph(&temp, textBox.sText, temp.GetArea(), &style2);
 
+    temp.DrawRectAlpha(0xffff0000, temp.GetArea(), ZBuffer::kAlphaSource);
 
-
+    shadow.spread = 150.0;
+    shadow.falloff = 10.50;
+    shadow.Render(&temp, temp.GetArea());
+    shadow.col = 0x88004488;
 
 
 
@@ -141,7 +155,7 @@ bool TestWin::Init()
     pForm->SetArea(rForm);
     pForm->SetScrollable();
     pForm->mStyle.fp = text.fp;
-    ChildAdd(pForm);
+//    ChildAdd(pForm);
 
 /*    pForm->AddMultiLine("\nOverview", sectionText);
     pForm->AddMultiLine("The main idea for ZView is to open and sort through images as fast as possible.\nThe app will read ahead/behind so that the next or previous image is already loaded when switching.\n\n", text);
@@ -201,6 +215,9 @@ bool TestWin::Paint()
 
     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
 
+    mpSurface->Fill(0xffffffff);
+    //#define DRAWGRID
+#ifdef DRAWGRID
     int64_t nSide = 64;
     for (int64_t y = 0; y < mAreaLocal.bottom; y += nSide)
     {
@@ -213,9 +230,12 @@ bool TestWin::Paint()
             mpSurface.get()->Fill(nCol, &r);
         }
     }
+#endif
 
+//    textBox.Paint(mpSurface.get());
 
-    textBox.Paint(mpSurface.get());
+    shadow.offset.Set(15, 100);
+    shadow.Paint(mpSurface.get());
 
 //    textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &textBox.style);
 

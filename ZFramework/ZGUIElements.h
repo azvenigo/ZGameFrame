@@ -10,6 +10,34 @@
 
 namespace ZGUI
 {
+
+    class Shadow
+    {
+    public:
+        Shadow(uint32_t _col = 0xff000000, float _spread = 1.0f, float _falloff = 1.0f);
+
+        bool Render(ZBuffer* pSrc, ZRect rDst);
+        bool Paint(ZBuffer* pDst);
+        bool IsInvalid() { return renderedColor != col || renderedSpread != spread || renderedFalloff != falloff; }
+
+        ZRect Bounds(ZRect r); // returns limits of shadow based on spread and falloff
+
+        uint32_t    col;
+        float       spread;
+        float       falloff;
+
+        ZPoint      offset;
+
+
+    private:
+        tZBufferPtr renderedShadow;
+        uint32_t    renderedColor;
+        float       renderedSpread;
+        float       renderedFalloff;
+    };
+
+
+
     typedef std::map<std::string, class TextBox> tTextboxMap; // named textboxes
 
     class TextBox
@@ -28,23 +56,32 @@ namespace ZGUI
             visible = true;
             blurBackground = 0.0;
 
-            dropShadowColor = 0x00000000;
-            dropShadowBlur = 0.0;
+/*            dropShadowColor = 0x00000000;
+            dropShadowSpread = 0.0f;
+            dropShadowFalloff = 1.0f;*/
         }
+
+        bool IsInvalid()
+        {
+            return renderedBuf.GetArea().Width() != area.Width() || renderedBuf.GetArea().Height() != area.Height() || renderedText != sText || renderedStyle != style || shadow.IsInvalid();
+        };
 
         std::string sText;
         Style       style;
         ZRect       area;
         float       blurBackground;
 
-        ZPoint      dropShadowOffset;
-        uint32_t    dropShadowColor;    // if alpha of dropshadow is not 0, render a drop shadow
-        float       dropShadowBlur;
+//        ZPoint      dropShadowOffset;
+//        uint32_t    dropShadowColor;    // if alpha of dropshadow is not 0, render a drop shadow
+//        float       dropShadowSpread;
+        //float       dropShadowFalloff;
 
 
         ZBuffer     renderedBuf;
         std::string renderedText;
         Style       renderedStyle;
+        class Shadow      shadow;
+
 
         std::mutex  clearMutex;
 
@@ -65,8 +102,6 @@ namespace ZGUI
         ZRect renderedArea; 
         std::string renderedText;
     };
-
-
 
 
 

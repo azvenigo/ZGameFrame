@@ -1042,7 +1042,7 @@ bool ZBuffer::Colorize(uint32_t nH, uint32_t nS, ZRect* pRect)
         {
             uint32_t nCol = *pDstBits;
             uint32_t nHSV = COL::ARGB_To_AHSV(nCol);
-            uint8_t  a = AHSV_A(nHSV);
+            uint8_t  a = ARGB_A(nCol);
             uint32_t h = AHSV_H(nHSV);
             uint32_t s = AHSV_S(nHSV);
             uint32_t v = AHSV_V(nHSV);
@@ -2012,7 +2012,7 @@ bool ZBuffer::BltScaled(ZBuffer* pSrc)
 }
 
 
-void ZBuffer::Blur(float sigma, ZRect* pRect)
+void ZBuffer::Blur(float radius, float falloff, ZRect* pRect)
 {
     ZRect rArea(mSurfaceArea);
     if (pRect)
@@ -2023,8 +2023,8 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
 
     ZBuffer temp;
     temp.Init(rArea.Width(), rArea.Height());
-    temp.Blt(this, rArea, temp.GetArea(), nullptr, ZBuffer::eAlphaBlendType::kAlphaSource);
 
+    float sigma = radius / 3.0f;
 
     // Calculate the size of the kernel based on sigma (standard deviation)
     int64_t kernelSize = int64_t(6 * sigma) + 1;
@@ -2042,7 +2042,7 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
     for (int64_t i = 0; i < kernelSize; i++)
     {
         int64_t x = i - kernelRadius;
-        kernel[i] = expf(-(x * x) / (2 * sigma * sigma));
+        kernel[i] = expf(-(x * x * falloff) / (2.0f * sigma * sigma));
         sum += kernel[i];
     }
 
@@ -2053,8 +2053,6 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
     }
 
     // Perform horizontal convolution
-//#pragma omp parallel for
-//#pragma omp parallel num_threads(4)
     for (int64_t y = rArea.top; y < rArea.bottom; y++)
     {
         for (int64_t x = rArea.left; x < rArea.right; x++)
@@ -2065,13 +2063,13 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
             {
                 int64_t newX = x + i;
                 if (newX < rArea.left)
-                    newX = rArea.left;
-                //                    continue;
-
-                else if (newX > rArea.right-1)
-                    newX = rArea.right - 1;
-
-//                    continue;
+                {
+                    continue;
+                }
+                else if (newX > rArea.right - 1)
+                {
+                    continue;
+                }
 
                 uint32_t pixel = mpPixels[y * srcStride + newX];
                 float weight = kernel[i + kernelRadius];
@@ -2092,8 +2090,6 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
     }
 
     // Perform vertical convolution and store the result in the output buffer
-//#pragma omp parallel for
-//#pragma omp parallel num_threads(4)
     for (int64_t x = rArea.left; x < rArea.right; x++)
     {
 
@@ -2105,12 +2101,13 @@ void ZBuffer::Blur(float sigma, ZRect* pRect)
             {
                 int64_t newY = y + i;
                 if (newY < rArea.top)
-                    newY = rArea.top;
-                //                    continue;
-                                //                    newY = rArea.top;
-                else if (newY > rArea.bottom-1)
-                    newY = rArea.bottom - 1;
-//                    continue;
+                {
+                    continue;
+                }
+                else if (newY > rArea.bottom - 1)
+                {
+                    continue;
+                }
 
                 int64_t tempY = newY - rArea.top;
                 int64_t tempX = x - rArea.left;

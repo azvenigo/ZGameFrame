@@ -204,9 +204,9 @@ bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
         mTooltip.mTextbox.style.pad.col = 0xffffffff;
         mTooltip.mTextbox.style.bgCol &= 0x88ffffff;
         mTooltip.mTextbox.blurBackground = 2.0;
-        mTooltip.mTextbox.dropShadowColor = 0x44000000;
-        mTooltip.mTextbox.dropShadowOffset.Set(12, 12);
-        mTooltip.mTextbox.dropShadowBlur = 4.0;
+        mTooltip.mTextbox.shadow.col = 0x44000000;
+        mTooltip.mTextbox.shadow.offset.Set(12, 12);
+        mTooltip.mTextbox.shadow.spread = 4.0;
         ZRect rTooltip;
         tZFontPtr pTooltipFont = mTooltip.mTextbox.style.Font();
         rTooltip = pTooltipFont->StringRect(tooltip);

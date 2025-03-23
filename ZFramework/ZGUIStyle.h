@@ -58,6 +58,20 @@ namespace ZGUI
 
         ZTextLook(eDeco _decoration = kNormal, uint32_t _colTop = 0xffffffff, uint32_t _colBottom = 0xffffffff);
         ZTextLook(const std::string& s);
+
+        void SetCol(uint32_t col)
+        {
+            colTop = col;
+            colBottom = col;
+        }
+
+        void SetCol(uint32_t top, uint32_t bottom)
+        {
+            colTop = top;
+            colBottom = bottom;
+        }
+
+
         operator std::string() const;
         bool operator == (const ZTextLook& rhs) const
         {

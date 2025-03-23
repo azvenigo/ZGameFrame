@@ -78,7 +78,7 @@ public:
     virtual bool            FillGradient(uint32_t nCol[4], ZRect* pRect = nullptr);     // fills gradient...color order is TL->TR->BR->BL
 
     virtual bool            Colorize(uint32_t nH, uint32_t nS, ZRect* pRect = nullptr);        // changes hue to color
-    virtual void            Blur(float sigma, ZRect* pRect = nullptr);
+    virtual void            Blur(float radius, float falloff = 1.0f, ZRect* pRect = nullptr);
 
 
 	virtual bool            BltNoClip(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, eAlphaBlendType type = kAlphaDest);

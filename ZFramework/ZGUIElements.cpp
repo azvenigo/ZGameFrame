@@ -29,37 +29,17 @@ namespace ZGUI
         assert(style.fp.nScalePoints > 0);
         rDraw = style.Font()->Arrange(rDraw, sText, style.pos, style.pad.h, style.pad.v);
         ZRect rLabel(rDraw.Width(), rDraw.Height());
+        bool bDrawShadow = ARGB_A(shadow.col) > 0;
 
-
-        bool bDrawDropShadow = ARGB_A(dropShadowColor) > 0;
-        if (bDrawDropShadow)
+        if (bDrawShadow)
         {
-            if (dropShadowOffset.x > 0)
-            {
-                rDraw.right += (dropShadowOffset.x + (int64_t)dropShadowBlur*2);
-            }
-            else
-            {
-                int64_t offset = (dropShadowOffset.x - (int64_t)dropShadowBlur*2);
-                rLabel.OffsetRect(-offset, 0);
-                rDraw.left += offset;
-            }
+            ZRect rBounds(shadow.Bounds(rDraw));
+            rBounds.OffsetRect(shadow.offset);
 
-            if (dropShadowOffset.y > 0)
-            {
-                rDraw.bottom += (dropShadowOffset.y + (int64_t)dropShadowBlur*2);
-            }
-            else
-            {
-                int64_t offset = (dropShadowOffset.y - (int64_t)dropShadowBlur*2);
-                rLabel.OffsetRect(0, -offset);
-                rDraw.top += offset;
-                
-            }
+            rDraw.UnionRect(rBounds);
         }
 
-
-        if (renderedBuf.GetArea().Width() != rDraw.Width() || renderedBuf.GetArea().Height() != rDraw.Height() || renderedText != sText || renderedStyle != style)
+        if (IsInvalid())
         {
             renderedText = sText;
             renderedStyle = style;
@@ -86,7 +66,7 @@ namespace ZGUI
                     }
 
                     renderedBuf.FillAlpha(style.bgCol, &rLabel);
-                    renderedBuf.Blur(blurBackground, &rLabel);
+                    renderedBuf.Blur(blurBackground, 1.0f, &rLabel);
                 }
                 else
                     renderedBuf.Fill(style.bgCol);
@@ -101,32 +81,20 @@ namespace ZGUI
 
             style.Font()->DrawTextParagraph(&renderedBuf, sText, rLabel, &style);
 
-            if (bDrawDropShadow)
+            if (bDrawShadow)
             {
-                ZBuffer shadowTemp;
-                shadowTemp.Init(rDraw.Width(), rDraw.Height());
-
-                ZRect rShadow(rLabel);
-                rShadow.OffsetRect(dropShadowOffset);
-                shadowTemp.Blt(&renderedBuf, rLabel, rShadow, 0, ZBuffer::kAlphaSource);
-
-                uint32_t* pStart = shadowTemp.mpPixels;
-                uint32_t* pEnd = pStart + shadowTemp.GetArea().Width() * shadowTemp.GetArea().Height();
-                uint32_t shadowAlphaMask = (0xff000000 & dropShadowColor);
-                uint32_t shadowColor = (0x00ffffff & dropShadowColor);
-                while (pStart < pEnd)
-                {
-                    *pStart = (*pStart & shadowAlphaMask)|shadowColor; // set each pixel color to shadowColor but leave alpha
-                    pStart++;
-                }
+                // render the shadow into internal
+                shadow.Render(&renderedBuf, rLabel);
+                shadow.Paint(&renderedBuf);
 
 
+/*                // composite the 
+                ZBuffer composite;
+                composite.Init(rDraw.Width(), rDraw.Height());
+                composite.Blt(&renderedBuf, rLabel, rLabel, 0, ZBuffer::kAlphaSource);
 
-                if (dropShadowBlur > 0.0)
-                    shadowTemp.Blur(dropShadowBlur);
-                shadowTemp.Blt(&renderedBuf, rLabel, rLabel, 0, ZBuffer::kAlphaBlend);
-
-                renderedBuf.CopyPixels(&shadowTemp);
+                renderedBuf.CopyPixels(&composite);*/
+                style.Font()->DrawTextParagraph(&renderedBuf, sText, rLabel, &style);  // final text overlay after shadow compositing
             }
         }
 
@@ -181,6 +149,89 @@ namespace ZGUI
 
 
 
+
+    Shadow::Shadow(uint32_t _col, float _spread, float _falloff)
+    {
+        col = _col;
+        spread = _spread;
+        falloff = _falloff;
+    }
+
+    ZRect Shadow::Bounds(ZRect r)
+    {
+        int64_t spreadPixels = (int64_t)spread * 2; 
+        r.InflateRect(spreadPixels, spreadPixels);
+        return r;
+    }
+
+
+    bool Shadow::Render(ZBuffer* pSrc, ZRect rSrc)
+    {
+        if (!pSrc)
+            return false;
+
+        ZRect rBounds(Bounds(rSrc));
+        ZRect rRendered(rBounds.Width(), rBounds.Height());
+
+        renderedShadow.reset(new ZBuffer());
+        renderedShadow->Init(rRendered.Width(), rRendered.Height());
+        renderedShadow->mbHasAlphaPixels = true;
+
+        // blt the shadow source material
+        ZRect rDst(ZGUI::Arrange(rSrc, rRendered, ZGUI::C));
+//        rDst.OffsetRect(offset.x, offset.y);    
+        renderedShadow->Blt(pSrc, rSrc, rDst, nullptr, ZBuffer::kAlphaSource);
+
+/*        uint32_t* pStart = renderedShadow->mpPixels;
+        uint32_t* pEnd = pStart + rDst.Area();
+        while (pStart < pEnd)
+        {
+            if (*pStart != 0)
+            {
+                int stophere = 5;
+            }
+
+
+            *pStart = (*pStart & 0xff000000); // all colors to gray scale with alpha
+            pStart++;
+        }*/
+
+        renderedShadow->Blur(spread, falloff);
+
+        renderedShadow->DrawRectAlpha(0xff00ffff, renderedShadow->GetArea(), ZBuffer::kAlphaSource);
+
+        renderedColor = 0;  // clear this for updating next paint
+
+        return true;
+    }
+
+    bool Shadow::Paint(ZBuffer* pDst)
+    {
+        if (!pDst || !renderedShadow)
+            return false;
+
+        if (renderedColor != col)
+        {
+            renderedColor = col;
+
+            uint32_t* pStart = renderedShadow->mpPixels;
+            uint32_t* pEnd = pStart + renderedShadow->GetArea().Area();
+            while (pStart < pEnd)
+            {
+                *pStart = (*pStart & 0xff000000) | (col &0x00ffffff);
+                pStart++;
+            }
+        }
+
+        ZRect rSrc(renderedShadow->GetArea());
+        ZRect rDst(rSrc);
+        rDst.OffsetRect(offset.x, offset.y);
+
+        uint32_t shadowA = ARGB_A(col);
+
+        pDst->BltAlpha(renderedShadow.get(), rSrc, rDst, shadowA, nullptr, ZBuffer::eAlphaBlendType::kAlphaBlend);
+        return true;
+    }
 
 
 
