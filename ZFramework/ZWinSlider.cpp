@@ -15,7 +15,11 @@ static char THIS_FILE[] = __FILE__;
 #endif
 using namespace std;
 
-ZWinSlider::ZWinSlider(int64_t* pnSliderValue)
+template class tZWinSlider<int64_t>;
+template class tZWinSlider<float>;
+
+template <class T>
+tZWinSlider<T>::tZWinSlider(T* pnSliderValue)
 {
     mStyle = gStyleSlider;
 
@@ -32,23 +36,28 @@ ZWinSlider::ZWinSlider(int64_t* pnSliderValue)
         msWinName = "ZWinSlider_" + gMessageSystem.GenerateUniqueTargetName();
 }
 
-ZWinSlider::~ZWinSlider()
+template <class T>
+tZWinSlider<T>::~tZWinSlider()
 {
 }
 
-bool ZWinSlider::Init()
+template <class T>
+bool tZWinSlider<T>::Init()
 {
 	mbAcceptsCursorMessages = true;
 
 	return ZWin::Init();
 }
 
-bool ZWinSlider::Shutdown()
+template <class T>
+bool tZWinSlider<T>::Shutdown()
 {
 	return ZWin::Shutdown();
 }
 
-void ZWinSlider::SetSliderRange(int64_t nMin, int64_t nMax, int64_t nMultiplier, double fThumbSizeRatio)
+
+template <class T>
+void tZWinSlider<T>::SetSliderRange(T nMin, T nMax, T nMultiplier, double fThumbSizeRatio)
 { 
 	mnSliderUnscaledValMin = nMin; 
 	mnSliderUnscaledValMax = nMax; 
@@ -56,11 +65,12 @@ void ZWinSlider::SetSliderRange(int64_t nMin, int64_t nMax, int64_t nMultiplier,
     mfThumbSizeRatio = fThumbSizeRatio;
 
 	ZASSERT(nMax - nMin > 0);
-    limit<int64_t>(*mpnSliderValue, nMin * mnSliderValScalar, nMax * mnSliderValScalar);
+    limit<T>(*mpnSliderValue, nMin * mnSliderValScalar, nMax * mnSliderValScalar);
     limit<double>(mfThumbSizeRatio, 0.1, 1.0);
 }
 
-bool ZWinSlider::OnMouseDownL(int64_t x, int64_t y)
+template <class T>
+bool tZWinSlider<T>::OnMouseDownL(int64_t x, int64_t y)
 {
     WindowToScaledValue(x, y);
 
@@ -99,7 +109,8 @@ bool ZWinSlider::OnMouseDownL(int64_t x, int64_t y)
 	return ZWin::OnMouseDownL(x, y);
 }
 
-bool ZWinSlider::OnMouseUpL(int64_t x, int64_t y)
+template <class T>
+bool tZWinSlider<T>::OnMouseUpL(int64_t x, int64_t y)
 {
     if (AmCapturing())
     {
@@ -112,7 +123,8 @@ bool ZWinSlider::OnMouseUpL(int64_t x, int64_t y)
 	return ZWin::OnMouseUpL(x, y);
 }
 
-int64_t ZWinSlider::WindowToScaledValue(int64_t x, int64_t y)
+template <class T>
+T tZWinSlider<T>::WindowToScaledValue(int64_t x, int64_t y)
 {
     double fNormalizedValue;
     int64_t nThumbSize = ThumbSize();
@@ -123,21 +135,22 @@ int64_t ZWinSlider::WindowToScaledValue(int64_t x, int64_t y)
 
     limit<double>(fNormalizedValue, 0.0, 1.0);
 
-    int64_t nUnscaledValRange = mnSliderUnscaledValMax - mnSliderUnscaledValMin;
-    int64_t nScaledValue = mnSliderValScalar * (mnSliderUnscaledValMin + (int64_t)((double)(nUnscaledValRange) * fNormalizedValue));
+    T nUnscaledValRange = mnSliderUnscaledValMax - mnSliderUnscaledValMin;
+    T nScaledValue = mnSliderValScalar * (mnSliderUnscaledValMin + (T)((double)(nUnscaledValRange) * fNormalizedValue));
     //ZDEBUG_OUT("normalized:", fNormalizedValue, " scaled:", nScaledValue, "\n");
 
     return nScaledValue;
 }
 
-ZPoint ZWinSlider::ScaledValueToWindowPosition(int64_t val)
+template <class T>
+ZPoint tZWinSlider<T>::ScaledValueToWindowPosition(T val)
 {
     ZPoint pt;
     if (mnSliderUnscaledValMax > mnSliderUnscaledValMin)
     {
-        int64_t nUnscaledVal = val / mnSliderValScalar;  // from scaled to internal
+        T nUnscaledVal = val / mnSliderValScalar;  // from scaled to internal
 
-        int64_t nUnscaledValRange = mnSliderUnscaledValMax - mnSliderUnscaledValMin;
+        T nUnscaledValRange = mnSliderUnscaledValMax - mnSliderUnscaledValMin;
         double fNormalizedValue = (double)(nUnscaledVal-mnSliderUnscaledValMin) / nUnscaledValRange;
         limit<double>(fNormalizedValue, 0.0, 1.0);
         int64_t nThumbSize = ThumbSize();
@@ -151,12 +164,13 @@ ZPoint ZWinSlider::ScaledValueToWindowPosition(int64_t val)
 }
 
 
-bool ZWinSlider::OnMouseMove(int64_t x, int64_t y)
+template <class T>
+bool tZWinSlider<T>::OnMouseMove(int64_t x, int64_t y)
 {
 	if (AmCapturing())
 	{
         int64_t nThumbSize = ThumbSize();
-        int64_t nValue = WindowToScaledValue(x-mSliderGrabAnchor.x+nThumbSize/2, y-mSliderGrabAnchor.y+nThumbSize/2);
+        T nValue = WindowToScaledValue(x-mSliderGrabAnchor.x+nThumbSize/2, y-mSliderGrabAnchor.y+nThumbSize/2);
 		SetSliderValue(nValue);
         if (mBehavior & kInvalidateOnMove)
             mpParentWin->InvalidateChildren();
@@ -165,7 +179,8 @@ bool ZWinSlider::OnMouseMove(int64_t x, int64_t y)
 	return ZWin::OnMouseMove(x, y);
 }
 
-bool ZWinSlider::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
+template <class T>
+bool tZWinSlider<T>::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 {
     // for vertical slider, wheel forward is up.... for horizontal, wheel forward is right
     if (IsVertical())
@@ -182,14 +197,16 @@ bool ZWinSlider::OnMouseWheel(int64_t /*x*/, int64_t /*y*/, int64_t nDelta)
 }
 
 
-bool ZWinSlider::OnMouseIn() 
+template <class T>
+bool tZWinSlider<T>::OnMouseIn()
 { 
     if (mBehavior & kDrawSliderValueOnMouseOver)
         Invalidate();
     return ZWin::OnMouseIn(); 
 }
 
-bool ZWinSlider::OnMouseOut() 
+template <class T>
+bool tZWinSlider<T>::OnMouseOut()
 { 
     if (mBehavior & kDrawSliderValueOnMouseOver)
         Invalidate();
@@ -197,7 +214,8 @@ bool ZWinSlider::OnMouseOut()
 }
 
 
-bool ZWinSlider::Paint()
+template <class T>
+bool tZWinSlider<T>::Paint()
 {
     if (!PrePaintCheck())
         return false;
@@ -237,8 +255,8 @@ bool ZWinSlider::Paint()
 
 	if (bDrawLabel)
 	{
-		string sLabel;
-		Sprintf(sLabel, "%d", *mpnSliderValue);
+        string sLabel = std::to_string(*mpnSliderValue);
+//		Sprintf(sLabel, "%d", *mpnSliderValue);
         
         mStyle.Font()->DrawTextParagraph(mpSurface.get(), sLabel, rThumb, &mStyle);
 	}
@@ -248,7 +266,8 @@ bool ZWinSlider::Paint()
 	return ZWin::Paint();
 }
 
-int64_t ZWinSlider::ThumbSize()
+template <class T>
+int64_t tZWinSlider<T>::ThumbSize()
 {
     int64_t nThumbSize = 0;
 
@@ -281,7 +300,8 @@ int64_t ZWinSlider::ThumbSize()
     return nThumbSize;
 }
 
-ZRect ZWinSlider::ThumbRect()
+template <class T>
+ZRect tZWinSlider<T>::ThumbRect()
 {
     ZPoint sliderPt = ScaledValueToWindowPosition(*mpnSliderValue);
     int64_t nThumbSize = ThumbSize();
@@ -299,7 +319,8 @@ ZRect ZWinSlider::ThumbRect()
 	return ZRect(nSliderLeft, 0, nSliderRight, mAreaLocal.Height());
 }
 
-int64_t ZWinSlider::PageSize()
+template <class T>
+int64_t tZWinSlider<T>::PageSize()
 {
     tZBufferPtr pThumb = mCustomSliderThumb;
     ZRect rThumbEdge = mrCustomThumbEdge;
@@ -330,15 +351,16 @@ int64_t ZWinSlider::PageSize()
 
 
     int64_t nScaledSliderPageDelta = (int64_t) (((double)(mnSliderUnscaledValMax - mnSliderUnscaledValMin) * mnSliderValScalar) * fThumbGUIRatio);
-    nScaledSliderPageDelta = ((nScaledSliderPageDelta + mnSliderValScalar - 1) / mnSliderValScalar) * mnSliderValScalar;
+    nScaledSliderPageDelta = ((nScaledSliderPageDelta + mnSliderValScalar - 1) / mnSliderValScalar) * (int64_t)mnSliderValScalar;
     return nScaledSliderPageDelta;
 }
 
 
 
-void ZWinSlider::SetSliderValue(int64_t nVal)
+template <class T>
+void tZWinSlider<T>::SetSliderValue(T nVal)
 {
-    limit<int64_t>(nVal, mnSliderUnscaledValMin * mnSliderValScalar, mnSliderUnscaledValMax * mnSliderValScalar);
+    limit<T>(nVal, mnSliderUnscaledValMin * mnSliderValScalar, mnSliderUnscaledValMax * mnSliderValScalar);
 
     if (*mpnSliderValue != nVal)
     {

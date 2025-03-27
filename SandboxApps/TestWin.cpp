@@ -235,7 +235,7 @@ bool TestWin::Paint()
 //    textBox.Paint(mpSurface.get());
 
     shadow.offset.Set(15, 100);
-    shadow.Paint(mpSurface.get());
+    shadow.Paint(mpSurface.get(), ZRect(20,20,500,500));
 
 //    textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &textBox.style);
 

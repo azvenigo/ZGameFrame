@@ -7,7 +7,8 @@ extern ZRect	grSliderBgEdge;
 extern ZRect	grSliderThumbEdge;
 
 
-class ZWinSlider : public ZWin
+template <class T>
+class tZWinSlider : public ZWin
 {
 
 public:
@@ -21,36 +22,36 @@ public:
     };
 
 
-	ZWinSlider(int64_t* pnSliderValue);
-	~ZWinSlider();
+    tZWinSlider(T* pnSliderValue);
+	~tZWinSlider();
 
-	bool            Init();
-	bool			Shutdown();
+	bool    Init();
+	bool    Shutdown();
 
     // initialization
-    void            SetSliderSetMessage(const std::string& sMessage) { msSliderSetMessage = sMessage; }
-    void			SetSliderRange(int64_t nMin, int64_t nMax, int64_t nMultiplier = 1, double fThumbSizeRatio = 0.1);
+    void    SetSliderSetMessage(const std::string& sMessage) { msSliderSetMessage = sMessage; }
+    void    SetSliderRange(T nMin, T nMax, T nMultiplier = 1, double fThumbSizeRatio = 0.1);
 
-    void			SetDrawSliderValueFlag(bool bEnable, bool bMouseOverDrawOnly, tZFontPtr pFont);
+    //void    SetDrawSliderValueFlag(bool bEnable, bool bMouseOverDrawOnly, tZFontPtr pFont);
 
-    void			GetSliderRange(int64_t& nMin, int64_t& nMax) { nMin = mnSliderUnscaledValMin; nMax = mnSliderUnscaledValMax; }
-    void			SetSliderValue(int64_t nVal);
+    void    GetSliderRange(T& nMin, T& nMax) { nMin = mnSliderUnscaledValMin; nMax = mnSliderUnscaledValMax; }
+    void    SetSliderValue(T nVal);
 
 
 
     // ZWin
-    bool	        OnMouseIn();
-    bool	        OnMouseOut();
+    bool    OnMouseIn();
+    bool    OnMouseOut();
 
-	bool			OnMouseDownL(int64_t x, int64_t y);
-	bool			OnMouseUpL(int64_t x, int64_t y);
-	bool			OnMouseMove(int64_t x, int64_t y);
-	bool			OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
+	bool    OnMouseDownL(int64_t x, int64_t y);
+	bool    OnMouseUpL(int64_t x, int64_t y);
+	bool    OnMouseMove(int64_t x, int64_t y);
+	bool    OnMouseWheel(int64_t x, int64_t y, int64_t nDelta);
 
-    bool            IsVertical() { return mAreaLocal.Height() > mAreaLocal.Width(); }
+    bool    IsVertical() { return mAreaLocal.Height() > mAreaLocal.Width(); }
 
 protected:
-	virtual bool	Paint();
+	bool    Paint();
 
 public:
     // look
@@ -61,26 +62,28 @@ public:
 
 private:
 	// helper functions
-	ZRect		ThumbRect();
+	ZRect       ThumbRect();
     int64_t     ThumbSize();
     int64_t     PageSize();
 
-    int64_t     WindowToScaledValue(int64_t x, int64_t y);    // uses y for vertical, x for horizontal orientation
-    ZPoint      ScaledValueToWindowPosition(int64_t val);     // return y for vertical, x for horizontal
+    T           WindowToScaledValue(int64_t x, int64_t y);    // uses y for vertical, x for horizontal orientation
+    ZPoint      ScaledValueToWindowPosition(T val);     // return y for vertical, x for horizontal
 
 
     tZBufferPtr	mCustomSliderThumb;
     tZBufferPtr	mCustomSliderBackground;
-	ZRect		mrCustomThumbEdge;
-	ZRect		mrCustomBackgroundEdge;
+	ZRect       mrCustomThumbEdge;
+	ZRect       mrCustomBackgroundEdge;
 
 	// Value
-	int64_t*	mpnSliderValue;	// bound value
-	int64_t		mnSliderUnscaledValMin;
-	int64_t		mnSliderUnscaledValMax;
-    int64_t     mnSliderValScalar;      
-    double      mfThumbSizeRatio;
+    T*	    mpnSliderValue;	// bound value
+    T       mnSliderUnscaledValMin;
+    T       mnSliderUnscaledValMax;
+    T       mnSliderValScalar;
+    double  mfThumbSizeRatio;
 
-    ZPoint      mSliderGrabAnchor;
+    ZPoint  mSliderGrabAnchor;
 };
 
+using ZWinSlider = tZWinSlider<int64_t>;
+using ZWinSliderF = tZWinSlider<float>;
