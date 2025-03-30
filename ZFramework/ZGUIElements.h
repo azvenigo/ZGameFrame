@@ -21,6 +21,9 @@ namespace ZGUI
         bool IsInvalid() { return renderedColor != col || renderedSpread != spread || renderedFalloff != falloff; }
 
         ZRect Bounds(ZRect r); // returns limits of shadow based on spread and falloff
+        void Compute(ZBuffer* pSrc, ZRect rSrc, ZBuffer* pDst, ZPoint dstOffset, float radius, float falloff);
+
+
 
         uint32_t    col;
         float       spread;

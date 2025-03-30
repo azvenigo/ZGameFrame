@@ -38,6 +38,7 @@ private:
     ZGUI::TextBox mTextBox;
     bool            mbViewShadow;
     float           mShadowSpread;
+    float           mShadowFalloff;
 
     ZGUI::Palette mPalette;
 };

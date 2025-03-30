@@ -1,6 +1,7 @@
 #include "ZGUIElements.h"
 #include "helpers/StringHelpers.h"
 #include "ZScreenBuffer.h"
+#include <immintrin.h>
 
 using namespace std;
 
@@ -175,6 +176,119 @@ namespace ZGUI
     }
 
 
+    // Function to compute a normalized Gaussian value for a source and destination coordinate
+    float GetNormalizedGaussianValue(int srcX, int srcY, int destX, int destY, float radius, float falloff) 
+    {
+        float dx = static_cast<float>(destX - srcX);
+        float dy = static_cast<float>(destY - srcY);
+        float distance2 = dx * dx + dy * dy;
+        float sigma2 = 2.0f * falloff * falloff;
+        return std::exp(-distance2 / sigma2);
+    }
+
+    // Function to generate a Gaussian-distributed 1D buffer with destination stride
+    void GenerateGaussianBuffer(int radius, float falloff,std::vector<float>& buffer, int& side) 
+    {
+        side = 2 * radius + 1;
+        buffer.resize(side*side, 0.0f);
+        float sum = 0.0f;
+
+        int srcX = side/2;
+        int srcY = side/2;
+
+
+        for (int y = 0; y < side; y++)
+        {
+            for (int x = 0; x < side; x++)
+            {
+                int i = y * side + x;
+                buffer[i] = GetNormalizedGaussianValue(srcX, srcY, x, y, radius, falloff);
+                if (buffer[i] < 0.0001)
+                    buffer[i] = 0;
+                sum += buffer[i];
+            }
+        }
+
+        for (auto& f : buffer)
+        {
+            f /= sum;
+        }
+
+
+
+    }
+
+    float ComputeWmax(int radius, float falloff) 
+    {
+        float wmax = 0.0f;
+        float sigma2 = 2.0f * falloff * falloff;
+
+        for (int dy = -radius; dy <= radius; ++dy) {
+            for (int dx = -radius; dx <= radius; ++dx) {
+                float distance2 = static_cast<float>(dx * dx + dy * dy);
+                wmax += std::exp(-distance2 / sigma2);
+            }
+        }
+
+        return wmax;
+    }
+
+    void Shadow::Compute(ZBuffer* pSrc, ZRect rSrc, ZBuffer* pDst, ZPoint dstOffset, float radius, float falloff)
+    {
+        // Function to generate a Gaussian-distributed 1D buffer with destination stride
+        std::vector<float> accumArray(pDst->GetArea().Area());
+        std::vector<float> stampArray;
+        int side = 0;
+        GenerateGaussianBuffer(radius, falloff, stampArray, side);
+
+        size_t srcStride = pSrc->GetArea().Width();
+        size_t dstStride = pDst->GetArea().Width();
+        size_t accumStride = pDst->GetArea().Width();
+
+        for (int64_t y = 0; y < rSrc.Height(); y++)
+        {
+            for (int64_t x = 0; x < rSrc.Width(); x++)
+            {
+                uint32_t* pSrcCol = pSrc->mpPixels + (y + rSrc.top) * srcStride + rSrc.left + x;
+                uint8_t a = ARGB_A(*pSrcCol);
+                if (a > 0)
+                {
+                    // stamp
+                    int64_t dstX = x + dstOffset.x - side/2;
+                    int64_t dstY = y + dstOffset.y - side/2;
+
+                    for (int64_t stampY = 0; stampY < side; stampY++)
+                    {
+                        for (int64_t stampX = 0; stampX < side; stampX++)
+                        {
+                            int stampIndex = stampY * side + stampX;
+                            int dstIndex = (stampY + dstY) * accumStride + (stampX + dstX);
+                            if (dstIndex < 0 || dstIndex > accumArray.size())
+                                continue;
+                            accumArray[dstIndex] += stampArray[stampIndex];
+                        }
+                    }
+                }
+            }
+        }
+
+        ZRect rDst(pDst->GetArea());
+        size_t i = 0;
+        uint32_t* pDstCol = pDst->mpPixels;
+        for (int64_t i = 0; i < rDst.Area(); i++)
+        {
+            uint32_t destAlpha = (uint32_t)(accumArray[i] * 255.0);
+
+            if (destAlpha != 0)
+            {
+                int stophere = 5;
+            }
+
+            *pDstCol++ = ARGB(destAlpha, 0, 0, 0);
+        }
+    }
+
+
     bool Shadow::Render(ZBuffer* pSrc, ZRect rCastSrc, bool bForceInvalid)
     {
         if (!pSrc)
@@ -210,6 +324,8 @@ namespace ZGUI
 
             if (spread > 1.0)
                 renderedShadow->Blur(spread, falloff);
+//            if (spread > 1.0)
+//                Compute(pSrc, rCastSrc, renderedShadow.get(), ZPoint(spread, spread), spread, falloff);
 
 //            renderedShadow->DrawRectAlpha(0xff00ffff, renderedShadow->GetArea(), ZBuffer::kAlphaSource);
 

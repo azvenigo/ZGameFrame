@@ -136,6 +136,7 @@ bool TextTestWin::Init()
     int64_t offset = 0;
     mTextBox.shadow.offset.Set(offset, offset);
     mShadowSpread = 20.0;
+    mShadowFalloff = 20.0;
 
 
 
@@ -261,7 +262,8 @@ bool TextTestWin::Init()
     pCaption->mStyle.look.colBottom = 0xff008800;
 
     pCP->Slider("shadow_spread", &mShadowSpread, 0.1, 50.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
-
+    pCP->Slider("shadow_falloff", &mShadowFalloff, 0.1, 50.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
+    
     pCP->AddSpace(16);
 
     pCP->Button("loadfont", "Load Font", "{loadfont;target=TextTestWin}");
@@ -388,6 +390,7 @@ void TextTestWin::UpdateText()
         mTextBox.style.look.SetCol(mPalette.Get("font_col"));
         mTextBox.shadow.col = mPalette.Get("shadow_col");
         mTextBox.shadow.spread = mShadowSpread;
+        mTextBox.shadow.falloff = mShadowFalloff;
     }
     else
     {
