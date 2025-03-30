@@ -4,6 +4,7 @@
 #include "ZFont.h"
 #include "ZGUIHelpers.h"
 #include "ZGUIStyle.h"
+#include "ZWinSlider.h"
 #include <map>
 
 /////////////////////////////////////////////////////////////////////////
@@ -11,13 +12,13 @@
 class ZWinFormattedDoc;
 class ZWinBtn;
 class ZWinCheck;
-class ZWinSlider;
 class ZWinLabel;
 class ZWinPopupPanelBtn;
 
 typedef std::map<std::string, ZWinBtn*>  tIDToButtonMap;
 typedef std::map<std::string, ZWinCheck*>           tIDToCheckMap;
 typedef std::map<std::string, ZWinSlider*>          tIDToSliderMap;
+typedef std::map<std::string, ZWinSliderF*>         tIDToSliderFMap;
 typedef std::map<std::string, ZWinLabel*>           tIDToLabelMap;
 typedef std::map<std::string, ZWinPopupPanelBtn*>   tIDToPopupPanelBtnMap;
 
@@ -63,6 +64,16 @@ public:
                                         bool bDrawValue = false, 
                                         bool bMouseOnlyDrawValue = false);
 
+    ZWinSliderF*            Slider(  const std::string& sID,
+                                        float* pnSliderValue = nullptr,
+                                        float nMin = 0, 
+                                        float nMax = 0, 
+                                        float nMultiplier = 1, 
+                                        double fThumbSizeRatio = 0.1,
+                                        const std::string& sMessage = "", 
+                                        bool bDrawValue = false, 
+                                        bool bMouseOnlyDrawValue = false);
+
     void                    AddSpace( int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
 
     bool		            OnMouseOut();
@@ -79,6 +90,7 @@ public:
     tIDToButtonMap          mButtons;
     tIDToCheckMap           mChecks;
     tIDToSliderMap          mSliders;
+    tIDToSliderFMap         mSlidersF;
     tIDToLabelMap           mLabels;
     tIDToPopupPanelBtnMap   mPopupPanelButtons;
 

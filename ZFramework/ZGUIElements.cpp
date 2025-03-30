@@ -1,6 +1,7 @@
 #include "ZGUIElements.h"
 #include "helpers/StringHelpers.h"
 #include "ZScreenBuffer.h"
+#include <immintrin.h>
 
 using namespace std;
 
@@ -17,54 +18,39 @@ namespace ZGUI
         // assuming pDst is locked
         ZRect rDraw(area);
 
-        assert(!sText.empty());
         if (rDraw.Width() == 0 || rDraw.Height() == 0)
         {
             rDraw = pDst->GetArea();
         }
 
-        assert(!sText.empty());
         if (style.pos == ZGUI::Fit)
             style.fp.nScalePoints = ZFontParams::ScalePoints(rDraw.Height()/2);
 
         assert(!sText.empty());
         assert(style.fp.nScalePoints > 0);
-        rDraw = style.Font()->Arrange(rDraw, sText, style.pos, style.pad.h, style.pad.v);
-        ZRect rLabel(rDraw.Width(), rDraw.Height());
+        ZRect rLabel = style.Font()->Arrange(rDraw, sText, style.pos, style.pad.h, style.pad.v);
+        bool bDrawShadow = ARGB_A(shadow.col) > 0;
 
-        assert(!sText.empty());
-
-        bool bDrawDropShadow = ARGB_A(dropShadowColor) > 0;
-        if (bDrawDropShadow)
+        if (bDrawShadow)
         {
-            if (dropShadowOffset.x > 0)
-            {
-                rDraw.right += (dropShadowOffset.x + (int64_t)dropShadowBlur*2);
-            }
-            else
-            {
-                int64_t offset = (dropShadowOffset.x - (int64_t)dropShadowBlur*2);
-                rLabel.OffsetRect(-offset, 0);
-                rDraw.left += offset;
-            }
+            ZRect rBounds(shadow.Bounds(rDraw));
+            rBounds.OffsetRect(shadow.offset.x, shadow.offset.y);
 
-            if (dropShadowOffset.y > 0)
-            {
-                rDraw.bottom += (dropShadowOffset.y + (int64_t)dropShadowBlur*2);
-            }
-            else
-            {
-                int64_t offset = (dropShadowOffset.y - (int64_t)dropShadowBlur*2);
-                rLabel.OffsetRect(0, -offset);
-                rDraw.top += offset;
-                
-            }
+//            rBounds.OffsetRect(shadow.offset.x-shadow.spread, shadow.offset.y-shadow.spread);
+//            rBounds.OffsetRect(-shadow.spread, -shadow.spread);
+
+            if (rBounds.left < rDraw.left)
+                rLabel.OffsetRect(rDraw.left - rBounds.left, 0);
+            if (rBounds.top < rDraw.top)
+                rLabel.OffsetRect(0, rDraw.top - rBounds.top);
+
+            rDraw.UnionRect(rBounds);
         }
 
-        assert(!sText.empty());
-
-        if (renderedBuf.GetArea().Width() != rDraw.Width() || renderedBuf.GetArea().Height() != rDraw.Height() || renderedText != sText || renderedStyle != style)
+        if (IsInvalid())
         {
+            bool bForceShadowRender = (renderedText != sText) || (renderedStyle != style);
+
             renderedText = sText;
             renderedStyle = style;
 
@@ -90,49 +76,35 @@ namespace ZGUI
                     }
 
                     renderedBuf.FillAlpha(style.bgCol, &rLabel);
-                    renderedBuf.Blur(blurBackground, &rLabel);
+                    renderedBuf.Blur(blurBackground, 1.0f, &rLabel);
                 }
                 else
-                    renderedBuf.Fill(style.bgCol);
+                    renderedBuf.Fill(style.bgCol, &rLabel);
             }
             else
                 renderedBuf.Fill(0);
 
-            assert(!sText.empty());
 
             // Draw outline in padded area if style specifies
             if (ARGB_A(style.pad.col) > 0x00)
                 renderedBuf.DrawRectAlpha(style.pad.col, rLabel);
 
-            assert(!sText.empty());
-
             style.Font()->DrawTextParagraph(&renderedBuf, sText, rLabel, &style);
 
-            if (bDrawDropShadow)
+            if (bDrawShadow)
             {
-                ZBuffer shadowTemp;
-                shadowTemp.Init(rDraw.Width(), rDraw.Height());
-
-                ZRect rShadow(rLabel);
-                rShadow.OffsetRect(dropShadowOffset);
-                shadowTemp.Blt(&renderedBuf, rLabel, rShadow, 0, ZBuffer::kAlphaSource);
-
-                uint32_t* pStart = shadowTemp.mpPixels;
-                uint32_t* pEnd = pStart + shadowTemp.GetArea().Width() * shadowTemp.GetArea().Height();
-                uint32_t shadowAlphaMask = (0xff000000 & dropShadowColor);
-                while (pStart < pEnd)
-                {
-                    *pStart = (*pStart & shadowAlphaMask); // set each pixel color to 0 but leave alpha
-                    pStart++;
-                }
+                // render the shadow into internal
+                shadow.Render(&renderedBuf, rLabel, bForceShadowRender);
+                shadow.Paint(&renderedBuf, rLabel);
 
 
+/*                // composite the 
+                ZBuffer composite;
+                composite.Init(rDraw.Width(), rDraw.Height());
+                composite.Blt(&renderedBuf, rLabel, rLabel, 0, ZBuffer::kAlphaSource);
 
-                if (dropShadowBlur > 0.0)
-                    shadowTemp.Blur(dropShadowBlur);
-                shadowTemp.Blt(&renderedBuf, rLabel, rLabel, 0, ZBuffer::kAlphaBlend);
-
-                renderedBuf.CopyPixels(&shadowTemp);
+                renderedBuf.CopyPixels(&composite);*/
+                style.Font()->DrawTextParagraph(&renderedBuf, sText, rLabel, &style);  // final text overlay after shadow compositing
             }
         }
 
@@ -188,6 +160,211 @@ namespace ZGUI
 
 
 
+    Shadow::Shadow(uint32_t _col, float _spread, float _falloff)
+    {
+        col = _col;
+        spread = _spread;
+        falloff = _falloff;
+    }
+
+    ZRect Shadow::Bounds(ZRect r)
+    {
+        int64_t spreadPixels = (int64_t)spread/* * 2*/; 
+        r.InflateRect(spreadPixels, spreadPixels);
+//        r.OffsetRect(offset.x, offset.y);
+        return r;
+    }
+
+
+    // Function to compute a normalized Gaussian value for a source and destination coordinate
+    float GetNormalizedGaussianValue(int srcX, int srcY, int destX, int destY, float radius, float falloff) 
+    {
+        float dx = static_cast<float>(destX - srcX);
+        float dy = static_cast<float>(destY - srcY);
+        float distance2 = dx * dx + dy * dy;
+        float sigma2 = 2.0f * falloff * falloff;
+        return std::exp(-distance2 / sigma2);
+    }
+
+    // Function to generate a Gaussian-distributed 1D buffer with destination stride
+    void GenerateGaussianBuffer(int radius, float falloff,std::vector<float>& buffer, int& side) 
+    {
+        side = 2 * radius + 1;
+        buffer.resize(side*side, 0.0f);
+        float sum = 0.0f;
+
+        int srcX = side/2;
+        int srcY = side/2;
+
+
+        for (int y = 0; y < side; y++)
+        {
+            for (int x = 0; x < side; x++)
+            {
+                int i = y * side + x;
+                buffer[i] = GetNormalizedGaussianValue(srcX, srcY, x, y, radius, falloff);
+                if (buffer[i] < 0.0001)
+                    buffer[i] = 0;
+                sum += buffer[i];
+            }
+        }
+
+        for (auto& f : buffer)
+        {
+            f /= sum;
+        }
+
+
+
+    }
+
+    float ComputeWmax(int radius, float falloff) 
+    {
+        float wmax = 0.0f;
+        float sigma2 = 2.0f * falloff * falloff;
+
+        for (int dy = -radius; dy <= radius; ++dy) {
+            for (int dx = -radius; dx <= radius; ++dx) {
+                float distance2 = static_cast<float>(dx * dx + dy * dy);
+                wmax += std::exp(-distance2 / sigma2);
+            }
+        }
+
+        return wmax;
+    }
+
+    void Shadow::Compute(ZBuffer* pSrc, ZRect rSrc, ZBuffer* pDst, ZPoint dstOffset, float radius, float falloff)
+    {
+        // Function to generate a Gaussian-distributed 1D buffer with destination stride
+        std::vector<float> accumArray(pDst->GetArea().Area());
+        std::vector<float> stampArray;
+        int side = 0;
+        GenerateGaussianBuffer(radius, falloff, stampArray, side);
+
+        size_t srcStride = pSrc->GetArea().Width();
+        size_t dstStride = pDst->GetArea().Width();
+        size_t accumStride = pDst->GetArea().Width();
+
+        for (int64_t y = 0; y < rSrc.Height(); y++)
+        {
+            for (int64_t x = 0; x < rSrc.Width(); x++)
+            {
+                uint32_t* pSrcCol = pSrc->mpPixels + (y + rSrc.top) * srcStride + rSrc.left + x;
+                uint8_t a = ARGB_A(*pSrcCol);
+                if (a > 0)
+                {
+                    // stamp
+                    int64_t dstX = x + dstOffset.x - side/2;
+                    int64_t dstY = y + dstOffset.y - side/2;
+
+                    for (int64_t stampY = 0; stampY < side; stampY++)
+                    {
+                        for (int64_t stampX = 0; stampX < side; stampX++)
+                        {
+                            int stampIndex = stampY * side + stampX;
+                            int dstIndex = (stampY + dstY) * accumStride + (stampX + dstX);
+                            if (dstIndex < 0 || dstIndex > accumArray.size())
+                                continue;
+                            accumArray[dstIndex] += stampArray[stampIndex];
+                        }
+                    }
+                }
+            }
+        }
+
+        ZRect rDst(pDst->GetArea());
+        size_t i = 0;
+        uint32_t* pDstCol = pDst->mpPixels;
+        for (int64_t i = 0; i < rDst.Area(); i++)
+        {
+            uint32_t destAlpha = (uint32_t)(accumArray[i] * 255.0);
+
+            if (destAlpha != 0)
+            {
+                int stophere = 5;
+            }
+
+            *pDstCol++ = ARGB(destAlpha, 0, 0, 0);
+        }
+    }
+
+
+    bool Shadow::Render(ZBuffer* pSrc, ZRect rCastSrc, bool bForceInvalid)
+    {
+        if (!pSrc)
+            return false;
+
+        if (bForceInvalid || IsInvalid())
+        {
+            ZRect rBounds(Bounds(rCastSrc));
+            ZRect rRendered(rBounds.Width(), rBounds.Height());
+
+            renderedShadow.reset(new ZBuffer());
+            renderedShadow->Init(rRendered.Width(), rRendered.Height());
+            renderedShadow->mbHasAlphaPixels = true;
+
+            // blt the shadow source material
+            ZRect rDst(ZGUI::Arrange(rCastSrc, rRendered, ZGUI::C));
+            //        rDst.OffsetRect(offset.x, offset.y);    
+            renderedShadow->Blt(pSrc, rCastSrc, rDst, nullptr, ZBuffer::kAlphaSource);
+
+            /*        uint32_t* pStart = renderedShadow->mpPixels;
+                    uint32_t* pEnd = pStart + rDst.Area();
+                    while (pStart < pEnd)
+                    {
+                        if (*pStart != 0)
+                        {
+                            int stophere = 5;
+                        }
+
+
+                        *pStart = (*pStart & 0xff000000); // all colors to gray scale with alpha
+                        pStart++;
+                    }*/
+
+            if (spread > 1.0)
+                renderedShadow->Blur(spread, falloff);
+//            if (spread > 1.0)
+//                Compute(pSrc, rCastSrc, renderedShadow.get(), ZPoint(spread, spread), spread, falloff);
+
+//            renderedShadow->DrawRectAlpha(0xff00ffff, renderedShadow->GetArea(), ZBuffer::kAlphaSource);
+
+            renderedSpread = spread;
+            renderedFalloff = falloff;
+        }
+        renderedColor = 0;  // clear this for updating next paint
+
+        return true;
+    }
+
+    bool Shadow::Paint(ZBuffer* pDst, ZRect rCastSrc)
+    {
+        if (!pDst || !renderedShadow)
+            return false;
+
+        if (renderedColor != col)
+        {
+            renderedColor = col;
+
+            uint32_t* pStart = renderedShadow->mpPixels;
+            uint32_t* pEnd = pStart + renderedShadow->GetArea().Area();
+            while (pStart < pEnd)
+            {
+                *pStart = (*pStart & 0xff000000) | (col &0x00ffffff);
+                pStart++;
+            }
+        }
+
+        ZRect rSrc(renderedShadow->GetArea());
+        ZRect rDst(Bounds(rCastSrc));
+        rDst.OffsetRect(offset.x, offset.y);
+
+        uint32_t shadowA = ARGB_A(col);
+
+        pDst->BltAlpha(renderedShadow.get(), rSrc, rDst, shadowA, nullptr, ZBuffer::eAlphaBlendType::kAlphaBlend);
+        return true;
+    }
+
 
 
 
@@ -240,7 +417,8 @@ namespace ZGUI
 
         if (mRendered == nullptr || rDest.Width() != mRendered->GetArea().Width() || rDest.Height() != mRendered->GetArea().Height())
         {
-            if (loadedFilename != imageFilename)
+//            if (loadedFilename != imageFilename)
+            if (!imageFilename.empty())
             {
                 if (!Load())
                 {

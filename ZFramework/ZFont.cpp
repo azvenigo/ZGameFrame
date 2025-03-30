@@ -413,27 +413,29 @@ inline bool ZFont::DrawText_Helper(ZBuffer* pBuffer, const string& sText, const 
 	{
 		ZRect rSrc(rAreaToDrawTo);
 		ZRect rClipDest(rOutputText);
-		pBuffer->Clip(rClip, rSrc, rClipDest);
+        if (pBuffer->Clip(rClip, rSrc, rClipDest))
+        {
 
-		// Draw the text clipped
-        const uint8_t* pChar = (uint8_t*)sText.data();
-        for (;pChar < (uint8_t*)sText.data()+sText.length(); pChar++)
-		{
-			DrawCharClipped(pBuffer, *pChar, nCol, nX, nY, (ZRect*) &rClipDest);
-
-            if (mFontParams.nFixedWidth > 0)
+            // Draw the text clipped
+            const uint8_t* pChar = (uint8_t*)sText.data();
+            for (; pChar < (uint8_t*)sText.data() + sText.length(); pChar++)
             {
-                nX += mFontParams.nFixedWidth;
-            }
-            else
-            {
-                int32_t nBetween = GetSpaceBetweenChars(*pChar, *(pChar + 1));
-                nX += CharWidth(*pChar) + 1 + nBetween;
-            }
+                DrawCharClipped(pBuffer, *pChar, nCol, nX, nY, (ZRect*)&rClipDest);
 
-            if (nX >= rAreaToDrawTo.right)
-                break;
-		}
+                if (mFontParams.nFixedWidth > 0)
+                {
+                    nX += mFontParams.nFixedWidth;
+                }
+                else
+                {
+                    int32_t nBetween = GetSpaceBetweenChars(*pChar, *(pChar + 1));
+                    nX += CharWidth(*pChar) + 1 + nBetween;
+                }
+
+                if (nX >= rAreaToDrawTo.right)
+                    break;
+            }
+        }
 	}
 	else
 	{

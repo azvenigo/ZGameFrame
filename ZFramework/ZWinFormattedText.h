@@ -5,8 +5,8 @@
 #include "ZFont.h"
 #include "ZBuffer.h"
 #include <list>
+#include "ZWinSlider.h"
 
-class ZWinSlider;
 class ZFont;
 
 class FormattedEntry

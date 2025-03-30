@@ -174,12 +174,13 @@ namespace COL
         }
 
         // from quantized to either 100%, 50% or 0%
-        if (A > 1)
+/*        if (A > 1)
             outA = 0xff;
         else if (A == 1)
             outA = 0x88;
         else
-            outA = 0x00;
+            outA = 0x00;*/
+        outA = A;
 
         outR = (uint8_t)(fR * 255.0);
         outG = (uint8_t)(fG * 255.0);

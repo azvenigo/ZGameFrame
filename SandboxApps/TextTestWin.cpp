@@ -89,6 +89,7 @@ bool TextTestWin::Init()
 
     mIdleSleepMS = 10000;
     mPalette.mColorMap.push_back(ZGUI::EditableColor("font_col", 0xff88ff88));
+    mPalette.mColorMap.push_back(ZGUI::EditableColor("shadow_col", 0xff000000));
 
     SetFocus();
 
@@ -122,15 +123,20 @@ bool TextTestWin::Init()
 
     mTextBox.sText = "Cool Beans!";
     mTextBox.style = gStyleCaption;
+//    mTextBox.style.bgCol = 0x88000088;
     mTextBox.style.pos = ZGUI::LT;
+    mTextBox.style.pad.h = 25;
+    mTextBox.style.pad.v = 25;
     mTextBox.style.look.colTop = 0xffffff00;
     mTextBox.style.look.colBottom = 0xffffff00;
     mTextBox.style.fp = mTextBox.style.fp;
     mTextBox.style.fp.nScalePoints = ZFontParams::ScalePoints(mCustomFontHeight);
     mTextBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
-    int64_t offset = std::max <int64_t>(mTextBox.style.fp.Height() / 32, 1);
-    mTextBox.dropShadowOffset = ZPoint(offset, offset);
-    mShadowSpread = 20;
+//    int64_t offset = std::max <int64_t>(mTextBox.style.fp.Height() / 32, 1);
+    int64_t offset = 0;
+    mTextBox.shadow.offset.Set(offset, offset);
+    mShadowSpread = 20.0;
+    mShadowFalloff = 20.0;
 
 
 
@@ -198,7 +204,7 @@ bool TextTestWin::Init()
 
 
     UpdateText();
-    mTextBox.area.SetRect(0, 0, 3000, 2000);
+    mTextBox.area.SetRect(gM, gM, grFullArea.right-gM, grFullArea.bottom-gM);
 
 
     ZRect rControlPanel(rFontSelectionWin.left, rFontSelectionWin.bottom, rFontSelectionWin.right, mAreaLocal.bottom);     // upper right for now
@@ -248,15 +254,16 @@ bool TextTestWin::Init()
     ZWinCheck* pCheck = pCP->Toggle("toggleshadow", &mbViewShadow, "View Shadow", "{updatetext;target=TextTestWin}", "{updatetext;target=TextTestWin}");
 
   
-    pCP->Slider("shadowoffset_x", &mTextBox.dropShadowOffset.x, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
-    pCP->Slider("shadowoffset_y", &mTextBox.dropShadowOffset.y, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
+    pCP->Slider("shadowoffset_x", &mTextBox.shadow.offset.x, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
+    pCP->Slider("shadowoffset_y", &mTextBox.shadow.offset.y, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
 
     ZWinLabel* pCaption = pCP->Caption("shadow_blur", "View Shadow Spread");
     pCaption->mStyle.look.colTop = 0xff00ff00;
     pCaption->mStyle.look.colBottom = 0xff008800;
 
-    pCP->Slider("shadow_spread", &mShadowSpread, 0, 20, 10, 0.1, "{updatetext;target=TextTestWin}", true, false);
-
+    pCP->Slider("shadow_spread", &mShadowSpread, 0.1, 50.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
+    pCP->Slider("shadow_falloff", &mShadowFalloff, 0.1, 50.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
+    
     pCP->AddSpace(16);
 
     pCP->Button("loadfont", "Load Font", "{loadfont;target=TextTestWin}");
@@ -302,7 +309,7 @@ bool TextTestWin::Paint()
     mTextBox.Paint(mpSurface.get());
 
 
-
+    /*
 
     string sTemp;
     rText.SetRect(32, 32+ mpFont->Height(), mAreaLocal.right * 4 / 5,mAreaLocal.bottom);
@@ -338,7 +345,7 @@ bool TextTestWin::Paint()
     mpFont->DrawTextParagraph(mpSurface.get(), sAliceText, rText, &sampleStyle);
 
   TIME_SECTION_END(TextTestLines);
-  
+  */
 
     
 	return ZWin::Paint();
@@ -351,7 +358,10 @@ bool TextTestWin::OnChar(char key)
 	{
     case VK_BACK:
         if (!mTextBox.sText.empty())
-            mTextBox.sText = mTextBox.sText.substr(0, mTextBox.sText.length()-1);
+        {
+            mTextBox.sText = mTextBox.sText.substr(0, mTextBox.sText.length() - 1);
+            UpdateText();
+        }
         break;
 
     case VK_RETURN:
@@ -363,6 +373,7 @@ bool TextTestWin::OnChar(char key)
         break;
     default:
         mTextBox.sText += key;
+        UpdateText();
 		break;
 	}
 
@@ -376,12 +387,14 @@ void TextTestWin::UpdateText()
 //    mTextBox.style.fp = mTextBox.style.fp;
     if (mbViewShadow)
     {
-        mTextBox.dropShadowColor = 0x880000ff;
-        mTextBox.dropShadowBlur = (float)mShadowSpread / 10.0f;
+        mTextBox.style.look.SetCol(mPalette.Get("font_col"));
+        mTextBox.shadow.col = mPalette.Get("shadow_col");
+        mTextBox.shadow.spread = mShadowSpread;
+        mTextBox.shadow.falloff = mShadowFalloff;
     }
     else
     {
-        mTextBox.dropShadowColor = 0x0;
+        mTextBox.shadow.col = 0x0;
     }
 
     Invalidate();
@@ -459,7 +472,7 @@ bool TextTestWin::HandleMessage(const ZMessage& message)
     else if (sType == "choosecolor")
     {
 
-        ZWinPaletteDialog::ShowPaletteDialog("testcaption", &mPalette.mColorMap);
+        ZWinPaletteDialog::ShowPaletteDialog("testcaption", &mPalette.mColorMap, ZMessage("updatetext", this));
         return true;
     }
 #endif

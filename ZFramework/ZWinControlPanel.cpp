@@ -7,6 +7,7 @@
 #include "ZInput.h"
 
 using namespace std;
+//template class tZWinSlider<float>;
 
 ZWinControlPanel::ZWinControlPanel() : mbHideOnMouseExit(false), mStyle(gDefaultDialogStyle), mGroupingStyle(gDefaultGroupingStyle)
 {
@@ -211,6 +212,36 @@ ZWinSlider* ZWinControlPanel::Slider(const std::string& sID, int64_t* pnSliderVa
         }
     }
 
+    if (!sMessage.empty())
+    {
+        assert(sMessage[0] == '{');
+        pSlider->SetSliderSetMessage(sMessage);
+    }
+
+    return pSlider;
+}
+
+ZWinSliderF* ZWinControlPanel::Slider(const std::string& sID, float* pnSliderValue, float nMin, float nMax, float nMultiplier, double fThumbSizeRatio, const string& sMessage, bool bDrawValue, bool bMouseOnlyDrawValue)
+{
+    ZWinSliderF* pSlider = mSlidersF[sID];
+    if (!pSlider)
+    {
+        pSlider = new ZWinSliderF(pnSliderValue);
+        mSlidersF[sID] = pSlider;
+
+        pSlider->SetSliderRange(nMin, nMax, nMultiplier, fThumbSizeRatio);
+
+        if (bDrawValue && bMouseOnlyDrawValue)
+            pSlider->mBehavior |= ZWinSlider::kDrawSliderValueOnMouseOver;
+        else if (bDrawValue)
+            pSlider->mBehavior |= ZWinSlider::kDrawSliderValueAlways;
+        ChildAdd(pSlider);
+        if (mrNextControl.Area() > 0)
+        {
+            pSlider->SetArea(mrNextControl);
+            mrNextControl.OffsetRect(0, mrNextControl.Height());
+        }
+    }
 
     if (!sMessage.empty())
     {

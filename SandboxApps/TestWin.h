@@ -26,4 +26,7 @@ private:
     int64_t  mnSliderVal;
 
     ZGUI::TextBox   textBox;
+    ZGUI::Shadow    shadow;
+
+
 };
