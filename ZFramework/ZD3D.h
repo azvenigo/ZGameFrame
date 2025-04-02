@@ -15,6 +15,8 @@ class ZScreenBuffer;
 
 typedef std::map<std::string, ID3D11VertexShader*> tVertexShaderMap;
 typedef std::map<std::string, ID3D11PixelShader*> tPixelShaderMap;
+typedef std::map<std::string, ID3D11ComputeShader*> tComputeShaderMap;
+
 typedef std::map<std::string, ID3D11InputLayout*> tInputLayoutMap;
 
 struct Vertex {
@@ -182,16 +184,20 @@ namespace ZD3D
 //    void                    AddPrim(ID3D11VertexShader* vs, ID3D11PixelShader* ps, ID3D11ShaderResourceView* tex, const std::vector<Vertex>& verts);
     void                    RenderPrimitive(ScreenSpacePrimitive* pPrim);
 
+    bool                            Blur(ZBuffer* pSrc, ZBuffer* pResult, int radius, float sigma);
+
 
     ID3D11Texture2D*                CreateDynamicTexture(ZPoint size);
     bool                            CreateShaderResourceView(ID3D11Texture2D* texture, ID3D11ShaderResourceView** pTextureSRV);
     ID3D11VertexShader*             GetVertexShader(const std::string& sName);
     ID3D11PixelShader*              GetPixelShader(const std::string& sName);
+    ID3D11ComputeShader*            GetComputeShader(const std::string& sName);
     ID3D11InputLayout*              GetInputLayout(const std::string& sName);
 
     bool                            CompileShaders();
     extern tVertexShaderMap         mVertexShaderMap;
     extern tPixelShaderMap          mPixelShaderMap;
+    extern tComputeShaderMap        mComputeShaderMap;
     extern tInputLayoutMap          mInputLayoutMap;
 
     extern ID3D11Buffer*            mVertexBuffer;
@@ -205,5 +211,6 @@ namespace ZD3D
     extern ID3D11Buffer* pD3DLightBuffer;   // temp light
 
     bool                    LoadPixelShader(const std::string& sName, const std::string& sPath);
-    bool                    LoadVertexShader(const std::string& sName, const std::string& sPath);  
+    bool                    LoadVertexShader(const std::string& sName, const std::string& sPath);
+    bool                    LoadComputeShader(const std::string& sName, const std::string& sPath);
 };

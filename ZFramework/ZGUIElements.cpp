@@ -182,7 +182,8 @@ namespace ZGUI
         float dx = static_cast<float>(destX - srcX);
         float dy = static_cast<float>(destY - srcY);
         float distance2 = dx * dx + dy * dy;
-        float sigma2 = 2.0f * falloff * falloff;
+        float sigma = falloff*radius;
+        float sigma2 = 2.0f * sigma;
         return std::exp(-distance2 / sigma2);
     }
 
@@ -203,8 +204,8 @@ namespace ZGUI
             {
                 int i = y * side + x;
                 buffer[i] = GetNormalizedGaussianValue(srcX, srcY, x, y, radius, falloff);
-                if (buffer[i] < 0.0001)
-                    buffer[i] = 0;
+//                if (buffer[i] < 0.0001)
+//                    buffer[i] = 0;
                 sum += buffer[i];
             }
         }
@@ -263,7 +264,7 @@ namespace ZGUI
                         {
                             int stampIndex = stampY * side + stampX;
                             int dstIndex = (stampY + dstY) * accumStride + (stampX + dstX);
-                            if (dstIndex < 0 || dstIndex > accumArray.size())
+                            if (dstIndex < 0 || dstIndex >= accumArray.size())
                                 continue;
                             accumArray[dstIndex] += stampArray[stampIndex];
                         }
@@ -322,12 +323,15 @@ namespace ZGUI
                         pStart++;
                     }*/
 
-            if (spread > 1.0)
-                renderedShadow->Blur(spread, falloff);
+//            if (spread > 1.0)
+//                renderedShadow->Blur(spread, falloff);
 //            if (spread > 1.0)
 //                Compute(pSrc, rCastSrc, renderedShadow.get(), ZPoint(spread, spread), spread, falloff);
+            if (spread > 1.0)
+                ZD3D::Blur(renderedShadow.get(), renderedShadow.get(), spread, falloff);
 
-//            renderedShadow->DrawRectAlpha(0xff00ffff, renderedShadow->GetArea(), ZBuffer::kAlphaSource);
+
+            renderedShadow->DrawRectAlpha(0xff00ffff, renderedShadow->GetArea(), ZBuffer::kAlphaSource);
 
             renderedSpread = spread;
             renderedFalloff = falloff;
@@ -346,13 +350,13 @@ namespace ZGUI
         {
             renderedColor = col;
 
-            uint32_t* pStart = renderedShadow->mpPixels;
+/*            uint32_t* pStart = renderedShadow->mpPixels;
             uint32_t* pEnd = pStart + renderedShadow->GetArea().Area();
             while (pStart < pEnd)
             {
                 *pStart = (*pStart & 0xff000000) | (col &0x00ffffff);
                 pStart++;
-            }
+            }*/
         }
 
         ZRect rSrc(renderedShadow->GetArea());
