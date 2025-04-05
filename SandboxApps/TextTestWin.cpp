@@ -132,11 +132,12 @@ bool TextTestWin::Init()
     mTextBox.style.fp = mTextBox.style.fp;
     mTextBox.style.fp.nScalePoints = ZFontParams::ScalePoints(mCustomFontHeight);
     mTextBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
+    mTextBox.style.wrap = true;
 //    int64_t offset = std::max <int64_t>(mTextBox.style.fp.Height() / 32, 1);
     int64_t offset = 0;
     mTextBox.shadow.offset.Set(offset, offset);
-    mShadowSpread = 20.0;
-    mShadowFalloff = 20.0;
+    mShadowRadius = 20.0;
+    //mShadowFalloff = 20.0;
 
 
 
@@ -257,12 +258,12 @@ bool TextTestWin::Init()
     pCP->Slider("shadowoffset_x", &mTextBox.shadow.offset.x, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
     pCP->Slider("shadowoffset_y", &mTextBox.shadow.offset.y, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
 
-    ZWinLabel* pCaption = pCP->Caption("shadow_blur", "View Shadow Spread");
+    ZWinLabel* pCaption = pCP->Caption("shadow_blur", "View Shadow Radius");
     pCaption->mStyle.look.colTop = 0xff00ff00;
     pCaption->mStyle.look.colBottom = 0xff008800;
 
-    pCP->Slider("shadow_spread", &mShadowSpread, 0.1, 50.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
-    pCP->Slider("shadow_falloff", &mShadowFalloff, 0.1, 50.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
+    pCP->Slider("shadow_radius", &mShadowRadius, 0.0, 100.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
+//    pCP->Slider("shadow_falloff", &mShadowFalloff, 0.1, 100.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
     
     pCP->AddSpace(16);
 
@@ -389,8 +390,8 @@ void TextTestWin::UpdateText()
     {
         mTextBox.style.look.SetCol(mPalette.Get("font_col"));
         mTextBox.shadow.col = mPalette.Get("shadow_col");
-        mTextBox.shadow.spread = mShadowSpread;
-        mTextBox.shadow.falloff = mShadowFalloff;
+        mTextBox.shadow.radius = mShadowRadius;
+//        mTextBox.shadow.falloff = mShadowFalloff;
     }
     else
     {

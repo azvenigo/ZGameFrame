@@ -14,11 +14,11 @@ namespace ZGUI
     class Shadow
     {
     public:
-        Shadow(uint32_t _col = 0xff000000, float _spread = 1.0f, float _falloff = 1.0f);
+        Shadow(uint32_t _col = 0xff000000, float _radius = 1.0f/*, float _falloff = 1.0f*/);
 
         bool Render(ZBuffer* pSrc, ZRect rCastSrc, bool bForceInvalid = false);
         bool Paint(ZBuffer* pDst, ZRect rCastSrc);
-        bool IsInvalid() { return renderedColor != col || renderedSpread != spread || renderedFalloff != falloff; }
+        bool IsInvalid() { return renderedColor != col || renderedRadius != radius /*|| renderedSigma != sigma;*/; }
 
         ZRect Bounds(ZRect r); // returns limits of shadow based on spread and falloff
         void Compute(ZBuffer* pSrc, ZRect rSrc, ZBuffer* pDst, ZPoint dstOffset, float radius, float falloff);
@@ -26,8 +26,8 @@ namespace ZGUI
 
 
         uint32_t    col;
-        float       spread;
-        float       falloff;
+        float       radius;
+//        float       sigma;
 
         ZPoint      offset;
 
@@ -35,8 +35,8 @@ namespace ZGUI
     private:
         tZBufferPtr renderedShadow;
         uint32_t    renderedColor;
-        float       renderedSpread;
-        float       renderedFalloff;
+        float       renderedRadius;
+//        float       renderedSigma;
     };
 
 

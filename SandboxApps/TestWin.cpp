@@ -114,8 +114,8 @@ bool TestWin::Init()
 //    textBox.blurBackground = 2.0;
     textBox.shadow.col = 0xff000000;
     textBox.shadow.offset   = ZPoint(15, 15);
-    textBox.shadow.spread = 15.0;
-    textBox.shadow.falloff = .5;
+    textBox.shadow.radius = 15.0;
+//    textBox.shadow.falloff = .5;
     textBox.area.SetRect(0, 0, 3000, 2000);
     
     ZBuffer temp;
@@ -130,8 +130,8 @@ bool TestWin::Init()
 
     temp.DrawRectAlpha(0xffff0000, temp.GetArea(), ZBuffer::kAlphaSource);
 
-    shadow.spread = 150.0;
-    shadow.falloff = 10.50;
+    shadow.radius = 150.0;
+//    shadow.falloff = 10.50;
     shadow.Render(&temp, temp.GetArea());
     shadow.col = 0x88004488;
 

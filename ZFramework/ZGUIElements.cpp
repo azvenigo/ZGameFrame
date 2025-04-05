@@ -1,6 +1,7 @@
 #include "ZGUIElements.h"
 #include "helpers/StringHelpers.h"
 #include "ZScreenBuffer.h"
+#include "ZTimer.h"
 #include <immintrin.h>
 
 using namespace std;
@@ -160,16 +161,16 @@ namespace ZGUI
 
 
 
-    Shadow::Shadow(uint32_t _col, float _spread, float _falloff)
+    Shadow::Shadow(uint32_t _col, float _radius/*, float _falloff*/)
     {
         col = _col;
-        spread = _spread;
-        falloff = _falloff;
+        radius = _radius;
+//        falloff = _falloff;
     }
 
     ZRect Shadow::Bounds(ZRect r)
     {
-        int64_t spreadPixels = (int64_t)spread/* * 2*/; 
+        int64_t spreadPixels = (int64_t)radius/* * 2*/; 
         r.InflateRect(spreadPixels, spreadPixels);
 //        r.OffsetRect(offset.x, offset.y);
         return r;
@@ -309,32 +310,36 @@ namespace ZGUI
             //        rDst.OffsetRect(offset.x, offset.y);    
             renderedShadow->Blt(pSrc, rCastSrc, rDst, nullptr, ZBuffer::kAlphaSource);
 
-            /*        uint32_t* pStart = renderedShadow->mpPixels;
-                    uint32_t* pEnd = pStart + rDst.Area();
-                    while (pStart < pEnd)
-                    {
-                        if (*pStart != 0)
-                        {
-                            int stophere = 5;
-                        }
-
-
-                        *pStart = (*pStart & 0xff000000); // all colors to gray scale with alpha
-                        pStart++;
-                    }*/
+            uint32_t* pStart = renderedShadow->mpPixels;
+            uint32_t* pEnd = pStart + rDst.Area();
+            while (pStart < pEnd)
+            {
+                *pStart = (*pStart & 0xff000000); // all colors to gray scale with alpha
+                pStart++;
+            }
 
 //            if (spread > 1.0)
 //                renderedShadow->Blur(spread, falloff);
 //            if (spread > 1.0)
 //                Compute(pSrc, rCastSrc, renderedShadow.get(), ZPoint(spread, spread), spread, falloff);
-            if (spread > 1.0)
-                ZD3D::Blur(renderedShadow.get(), renderedShadow.get(), spread, falloff);
+
+//            size_t startTime = gTimer.GetUSSinceEpoch();
+
+            if (radius > 1.0)
+            {
+                float falloff = radius / 3.0;
+                ZD3D::Blur(renderedShadow.get(), renderedShadow.get(), radius, falloff);
+                //Compute(pSrc, rCastSrc, renderedShadow.get(), ZPoint(radius, radius), radius, falloff);
 
 
-            renderedShadow->DrawRectAlpha(0xff00ffff, renderedShadow->GetArea(), ZBuffer::kAlphaSource);
+            }
+//            size_t endTime = gTimer.GetUSSinceEpoch();
+  //          ZOUT("Blur time: ", endTime - startTime, "us\n");
 
-            renderedSpread = spread;
-            renderedFalloff = falloff;
+
+//            renderedShadow->DrawRectAlpha(0xff00ffff, renderedShadow->GetArea(), ZBuffer::kAlphaSource);
+
+            renderedRadius = radius;
         }
         renderedColor = 0;  // clear this for updating next paint
 
@@ -350,13 +355,13 @@ namespace ZGUI
         {
             renderedColor = col;
 
-/*            uint32_t* pStart = renderedShadow->mpPixels;
+            uint32_t* pStart = renderedShadow->mpPixels;
             uint32_t* pEnd = pStart + renderedShadow->GetArea().Area();
             while (pStart < pEnd)
             {
                 *pStart = (*pStart & 0xff000000) | (col &0x00ffffff);
                 pStart++;
-            }*/
+            }
         }
 
         ZRect rSrc(renderedShadow->GetArea());

@@ -568,13 +568,23 @@ namespace ZD3D
         HRESULT hr;
 
         // Get the blur shader
-        ID3D11ComputeShader* pComputeShader = GetComputeShader("GaussianBlur");
-        if (!pComputeShader)
+        ID3D11ComputeShader* pComputeShaderH = GetComputeShader("GaussianBlur_Horizontal");
+        if (!pComputeShaderH)
         {
-            cout << "GaussianBlur shader not loaded\n";
+            cout << "GaussianBlur_Horizontal shader not loaded\n";
             assert(false);
             return false;
         }
+
+        ID3D11ComputeShader* pComputeShaderV = GetComputeShader("GaussianBlur_Vertical");
+        if (!pComputeShaderV)
+        {
+            cout << "GaussianBlur_Vertical shader not loaded\n";
+            assert(false);
+            return false;
+        }
+
+
 
         ZRect rSrc(pSrc->GetArea());
         int64_t w = rSrc.Width();
@@ -592,7 +602,6 @@ namespace ZD3D
         texDesc.SampleDesc.Count = 1;
 
 
-        ID3D11Texture2D* pStaging = nullptr;
 
 
         D3D11_TEXTURE2D_DESC stagingDesc = texDesc;
@@ -600,13 +609,17 @@ namespace ZD3D
         stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
         stagingDesc.BindFlags = 0;  // No binding flags for a staging texture
 
+
+
+        ID3D11Texture2D* pStaging = nullptr;
         mD3DDevice->CreateTexture2D(&stagingDesc, nullptr, &pStaging);
         assert(pStaging);
 
+        D3D11_MAPPED_SUBRESOURCE mappedResource;
+
         // copy source to staging texture
         std::vector<float> floatPixels(w * h * 4); // 4 floats per pixel (RGBA)
-
-        for (size_t i = 0; i < w * h; i++) 
+       for (size_t i = 0; i < w * h; i++) 
         {
             uint32_t argb = pSrc->mpPixels[i]; // Assuming srcPixels is uint32_t*
             floatPixels[i * 4 + 0] = ((argb >> 16) & 0xFF) / 255.0f; // R
@@ -614,20 +627,16 @@ namespace ZD3D
             floatPixels[i * 4 + 2] = ((argb >> 0) & 0xFF) / 255.0f;  // B
             floatPixels[i * 4 + 3] = ((argb >> 24) & 0xFF) / 255.0f; // A
         }
-
-        D3D11_MAPPED_SUBRESOURCE mappedResource;
         mD3DContext->Map(pStaging, 0, D3D11_MAP_WRITE, 0, &mappedResource);
-
         float* dest = reinterpret_cast<float*>(mappedResource.pData);
         size_t rowPitch = mappedResource.RowPitch / sizeof(float);
-
         for (size_t y = 0; y < h; y++) 
         {
             memcpy(reinterpret_cast<char*>(dest) + y * mappedResource.RowPitch, &floatPixels[y * w * 4], w * 4 * sizeof(float));
         }
-
         mD3DContext->Unmap(pStaging, 0);
 
+        
 
 
         
@@ -663,7 +672,6 @@ namespace ZD3D
         assert(pConstantBuffer);
 
         // Map and write to the buffer
-//        D3D11_MAPPED_SUBRESOURCE mappedResource;
         mD3DContext->Map(pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
         memcpy(mappedResource.pData, &blurParams, sizeof(BlurParams));
         mD3DContext->Unmap(pConstantBuffer, 0);
@@ -703,15 +711,15 @@ namespace ZD3D
 
 
         // create and bind a SRV for the blur input texture
-        ID3D11ShaderResourceView* pSRV = nullptr;
+        ID3D11ShaderResourceView* pSrcSRV = nullptr;
         D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
         srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MostDetailedMip = 0;
         srvDesc.Texture2D.MipLevels = 1;
 
-        mD3DDevice->CreateShaderResourceView(pBlurSrcTexture, &srvDesc, &pSRV);
-        assert(pSRV);
+        mD3DDevice->CreateShaderResourceView(pBlurSrcTexture, &srvDesc, &pSrcSRV);
+        assert(pSrcSRV);
 
 
 
@@ -720,22 +728,45 @@ namespace ZD3D
 
 
 
-        D3D11_TEXTURE2D_DESC dstDesc = {};
-        dstDesc.Width = w;
-        dstDesc.Height = h;
-        dstDesc.MipLevels = 1;
-        dstDesc.ArraySize = 1;
-        dstDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;  // Must match src format
-        dstDesc.SampleDesc.Count = 1;
-        dstDesc.Usage = D3D11_USAGE_DEFAULT;
-        dstDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;  // Only write access in shader
-        dstDesc.CPUAccessFlags = 0;  // No CPU read/write
-        dstDesc.MiscFlags = 0;
+        D3D11_TEXTURE2D_DESC texture_desc = {};
+        texture_desc.Width = w;
+        texture_desc.Height = h;
+        texture_desc.MipLevels = 1;
+        texture_desc.ArraySize = 1;
+        texture_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;  // Must match src format
+        texture_desc.SampleDesc.Count = 1;
+        texture_desc.Usage = D3D11_USAGE_DEFAULT;
+        texture_desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;  // Only write access in shader
+        texture_desc.CPUAccessFlags = 0;  // No CPU read/write
+        texture_desc.MiscFlags = 0;
 
 
         ID3D11Texture2D* pBlurDstTexture = nullptr;
-        mD3DDevice->CreateTexture2D(&dstDesc, nullptr, &pBlurDstTexture);
+        mD3DDevice->CreateTexture2D(&texture_desc, nullptr, &pBlurDstTexture);
 
+
+
+
+
+
+
+
+
+        D3D11_TEXTURE2D_DESC temp_texture_desc = {};
+        temp_texture_desc.Width = w;
+        temp_texture_desc.Height = h;
+        temp_texture_desc.MipLevels = 1;
+        temp_texture_desc.ArraySize = 1;
+        temp_texture_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;  // Must match src format
+        temp_texture_desc.SampleDesc.Count = 1;
+        temp_texture_desc.Usage = D3D11_USAGE_DEFAULT;
+        temp_texture_desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+        temp_texture_desc.CPUAccessFlags = 0;  // No CPU read/write
+        temp_texture_desc.MiscFlags = 0;
+
+
+        ID3D11Texture2D* pTempTexture = nullptr;
+        mD3DDevice->CreateTexture2D(&temp_texture_desc, nullptr, &pTempTexture);
 
 
 
@@ -744,6 +775,14 @@ namespace ZD3D
 
 
         ID3D11UnorderedAccessView* pDstUAV = nullptr;
+        ID3D11UnorderedAccessView* pTempUAV = nullptr;
+        ID3D11ShaderResourceView* pTempSRV = nullptr;
+
+
+        ID3D11UnorderedAccessView* pNullUAV = nullptr;
+        ID3D11ShaderResourceView* pNullSRV = nullptr;
+
+
 
         D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
         uavDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -751,8 +790,11 @@ namespace ZD3D
         uavDesc.Texture2D.MipSlice = 0;
 
         mD3DDevice->CreateUnorderedAccessView(pBlurDstTexture, &uavDesc, &pDstUAV);
+        mD3DDevice->CreateUnorderedAccessView(pTempTexture, &uavDesc, &pTempUAV);
 
-
+        mD3DDevice->CreateShaderResourceView(pTempTexture, &srvDesc, &pTempSRV);
+        assert(pTempSRV);
+        
 
 
 
@@ -762,15 +804,37 @@ namespace ZD3D
         // Perform blur
 
 
-        mD3DContext->CSSetShader(pComputeShader, nullptr, 0);
-        mD3DContext->CSSetShaderResources(0, 1, &pSRV);
-        mD3DContext->CSSetUnorderedAccessViews(0, 1, &pDstUAV, nullptr);
+        mD3DContext->CSSetShader(pComputeShaderH, nullptr, 0);
+        mD3DContext->CSSetShaderResources(0, 1, &pSrcSRV);
+        mD3DContext->CSSetUnorderedAccessViews(0, 1, &pTempUAV, nullptr);
 
         UINT groupsX = (w + 15) / 16;  // Divide by thread group size
         UINT groupsY = (h + 15) / 16;
 
         mD3DContext->Dispatch(groupsX, groupsY, 1);
         
+
+                   
+        mD3DContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
+        mD3DContext->CSSetShaderResources(0, 1, &pNullSRV);
+
+        mD3DContext->CSSetShader(pComputeShaderV, nullptr, 0);
+        mD3DContext->CSSetShaderResources(0, 1, &pTempSRV);
+        mD3DContext->CSSetUnorderedAccessViews(0, 1, &pDstUAV, nullptr);
+
+        // Update and set constant buffer (same params)
+        mD3DContext->CSSetConstantBuffers(0, 1, &pConstantBuffer);
+
+        mD3DContext->Dispatch(groupsX, groupsY, 1);
+        
+
+
+
+
+
+
+
+
         mD3DContext->Flush();
 
 
@@ -779,13 +843,8 @@ namespace ZD3D
 
 
         ID3D11ShaderResourceView* nullSRV = nullptr;
-        ID3D11UnorderedAccessView* nullUAV = nullptr;
         mD3DContext->CSSetShaderResources(0, 1, &nullSRV);
-        mD3DContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
-
-
-
-
+        mD3DContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
 
 
 
@@ -1147,7 +1206,7 @@ namespace ZD3D
         tVertexShaderMap::iterator it = mVertexShaderMap.find(sName);
         if (it == mVertexShaderMap.end())
             return nullptr;
-
+        
         return (*it).second;
     }
 
