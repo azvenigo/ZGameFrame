@@ -4,6 +4,7 @@
 #include "ZDebug.h"
 #include "ZBuffer.h"
 #include <vector>
+#include <filesystem>
 #ifdef _WIN64
 #include <d3d11.h>
 #include <dxgi1_6.h>
@@ -210,7 +211,7 @@ namespace ZD3D
 
     extern ID3D11Buffer* pD3DLightBuffer;   // temp light
 
-    bool                    LoadPixelShader(const std::string& sName, const std::string& sPath);
-    bool                    LoadVertexShader(const std::string& sName, const std::string& sPath);
-    bool                    LoadComputeShader(const std::string& sName, const std::string& sPath);
+    bool                    LoadPixelShader(const std::string& sName, const std::filesystem::path& path);
+    bool                    LoadVertexShader(const std::string& sName, const std::filesystem::path& path);
+    bool                    LoadComputeShader(const std::string& sName, const std::filesystem::path& path);
 };

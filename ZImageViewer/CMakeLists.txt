@@ -130,6 +130,7 @@ link_directories(${LINK_DIRS})
 include_directories(${INCLUDE_DIRS})
 
 add_executable(ZImageViewer WIN32 ${SOURCES} ${INCLUDES})
+add_shader_compilation_target(ZImageViewer)
 
 target_link_libraries(ZImageViewer ${LINK_LIBS})
 

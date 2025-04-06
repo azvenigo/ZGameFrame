@@ -129,6 +129,7 @@ link_directories(${LINK_DIRS})
 include_directories(${INCLUDE_DIRS})
 
 add_executable(SandboxApps WIN32 ${SOURCES} ${INCLUDES})
+add_shader_compilation_target(SandboxApps)
 target_link_libraries(SandboxApps PRIVATE ${LINK_LIBS})
 
 
@@ -136,5 +137,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_LIST_DIR}/../external/lunasvg/build/_deps/plutovg-build/$<CONFIG>/plutovg.dll" $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/res" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/../ZFramework/default_resources" $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
+
+
 set_target_properties(SandboxApps ${TARGET_PROPS})
     

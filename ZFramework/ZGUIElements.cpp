@@ -323,7 +323,7 @@ namespace ZGUI
 //            if (spread > 1.0)
 //                Compute(pSrc, rCastSrc, renderedShadow.get(), ZPoint(spread, spread), spread, falloff);
 
-//            size_t startTime = gTimer.GetUSSinceEpoch();
+            size_t startTime = gTimer.GetUSSinceEpoch();
 
             if (radius > 1.0)
             {
@@ -333,8 +333,8 @@ namespace ZGUI
 
 
             }
-//            size_t endTime = gTimer.GetUSSinceEpoch();
-  //          ZOUT("Blur time: ", endTime - startTime, "us\n");
+            size_t endTime = gTimer.GetUSSinceEpoch();
+          ZOUT("Blur time: ", endTime - startTime, "us\n");
 
 
 //            renderedShadow->DrawRectAlpha(0xff00ffff, renderedShadow->GetArea(), ZBuffer::kAlphaSource);

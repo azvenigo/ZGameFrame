@@ -67,6 +67,7 @@ TextTestWin::TextTestWin()
 {
 	mpFont = NULL;
     msWinName="TextTestWin";
+    mbViewBackground = true;
 }
 
 
@@ -90,6 +91,7 @@ bool TextTestWin::Init()
     mIdleSleepMS = 10000;
     mPalette.mColorMap.push_back(ZGUI::EditableColor("font_col", 0xff88ff88));
     mPalette.mColorMap.push_back(ZGUI::EditableColor("shadow_col", 0xff000000));
+    mPalette.mColorMap.push_back(ZGUI::EditableColor("bg_col", 0xff999999));
 
     SetFocus();
 
@@ -221,6 +223,8 @@ bool TextTestWin::Init()
 
     ZGUI::ZTextLook captionLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
 
+    pCP->Toggle("viewbg", &mbViewBackground, "Background", "{invalidate;target=TextTestWin}", "{invalidate;target=TextTestWin}");
+
     pCP->Button("choosecolor", "Color", ZMessage("choosecolor", this));
 
     pCP->Caption("heightlabel", "Height");
@@ -298,12 +302,15 @@ bool TextTestWin::Paint()
 
 	ZRect rText(32, 32, mAreaLocal.right*4/5, mAreaLocal.bottom);
 
-    mpSurface.get()->Fill(0xff8888ff);
-    if (mpBackground.get()->GetArea().Width() > 0)
+    if (mbViewBackground && mpBackground.get()->GetArea().Width() > 0)
     {
         tUVVertexArray verts;
         gRasterizer.RectToVerts(mAreaLocal, verts);
         gRasterizer.Rasterize(mpSurface.get(), mpBackground.get(), verts);
+    }
+    else
+    {
+        mpSurface.get()->Fill(mPalette.Get("bg_col"));
     }
 
 

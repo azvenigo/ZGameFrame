@@ -31,6 +31,7 @@ private:
     bool        mbEnableKerning;
     //ZFontParams mCustomFontParams;
     int64_t     mCustomFontHeight;
+    bool        mbViewBackground;
     tZFontPtr   mpFont;
 
     tZBufferPtr  mpBackground;

@@ -2,8 +2,8 @@
 #include <GdiPlus.h>
 #include <wrl.h> 
 #include <array>
-#include <filesystem>
 #include "helpers/StringHelpers.h"
+#include "helpers/FileHelpers.h"
 #include "ZTimer.h"
 
 using Microsoft::WRL::ComPtr;
@@ -886,6 +886,8 @@ namespace ZD3D
         pStaging->Release();
         pBlurSrcTexture->Release();
         pDstUAV->Release();
+
+        return true;
     }
 
 
@@ -906,26 +908,41 @@ namespace ZD3D
             {
                 fs::path p = dir_entry.path();
                 p.make_preferred();
-                if (p.extension() == ".hlsl")
+                fs::path filename = p.filename();
+                fs::path extension = p.extension();
+
+                string sName(filename.string().substr(2, filename.string().length() - (2+ extension.string().length()))); // extract shader name
+
+                if (extension == ".cso")
                 {
-                    fs::path filename = p.filename();
-                    string sName(filename.string().substr(2, filename.string().length() - 7)); // extract shader name
+                }
+                else if (extension == ".hlsl")
+                {
 
-                    char c = p.filename().string()[0];
-
-                    if (c == 'p')
-                        LoadPixelShader(sName, p.string());
-                    else if (c == 'v')
-                        LoadVertexShader(sName, p.string());
-                    else if (c == 'c')
-                        LoadComputeShader(sName, p.string());
-                    else
-                        cout << "Unknown shader file prefix: " << p.string() << "\n";
+                    fs::path compiledShaderFilename = p.replace_extension(".cso");
+                    if (fs::exists(compiledShaderFilename))
+                    {
+                        cout << "Compiled version of shader exists. Skipping:" << p << "\n";
+                        continue;
+                    }
                 }
                 else
                 {
                     cout << "Unknown file type when shader expected: " << p.string() << "\n";
+                    continue;
                 }
+
+                char c = p.filename().string()[0];
+
+                if (c == 'p')
+                    LoadPixelShader(sName, p);
+                else if (c == 'v')
+                    LoadVertexShader(sName, p);
+                else if (c == 'c')
+                    LoadComputeShader(sName, p);
+                else
+                    cout << "Unknown shader file prefix: " << p.string() << "\n";
+
             }
         }
         
@@ -1063,112 +1080,186 @@ namespace ZD3D
     }
 
 
-    bool LoadPixelShader(const string& sName, const string& sPath)
+    bool LoadPixelShader(const string& sName, const std::filesystem::path& path)
     {
         assert(mD3DDevice);
-
-        ID3DBlob* psBlob = nullptr;
-        ID3DBlob* errorBlob = nullptr;
-
-        // Compile Pixel Shader
-        HRESULT hr = D3DCompileFromFile(SH::string2wstring(sPath).c_str(), nullptr, nullptr, "PSMain", "ps_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0, &psBlob, &errorBlob);
-        if (FAILED(hr))
-        {
-            if (errorBlob)
-            {
-                cerr << (char*)errorBlob->GetBufferPointer() << "\n";
-                assert(false);
-                errorBlob->Release();
-            }
-
-            return false;
-        }
-
-        // Create Pixel Shader
         ID3D11PixelShader* pixelShader = nullptr;
-        hr = mD3DDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
-        if (FAILED(hr))
+        HRESULT hr;
+
+        if (SH::Compare(path.extension().string(), ".cso", false))
         {
-            assert(false);
-            return false;
-        }
-
-        mPixelShaderMap[sName] = pixelShader;
-
-        psBlob->Release();
-
-        return true;
-    }
-
-
-    bool LoadComputeShader(const string& sName, const string& sPath)
-    {
-        assert(mD3DDevice);
-
-        ID3DBlob* psBlob = nullptr;
-        ID3DBlob* errorBlob = nullptr;
-
-        // Compile Compute Shader
-        HRESULT hr = D3DCompileFromFile(SH::string2wstring(sPath).c_str(), nullptr, nullptr, "CSMain", "cs_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0, &psBlob, &errorBlob);
-        if (FAILED(hr))
-        {
-            if (errorBlob)
+            vector<uint8_t> buf;
+            if (!FH::ReadIntoBuffer(path, buf))
             {
-                cerr << (char*)errorBlob->GetBufferPointer() << "\n";
-                assert(false);
-                errorBlob->Release();
+                cout << "Unable to load pixel shader:" << path << "\n";
+                return false;
             }
 
-            return false;
-        }
+            hr = mD3DDevice->CreatePixelShader(buf.data(), buf.size(), nullptr, &pixelShader);
+            if (FAILED(hr))
+            {
+                assert(false);
+                return false;
+            }
 
-        // Create Compute Shader
-        ID3D11ComputeShader* pShader = nullptr;
-        hr = mD3DDevice->CreateComputeShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pShader);
-        if (FAILED(hr))
+            mPixelShaderMap[sName] = pixelShader;
+        }
+        else
         {
-            assert(false);
-            return false;
+            ID3DBlob* psBlob = nullptr;
+            ID3DBlob* errorBlob = nullptr;
+
+            // Compile Pixel Shader
+            hr = D3DCompileFromFile(SH::string2wstring(path.string()).c_str(), nullptr, nullptr, "PSMain", "ps_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0, &psBlob, &errorBlob);
+            if (FAILED(hr))
+            {
+                if (errorBlob)
+                {
+                    cerr << (char*)errorBlob->GetBufferPointer() << "\n";
+                    assert(false);
+                    errorBlob->Release();
+                }
+
+                return false;
+            }
+
+            // Create Pixel Shader
+            hr = mD3DDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+            if (FAILED(hr))
+            {
+                assert(false);
+                return false;
+            }
+
+            mPixelShaderMap[sName] = pixelShader;
+
+            psBlob->Release();
         }
+        return true;
+    }
 
-        mComputeShaderMap[sName] = pShader;
 
-        psBlob->Release();
+    bool LoadComputeShader(const string& sName, const std::filesystem::path& path)
+    {
+        assert(mD3DDevice);
+        ID3D11ComputeShader* pShader;
+        HRESULT hr;
+
+        if (SH::Compare(path.extension().string(), ".cso", false))
+        {
+            vector<uint8_t> buf;
+            if (!FH::ReadIntoBuffer(path, buf))
+            {
+                cout << "Unable to load pixel shader:" << path << "\n";
+                return false;
+            }
+
+            hr = mD3DDevice->CreateComputeShader(buf.data(), buf.size(), nullptr, &pShader);
+            if (FAILED(hr))
+            {
+                assert(false);
+                return false;
+            }
+
+            mComputeShaderMap[sName] = pShader;
+        }
+        else
+        {
+            ID3DBlob* psBlob = nullptr;
+            ID3DBlob* errorBlob = nullptr;
+
+            // Compile Compute Shader
+            hr = D3DCompileFromFile(SH::string2wstring(path.string()).c_str(), nullptr, nullptr, "CSMain", "cs_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0, &psBlob, &errorBlob);
+            if (FAILED(hr))
+            {
+                if (errorBlob)
+                {
+                    cerr << (char*)errorBlob->GetBufferPointer() << "\n";
+                    assert(false);
+                    errorBlob->Release();
+                }
+
+                return false;
+            }
+
+            // Create Compute Shader
+            pShader = nullptr;
+            hr = mD3DDevice->CreateComputeShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pShader);
+            if (FAILED(hr))
+            {
+                assert(false);
+                return false;
+            }
+
+            mComputeShaderMap[sName] = pShader;
+
+            psBlob->Release();
+        }
 
         return true;
     }
 
-    bool LoadVertexShader(const string& sName, const string& sPath)
+    bool LoadVertexShader(const string& sName, const std::filesystem::path& path)
     {
         assert(mD3DDevice);
+        ID3D11VertexShader* pShader;
+        HRESULT hr;
 
         ID3DBlob* vsBlob = nullptr;
-        ID3DBlob* errorBlob = nullptr;
+        void* pLayoutBuffer = nullptr;
+        size_t layoutbuffersize = 0;
+        vector<uint8_t> buf;
 
-        // Compile Vertex Shader
-        HRESULT hr = D3DCompileFromFile(SH::string2wstring(sPath).c_str(), nullptr, nullptr, "VSMain", "vs_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0, &vsBlob, &errorBlob);
-        if (FAILED(hr))
+        if (SH::Compare(path.extension().string(), ".cso", false))
         {
-            if (errorBlob)
+            if (!FH::ReadIntoBuffer(path, buf))
             {
-                cerr << (char*)errorBlob->GetBufferPointer() << "\n";
-                errorBlob->Release();
+                cout << "Unable to load compute shader:" << path << "\n";
+                return false;
             }
 
-            return false;
+            hr = mD3DDevice->CreateVertexShader(buf.data(), buf.size(), nullptr, &pShader);
+            if (FAILED(hr))
+            {
+                assert(false);
+                return false;
+            }
+
+            mVertexShaderMap[sName] = pShader;
+            pLayoutBuffer = &buf[0];
+            layoutbuffersize = buf.size();
         }
-
-        ID3D11VertexShader* vertexShader = nullptr;
-
-        hr = mD3DDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
-        if (FAILED(hr))
+        else
         {
-            assert(false);
-            return false;
+
+            ID3DBlob* errorBlob = nullptr;
+
+            // Compile Vertex Shader
+            HRESULT hr = D3DCompileFromFile(SH::string2wstring(path.string()).c_str(), nullptr, nullptr, "VSMain", "vs_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0, &vsBlob, &errorBlob);
+            if (FAILED(hr))
+            {
+                if (errorBlob)
+                {
+                    cerr << (char*)errorBlob->GetBufferPointer() << "\n";
+                    errorBlob->Release();
+                }
+
+                return false;
+            }
+
+            ID3D11VertexShader* vertexShader = nullptr;
+
+            hr = mD3DDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
+            if (FAILED(hr))
+            {
+                assert(false);
+                return false;
+            }
+
+            mVertexShaderMap[sName] = vertexShader;
+            pLayoutBuffer = vsBlob->GetBufferPointer();
+            layoutbuffersize = vsBlob->GetBufferSize();
         }
-
-        mVertexShaderMap[sName] = vertexShader;
-
 
         // Define the input layout for the vertex buffer
         D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -1179,8 +1270,7 @@ namespace ZD3D
         };
 
         ID3D11InputLayout* pLayout;
-        hr = mD3DDevice->CreateInputLayout(layout, ARRAYSIZE(layout), vsBlob->GetBufferPointer(),
-            vsBlob->GetBufferSize(), &pLayout);
+        hr = mD3DDevice->CreateInputLayout(layout, ARRAYSIZE(layout), pLayoutBuffer, layoutbuffersize, &pLayout);
         if (FAILED(hr))
         {
             assert(false);
@@ -1189,14 +1279,8 @@ namespace ZD3D
 
         mInputLayoutMap[sName] = pLayout;
 
-
-
-
-
-
-
-
-        vsBlob->Release();
+        if (vsBlob)
+            vsBlob->Release();
 
         return true;
     }
