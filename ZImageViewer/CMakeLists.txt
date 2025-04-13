@@ -38,6 +38,7 @@ set (GUI_FILES
 ../ZFramework/ZFloatColorBuffer.h   ../ZFramework/ZFloatColorBuffer.cpp
 
 ../ZFramework/ZGraphicSystem.h      ../ZFramework/ZGraphicSystem.cpp
+../ZFramework/ZD3D.h      					../ZFramework/ZD3D.cpp
 ../ZFramework/ZGUIHelpers.h         ../ZFramework/ZGUIHelpers.cpp
 ../ZFramework/ZGUIStyle.h           ../ZFramework/ZGUIStyle.cpp
 ../ZFramework/ZGUIElements.h        ../ZFramework/ZGUIElements.cpp
@@ -129,6 +130,7 @@ link_directories(${LINK_DIRS})
 include_directories(${INCLUDE_DIRS})
 
 add_executable(ZImageViewer WIN32 ${SOURCES} ${INCLUDES})
+add_shader_compilation_target(ZImageViewer)
 
 target_link_libraries(ZImageViewer ${LINK_LIBS})
 

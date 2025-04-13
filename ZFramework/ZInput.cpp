@@ -104,7 +104,11 @@ void ZInput::OnMouseMove(int64_t x, int64_t y)
 
         IMessageTarget* pTarget = captureWin;
         if (!captureWin)
+        {
             pTarget = gpMainWin;
+            if (!pTarget)
+                return;
+        }
 
         gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "move", "x", x, "y", y));
 
@@ -206,7 +210,7 @@ bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
         mTooltip.mTextbox.blurBackground = 2.0;
         mTooltip.mTextbox.shadow.col = 0x44000000;
         mTooltip.mTextbox.shadow.offset.Set(12, 12);
-        mTooltip.mTextbox.shadow.spread = 4.0;
+        mTooltip.mTextbox.shadow.radius = 4.0;
         ZRect rTooltip;
         tZFontPtr pTooltipFont = mTooltip.mTextbox.style.Font();
         rTooltip = pTooltipFont->StringRect(tooltip);

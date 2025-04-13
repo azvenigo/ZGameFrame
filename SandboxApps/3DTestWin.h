@@ -6,6 +6,7 @@
 #include "ZTimer.h"
 #include <vector>
 #include "Z3DMath.h"
+#include "ZD3D.h"
 
 /////////////////////////////////////////////////////////////////////////
 // 
@@ -47,6 +48,7 @@ public:
     Z3DTestWin();
 
     bool    Init();
+    bool    Shutdown();
     bool    Paint();
     bool    Process();
     bool    OnChar(char key);
@@ -54,7 +56,7 @@ public:
     void    SetControlPanelEnabled(bool bEnabled = true) { mbControlPanelEnabled = bEnabled; }
 
     void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, uint32_t nCol);
-    void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, tZBufferPtr pTexture);
+    void    RenderPoly(std::vector<Z3D::Vec3d>& worldVerts, Z3D::Matrix44d& mtxProjection, Z3D::Matrix44d& mtxWorldToCamera, ZD3D::tDynamicTexturePtr pTexture, ZD3D::Light* pLight = nullptr);
     bool	HandleMessage(const ZMessage& message);
 
 private:
@@ -66,7 +68,21 @@ private:
     Z3D::Matrix44d mWorldToObject;
 
     tZBufferPtr mpTexture;
+    ZD3D::tDynamicTexturePtr mpDynTexture;
+
+    tZBufferPtr mpGrassTexture;
+    ZD3D::tDynamicTexturePtr mpGrassDynTexture;
+
+
+    ZD3D::Light   mLight;
+    ID3D11Buffer* pLightBuffer; // todo, create containing class like texture
+
+
+
     bool mbControlPanelEnabled;
+
+    size_t mFramePrimCount;
+    std::vector<ZD3D::ScreenSpacePrimitive*> mReservedPrims;
 
 #ifdef RENDER_TEAPOT
     tZBufferPtr mpTeapotRender;
@@ -86,6 +102,11 @@ private:
     int64_t     mnRotateSpeed;
     int64_t     mnRayDepth;
     int64_t     mnFOVTime100;
+
+    int64_t     mnCameraX;
+    int64_t     mnCameraY;
+    int64_t     mnCameraZ;
+
     double      mfBaseAngle;
 
     bool        mbRenderCube;

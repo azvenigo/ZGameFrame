@@ -2,6 +2,8 @@
 
 #include "ZBuffer.h"
 #include "ZGraphicSystem.h"
+#include "ZD3D.h"
+
 
 class ZScreenRect
 {
@@ -32,8 +34,6 @@ typedef std::list<ZScreenRect> tScreenRectList;
 
 
 
-
-
 class ZScreenBuffer : public ZBuffer
 {
 public:
@@ -57,7 +57,6 @@ public:
 	size_t	GetVisibilityCount() { return mScreenRectList.size(); }
 
 	int32_t	RenderVisibleRects();   // returns number of rects that needed rendering
-//    int32_t RenderVisibleRectsToBuffer(ZBuffer* pDst, const ZRect& rClip);  // shouldn't be needed any longer since screenbuffer will collect all visible...this can just be a blt
 
     bool    RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst);
     bool    PaintToSystem(const ZRect& rClip);
@@ -65,19 +64,19 @@ public:
     bool    PaintToSystem();    // final transfer from internal surface
 
 protected:
-	ZGraphicSystem*		mpGraphicSystem;
+	ZGraphicSystem*     mpGraphicSystem;
 
-	tScreenRectList		mScreenRectList;
+	tScreenRectList     mScreenRectList;
     std::mutex          mScreenRectListMutex;
-	bool				mbVisibilityNeedsComputing;
+	bool                mbVisibilityNeedsComputing;
     bool                mbRenderingEnabled; 
     bool                mbCurrentlyRendering;
 
 #ifdef _WIN64
-    PAINTSTRUCT			mPS;
-    HDC					mDC;
+    PAINTSTRUCT         mPS;
+    HDC                 mDC;
 
-    ID3D11Texture2D* mDynamicTexture;
+    ZD3D::ScreenSpacePrimitive* mpSSPrim;
 #endif
 };
 

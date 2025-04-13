@@ -30,7 +30,7 @@ namespace ZFrameworkApp
 extern ZTickManager     gTickManager;
 
 using namespace std;
-
+namespace fs = std::filesystem;
 
 ATOM					MyRegisterClass(HINSTANCE, LPTSTR);
 BOOL					WinInitInstance(int argc, char* argv[]);
@@ -79,9 +79,6 @@ public:
     }
 };
 
-
-namespace fs = std::filesystem;
-
 int processFolder(const fs::path& folderPath) 
 {
     int nCount = 0;
@@ -108,7 +105,6 @@ int processFolder(const fs::path& folderPath)
 
 int main(int argc, char* argv[])
 {
-
 //#define TEST_MESSAGE_POSTING
 #ifdef TEST_MESSAGE_POSTING
 
@@ -180,7 +176,6 @@ int main(int argc, char* argv[])
 
     if (!ZFrameworkApp::Initialize(argc, argv, userDataPath))
         return FALSE;
-
 
     uint64_t nTimeStamp = 0;
     uint64_t nLogFlushTimeStamp = gTimer.GetUSSinceEpoch();

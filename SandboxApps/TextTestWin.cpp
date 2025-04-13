@@ -67,6 +67,10 @@ TextTestWin::TextTestWin()
 {
 	mpFont = NULL;
     msWinName="TextTestWin";
+    mbViewBackground = true;
+    mDraggingTextbox = false;
+    mbAcceptsFocus = true;
+    mbAcceptsCursorMessages = true;
 }
 
 
@@ -90,6 +94,7 @@ bool TextTestWin::Init()
     mIdleSleepMS = 10000;
     mPalette.mColorMap.push_back(ZGUI::EditableColor("font_col", 0xff88ff88));
     mPalette.mColorMap.push_back(ZGUI::EditableColor("shadow_col", 0xff000000));
+    mPalette.mColorMap.push_back(ZGUI::EditableColor("bg_col", 0xff999999));
 
     SetFocus();
 
@@ -132,11 +137,12 @@ bool TextTestWin::Init()
     mTextBox.style.fp = mTextBox.style.fp;
     mTextBox.style.fp.nScalePoints = ZFontParams::ScalePoints(mCustomFontHeight);
     mTextBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
+    mTextBox.style.wrap = true;
 //    int64_t offset = std::max <int64_t>(mTextBox.style.fp.Height() / 32, 1);
     int64_t offset = 0;
     mTextBox.shadow.offset.Set(offset, offset);
-    mShadowSpread = 20.0;
-    mShadowFalloff = 20.0;
+    mShadowRadius = 20.0;
+    //mShadowFalloff = 20.0;
 
 
 
@@ -220,6 +226,8 @@ bool TextTestWin::Init()
 
     ZGUI::ZTextLook captionLook(ZGUI::ZTextLook::kShadowed, 0xffffffff, 0xffffffff);
 
+    pCP->Toggle("viewbg", &mbViewBackground, "Background", "{invalidate;target=TextTestWin}", "{invalidate;target=TextTestWin}");
+
     pCP->Button("choosecolor", "Color", ZMessage("choosecolor", this));
 
     pCP->Caption("heightlabel", "Height");
@@ -257,12 +265,12 @@ bool TextTestWin::Init()
     pCP->Slider("shadowoffset_x", &mTextBox.shadow.offset.x, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
     pCP->Slider("shadowoffset_y", &mTextBox.shadow.offset.y, -200, 200, 1, 0.1, "{updatetext;target=TextTestWin}", true, false);
 
-    ZWinLabel* pCaption = pCP->Caption("shadow_blur", "View Shadow Spread");
+    ZWinLabel* pCaption = pCP->Caption("shadow_blur", "View Shadow Radius");
     pCaption->mStyle.look.colTop = 0xff00ff00;
     pCaption->mStyle.look.colBottom = 0xff008800;
 
-    pCP->Slider("shadow_spread", &mShadowSpread, 0.1, 50.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
-    pCP->Slider("shadow_falloff", &mShadowFalloff, 0.1, 50.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
+    pCP->Slider("shadow_radius", &mShadowRadius, 0.0, 100.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
+//    pCP->Slider("shadow_falloff", &mShadowFalloff, 0.1, 100.0, 1.0, 0.1, "{updatetext;target=TextTestWin}", true, false);
     
     pCP->AddSpace(16);
 
@@ -297,12 +305,15 @@ bool TextTestWin::Paint()
 
 	ZRect rText(32, 32, mAreaLocal.right*4/5, mAreaLocal.bottom);
 
-    mpSurface.get()->Fill(0xff8888ff);
-    if (mpBackground.get()->GetArea().Width() > 0)
+    if (mbViewBackground && mpBackground.get()->GetArea().Width() > 0)
     {
         tUVVertexArray verts;
         gRasterizer.RectToVerts(mAreaLocal, verts);
         gRasterizer.Rasterize(mpSurface.get(), mpBackground.get(), verts);
+    }
+    else
+    {
+        mpSurface.get()->Fill(mPalette.Get("bg_col"));
     }
 
 
@@ -389,8 +400,8 @@ void TextTestWin::UpdateText()
     {
         mTextBox.style.look.SetCol(mPalette.Get("font_col"));
         mTextBox.shadow.col = mPalette.Get("shadow_col");
-        mTextBox.shadow.spread = mShadowSpread;
-        mTextBox.shadow.falloff = mShadowFalloff;
+        mTextBox.shadow.radius = mShadowRadius;
+//        mTextBox.shadow.falloff = mShadowFalloff;
     }
     else
     {
@@ -417,6 +428,44 @@ void TextTestWin::UpdateFontByParams()
     UpdateText();
 #endif
 
+}
+
+
+bool TextTestWin::OnMouseDownL(int64_t x, int64_t y)
+{
+    if (mTextBox.area.PtInRect(x, y))
+    {
+        SetCapture();
+        mDraggingTextbox = true;
+        mDraggingTextboxAnchor.x = x-mTextBox.area.left;
+        mDraggingTextboxAnchor.y = y-mTextBox.area.left;
+        Invalidate();
+    }
+
+    return ZWin::OnMouseDownL(x, y);
+}
+
+bool TextTestWin::OnMouseUpL(int64_t x, int64_t y)
+{
+    if (AmCapturing())
+        ReleaseCapture();
+    mDraggingTextbox = false;
+    return ZWin::OnMouseUpL(x, y);
+}
+
+bool TextTestWin::OnMouseMove(int64_t x, int64_t y)
+{
+    if (mDraggingTextbox)
+    {
+        mTextBox.area.MoveRect(x-mDraggingTextboxAnchor.x, y-mDraggingTextboxAnchor.y);
+        Invalidate();
+    }
+    return ZWin::OnMouseMove(x, y);
+}
+
+bool TextTestWin::OnMouseDownR(int64_t x, int64_t y)
+{
+    return ZWin::OnMouseDownR(x, y);
 }
 
 bool TextTestWin::HandleMessage(const ZMessage& message)

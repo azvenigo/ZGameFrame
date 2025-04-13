@@ -170,13 +170,6 @@ bool ReadCFG(const string& sCFGPath, string& sVersion, string& sBuildURL)
 
 bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path userDataPath)
 {
-    gGraphicSystem.SetArea(grFullArea);
-    if (!gGraphicSystem.Init())
-    {
-        assert(false);
-        return false;
-    }
-
     filesystem::path appDataPath(userDataPath);
     appDataPath += "/ZImageViewer/";
 
@@ -259,6 +252,14 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 
     if (!sImageFilename.empty())
         gRegistry["ZImageViewer"]["image"] = sImageFilename;
+
+
+    gGraphicSystem.SetArea(grFullArea);
+    if (!gGraphicSystem.Init())
+    {
+        assert(false);
+        return false;
+    }
 
 
     filesystem::path resourcesPath(appPath.parent_path());
