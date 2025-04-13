@@ -2,6 +2,7 @@
 #include <GdiPlus.h>
 #include <wrl.h> 
 #include <array>
+#include "helpers/Registry.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/FileHelpers.h"
 #include "ZTimer.h"
@@ -200,7 +201,11 @@ namespace ZD3D
         mD3DDevice->CreateRasterizerState(&rasterDesc, &rasterizerState);
         mD3DContext->RSSetState(rasterizerState);
 
-        CompileShaders();
+        if (!CompileShaders())
+        {
+            assert(false);
+            return false;
+        }
 
         mViewport = {};
         mViewport.TopLeftX = 0;
@@ -213,33 +218,6 @@ namespace ZD3D
 
 //        mSSPrimArray.resize(16*1024);
 
-
-        D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
-        depthStencilBufferDesc.Width = swapChainDesc.Width;      // Match your backbuffer width
-        depthStencilBufferDesc.Height = swapChainDesc.Height;    // Match your backbuffer height
-        depthStencilBufferDesc.MipLevels = 1;      // No mip levels
-        depthStencilBufferDesc.ArraySize = 1;      // Not a texture array
-        depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;  // 24-bit depth, 8-bit stencil
-        depthStencilBufferDesc.SampleDesc.Count = 1;  // No MSAA (or match swap chain settings)
-        depthStencilBufferDesc.SampleDesc.Quality = 0;
-        depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-        depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-        depthStencilBufferDesc.CPUAccessFlags = 0;
-        depthStencilBufferDesc.MiscFlags = 0;
-
-        hr = mD3DDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr, &mDepthStencilBuffer);
-        if (FAILED(hr))
-        {
-            assert(false);
-            return false;
-        }
-
-        hr = mD3DDevice->CreateDepthStencilView(mDepthStencilBuffer, nullptr, &mDepthStencilView);
-        if (FAILED(hr))
-        {
-            assert(false);
-            return false;
-        }
 
 
 
@@ -341,11 +319,11 @@ namespace ZD3D
         }
         HRESULT hr;
         // Resize swap chain (if needed)
-/*        hr = mSwapChain->ResizeBuffers(0, mViewport.Width, mViewport.Height, DXGI_FORMAT_UNKNOWN, 0);
+        hr = mSwapChain->ResizeBuffers(0, mViewport.Width, mViewport.Height, DXGI_FORMAT_UNKNOWN, 0);
         if (FAILED(hr))
         {
             return;
-        }*/
+        }
 
         // Get new back buffer
         ID3D11Texture2D* pBackBuffer = nullptr;
@@ -363,6 +341,52 @@ namespace ZD3D
         {
             return;
         }
+
+
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+        swapChainDesc.Width = (UINT)mViewport.Width;
+        swapChainDesc.Height = (UINT)mViewport.Height;
+        //swapChainDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; // HDR format
+        swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.SampleDesc.Count = 1;                     // Single-sampling (no MSAA)
+        swapChainDesc.SampleDesc.Quality = 0;
+        swapChainDesc.BufferCount = 2; // Double buffering
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+        swapChainDesc.Flags = 0;
+
+
+        D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
+        depthStencilBufferDesc.Width = swapChainDesc.Width;      // Match your backbuffer width
+        depthStencilBufferDesc.Height = swapChainDesc.Height;    // Match your backbuffer height
+        depthStencilBufferDesc.MipLevels = 1;      // No mip levels
+        depthStencilBufferDesc.ArraySize = 1;      // Not a texture array
+        depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;  // 24-bit depth, 8-bit stencil
+        depthStencilBufferDesc.SampleDesc.Count = 1;  // No MSAA (or match swap chain settings)
+        depthStencilBufferDesc.SampleDesc.Quality = 0;
+        depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+        depthStencilBufferDesc.CPUAccessFlags = 0;
+        depthStencilBufferDesc.MiscFlags = 0;
+
+        hr = mD3DDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr, &mDepthStencilBuffer);
+        if (FAILED(hr))
+        {
+            assert(false);
+        }
+
+        hr = mD3DDevice->CreateDepthStencilView(mDepthStencilBuffer, nullptr, &mDepthStencilView);
+        if (FAILED(hr))
+        {
+            assert(false);
+        }
+
+
+
+
+
+
 
         D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
         depthStencilDesc.DepthEnable = TRUE;  // Enable depth testing
@@ -388,12 +412,22 @@ namespace ZD3D
 //        if (mBackBuffer)
 //            mBackBuffer->Release();
 //        mBackBuffer = nullptr;
-//        if (mRenderTargetView)
-//            mRenderTargetView->Release();
-//        mRenderTargetView = nullptr;
+        if (mRenderTargetView)
+            mRenderTargetView->Release();
+        mRenderTargetView = nullptr;
 
         mSwapChain->ResizeBuffers(2, (UINT)r.Width(), (UINT)r.Height(), DXGI_FORMAT_B8G8R8A8_UNORM, 0);
 
+        mViewport = {};
+        mViewport.TopLeftX = 0;
+        mViewport.TopLeftY = 0;
+        mViewport.Width = static_cast<FLOAT>(r.Width());
+        mViewport.Height = static_cast<FLOAT>(r.Height());
+        mViewport.MinDepth = 0.0f;
+        mViewport.MaxDepth = 1.0f;
+
+
+        UpdateRenderTarget();
 /*        HRESULT hr = mSwapChain->GetBuffer(0, IID_PPV_ARGS(&mBackBuffer));
         if (FAILED(hr))
         {
@@ -894,15 +928,19 @@ namespace ZD3D
 
     bool CompileShaders()
     {
-        if (!fs::exists("res/shaders/"))
+        fs::path appPath = gRegistry["apppath"];
+        fs::path shadersPath = appPath;
+        shadersPath.append("res/shaders/");
+        if (!fs::exists(shadersPath))
         {
             cout << "No shaders folder\n";
-            return true;
+            MessageBox(0, "No shaders found", "No shaders found.", MB_OK | MB_ICONEXCLAMATION);
+            return false;
         }
 
         // enumerate shaders in subfolder and map them into our members
         tStringList shaderFiles;
-        for (auto const& dir_entry : fs::directory_iterator("res/shaders/"))
+        for (auto const& dir_entry : fs::directory_iterator(shadersPath))
         {
             if (dir_entry.is_regular_file())
             {

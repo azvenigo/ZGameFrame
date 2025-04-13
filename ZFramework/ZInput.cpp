@@ -104,7 +104,11 @@ void ZInput::OnMouseMove(int64_t x, int64_t y)
 
         IMessageTarget* pTarget = captureWin;
         if (!captureWin)
+        {
             pTarget = gpMainWin;
+            if (!pTarget)
+                return;
+        }
 
         gMessageSystem.Post(ZMessage("cursor_msg", pTarget, "subtype", "move", "x", x, "y", y));
 

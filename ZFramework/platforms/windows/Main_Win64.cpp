@@ -105,7 +105,6 @@ int processFolder(const fs::path& folderPath)
 
 int main(int argc, char* argv[])
 {
-
 //#define TEST_MESSAGE_POSTING
 #ifdef TEST_MESSAGE_POSTING
 
@@ -177,7 +176,6 @@ int main(int argc, char* argv[])
 
     if (!ZFrameworkApp::Initialize(argc, argv, userDataPath))
         return FALSE;
-
 
     uint64_t nTimeStamp = 0;
     uint64_t nLogFlushTimeStamp = gTimer.GetUSSinceEpoch();

@@ -12,34 +12,39 @@ class TextTestWin : public ZWin
 {
 public:
     TextTestWin();
-   
+
     bool        Init();
     bool        Shutdown();
     bool        Paint();
 
-   virtual bool	OnChar(char key);
-   virtual bool HandleMessage(const ZMessage& message);
+    virtual bool    OnChar(char key);
+    virtual bool    HandleMessage(const ZMessage& message);
+    bool            OnMouseDownL(int64_t x, int64_t y);
+    bool            OnMouseUpL(int64_t x, int64_t y);
+    bool            OnMouseMove(int64_t x, int64_t y);
+    bool            OnMouseDownR(int64_t x, int64_t y);
 
 private:
-    void        UpdateFontByParams();
-    void        UpdateText();
-    bool        LoadFont();
-    bool        SaveFont();
+    void            UpdateFontByParams();
+    void            UpdateText();
+    bool            LoadFont();
+    bool            SaveFont();
 
 
-    int32_t     mnSelectedFontIndex;
-    bool        mbEnableKerning;
-    //ZFontParams mCustomFontParams;
-    int64_t     mCustomFontHeight;
-    bool        mbViewBackground;
-    tZFontPtr   mpFont;
+    int32_t         mnSelectedFontIndex;
+    bool            mbEnableKerning;
+    int64_t         mCustomFontHeight;
+    bool            mbViewBackground;
+    tZFontPtr       mpFont;
 
-    tZBufferPtr  mpBackground;
+    tZBufferPtr     mpBackground;
 
-    ZGUI::TextBox mTextBox;
+    ZGUI::TextBox   mTextBox;
     bool            mbViewShadow;
     float           mShadowRadius;
-//    float           mShadowFalloff;
+
+    bool            mDraggingTextbox;
+    ZPoint          mDraggingTextboxAnchor;
 
     ZGUI::Palette mPalette;
 };

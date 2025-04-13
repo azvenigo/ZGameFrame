@@ -50,7 +50,7 @@ namespace ZGUI
 
         if (IsInvalid())
         {
-            bool bForceShadowRender = (renderedText != sText) || (renderedStyle != style);
+            bool bForceShadowRender = (renderedText != sText) || (renderedStyle != style) || (renderedBuf.GetArea().Area() != rDraw.Area());;
 
             renderedText = sText;
             renderedStyle = style;

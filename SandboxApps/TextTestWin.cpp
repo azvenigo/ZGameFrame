@@ -68,6 +68,9 @@ TextTestWin::TextTestWin()
 	mpFont = NULL;
     msWinName="TextTestWin";
     mbViewBackground = true;
+    mDraggingTextbox = false;
+    mbAcceptsFocus = true;
+    mbAcceptsCursorMessages = true;
 }
 
 
@@ -425,6 +428,44 @@ void TextTestWin::UpdateFontByParams()
     UpdateText();
 #endif
 
+}
+
+
+bool TextTestWin::OnMouseDownL(int64_t x, int64_t y)
+{
+    if (mTextBox.area.PtInRect(x, y))
+    {
+        SetCapture();
+        mDraggingTextbox = true;
+        mDraggingTextboxAnchor.x = x-mTextBox.area.left;
+        mDraggingTextboxAnchor.y = y-mTextBox.area.left;
+        Invalidate();
+    }
+
+    return ZWin::OnMouseDownL(x, y);
+}
+
+bool TextTestWin::OnMouseUpL(int64_t x, int64_t y)
+{
+    if (AmCapturing())
+        ReleaseCapture();
+    mDraggingTextbox = false;
+    return ZWin::OnMouseUpL(x, y);
+}
+
+bool TextTestWin::OnMouseMove(int64_t x, int64_t y)
+{
+    if (mDraggingTextbox)
+    {
+        mTextBox.area.MoveRect(x-mDraggingTextboxAnchor.x, y-mDraggingTextboxAnchor.y);
+        Invalidate();
+    }
+    return ZWin::OnMouseMove(x, y);
+}
+
+bool TextTestWin::OnMouseDownR(int64_t x, int64_t y)
+{
+    return ZWin::OnMouseDownR(x, y);
 }
 
 bool TextTestWin::HandleMessage(const ZMessage& message)
