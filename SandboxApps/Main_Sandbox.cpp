@@ -1,7 +1,7 @@
 #include "Main_Sandbox.h"
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
-#include "helpers/Logger.h"
+#include "helpers/FileLogger.h"
 
 #include "LifeWin.h"
 #include "ZWinImage.h"
@@ -48,7 +48,7 @@ ZAnimator               gAnimator;
 int64_t                 gnCheckerWindowCount = 8;
 int64_t                 gnLifeGridSize = 500;
 REG::Registry           gRegistry;
-LOG::Logger             gLogger;
+LOG::FileLogger         gLogger;
 
 bool                    gbShowOverlayWin = false;
 

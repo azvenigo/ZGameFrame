@@ -2,7 +2,7 @@
 #include "helpers/StringHelpers.h"
 #include "helpers/Registry.h"
 #include "helpers/CommandLineParser.h"
-#include "helpers/Logger.h"
+#include "helpers/FileLogger.h"
 #include "helpers/ZZFileAPI.h"
 #include "helpers/FileHelpers.h"
 
@@ -41,7 +41,7 @@ ZAnimator               gAnimator;
 ZWin*                   gpCaptureWin = nullptr;
 ZWin*                   gpMouseOverWin = nullptr;
 REG::Registry           gRegistry;
-LOG::Logger             gLogger;
+LOG::FileLogger         gLogger;
 
 
 void ZImageViewer::InitControlPanel()

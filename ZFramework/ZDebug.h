@@ -12,7 +12,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdarg.h>
-#include "helpers/Logger.h"
+#include "helpers/FileLogger.h"
 
 struct sDbgMsg
 {

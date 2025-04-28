@@ -50,7 +50,7 @@ set(COMMON_FILES
 ../../ZLibraries/Common/helpers/StringHelpers.h     ../../ZLibraries/Common/helpers/StringHelpers.cpp 
 ../../ZLibraries/Common/helpers/ThreadPool.h
 ../../ZLibraries/Common/helpers/Registry.h          ../../ZLibraries/Common/helpers/Registry.cpp
-../../ZLibraries/Common/helpers/Logger.h            ../../ZLibraries/Common/helpers/Logger.cpp
+../../ZLibraries/Common/helpers/FileLogger.h        ../../ZLibraries/Common/helpers/FileLogger.cpp
 ../../ZLibraries/Common/json/json.hpp
 ../../ZLibraries/Common/stb/stb_image.h
 ../../ZLibraries/Common/stb/stb_image_write.h

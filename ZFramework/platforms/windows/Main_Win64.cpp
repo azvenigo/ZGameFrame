@@ -9,7 +9,7 @@
 #include "helpers/CommandLineParser.h"
 #include "helpers/Registry.h"
 #include "ZDebug.h"
-#include "helpers/Logger.h"
+#include "helpers/FileLogger.h"
 #include "ZInput.h"
 #include "ZTickManager.h"
 #include "ZGraphicSystem.h"
