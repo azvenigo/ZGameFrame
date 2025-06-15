@@ -73,7 +73,7 @@ public:
         string type = message.GetType();
         if (type == "toggle_fullscreen")
         {
-            SwitchFullscreen(!gGraphicSystem.mbFullScreen);
+            SwitchFullscreen(!gpGraphicSystem->mbFullScreen);
         }
         return true;
     }
@@ -167,6 +167,14 @@ int main(int argc, char* argv[])
 
     ZFrameworkApp::InitRegistry(userDataPath);
 
+    assert(!gpGraphicSystem);
+    size_t s = sizeof(ZGraphicSystem);
+    std::cout << "sizeof(ZGraphicSystem): " << sizeof(ZGraphicSystem) << std::endl;
+    std::cout << "sizeof(tRect<__int64>): " << sizeof(tRect<__int64>) << std::endl;
+    std::cout << flush;
+
+     gpGraphicSystem = new ZGraphicSystem();
+
     // Perform application initialization:
     if (!WinInitInstance(argc, argv))
         return FALSE;
@@ -219,13 +227,15 @@ int main(int argc, char* argv[])
             {
                 gInput.Process();
 
-                ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
+                ZScreenBuffer* pScreenBuffer = gpGraphicSystem->GetScreenBuffer();
                 if (pScreenBuffer && gbRenderingEnabled)
                 {
                     // Copy to our window surface
                     pScreenBuffer->BeginRender();
 
-                    if (pScreenBuffer->DoesVisibilityNeedComputing())
+                    bool bNeedsComputing = pScreenBuffer->DoesVisibilityNeedComputing();
+
+                    if (bNeedsComputing)
                     {
                         int64_t nStartTime = gTimer.GetUSSinceEpoch();
                         pScreenBuffer->ResetVisibilityList();
@@ -436,8 +446,8 @@ BOOL WinInitInstance(int argc, char* argv[])
     if (!gRegistry.Get("appwin", "full_b", grFullScreenArea.bottom))
         gRegistry.SetDefault("appwin", "full_b", grFullScreenArea.bottom);
 
-    if (!gRegistry.Get("appwin", "fullscreen", gGraphicSystem.mbFullScreen))
-        gRegistry.SetDefault("appwin", "fullscreen", gGraphicSystem.mbFullScreen);
+    if (!gRegistry.Get("appwin", "fullscreen", gpGraphicSystem->mbFullScreen))
+        gRegistry.SetDefault("appwin", "fullscreen", gpGraphicSystem->mbFullScreen);
 
 
     // Finally if any command line overrides
@@ -446,7 +456,7 @@ BOOL WinInitInstance(int argc, char* argv[])
     int64_t height = 0;
     parser.RegisterParam(CLP::ParamDesc("width", &width, CLP::kNamed));
     parser.RegisterParam(CLP::ParamDesc("height", &height, CLP::kNamed));
-    parser.RegisterParam(CLP::ParamDesc("fullscreen", &gGraphicSystem.mbFullScreen, CLP::kNamed));
+    parser.RegisterParam(CLP::ParamDesc("fullscreen", &gpGraphicSystem->mbFullScreen, CLP::kNamed));
     parser.Parse(argc, argv);
     if (parser.GetParamWasFound("width"))
         grWindowedArea.right = grWindowedArea.left + width;
@@ -457,7 +467,7 @@ BOOL WinInitInstance(int argc, char* argv[])
 
 
 
-    if (gGraphicSystem.mbFullScreen)
+    if (gpGraphicSystem->mbFullScreen)
     {
         ghWnd = CreateWindow(szAppClass, szAppClass, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
         grFullArea.SetRect(0, 0, grFullScreenArea.Width(), grFullScreenArea.Height());
@@ -476,7 +486,7 @@ BOOL WinInitInstance(int argc, char* argv[])
         return FALSE;
     }
 
-	gGraphicSystem.SetHWND(ghWnd);
+    gpGraphicSystem->SetHWND(ghWnd);
 
 
     HCURSOR hCursor = ::LoadCursor(NULL, IDC_ARROW);
@@ -490,11 +500,11 @@ BOOL WinInitInstance(int argc, char* argv[])
 
 void SwitchFullscreen(bool bFullscreen)
 {
-    if (gGraphicSystem.mbFullScreen == bFullscreen)
+    if (gpGraphicSystem->mbFullScreen == bFullscreen)
         return;
 
-    gGraphicSystem.mbFullScreen = bFullscreen;
-    if (gGraphicSystem.mbFullScreen)
+    gpGraphicSystem->mbFullScreen = bFullscreen;
+    if (gpGraphicSystem->mbFullScreen)
     {
         MONITORINFO mi;
         mi.cbSize = sizeof(mi);
@@ -538,7 +548,7 @@ void HandleWindowSizeChanged()
 
     RECT rC;
     GetClientRect(ghWnd, &rC);
-    if (gGraphicSystem.mbFullScreen)
+    if (gpGraphicSystem->mbFullScreen)
     {
         grFullScreenArea.left = rC.left;
         grFullScreenArea.top = rC.top;
@@ -577,11 +587,11 @@ void HandleWindowSizeChanged()
             grFullArea.SetRect(0, 0, rC.right, rC.bottom);
             ZGUI::ComputeLooks();
 
-            gRegistry.Set("appwin", "fullscreen", gGraphicSystem.mbFullScreen);
+            gRegistry.Set("appwin", "fullscreen", gpGraphicSystem->mbFullScreen);
 
             gpGraphicSystem->HandleModeChanges(grFullArea);
             gpMainWin->SetArea(grFullArea);
-            gGraphicSystem.GetScreenBuffer()->SetVisibilityComputingFlag(true);
+            gpGraphicSystem->GetScreenBuffer()->SetVisibilityComputingFlag(true);
         }
     }
 
@@ -663,7 +673,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         gInput.OnKeyDown((uint32_t)wParam);
         if (wParam == VK_RETURN && gInput.IsKeyDown(VK_MENU))  // alt-enter
         {
-            SwitchFullscreen(!gGraphicSystem.mbFullScreen);
+            SwitchFullscreen(!gpGraphicSystem->mbFullScreen);
         }
         else if (wParam == VK_OEM_3)    // ~
         {
@@ -672,7 +682,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         else if (wParam == 'f' || wParam == 'F')
         {
             if (gInput.IsKeyDown(VK_CONTROL))
-                SwitchFullscreen(!gGraphicSystem.mbFullScreen);
+                SwitchFullscreen(!gpGraphicSystem->mbFullScreen);
         }
         else if (wParam == 'O')
         {
@@ -725,7 +735,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_SETFOCUS:
     {
-        ZScreenBuffer* pSB = gGraphicSystem.GetScreenBuffer();
+        ZScreenBuffer* pSB = gpGraphicSystem->GetScreenBuffer();
         GetKeyboardState((BYTE*) gInput.keyState);   // set up keystate for any keys up or down while window didn't have focus
 
         if (pSB)

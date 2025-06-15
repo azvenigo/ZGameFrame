@@ -28,7 +28,7 @@ ZWinDebugConsole*       gpDebugConsole;
 
 ZAnimObject_StaticImage* gpOverlay;
 ZGraphicSystem          gGraphicSystem;
-ZGraphicSystem*         gpGraphicSystem = &gGraphicSystem;
+ZGraphicSystem*         gpGraphicSystem = nullptr;
 ZRasterizer             gRasterizer;
 bool                    gbGraphicSystemResetNeeded(false);
 ZTimer                  gTimer(true);
@@ -217,7 +217,7 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
 	else if (mode == eSandboxMode::kCheckerboard)
 	{
 		int64_t nSubWidth = (int64_t) (grFullArea.Width() / (sqrt(gnCheckerWindowCount)));
-        int64_t nSubHeight = (int64_t) (nSubWidth / gGraphicSystem.GetAspectRatio());
+        int64_t nSubHeight = (int64_t) (nSubWidth / gpGraphicSystem->GetAspectRatio());
 
         int n3DCount = 0;
 
@@ -281,7 +281,7 @@ void Sandbox::InitChildWindows(Sandbox::eSandboxMode mode)
 	{
 		cLifeWin* pWin = new cLifeWin();
 		pWin->SetArea(grFullArea);
-		pWin->SetGridSize((int64_t) (gnLifeGridSize*(gGraphicSystem.GetAspectRatio())), gnLifeGridSize);
+		pWin->SetGridSize((int64_t) (gnLifeGridSize*(gpGraphicSystem->GetAspectRatio())), gnLifeGridSize);
 		gpMainWin->ChildAdd(pWin);
         sandboxWins.push_back(pWin);
     }
@@ -414,8 +414,10 @@ bool ZFrameworkApp::InitRegistry(std::filesystem::path userDataPath)
 
 bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path userDataPath)
 {
-    gGraphicSystem.SetArea(grFullArea);
-    if (!gGraphicSystem.Init())
+    assert(!gpGraphicSystem);
+    gpGraphicSystem = new ZGraphicSystem;
+    gpGraphicSystem->SetArea(grFullArea);
+    if (!gpGraphicSystem->Init())
     {
         assert(false);
         return false;
@@ -488,6 +490,10 @@ void ZFrameworkApp::Shutdown()
     }
 
     gResources.Shutdown();
-    gGraphicSystem.Shutdown();
+    if (gpGraphicSystem)
+    {
+        delete gpGraphicSystem;
+        gpGraphicSystem = nullptr;
+    }
     gAnimator.KillAllObjects();
 }

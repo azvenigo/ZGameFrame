@@ -81,7 +81,7 @@ ImageViewer::ImageViewer()
     mpRatedImagesStrip = nullptr;
     mpFolderLabel = nullptr;
 
-    assert(gGraphicSystem.GetScreenBuffer());
+    assert(gpGraphicSystem->GetScreenBuffer());
 }
  
 ImageViewer::~ImageViewer()
@@ -178,7 +178,7 @@ void ImageViewer::UpdateUI()
         mpFolderLabel->SetArea(rSelector);
     }
 
-//    gGraphicSystem.GetScreenBuffer()->EnableRendering(false);
+//    gpGraphicSystem->GetScreenBuffer()->EnableRendering(false);
     if (mpWinImage && mbInitted)
     {
         mpWinImage->SetArea(rImageArea);
@@ -1531,7 +1531,7 @@ void ImageViewer::UpdateControlPanel()
 
 
     string sAppPath = gRegistry["apppath"];
-    if (gGraphicSystem.mbFullScreen)
+    if (gpGraphicSystem->mbFullScreen)
         gMessageSystem.Post(ZMessage("set_image", "target", "toggle_fullscreen", "image", sAppPath + "/res/windowed.svg"));
     else
         gMessageSystem.Post(ZMessage("set_image", "target", "toggle_fullscreen", "image", sAppPath + "/res/fullscreen.svg"));

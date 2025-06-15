@@ -7,6 +7,8 @@
 
 class ZScreenBuffer;
 
+#pragma pack(push)
+#pragma pack()  // Reset to default alignment
 
 class ZGraphicSystem
 {
@@ -34,12 +36,14 @@ public:
     bool                    HandleModeChanges(ZRect& r);
     bool                    mbFullScreen;
 
-protected:
+//protected:
     bool                    mbInitted;
     ZScreenBuffer*          mpScreenBuffer;
     ZRect                   mrSurfaceArea;
     
 };
 
-extern ZGraphicSystem gGraphicSystem;
+#pragma pack(pop)
+
+//extern ZGraphicSystem gGraphicSystem;
 extern ZGraphicSystem* gpGraphicSystem;

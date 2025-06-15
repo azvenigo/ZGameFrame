@@ -121,7 +121,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
     if (filenames.empty())
         return true;
 
-    ZScreenBuffer* pScreenBuffer = gGraphicSystem.GetScreenBuffer();
+    ZScreenBuffer* pScreenBuffer = gpGraphicSystem->GetScreenBuffer();
     pScreenBuffer->EnableRendering(false);
 
 

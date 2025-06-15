@@ -20,8 +20,9 @@ using namespace std;
 extern ZRect            grFullArea;
 ZMainWin*               gpMainWin;
 ZWinDebugConsole*       gpDebugConsole;
-ZGraphicSystem          gGraphicSystem;
-ZGraphicSystem*         gpGraphicSystem = &gGraphicSystem;
+//ZGraphicSystem          gGraphicSystem;
+//ZGraphicSystem*         gpGraphicSystem = &gGraphicSystem;
+ZGraphicSystem*         gpGraphicSystem(nullptr);
 ZRasterizer             gRasterizer;
 bool                    gbGraphicSystemResetNeeded(false);
 ZTimer                  gTimer(true);
@@ -254,8 +255,9 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
         gRegistry["ZImageViewer"]["image"] = sImageFilename;
 
 
-    gGraphicSystem.SetArea(grFullArea);
-    if (!gGraphicSystem.Init())
+    assert(gpGraphicSystem);
+    gpGraphicSystem->SetArea(grFullArea);
+    if (!gpGraphicSystem->Init())
     {
         assert(false);
         return false;
@@ -307,7 +309,11 @@ void ZFrameworkApp::Shutdown()
     }
 
     gResources.Shutdown();
-    gGraphicSystem.Shutdown();
+    if (gpGraphicSystem)
+    {
+        delete gpGraphicSystem;
+        gpGraphicSystem = nullptr;
+    }
     gAnimator.KillAllObjects();
 
     gRegistry.Save();

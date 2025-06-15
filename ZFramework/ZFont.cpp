@@ -37,8 +37,6 @@ extern HWND ghWnd;
 #endif
 extern ZTimer				gTimer;
 
-#pragma pack (1)
-
 string sZFontHeader("ZFONT v3.1 by Alex Zvenigorodsky");
 
 #ifdef _DEBUG

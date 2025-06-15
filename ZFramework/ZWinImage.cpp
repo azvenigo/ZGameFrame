@@ -587,7 +587,8 @@ bool ZWinImage::Paint()
 
     ZRect rDest(mpSurface.get()->GetArea());
 
-      mpSurface.get()->Fill(mFillColor);
+    //mpSurface.get()->Fill(mFillColor);
+    mpSurface.get()->Fill(0xff88ff88);
 
     ZASSERT(mpSurface.get()->GetPixels() != nullptr);
 

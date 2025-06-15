@@ -33,8 +33,12 @@ using namespace std;
 
 ZScreenBuffer::ZScreenBuffer()
 {
+    mpGraphicSystem = nullptr;
     mbRenderingEnabled = true;
     mbCurrentlyRendering = false;
+    mbVisibilityNeedsComputing = true;
+    memset(&mPS, 0, sizeof(mPS));
+    mDC = 0;
 }
 
 ZScreenBuffer::~ZScreenBuffer()
@@ -45,8 +49,10 @@ ZScreenBuffer::~ZScreenBuffer()
 
 bool ZScreenBuffer::Init(int64_t nWidth, int64_t nHeight, ZGraphicSystem* pGraphicSystem)
 {
-	mpGraphicSystem = pGraphicSystem;
-	if (!ZBuffer::Init(nWidth, nHeight))
+    printf("Before assignment: mpGraphicSystem = %p, pGraphicSystem = %p\n", mpGraphicSystem, pGraphicSystem);
+    mpGraphicSystem = pGraphicSystem;
+    printf("After assignment: mpGraphicSystem = %p\n", mpGraphicSystem);
+    if (!ZBuffer::Init(nWidth, nHeight))
 		return false;
 
 
@@ -152,8 +158,8 @@ bool ZScreenBuffer::PaintToSystem()
 
     
     mpSSPrim->texture->UpdateTexture(this);
-    HRESULT hr;
-/*    void* pBits = mpPixels;
+/*    HRESULT hr;
+    void* pBits = mpPixels;
 
     D3D11_MAPPED_SUBRESOURCE mapped;
     hr = ZD3D::mD3DContext->Map(mDynamicTexture.mpTexture2D, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
@@ -193,7 +199,7 @@ bool ZScreenBuffer::PaintToSystem()
     // Copy staging texture to back buffer
 //    ZD3D::mD3DContext->CopyResource(ZD3D::mBackBuffer, mDynamicTexture.GetTexture(ZD3D::mD3DContext));
 
-    mpSSPrim->SetScreenRect(mSurfaceArea, 0.9);
+    mpSSPrim->SetScreenRect(mSurfaceArea, 0.9f);
     mpSSPrim->state = ZD3D::ScreenSpacePrimitive::eState::kVisible;
 
 //    ZD3D::AddPrim(ZD3D::GetVertexShader("ScreenSpaceShader"), ZD3D::GetPixelShader("ScreenSpaceShader"), &mDynamicTexture, verts);
@@ -526,6 +532,20 @@ bool ZScreenBuffer::RenderBuffer(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst)
 #else
 #define DebugVisibilityOutput
 #endif
+
+
+void	ZScreenBuffer::SetVisibilityComputingFlag(bool bSet) 
+{ 
+
+    void* pTest = &mbVisibilityNeedsComputing;
+    mbVisibilityNeedsComputing = bSet; 
+
+    bool btest = mbVisibilityNeedsComputing;
+    if (!bSet)
+    {
+        int stophere = 5;
+    }
+}
 
 bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenRect)
 {

@@ -33,6 +33,7 @@ public:
 typedef std::list<ZScreenRect> tScreenRectList;
 
 
+#pragma pack()  // Reset to default alignment
 
 class ZScreenBuffer : public ZBuffer
 {
@@ -52,7 +53,7 @@ public:
 	// Visibility Related
 	void	ResetVisibilityList() { mScreenRectList.clear(); }
 	bool	AddScreenRectAndComputeVisibility(const ZScreenRect& screenRect);
-	void	SetVisibilityComputingFlag(bool bSet) { mbVisibilityNeedsComputing = bSet; }
+    void	SetVisibilityComputingFlag(bool bSet);
 	bool	DoesVisibilityNeedComputing() { return mbVisibilityNeedsComputing; }
 	size_t	GetVisibilityCount() { return mScreenRectList.size(); }
 

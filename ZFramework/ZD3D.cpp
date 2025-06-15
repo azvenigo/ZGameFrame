@@ -400,7 +400,7 @@ namespace ZD3D
         
 
         // Set new render target
-//        mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, nullptr);
+        mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, nullptr);
         mD3DContext->OMSetRenderTargets(1, &mRenderTargetView, mDepthStencilView);
 
 
@@ -464,7 +464,7 @@ namespace ZD3D
     {
         UpdateRenderTarget();
 
-        const FLOAT clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        const FLOAT clearColor[4] = { 0.0f, 1.0f, 1.0f, 1.0f };
         mD3DContext->ClearRenderTargetView(mRenderTargetView, clearColor);
         mD3DContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
@@ -590,6 +590,8 @@ namespace ZD3D
         ID3D11ShaderResourceView* pSRV = pPrim->texture->GetSRV(mD3DContext);
         mD3DContext->PSSetShaderResources(0, 1, &pSRV);
         mD3DContext->PSSetSamplers(0, 1, &mSamplerState);
+
+        size_t size = pPrim->verts.size();
 
         // Draw triangle
         mD3DContext->Draw(pPrim->verts.size(), 0);
