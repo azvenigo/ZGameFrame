@@ -83,11 +83,10 @@ list(APPEND INCLUDE_DIRS
 ../../ZLibraries/Common/curl/include
 ../ZFramework/platforms/windows
 ../external
-../external/lunasvg/include
 )
 
-list(APPEND LINK_DIRS ../../ZLibraries/Common/curl/lib ../external/lunasvg/build/debug)
-list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libcurl.lib lunasvg.lib DXGI.lib d3d11.lib)
+list(APPEND LINK_DIRS ../../ZLibraries/Common/curl/lib)
+list(APPEND LINK_LIBS gdiplus.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libcurl.lib lunasvg DXGI.lib d3d11.lib)
 
 
 
@@ -156,9 +155,10 @@ endfunction()
 ####################
 # PROJECTS
 
+set(LUNASVG_BUILD_STATIC ON CACHE BOOL "" FORCE)
+add_subdirectory(external/lunasvg EXCLUDE_FROM_ALL)
 add_subdirectory(SandboxApps)
 add_subdirectory(ZImageViewer)
-#add_subdirectory(External/lunasvg)
 
 
 set (SHADER_IN ${CMAKE_CURRENT_LIST_DIR}/ZFramework/default_resources/shaders)
