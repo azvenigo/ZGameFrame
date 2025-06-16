@@ -246,6 +246,7 @@ namespace ZGUI
             mpFont = gpFontSystem->GetFont(fp); // cache
 
         assert(mpFont);
+        assert(mpFont->Height() > 1 && mpFont->Height() < 2000);
         return mpFont;
     }
 
