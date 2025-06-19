@@ -663,7 +663,9 @@ namespace ZD3D
             floatPixels[i * 4 + 2] = ((argb >> 0) & 0xFF) / 255.0f;  // B
             floatPixels[i * 4 + 3] = ((argb >> 24) & 0xFF) / 255.0f; // A
         }
-        mD3DContext->Map(pStaging, 0, D3D11_MAP_WRITE, 0, &mappedResource);
+        hr = mD3DContext->Map(pStaging, 0, D3D11_MAP_WRITE, 0, &mappedResource);
+        assert(!FAILED(hr));
+
         float* dest = reinterpret_cast<float*>(mappedResource.pData);
         size_t rowPitch = mappedResource.RowPitch / sizeof(float);
         for (size_t y = 0; y < h; y++) 

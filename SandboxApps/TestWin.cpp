@@ -110,7 +110,7 @@ bool TestWin::Init()
     textBox.style.fp.nTracking = 10;
     textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
     textBox.style.wrap = false;
-    textBox.style.fp.nScalePoints = 10000;
+    textBox.style.fp.nScalePoints = 1000;
 //    textBox.blurBackground = 2.0;
     textBox.shadow.col = 0xff000000;
     textBox.shadow.offset   = ZPoint(15, 15);

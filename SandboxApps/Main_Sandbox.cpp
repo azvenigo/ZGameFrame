@@ -414,19 +414,6 @@ bool ZFrameworkApp::InitRegistry(std::filesystem::path userDataPath)
 
 bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path userDataPath)
 {
-    assert(!gpGraphicSystem);
-    gpGraphicSystem = new ZGraphicSystem;
-    gpGraphicSystem->SetArea(grFullArea);
-    if (!gpGraphicSystem->Init())
-    {
-        assert(false);
-        return false;
-    }
-
-    gResources.Init("res/");// todo, move this define elsewhere?
-
-    ZGUI::ComputeLooks();
-
     filesystem::path appDataPath(userDataPath);
     appDataPath += "/ZSandbox/";
 
@@ -451,6 +438,12 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
 
 
 
+    gResources.Init("res/");// todo, move this define elsewhere?
+
+    ZGUI::ComputeLooks();
+
+
+
     std::filesystem::create_directory(font_cache);    // ensure font cache exists...keep in working folder or move elsewhere?
     gpFontSystem->SetCacheFolder(font_cache.string());
     gpFontSystem->SetDefaultFont(gDefaultTextFont);
@@ -467,6 +460,16 @@ bool ZFrameworkApp::Initialize(int argc, char* argv[], std::filesystem::path use
     int32_t nMode;
     if (!gRegistry.Get("sandbox", "mode", nMode))
         nMode = Sandbox::kImageProcess;
+
+
+    assert(gpGraphicSystem);
+    gpGraphicSystem->SetArea(grFullArea);
+    if (!gpGraphicSystem->Init())
+    {
+        assert(false);
+        return false;
+    }
+
 
     Sandbox::InitChildWindows((Sandbox::eSandboxMode) nMode);
     return true;

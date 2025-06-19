@@ -77,7 +77,9 @@ namespace ZGUI
                     }
 
                     renderedBuf.FillAlpha(style.bgCol, &rLabel);
-                    renderedBuf.Blur(blurBackground, 1.0f, &rLabel);
+                    renderedBuf.Blur(blurBackground, 1.0f);
+//                    ZD3D::Blur(&renderedBuf, &renderedBuf, 2.0, 0.66);
+
                 }
                 else
                     renderedBuf.Fill(style.bgCol, &rLabel);
@@ -328,8 +330,8 @@ namespace ZGUI
             if (radius > 1.0)
             {
                 float falloff = radius / 3.0;
-                ZD3D::Blur(renderedShadow.get(), renderedShadow.get(), radius, falloff);
-                //Compute(pSrc, rCastSrc, renderedShadow.get(), ZPoint(radius, radius), radius, falloff);
+                //ZD3D::Blur(renderedShadow.get(), renderedShadow.get(), radius, falloff);
+                Compute(pSrc, rCastSrc, renderedShadow.get(), ZPoint(radius, radius), radius, falloff);
 
 
             }
@@ -348,6 +350,10 @@ namespace ZGUI
 
     bool Shadow::Paint(ZBuffer* pDst, ZRect rCastSrc)
     {
+
+        return true;
+
+
         if (!pDst || !renderedShadow)
             return false;
 
