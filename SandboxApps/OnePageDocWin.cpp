@@ -50,7 +50,7 @@ bool OnePageDocWin::Init()
         mDocStyle = ZGUI::Style(ZFontParams("verdana", nHeightPoints, 100));
         ZRect rFull;
         int64_t lines = mDocStyle.Font()->CalculateNumberOfLines(nHeightPoints*5, (uint8_t*)sText.c_str(), sText.length());
-        rFull.SetRect(0, 0, nHeightPoints*5, lines * mDocStyle.fp.Height());
+        rFull.Set(0, 0, nHeightPoints*5, lines * mDocStyle.fp.Height());
         
         tZBufferPtr docImage(new ZBuffer());
         docImage->Init(rFull.Width(), rFull.Height());

@@ -259,7 +259,7 @@ bool ZWinBtn::Paint()
     int64_t nOffset = max((int)mCaption.style.fp.Height() / 16, (int)1);
     ZRect rCaption = mAreaLocal;
     if (mDrawState == kDown)
-        rCaption.OffsetRect(nOffset, nOffset);
+        rCaption.Offset(nOffset, nOffset);
 
     mSVGImage.area = rCaption;
     if (!mSVGImage.Paint(mpSurface.get()))

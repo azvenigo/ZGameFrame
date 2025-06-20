@@ -194,7 +194,7 @@ bool ZWinImage::OnMouseDownR(int64_t x, int64_t y)
 
                 ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
 
-                mImageArea.SetRect(rNewArea);
+                mImageArea.Set(rNewArea);
             }
             else
             {
@@ -303,7 +303,7 @@ bool ZWinImage::OnMouseWheel(int64_t x, int64_t y, int64_t nDelta)
 
         ZRect rNewArea(nNewLeft, nNewTop, nNewRight, nNewBottom);
 
-        mImageArea.SetRect(rNewArea);
+        mImageArea.Set(rNewArea);
         SetZoom(fNewZoom);
         return true;
     }
@@ -364,7 +364,7 @@ void ZWinImage::ScrollTo(int64_t nX, int64_t nY)
         nY = mAreaLocal.bottom - mImageArea.Height(); // snap right
     }
 
-    mImageArea.MoveRect(nX, nY);
+    mImageArea.Move(nX, nY);
     UpdateZoomIcon();
     Invalidate();
 }
@@ -430,7 +430,7 @@ void ZWinImage::FitImageToWindow()
 
 void ZWinImage::CenterImage()
 {
-    mImageArea.SetRect(ZGUI::Arrange(mImageArea, mAreaLocal, ZGUI::C));
+    mImageArea.Set(ZGUI::Arrange(mImageArea, mAreaLocal, ZGUI::C));
     UpdateZoomIcon();
     Invalidate();
 }
@@ -460,10 +460,10 @@ void ZWinImage::UpdateZoomIcon()
         return;
     }
 
-    rZoomedImageArea.OffsetRect(mAreaInParent.TL());  // adjust to local image coordinates
+    rZoomedImageArea.Offset(mAreaInParent.TL());  // adjust to local image coordinates
 
     ZRect rBounds(rZoomedImageArea);
-    rBounds.UnionRect(rImageArea);
+    rBounds.Union(rImageArea);
 
     double fBoundsRatio = (double)rBounds.Height() / (double)rBounds.Width();
 
@@ -475,8 +475,8 @@ void ZWinImage::UpdateZoomIcon()
     ZRect rScreenIcon(rImageArea.left * fIconScale, rImageArea.top * fIconScale, rImageArea.right * fIconScale, rImageArea.bottom * fIconScale);
     ZRect rImageIcon(rZoomedImageArea.left * fIconScale, rZoomedImageArea.top * fIconScale, rZoomedImageArea.right * fIconScale, rZoomedImageArea.bottom * fIconScale);
 
-    rScreenIcon.OffsetRect(-rBounds.left * fIconScale, -rBounds.top * fIconScale);
-    rImageIcon.OffsetRect(-rBounds.left * fIconScale, -rBounds.top * fIconScale);
+    rScreenIcon.Offset(-rBounds.left * fIconScale, -rBounds.top * fIconScale);
+    rImageIcon.Offset(-rBounds.left * fIconScale, -rBounds.top * fIconScale);
 
 
 
@@ -516,7 +516,7 @@ void ZWinImage::SetZoom(double fZoom)
         int64_t nImageHeight = (int64_t)(nImageWidth / fRatio);
 
         ZPoint tl(((mImageArea.left + mImageArea.right) - nImageWidth) / 2, ((mImageArea.top + mImageArea.bottom) - nImageHeight) / 2);
-        mImageArea.SetRect(tl.x, tl.y, tl.x + nImageWidth, tl.y + nImageHeight);
+        mImageArea.Set(tl.x, tl.y, tl.x + nImageWidth, tl.y + nImageHeight);
 
         if (mfZoom == 1.0)
             mViewState = kZoom100;
@@ -651,7 +651,7 @@ bool ZWinImage::Paint()
 
 void ZWinImage::ClearSelection()
 {
-    mrSelection.SetRect(-1, -1, -1, -1);
+    mrSelection.Set(-1, -1, -1, -1);
     Invalidate();
 }
 
@@ -671,8 +671,8 @@ ZRect ZWinImage::GetSelection()
         else
             nH = (int64_t)((double)nH / (double)abs(nH) * (double)abs(nW));
 
-        rSelection.SetRect(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x+nW, mMouseDownOffset.y+nH);
-        rSelection.NormalizeRect();
+        rSelection.Set(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x+nW, mMouseDownOffset.y+nH);
+        rSelection.Normalize();
 
         if (rSelection.Width() > rSelection.Height())
             rSelection.right = rSelection.left + rSelection.Height();
@@ -681,17 +681,17 @@ ZRect ZWinImage::GetSelection()
     }
     else
     {
-        rSelection.SetRect(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x + nW, mMouseDownOffset.y + nH);
+        rSelection.Set(mMouseDownOffset.x, mMouseDownOffset.y, mMouseDownOffset.x + nW, mMouseDownOffset.y + nH);
     }
 
-    rSelection.IntersectRect(mImageArea);   // clip
+    rSelection.Intersect(mImageArea);   // clip
 
     return rSelection;
 }
 
 void ZWinImage::ToImageCoords(ZRect& r)
 {
-    r.OffsetRect(-mImageArea.left, -mImageArea.top);
+    r.Offset(-mImageArea.left, -mImageArea.top);
     int64_t nW = r.Width();
     int64_t nH = r.Height();
 

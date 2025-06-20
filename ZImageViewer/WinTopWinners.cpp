@@ -95,9 +95,9 @@ void WinTopWinners::UpdateUI()
         }
 
         if (rScaled.Height() <= nThumbSide)
-            rThumb.OffsetRect(0, nThumbSide);
+            rThumb.Offset(0, nThumbSide);
         else
-            rThumb.OffsetRect(0, rScaled.Height());
+            rThumb.Offset(0, rScaled.Height());
 
         mThumbRects[rank-1] = rScaled;
 
@@ -118,7 +118,7 @@ bool WinTopWinners::OnMouseDownL(int64_t x, int64_t y)
         if (r.PtInRect(x, y))
         {
             ZRect rScreen(r);
-            rScreen.OffsetRect(mAreaAbsolute.TL());
+            rScreen.Offset(mAreaAbsolute.TL());
 
             // post
             string sLink("{select;filename=" + SH::URL_Encode((*it).filename) + ";target=" + mpParentWin->GetTargetName() + ";area=" + RectToString(rScreen) + "}");

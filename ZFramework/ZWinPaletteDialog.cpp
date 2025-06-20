@@ -143,7 +143,7 @@ ZRect ZWinPaletteDialog::PaletteRect(int64_t nIndex, eCategory category)
     ZRect r(mrPaletteEntryArea.left, mrPaletteEntryArea.top, mrPaletteEntryArea.right, mrPaletteEntryArea.top + mnPaletteEntryHeight);
     int64_t w = r.Width() / 3;
 
-    r.OffsetRect(0, nIndex * mnPaletteEntryHeight);
+    r.Offset(0, nIndex * mnPaletteEntryHeight);
 
     if (category == kDefault)
         return ZRect(r.left, r.top, r.left + w, r.bottom);
@@ -281,7 +281,7 @@ bool ZWinPaletteDialog::Paint()
 
 
     ZRect rSVOutline(mrSVArea);
-    rSVOutline.InflateRect(4, 4);
+    rSVOutline.Inflate(4, 4);
     mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rSVOutline, ZBuffer::kEdgeBltMiddle_None);
 
 
@@ -299,7 +299,7 @@ bool ZWinPaletteDialog::Paint()
 
 
     ZRect rHOutline(mrHArea);
-    rHOutline.InflateRect(4, 4);
+    rHOutline.Inflate(4, 4);
     mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, rHOutline, ZBuffer::kEdgeBltMiddle_None);
 
     for (int y = 0; y < mrHArea.Height(); y++)
@@ -360,9 +360,9 @@ bool ZWinPaletteDialog::Paint()
         style.pos = ZGUI::CB;
 
         mStyle.Font()->DrawText(mpSurface.get(), "reset", rCaption, &style);
-        rCaption.OffsetRect(rCaption.Width(), 0);
+        rCaption.Offset(rCaption.Width(), 0);
         mStyle.Font()->DrawText(mpSurface.get(), "undo", rCaption, &style);
-        rCaption.OffsetRect(rCaption.Width(), 0);
+        rCaption.Offset(rCaption.Width(), 0);
         mStyle.Font()->DrawText(mpSurface.get(), "edit", rCaption, &style);
 
         mpSurface.get()->BltEdge(gDefaultDialogBackground.get(), grDefaultDialogBackgroundEdgeRect, mrPaletteEntryArea, ZBuffer::kEdgeBltMiddle_None);
@@ -374,7 +374,7 @@ bool ZWinPaletteDialog::Paint()
 void ZWinPaletteDialog::ComputeAreas()
 {
     ZRect rFull = mAreaLocal;
-    rFull.DeflateRect(gM, gM);
+    rFull.Deflate(gM, gM);
 
     int64_t nHSVSide = rFull.Width();
     if (rFull.Height() < rFull.Width())
@@ -391,8 +391,8 @@ void ZWinPaletteDialog::ComputeAreas()
     mrHArea = ZGUI::Arrange(ZRect(gM, nSVSide), rHSVArea, ZGUI::IRIT);                               // Right HUE rectangle
     mrSVArea = ZGUI::Arrange(ZRect(nSVSide, nSVSide), rHSVArea, ZGUI::ILIT);               // Left SV square
 
-    mrColorValueBoxesArea.SetRect(rHSVArea.left, rHSVArea.bottom + gSpacer, rHSVArea.right, rFull.bottom);
-    mrPaletteEntryArea.SetRect(rFull.left, rHSVArea.top, rHSVArea.left - gM, rHSVArea.bottom);
+    mrColorValueBoxesArea.Set(rHSVArea.left, rHSVArea.bottom + gSpacer, rHSVArea.right, rFull.bottom);
+    mrPaletteEntryArea.Set(rFull.left, rHSVArea.top, rHSVArea.left - gM, rHSVArea.bottom);
 
 
     if (mpColorMap)
@@ -409,7 +409,7 @@ void ZWinPaletteDialog::ComputeAreas()
     if (mpRGBEdit)
     {
         ZRect rEdit(mStyle.Font()->StringRect("WWWWWWWW"));   // enough space for ARGB hex without 0x
-        rEdit.InflateRect(gSpacer*2, gSpacer);
+        rEdit.Inflate(gSpacer*2, gSpacer);
         rEdit = ZGUI::Arrange(rEdit, mrSVArea, ZGUI::ILOB, 0, gM);
         mpRGBEdit->SetArea(rEdit);
         mpRGBEdit->mnCharacterLimit = 8;

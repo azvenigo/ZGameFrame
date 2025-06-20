@@ -82,7 +82,7 @@ void ZLine::SetBounds(ZRect rBounds)
 {
     mrBounds = rBounds;
     int64_t nInflate = RANDU64(0, 600);
-    mrBounds.InflateRect(nInflate, nInflate);
+    mrBounds.Inflate(nInflate, nInflate);
 }
 
 ZLine::~ZLine()
@@ -501,8 +501,8 @@ bool cFloatLinesWin::Paint()
 
 //    double dX = 10.0 * (1.0 + cos(gTimer.GetMSSinceEpoch() / 10000.0));
 //    double dY = 10.0 * (1.0 + cos(gTimer.GetMSSinceEpoch() / 9000.0));
-//    r.OffsetRect(dX, dY);
-//    r.OffsetRect(1, 1);
+//    r.Offset(dX, dY);
+//    r.Offset(1, 1);
 //    mpSurface->Blt(mpSurface.get(), r, mpSurface->GetArea());
 
 /*    size_t bytes = r.Width() * 4;
@@ -805,7 +805,7 @@ void cFloatLinesWin::DrawAlphaLine(ZBuffer* pBufferToDrawTo, ZFloatVertex& v1, Z
         rLineRect.right = (int64_t)max(v1.mx + mfLineThickness / 2.0f, v2.mx + mfLineThickness / 2.0f);
     }
 
-    rLineRect.IntersectRect(/*&rLineRect, */&rDest);
+    rLineRect.Intersect(/*&rLineRect, */&rDest);
 
     double* pSurface = mpFloatBuffer;
     int64_t nStride = mAreaInParent.Width() * 3;

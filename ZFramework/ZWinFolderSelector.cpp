@@ -99,7 +99,7 @@ bool ZWinFolderLabel::OnMouseIn()
 
 bool ZWinFolderLabel::OnMouseOut()
 {
-    mrMouseOver.SetRect(0, 0, 0, 0);
+    mrMouseOver.Set(0, 0, 0, 0);
     SizeToPath();
 
     return ZWin::OnMouseOut();
@@ -179,7 +179,7 @@ ZRect ZWinFolderLabel::PathRect()
 void ZWinFolderLabel::MouseOver(int64_t x, std::filesystem::path& subPath, ZRect& rArea)
 {
     ZRect r(PathRect());
-    r.DeflateRect(mStyle.pad.h, mStyle.pad.v);
+    r.Deflate(mStyle.pad.h, mStyle.pad.v);
     r.bottom -= mStyle.pad.v;
     tZFontPtr pFont = mStyle.Font();
 
@@ -197,7 +197,7 @@ void ZWinFolderLabel::MouseOver(int64_t x, std::filesystem::path& subPath, ZRect
         if (x < endW)
         {
             subPath = sPath.substr(0, slash);
-            rArea.SetRect(r.left + startW, r.top, r.left + endW, r.bottom);
+            rArea.Set(r.left + startW, r.top, r.left + endW, r.bottom);
             return;
         }
         startW = endW;
@@ -206,7 +206,7 @@ void ZWinFolderLabel::MouseOver(int64_t x, std::filesystem::path& subPath, ZRect
     } while (slash != string::npos);
 
     subPath = mCurPath;
-    rArea.SetRect(r.left + startW, r.top, r.right, r.bottom);
+    rArea.Set(r.left + startW, r.top, r.right, r.bottom);
 }
 
 
@@ -312,7 +312,7 @@ ZWinFolderSelector* ZWinFolderSelector::Show(ZWinFolderLabel* pLabel, ZRect& rLi
 
 bool ZWinFolderSelector::ScanFolder(const std::filesystem::path& folder)
 {
-    mrMouseOver.SetRect(0, 0, 0, 0);
+    mrMouseOver.Set(0, 0, 0, 0);
     mCurPath = folder;
 
     mpFolderList->Clear();

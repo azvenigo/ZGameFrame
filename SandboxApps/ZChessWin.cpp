@@ -41,7 +41,7 @@ bool ZChoosePGNWin::Init()
     pLabel->mStyle.pos = ZGUI::LB;
     ChildAdd(pLabel);
 
-    rControl.OffsetRect(0, rControl.Height());
+    rControl.Offset(0, rControl.Height());
 
 
     ZWinTextEdit* pEdit = new ZWinTextEdit(&msFilter);
@@ -55,7 +55,7 @@ bool ZChoosePGNWin::Init()
     ZWinBtn* pBtn;
 
     ZRect rButton(0, 0, nButtonWidth, nButtonHeight);
-    rButton.OffsetRect(gSpacer, mAreaLocal.Height() - gSpacer - rButton.Height());
+    rButton.Offset(gSpacer, mAreaLocal.Height() - gSpacer - rButton.Height());
 
 
 
@@ -78,7 +78,7 @@ bool ZChoosePGNWin::Init()
     pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "Cancel";
     pBtn->mCaption.style = btnStyle;
-    rButton.OffsetRect(rButton.Width(), 0);
+    rButton.Offset(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     //pBtn->SetMessage("cancelpgnselect;target=chesswin");
     pBtn->msButtonMessage = ZMessage("cancelpgnselect", mpParentWin);
@@ -106,7 +106,7 @@ bool ZChoosePGNWin::Paint()
     mpSurface->Fill(mFillColor);
 
     ZRect rText(mAreaLocal);
-    rText.OffsetRect(gSpacer, gSpacer);
+    rText.Offset(gSpacer, gSpacer);
     gStyleCaption.Font()->DrawTextParagraph(mpSurface.get(), msCaption, rText);
     return ZWin::Paint();
 }
@@ -274,7 +274,7 @@ bool ZPGNWin::Init()
     size_t nButtonSize = (mAreaLocal.Width() - gSpacer *2) / nButtonSlots;
 
     ZRect rButton(0, 0, nButtonSize, nButtonSize);
-    rButton.OffsetRect(gSpacer, mAreaLocal.Height() - gSpacer - rButton.Height());
+    rButton.Offset(gSpacer, mAreaLocal.Height() - gSpacer - rButton.Height());
 
     pBtn = new ZWinBtn();
     pBtn->mCaption.sText = ")"; // wingdings 3 to the beggining
@@ -286,7 +286,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "v"; // back one
     pBtn->mCaption.style = wd3;
-    rButton.OffsetRect(rButton.Width(), 0);
+    rButton.Offset(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->msButtonMessage = ZMessage("backone", this);
     ChildAdd(pBtn);
@@ -294,7 +294,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "w"; // forward one
     pBtn->mCaption.style = wd3;
-    rButton.OffsetRect(rButton.Width(), 0);
+    rButton.Offset(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->msButtonMessage = ZMessage("forwardone", this);
     ChildAdd(pBtn);
@@ -302,7 +302,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "*"; // to end
     pBtn->mCaption.style = wd3;
-    rButton.OffsetRect(rButton.Width(), 0);
+    rButton.Offset(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->msButtonMessage = ZMessage("end", this);
     ChildAdd(pBtn);
@@ -310,7 +310,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "5"; // file cabinet
     pBtn->mCaption.style = wd;
-    rButton.OffsetRect(rButton.Width() * 2, 0);
+    rButton.Offset(rButton.Width() * 2, 0);
     pBtn->SetArea(rButton);
     pBtn->msButtonMessage = ZMessage("chessdb", mpParentWin);
     ChildAdd(pBtn);
@@ -319,7 +319,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "1"; // open file
     pBtn->mCaption.style = wd;
-    rButton.OffsetRect(rButton.Width() *2, 0);
+    rButton.Offset(rButton.Width() *2, 0);
     pBtn->SetArea(rButton);
     pBtn->msButtonMessage = ZMessage("loadgame", mpParentWin);
     ChildAdd(pBtn);
@@ -328,7 +328,7 @@ bool ZPGNWin::Init()
     pBtn = new ZWinBtn();
     pBtn->mCaption.sText = "<"; // save file
     pBtn->mCaption.style = wd;
-    rButton.OffsetRect(rButton.Width(), 0);
+    rButton.Offset(rButton.Width(), 0);
     pBtn->SetArea(rButton);
     pBtn->msButtonMessage = ZMessage("savegame", mpParentWin);
     ChildAdd(pBtn);
@@ -637,7 +637,7 @@ bool ZChessWin::Init()
 
 
         ZRect rEditBoard(rControlPanel);
-        rEditBoard.OffsetRect(0, pEditButton->GetArea().bottom + gSpacer);
+        rEditBoard.Offset(0, pEditButton->GetArea().bottom + gSpacer);
         mpEditBoardWin = new ZWinControlPanel();
         mpEditBoardWin->SetArea(rEditBoard);
         mpEditBoardWin->Init();
@@ -666,7 +666,7 @@ bool ZChessWin::Init()
 
         mpPGNWin = new ZPGNWin();
         ZRect rPGNPanel((int64_t)(rControlPanel.Width() * 1.5), (int64_t)(rControlPanel.Height()));
-        rPGNPanel.OffsetRect(rControlPanel.left - rPGNPanel.Width() - gSpacer, rControlPanel.top);
+        rPGNPanel.Offset(rControlPanel.left - rPGNPanel.Width() - gSpacer, rControlPanel.top);
         mpPGNWin->SetArea(rPGNPanel);
         ChildAdd(mpPGNWin);
 
@@ -725,13 +725,13 @@ void ZChessWin::UpdateSize()
     mPieceData['n'].LoadImage("res/chess/knight_b.svg", mnPieceHeight, blackCol);
     mPieceData['p'].LoadImage("res/chess/pawn_b.svg", mnPieceHeight, blackCol);
 
-    mrBoardArea.SetRect(0, 0, mnPieceHeight * 8, mnPieceHeight * 8);
+    mrBoardArea.Set(0, 0, mnPieceHeight * 8, mnPieceHeight * 8);
     mrBoardArea = mrBoardArea.CenterInRect(mAreaLocal);
 
 
     mnPalettePieceHeight = mnPieceHeight * 8 / 12;      // 12 possible pieces drawn over 8 squares
 
-    mrPaletteArea.SetRect(mrBoardArea.right, mrBoardArea.top, mrBoardArea.right + mnPalettePieceHeight, mrBoardArea.bottom);
+    mrPaletteArea.Set(mrBoardArea.right, mrBoardArea.top, mrBoardArea.right + mnPalettePieceHeight, mrBoardArea.bottom);
 
     if (mpStatusWin)
     {
@@ -790,8 +790,8 @@ bool ZChessWin::OnMouseDownL(int64_t x, int64_t y)
                     mMouseDownOffset.Set(squareOffset.x, squareOffset.x);
                     const std::lock_guard<std::recursive_mutex> surfaceLock(mpSurface.get()->GetMutex());
                     mpDraggingPiece = pieceImage;
-                    mrDraggingPiece.SetRect(pieceImage->GetArea());
-                    mrDraggingPiece.OffsetRect(x - mrDraggingPiece.Width() / 2, y - mrDraggingPiece.Height() / 2);
+                    mrDraggingPiece.Set(pieceImage->GetArea());
+                    mrDraggingPiece.Offset(x - mrDraggingPiece.Width() / 2, y - mrDraggingPiece.Height() / 2);
                     //            mZoomOffsetAtMouseDown = mZoomOffset;
                     return true;
                 }
@@ -882,8 +882,8 @@ bool ZChessWin::OnMouseMove(int64_t x, int64_t y)
 {
     if (AmCapturing() && mpDraggingPiece)
     {
-        mrDraggingPiece.SetRect(mpDraggingPiece->GetArea());
-        mrDraggingPiece.OffsetRect(x - mrDraggingPiece.Width() / 2, y - mrDraggingPiece.Height() / 2);
+        mrDraggingPiece.Set(mpDraggingPiece->GetArea());
+        mrDraggingPiece.Offset(x - mrDraggingPiece.Width() / 2, y - mrDraggingPiece.Height() / 2);
         Invalidate();
     }
 
@@ -961,7 +961,7 @@ bool ZChessWin::Paint()
             }
 
             rMoveLabel = pLabelFont->Arrange(rMoveLabel, sLabel, ZGUI::Center);
-            rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
+            rMoveLabel.Inflate(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA1), ZGUI::OLIC, gSpacer, gSpacer);
 
             mpSurface->Fill(0xffffffff, &rMoveLabel);
@@ -979,7 +979,7 @@ bool ZChessWin::Paint()
                     sLabel = "Black is in Check";
             }
             rMoveLabel = pLabelFont->Arrange(rMoveLabel, sLabel, ZGUI::Center);
-            rMoveLabel.InflateRect(nLabelPadding, nLabelPadding);
+            rMoveLabel.Inflate(nLabelPadding, nLabelPadding);
             rMoveLabel = ZGUI::Arrange(rMoveLabel, SquareArea(kA8), ZGUI::OLIC, gSpacer, gSpacer);
             mpSurface->Fill(0xff000000, &rMoveLabel);
             ZGUI::Style style(gDefaultTitleFont, ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xffffffff, 0xffffffff), ZGUI::Center);
@@ -1002,7 +1002,7 @@ bool ZChessWin::Paint()
 ZRect ZChessWin::SquareArea(const ZPoint& grid)
 {
     ZRect r(grid.x * mnPieceHeight, grid.y * mnPieceHeight, (grid.x + 1) * mnPieceHeight, (grid.y + 1) * mnPieceHeight);
-    r.OffsetRect(mrBoardArea.left, mrBoardArea.top);
+    r.Offset(mrBoardArea.left, mrBoardArea.top);
     return r;
 }
 
@@ -1062,7 +1062,7 @@ void ZChessWin::DrawPalette()
         gRasterizer.RectToVerts(rPalettePiece, verts);
 
         gRasterizer.RasterizeWithAlpha(mpSurface.get(), mPieceData[mPalettePieces[i]].mpImage.get(), verts);
-        rPalettePiece.OffsetRect(0, mnPalettePieceHeight);
+        rPalettePiece.Offset(0, mnPalettePieceHeight);
     }
 }
 
@@ -1102,7 +1102,7 @@ void ZChessWin::DrawBoard()
                 ZRect rText(SquareArea(grid));
                 defaultFont->DrawText(mpSurface.get(), sCount, rText);
 
-                rText.OffsetRect(0, defaultFont->Height());
+                rText.Offset(0, defaultFont->Height());
 
                 Sprintf(sCount, "%d",mBoard.UnderAttack(false, grid));
                 defaultFont->DrawText(mpSurface.get(), sCount, rText);
@@ -1416,7 +1416,7 @@ bool ZChessWin::LoadPGN(string sFilename)
             ZRect rControlPanel(grFullArea.right - panelW, grFullArea.bottom - panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
 
             ZRect rChoosePGNWin((int64_t)(rControlPanel.Width() * 1.5), rControlPanel.Height());
-            rChoosePGNWin.OffsetRect(rControlPanel.left - rChoosePGNWin.Width() - gSpacer, rControlPanel.top);
+            rChoosePGNWin.Offset(rControlPanel.left - rChoosePGNWin.Width() - gSpacer, rControlPanel.top);
             mpChoosePGNWin->SetArea(rChoosePGNWin);
             ChildAdd(mpChoosePGNWin);
             mpChoosePGNWin->ListGamesFromPGN(sFilename, sPGN);
@@ -1700,7 +1700,7 @@ bool ZPiecePromotionWin::Paint()
         gRasterizer.RectToVerts(rPalettePiece, verts);
 
         gRasterizer.RasterizeWithAlpha(mpSurface.get(), mpPieceData[mPromotionPieces[i]].mpImage.get(), verts);
-        rPalettePiece.OffsetRect(nPieceHeight, 0);
+        rPalettePiece.Offset(nPieceHeight, 0);
     }
 
     return ZWin::Paint();

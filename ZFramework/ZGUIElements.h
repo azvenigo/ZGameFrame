@@ -17,7 +17,7 @@ namespace ZGUI
         Shadow(uint32_t _col = 0xff000000, float _radius = 1.0f/*, float _falloff = 1.0f*/);
 
         bool Render(ZBuffer* pSrc, ZRect rCastSrc, bool bForceInvalid = false);
-        bool Paint(ZBuffer* pDst, ZRect rCastSrc);
+        bool Paint(ZBuffer* pDst, ZPoint tl);
         bool IsInvalid() { return renderedColor != col || renderedRadius != radius /*|| renderedSigma != sigma;*/; }
 
         ZRect Bounds(ZRect r); // returns limits of shadow based on spread and falloff

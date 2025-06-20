@@ -38,7 +38,7 @@ tRectList ZAnimObject::ComputeDirtyRects(const ZRect& rOldArea, const ZRect& rNe
     tRectList dirtyList;
 
     ZRect rOverlap(rNewArea);
-    rOverlap.IntersectRect(rOldArea);
+    rOverlap.Intersect(rOldArea);
 
     ZRect rDest(rOldArea);
 
@@ -190,7 +190,7 @@ bool ZAnimObject_TextMover::Paint(ZBuffer* pDest)
 	int64_t nWidth = mrDrawArea.Width();
 	int64_t nHeight = mrDrawArea.Height();
 
-    mrDrawArea.SetRect(nX, nY, nX + nWidth, nY + nHeight);
+    mrDrawArea.Set(nX, nY, nX + nWidth, nY + nHeight);
 
 	ZRect rBufferArea(pRealDest->GetArea());
 
@@ -237,7 +237,7 @@ void ZAnimObject_TextMover::SetText(const string& sText)
 	int64_t nY = (int64_t) mfY;
 
 	// Now calculate (or recalculate) our area
-    mrDrawArea.SetRect(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
+    mrDrawArea.Set(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
 }
 
 void ZAnimObject_TextMover::SetLocation(int64_t nX, int64_t nY)
@@ -245,7 +245,7 @@ void ZAnimObject_TextMover::SetLocation(int64_t nX, int64_t nY)
 	mfX = (double) nX;
 	mfY = (double) nY;
 
-    mrDrawArea.SetRect(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
+    mrDrawArea.Set(nX, nY, nX + mStyle.Font()->StringWidth(msText), nY + mStyle.Font()->Height());
 }
 
 void ZAnimObject_TextMover::SetPixelsPerSecond(double fDX, double fDY)
@@ -699,7 +699,7 @@ void ZAnimObject_BitmapShatterer::CreateShatterListFromBuffer(ZBuffer* pBuffer, 
 /*ZAnimObject_BouncyLine::ZAnimObject_BouncyLine() : ZAnimObject()
 {
 	mnMaxTailLength = 0;
-	mrExtents.SetRect(0,0,0,0);
+	mrExtents.Set(0,0,0,0);
 	mbXMirror = false;
 	mbYMirror = false;
 	mbAAttractsB = false;
@@ -979,7 +979,7 @@ void ZAnimObject_BouncyLine::Process()
 
 void ZAnimObject_BouncyLine::SetParams(ZRect rExtents, int64_t nTailLength, uint8_t nType)
 {
-	mrExtents.SetRect((double) rExtents.left, (double) rExtents.top, (double) rExtents.right, (double) rExtents.bottom);
+	mrExtents.Set((double) rExtents.left, (double) rExtents.top, (double) rExtents.right, (double) rExtents.bottom);
 	mnMaxTailLength = nTailLength;
 	mbXMirror = (nType & kXMirror) != 0;
 	mbYMirror = (nType & kYMirror) != 0;
@@ -1034,7 +1034,7 @@ ZAnimObject_TransformingImage::ZAnimObject_TransformingImage(tZBufferPtr pImage,
     mbFullScreenDraw = false;
 
 	if (pDrawArea)
-        mrDrawArea.SetRect(*pDrawArea);
+        mrDrawArea.Set(*pDrawArea);
 	else
         mrDrawArea = pImage->GetArea();
 
@@ -1062,7 +1062,7 @@ bool ZAnimObject_TransformingImage::Paint(ZBuffer* pDest)
     if (mTransformState == ZTransformable::kFinished)
 	{
 		mState = ZAnimObject::kFinished;
-        //mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
+        //mrArea.Set(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
         mrDrawArea = mBounds;
     }
     else
@@ -1094,7 +1094,7 @@ bool ZAnimObject_TransformingImage::Paint(ZBuffer* pDest)
                 bFirstDraw = true;
 
             mrLastDrawArea = mrDrawArea;
-            //        mrArea.SetRect(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
+            //        mrArea.Set(mCurTransform.mPosition.x, mCurTransform.mPosition.y, mCurTransform.mPosition.x + mrBaseArea.Width(), mCurTransform.mPosition.y + mrBaseArea.Height());
             mrDrawArea = mBounds;
 
             // if this is the first time drawing, re-set

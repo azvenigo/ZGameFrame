@@ -22,7 +22,7 @@ bool ZWinControlPanel::Init()
         return true;
 
     if (mAreaInParent.Width() > 0 && mAreaInParent.Height() > 0)
-        mrNextControl.SetRect(gnControlPanelEdge, gnControlPanelEdge, mAreaInParent.Width()- gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);  
+        mrNextControl.Set(gnControlPanelEdge, gnControlPanelEdge, mAreaInParent.Width()- gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);  
 
 
     mbAcceptsCursorMessages = true;
@@ -36,11 +36,11 @@ void ZWinControlPanel::FitToControls()
     ZRect rFit;
     for (auto child : mChildList)
     {
-        rFit.UnionRect(child->GetArea());
+        rFit.Union(child->GetArea());
     }
 
-    rFit.InflateRect(gnControlPanelEdge, gnControlPanelEdge);
-    rFit.MoveRect(mAreaAbsolute.left, mAreaAbsolute.top);
+    rFit.Inflate(gnControlPanelEdge, gnControlPanelEdge);
+    rFit.Move(mAreaAbsolute.left, mAreaAbsolute.top);
 
     SetArea(rFit);
 }
@@ -62,7 +62,7 @@ ZWinBtn* ZWinControlPanel::Button(const std::string& sID, const string& sCaption
         if (mrNextControl.Area() > 0)
         {
             pBtn->SetArea(mrNextControl);
-            mrNextControl.OffsetRect(0, mrNextControl.Height());
+            mrNextControl.Offset(0, mrNextControl.Height());
         }
     }
 
@@ -92,7 +92,7 @@ ZWinBtn* ZWinControlPanel::SVGButton(const std::string& sID, const string& sSVGF
         if (mrNextControl.Area() > 0)
         {
             pBtn->SetArea(mrNextControl);
-            mrNextControl.OffsetRect(0, mrNextControl.Height());
+            mrNextControl.Offset(0, mrNextControl.Height());
         }
     }
 
@@ -123,7 +123,7 @@ ZWinPopupPanelBtn* ZWinControlPanel::PopupPanelButton(const std::string& sID, co
         if (mrNextControl.Area() > 0)
         {
             pBtn->SetArea(mrNextControl);
-            mrNextControl.OffsetRect(0, mrNextControl.Height());
+            mrNextControl.Offset(0, mrNextControl.Height());
         }
     }
 
@@ -145,7 +145,7 @@ ZWinLabel* ZWinControlPanel::Caption(const std::string& sID, const std::string& 
         if (mrNextControl.Area() > 0)
         {
             pLabel->SetArea(mrNextControl);
-            mrNextControl.OffsetRect(0, mrNextControl.Height());
+            mrNextControl.Offset(0, mrNextControl.Height());
         }
     }
 
@@ -181,7 +181,7 @@ ZWinCheck* ZWinControlPanel::Toggle(const std::string& sID, bool* pbValue, const
         if (mrNextControl.Area() > 0)
         {
             pCheck->SetArea(mrNextControl);
-            mrNextControl.OffsetRect(0, mrNextControl.Height());
+            mrNextControl.Offset(0, mrNextControl.Height());
         }
         ChildAdd(pCheck);
 
@@ -208,7 +208,7 @@ ZWinSlider* ZWinControlPanel::Slider(const std::string& sID, int64_t* pnSliderVa
         if (mrNextControl.Area() > 0)
         {
             pSlider->SetArea(mrNextControl);
-            mrNextControl.OffsetRect(0, mrNextControl.Height());
+            mrNextControl.Offset(0, mrNextControl.Height());
         }
     }
 
@@ -239,7 +239,7 @@ ZWinSliderF* ZWinControlPanel::Slider(const std::string& sID, float* pnSliderVal
         if (mrNextControl.Area() > 0)
         {
             pSlider->SetArea(mrNextControl);
-            mrNextControl.OffsetRect(0, mrNextControl.Height());
+            mrNextControl.Offset(0, mrNextControl.Height());
         }
     }
 
@@ -266,12 +266,12 @@ bool ZWinControlPanel::Paint()
     {
         // draw embossed rect
         ZRect rBounds(GetBounds(group.second));
-        rBounds.InflateRect(gSpacer, gSpacer);
+        rBounds.Inflate(gSpacer, gSpacer);
         rBounds.right--;
         rBounds.bottom--;
 
         mpSurface->DrawRectAlpha(0x88000000, rBounds);
-        rBounds.OffsetRect(1, 1);
+        rBounds.Offset(1, 1);
         mpSurface->DrawRectAlpha(0x88ffffff, rBounds);
         
         mGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rBounds, &mGroupingStyle);
@@ -308,7 +308,7 @@ bool ZWinControlPanel::Process()
         {
             ZRect rOverArea(mAreaAbsolute);
             if (mrTrigger.Width() > 0 && mrTrigger.Height() > 0)
-                rOverArea.UnionRect(mrTrigger);
+                rOverArea.Union(mrTrigger);
 
             if (!rOverArea.PtInRect(gInput.lastMouseMove) && mbHideOnMouseExit)        // if the mouse is outside of our area we hide. (Can't use OnMouseOut because we get called when the mouse goes over one of our controls)
             {

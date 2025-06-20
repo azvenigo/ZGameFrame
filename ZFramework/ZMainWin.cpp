@@ -60,7 +60,7 @@ void ZMainWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRe
         return;
 
     ZRect rAbsIntersection(rAbsSrc);
-    if (!rAbsIntersection.IntersectRect(mAreaAbsolute))
+    if (!rAbsIntersection.Intersect(mAreaAbsolute))
         return;// no intersection
 
     for (tWinList::reverse_iterator it = mChildList.rbegin(); it != mChildList.rend(); it++)

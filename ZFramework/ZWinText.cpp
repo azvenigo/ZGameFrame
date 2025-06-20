@@ -40,7 +40,7 @@ bool ZWinLabel::OnMouseHover(int64_t x, int64_t y)
         
         tZFontPtr pTooltipFont = gpFontSystem->GetFont(mStyleTooltip.fp);
         rTextArea = pTooltipFont->Arrange(mAreaLocal, msTooltipText, mStyleTooltip.pos);
-        rTextArea.InflateRect(pTooltipFont->Height()/4, pTooltipFont->Height()/4);
+        rTextArea.Inflate(pTooltipFont->Height()/4, pTooltipFont->Height()/4);
 
 
         // ensure the tooltip is entirely visible on the window
@@ -49,7 +49,7 @@ bool ZWinLabel::OnMouseHover(int64_t x, int64_t y)
         limit<int64_t>(pt.y, grFullArea.top, grFullArea.bottom - rTextArea.Height());
 
 
-        rTextArea.MoveRect(pt);
+        rTextArea.Move(pt);
         pWin->SetArea(rTextArea);
 
         GetTopWindow()->ChildAdd(pWin);
@@ -148,7 +148,7 @@ bool ZWinLabel::Paint()
     ZRect rTextArea;
     tZFontPtr pTooltipFont = gpFontSystem->GetFont(pWin->mStyle.fp);
     rTextArea = pTooltipFont->StringRect(sTooltip);
-    rTextArea.InflateRect(style.pad.h, style.pad.v);
+    rTextArea.Inflate(style.pad.h, style.pad.v);
 
 
     // ensure the tooltip is entirely visible on the window + a little padding
@@ -156,7 +156,7 @@ bool ZWinLabel::Paint()
     limit<int64_t>(pt.x, grFullArea.left+gSpacer, grFullArea.right - rTextArea.Width()- gSpacer);
     limit<int64_t>(pt.y, grFullArea.top+ gSpacer, grFullArea.bottom - rTextArea.Height()- gSpacer);
 
-    rTextArea.MoveRect(pt);
+    rTextArea.Move(pt);
     pWin->SetArea(rTextArea);
 
     if (bToolTipAlreadyExists || pMainWin->ChildAdd(pWin))
@@ -265,7 +265,7 @@ void ZWinTextEdit::SetArea(const ZRect& area)
 {
     ZWin::SetArea(area);
     mrVisibleTextArea = mAreaLocal;
-    mrVisibleTextArea.DeflateRect(mStyle.pad.h, mStyle.pad.v);
+    mrVisibleTextArea.Deflate(mStyle.pad.h, mStyle.pad.v);
     mrVisibleTextArea = ZGUI::Arrange(mrVisibleTextArea, mAreaLocal, mStyle.pos, mStyle.pad.h, mStyle.pad.v);
 
     mnLeftBoundary = mrVisibleTextArea.Width() / 4; // 25%
@@ -289,7 +289,7 @@ bool ZWinTextEdit::Paint()
         ZGUI::ePosition posToUse = mStyle.pos;
         if (nWidth > mrVisibleTextArea.Width())
         {
-            rOut.OffsetRect(-mnViewOffset, 0);
+            rOut.Offset(-mnViewOffset, 0);
             posToUse = (ZGUI::ePosition)((uint32_t)mStyle.pos & ~ZGUI::HC | ZGUI::L);  // remove horizontal center and left justify
         }
 
@@ -308,8 +308,8 @@ bool ZWinTextEdit::Paint()
             int64_t nWidthBefore = mStyle.Font()->StringWidth(mpText->substr(0, nMin));
             int64_t nWidthHighlighted = mStyle.Font()->StringWidth(mpText->substr(nMin, nMax - nMin));
             ZRect rHighlight(0, mrVisibleTextArea.top, nWidthHighlighted, mrVisibleTextArea.bottom);
-            rHighlight.OffsetRect(mrVisibleTextArea.left + nWidthBefore - mnViewOffset + StyleOffset(), 0);
-            rHighlight.IntersectRect(mrVisibleTextArea);
+            rHighlight.Offset(mrVisibleTextArea.left + nWidthBefore - mnViewOffset + StyleOffset(), 0);
+            rHighlight.Intersect(mrVisibleTextArea);
             mpSurface.get()->FillAlpha(0x8800ffff, &rHighlight);
         }
     }
@@ -655,7 +655,7 @@ void ZWinTextEdit::HandleCursorMove(int64_t newCursorPos, bool bScrollView)
     }
 
 
-    mrCursorArea.SetRect(mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset+StyleOffset(), mrVisibleTextArea.top, mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset + mrVisibleTextArea.Height()/32 + StyleOffset()+1, mrVisibleTextArea.bottom);
+    mrCursorArea.Set(mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset+StyleOffset(), mrVisibleTextArea.top, mrVisibleTextArea.left+nNewAbsPixelsToCursor - mnViewOffset + mrVisibleTextArea.Height()/32 + StyleOffset()+1, mrVisibleTextArea.bottom);
 
     if (newCursorPos >= 0 && newCursorPos <= (int64_t)mpText->length())
     {

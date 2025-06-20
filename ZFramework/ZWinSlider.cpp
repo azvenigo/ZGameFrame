@@ -245,7 +245,7 @@ bool tZWinSlider<T>::Paint()
     mpSurface.get()->BltEdge(pBackground.get(), rBackgroundEdge, mAreaLocal);
 
 	ZRect rThumb(ThumbRect());
-	rThumb.OffsetRect(mAreaLocal.left, mAreaLocal.top);
+	rThumb.Offset(mAreaLocal.left, mAreaLocal.top);
 
     mpSurface.get()->BltEdge(pThumb.get(), rThumbEdge, rThumb);
 

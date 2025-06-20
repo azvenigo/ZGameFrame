@@ -47,7 +47,7 @@ public:
     virtual bool    Init();
 
     bool            AddItem(WatchType type, const std::string& sCaption, void* pWatchAddress = nullptr, const ZGUI::ZTextLook& captionlook = {}, const ZGUI::ZTextLook& textlook = {});
-    void            AddSpace(int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
+    void            AddSpace(int64_t nSpace) { mrNextControl.Offset(0,nSpace); }
 
     bool            Process();
     bool		    Paint();

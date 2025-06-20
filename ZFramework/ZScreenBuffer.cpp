@@ -6,7 +6,6 @@
 #include "ZStringHelpers.h"
 #include "ZGUIStyle.h"
 #include <iostream>
-#include "ZD3D.h"
 
 #ifdef _WIN64
 #include <GdiPlus.h>
@@ -45,45 +44,15 @@ ZScreenBuffer::~ZScreenBuffer()
 
 bool ZScreenBuffer::Init(int64_t nWidth, int64_t nHeight, ZGraphicSystem* pGraphicSystem)
 {
-	mpGraphicSystem = pGraphicSystem;
-	if (!ZBuffer::Init(nWidth, nHeight))
-		return false;
-
-
-    D3D11_TEXTURE2D_DESC desc = {};
-    desc.Width = (UINT)nWidth;
-    desc.Height = (UINT)nHeight;
-    desc.MipLevels = 1;
-    desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;  // Matches ARGB layout
-    desc.SampleDesc.Count = 1;
-    desc.Usage = D3D11_USAGE_DYNAMIC;
-    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    desc.MiscFlags = 0;
-
-    mpSSPrim = ZD3D::ReservePrimitive();
-    mpSSPrim->verts.resize(4);
-
-    mpSSPrim->texture.reset(new ZD3D::DynamicTexture);
-    if (!mpSSPrim->texture->Init(mSurfaceArea.BR()))
-    {
-        assert(false);
+    mpGraphicSystem = pGraphicSystem;
+    if (!ZBuffer::Init(nWidth, nHeight))
         return false;
-    }
 
-
-
-	return true;	
+    return true;
 }
 
 bool ZScreenBuffer::Shutdown()
 {
-    if (mpSSPrim)
-    {
-        mpSSPrim->clear();
-        mpSSPrim = nullptr;
-    }
 	return ZBuffer::Shutdown();
 }
 
@@ -134,153 +103,10 @@ void ZScreenBuffer::EndRender()
 
 #ifdef _WIN64
 
-
-
-
-
-
-using namespace DirectX;
-
-
-
-
-
 bool ZScreenBuffer::PaintToSystem()
 {
     if (!mbRenderingEnabled)
         return false;
-
-    
-    mpSSPrim->texture->UpdateTexture(this);
-    HRESULT hr;
-/*    void* pBits = mpPixels;
-
-    D3D11_MAPPED_SUBRESOURCE mapped;
-    hr = ZD3D::mD3DContext->Map(mDynamicTexture.mpTexture2D, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-    if (FAILED(hr)) {
-        throw std::runtime_error("Failed to map staging texture");
-    }
-
-    // Assuming your ARGB buffer is stored in `argbBuffer`:
-    UINT height = (UINT)mSurfaceArea.Height();
-    UINT width = (UINT)mSurfaceArea.Width();
-
-    if (width * 4 == mapped.RowPitch)
-    {
-        memcpy(mapped.pData, pBits, (width * height * 4));
-    } 
-    else
-    {
-        for (UINT row = 0; row < height; ++row)
-        {
-            memcpy(static_cast<BYTE*>(mapped.pData) + row * mapped.RowPitch,
-                (BYTE*)pBits + row * width * 4, // Assuming each pixel is 4 bytes
-                width * 4);
-        }
-    }
-
-
-    ZD3D::mD3DContext->Unmap(mDynamicTexture.mpTexture2D, 0);*/
-
-
-/*    hr = ZD3D::mSwapChain->GetBuffer(0, IID_PPV_ARGS(&ZD3D::mBackBuffer));
-    if (FAILED(hr))
-    {
-        throw runtime_error("Failed to get swap chain back buffer");
-    }*/
-
-
-    // Copy staging texture to back buffer
-//    ZD3D::mD3DContext->CopyResource(ZD3D::mBackBuffer, mDynamicTexture.GetTexture(ZD3D::mD3DContext));
-
-    mpSSPrim->SetScreenRect(mSurfaceArea, 0.9);
-    mpSSPrim->state = ZD3D::ScreenSpacePrimitive::eState::kVisible;
-
-//    ZD3D::AddPrim(ZD3D::GetVertexShader("ScreenSpaceShader"), ZD3D::GetPixelShader("ScreenSpaceShader"), &mDynamicTexture, verts);
-
-
-
-
-    ZD3D::Present();
-
-    static int frame = 0;
-    frame++;
-    if (frame % 100 == 0)
-        ZDEBUG_OUT_LOCKLESS("frame:", frame, "\n");
-
-    return true;
-}
-/*
-* 
-// Converts an sRGB value to linear space
-float SRGBToLinear(float c) {
-    return (c <= 0.04045f) ? (c / 12.92f) : powf((c + 0.055f) / 1.055f, 2.4f);
-}
-
-// Maps ARGB (0-255 per channel) to HDR float16 range (e.g., 0-1000)
-float MapToHDRRange(float linearColor, float maxHDRValue) {
-    return linearColor * maxHDRValue; // Scale to desired HDR range
-}
-
-bool ZScreenBuffer::PaintToSystem()
-{
-    if (!mbRenderingEnabled)
-        return false;
-
-    void* pBits = mpPixels;
-
-    D3D11_MAPPED_SUBRESOURCE mapped;
-    HRESULT hr = mpGraphicSystem->mD3DContext->Map(mStagingTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-    if (FAILED(hr)) {
-        throw std::runtime_error("Failed to map staging texture");
-    }
-
-    UINT height = mSurfaceArea.Height();
-    UINT width = mSurfaceArea.Width();
-    float maxHDRValue = 1000.0f; // Example HDR range max luminance
-
-    for (UINT row = 0; row < height; ++row) {
-        auto* dest = reinterpret_cast<DirectX::PackedVector::XMHALF4*>(
-            (BYTE*) (mapped.pData) + row * mapped.RowPitch);
-        const uint32_t* src = reinterpret_cast<const uint32_t*>(
-            (BYTE*)(mpPixels) + row * width * 4);
-
-        for (UINT col = 0; col < width; ++col) {
-            // Decompose ARGB to individual channels
-            uint8_t A = (src[col] >> 24) & 0xFF;
-            uint8_t R = (src[col] >> 16) & 0xFF;
-            uint8_t G = (src[col] >> 8) & 0xFF;
-            uint8_t B = src[col] & 0xFF;
-
-            // Convert to normalized floats
-            float rLinear = MapToHDRRange(SRGBToLinear(R / 255.0f), maxHDRValue);
-            float gLinear = MapToHDRRange(SRGBToLinear(G / 255.0f), maxHDRValue);
-            float bLinear = MapToHDRRange(SRGBToLinear(B / 255.0f), maxHDRValue);
-            float aLinear = A / 255.0f; // Alpha typically remains normalized
-
-            // Write HDR values to destination
-            dest[col] = DirectX::PackedVector::XMHALF4(rLinear, gLinear, bLinear, aLinear);
-        }
-    }
-
-    mpGraphicSystem->mD3DContext->Unmap(mStagingTexture, 0);
-
-    // Copy staging texture to back buffer
-    mpGraphicSystem->mD3DContext->CopyResource(mpGraphicSystem->mBackBuffer, mStagingTexture);
-
-    mpGraphicSystem->mSwapChain->Present(1, 0); // VSync: 1
-    return true;
-}
-*/
-
-
-/*
-bool ZScreenBuffer::PaintToSystem()
-{
-    if (!mbRenderingEnabled)
-        return false;
-
-    uint64_t start = gTimer.GetUSSinceEpoch();
 
     BITMAPINFO bmpInfo;
     bmpInfo.bmiHeader.biBitCount = 32;
@@ -311,27 +137,9 @@ bool ZScreenBuffer::PaintToSystem()
         &bmpInfo,                          // BMPINFO
         DIB_RGB_COLORS);                    // Usage
 
-
-    uint64_t end = gTimer.GetUSSinceEpoch();
-
-
-    static uint64_t delay = 0;
-
-    static uint64_t frames = 0;
-    static uint64_t totalTime = 0;
-    delay++;
-
-    if (delay > 100)
-    {
-        frames++;
-        totalTime += (end - start);
-
-        cout << "frames:" << frames << " avg paint time: " << (totalTime) / frames << "\n";
-    }
-
     return true;
 }
-*/
+
 int32_t ZScreenBuffer::RenderVisibleRects()
 {
     if (!mbRenderingEnabled)
@@ -592,7 +400,7 @@ bool ZScreenBuffer::AddScreenRectAndComputeVisibility(const ZScreenRect& screenR
 		else
 		{
 			ZRect rOverlap(oldRect.mrDest);
-			rOverlap.IntersectRect(screenRect.mrDest);
+			rOverlap.Intersect(screenRect.mrDest);
 
 			ZRect rDest(oldRect.mrDest);
 

@@ -100,7 +100,7 @@ void ImageContest::UpdateUI()
     {
         rImageArea.right = rImageArea.left + rImageArea.Width() / 2;
         mpWinImage[kLeft]->SetArea(rImageArea);
-        rImageArea.OffsetRect(rImageArea.Width(), 0);
+        rImageArea.Offset(rImageArea.Width(), 0);
         mpWinImage[kRight]->SetArea(rImageArea);
         mpWinImage[kRight]->SetVisible();
 
@@ -418,7 +418,7 @@ bool ImageContest::Init()
         ChildAdd(mpWinImage[kLeft]);
 
         mpWinImage[kRight] = new ZWinImage();
-        rImageArea.OffsetRect(rImageArea.Width(), 0);
+        rImageArea.Offset(rImageArea.Width(), 0);
         mpWinImage[kRight]->SetArea(rImageArea);
         mpWinImage[kRight]->mFillColor = 0xff444455;
         mpWinImage[kRight]->mZoomHotkey = VK_MENU;
@@ -526,7 +526,7 @@ void ImageContest::UpdateControlPanel()
     ZWinBtn* pBtn;
 
     ZRect rButton((int64_t)(nGroupSide * 1.5), nGroupSide);
-    rButton.OffsetRect(gSpacer * 2, gSpacer * 2);
+    rButton.Offset(gSpacer * 2, gSpacer * 2);
 
     string sAppPath = gRegistry["apppath"];
     
@@ -534,7 +534,7 @@ void ImageContest::UpdateControlPanel()
     pBtn->msTooltip = "Back to viewer";
     pBtn->SetArea(rButton);
 
-    rButton.OffsetRect(rButton.Width() + gSpacer*2, 0);
+    rButton.Offset(rButton.Width() + gSpacer*2, 0);
     
 
     int64_t nButtonPadding = rButton.Width() / 8;
@@ -546,14 +546,14 @@ void ImageContest::UpdateControlPanel()
     pBtn->SetArea(rButton);
     pBtn->msWinGroup = "Folder";
 
-    rButton.OffsetRect(rButton.Width(), 0);
+    rButton.Offset(rButton.Width(), 0);
 
 
     string sMessage;
 
 
     // Contests
-    rButton.OffsetRect(rButton.Width() + gSpacer * 4, 0);
+    rButton.Offset(rButton.Width() + gSpacer * 4, 0);
     rButton.right = rButton.left + (int64_t) (rButton.Width() * 2);     // wider buttons for management
 
     pBtn = mpPanel->Button("reset", "Reset", ZMessage("reset_contest", this));
@@ -571,11 +571,11 @@ void ImageContest::UpdateControlPanel()
 
 
 
-    rButton.SetRect(0,0,nGroupSide, nGroupSide);
+    rButton.Set(0,0,nGroupSide, nGroupSide);
 
     rButton = ZGUI::Arrange(rButton, rPanelArea, ZGUI::RC, gSpacer/2);
 
-    rButton.OffsetRect(-gSpacer/2, 0);
+    rButton.Offset(-gSpacer/2, 0);
 
     pBtn = mpPanel->SVGButton("fullscreen", sAppPath + "/res/fullscreen.svg", ZMessage("toggle_fullscreen"));
     pBtn->SetArea(rButton);
@@ -591,7 +591,7 @@ void ImageContest::UpdateControlPanel()
 
 
 
-    rButton.OffsetRect(-rButton.Width(), 0);
+    rButton.Offset(-rButton.Width(), 0);
     pBtn = mpPanel->Button("help", "?", ZMessage("show_help", this));
     pBtn->mCaption.style = filterButtonStyle;
     pBtn->mCaption.style.fp.nScalePoints= ZFontParams::ScalePoints( nGroupSide / 2);

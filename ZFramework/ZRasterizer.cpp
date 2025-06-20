@@ -98,7 +98,7 @@ inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, tColorVertexA
     ZASSERT(pDestination);
 
     if (pClip)
-        rDest.IntersectRect(pClip);
+        rDest.Intersect(pClip);
 
     // Find the first and last scanline
     nTopScanline = rDest.bottom;			// start with top scan line at the bottom of our draw area
@@ -131,7 +131,7 @@ inline void ZRasterizer::SetupRasterization(ZBuffer* pDestination, tUVVertexArra
 	ZASSERT(pDestination);
 
 	if (pClip)
-		rDest.IntersectRect(pClip);
+		rDest.Intersect(pClip);
 
 	// Find the first and last scanline
 	nTopScanline = rDest.bottom;			// start with top scan line at the bottom of our draw area

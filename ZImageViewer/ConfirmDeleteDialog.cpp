@@ -39,7 +39,7 @@ bool ConfirmDeleteDialog::Init()
 
         string sFolder = mFiles.begin()->parent_path().string();
 
-        rLabel.OffsetRect(0, rLabel.Height());
+        rLabel.Offset(0, rLabel.Height());
 //        rLabel = gStyleButton.Font()->GetOutputRect(mAreaToDrawTo, (uint8_t*)sFolder.c_str(), sFolder.length(), ZGUI::LT, gDefaultSpacer);
 
         ZGUI::Style labelstyle(gStyleCaption);

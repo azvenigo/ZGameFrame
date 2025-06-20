@@ -18,7 +18,7 @@ ZWinDebugConsole::ZWinDebugConsole()
 {
 	mpWinSlider = NULL;
 
-	mrDocumentArea.SetRect(0,0,0,0);
+	mrDocumentArea.Set(0,0,0,0);
 
     mStyle = gStyleGeneralText;
     mStyle.bgCol = 0xff444444;
@@ -107,8 +107,8 @@ void ZWinDebugConsole::UpdateScrollbar()
 {
 	int64_t nFullTextHeight = gDebug.mHistory.size();
 
-    mrDocumentArea.SetRect(mAreaLocal);
-    mrDocumentArea.DeflateRect(gSpacer, gSpacer);
+    mrDocumentArea.Set(mAreaLocal);
+    mrDocumentArea.Deflate(gSpacer, gSpacer);
     mrDocumentArea.right -= 16;
 
     size_t nVisible = GetVisibleLines();

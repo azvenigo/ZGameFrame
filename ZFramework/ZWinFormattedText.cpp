@@ -69,8 +69,8 @@ ZWinFormattedDoc::ZWinFormattedDoc()
 {
     mpWinSlider = NULL;
 
-	mrDocumentArea.SetRect(0,0,0,0);
-	mrDocumentBorderArea.SetRect(0,0,0,0);
+	mrDocumentArea.Set(0,0,0,0);
+	mrDocumentBorderArea.Set(0,0,0,0);
 
 	mnFullDocumentHeight    = 0;
     mbDocumentInvalid       = true;
@@ -118,10 +118,10 @@ bool ZWinFormattedDoc::OnMouseDownL(int64_t x, int64_t y)
 
 	// Get a local rect
 	ZRect rLocalTextBorderArea(mrDocumentArea);
-	rLocalTextBorderArea.InflateRect(6,6);
+	rLocalTextBorderArea.Inflate(6,6);
 
 	ZRect rLocalDocArea(mrDocumentArea);
-    rLocalDocArea.DeflateRect(mStyle.pad.h, mStyle.pad.v);
+    rLocalDocArea.Deflate(mStyle.pad.h, mStyle.pad.v);
 
 
 	ZRect rClip(rLocalDocArea);
@@ -268,9 +268,9 @@ void ZWinFormattedDoc::UpdateDocumentAndScrollbar()
     if (IsBehaviorSet(kEvenColumns))
         ComputeColumnWidths();
 
-    mrDocumentBorderArea.SetRect(mAreaLocal);
+    mrDocumentBorderArea.Set(mAreaLocal);
 
-    mrDocumentArea.SetRect(mrDocumentBorderArea);
+    mrDocumentArea.Set(mrDocumentBorderArea);
 
     if (IsBehaviorSet(kDrawBorder))
     {
@@ -338,7 +338,7 @@ bool ZWinFormattedDoc::Paint()
 
 	// Get a local rect
 	ZRect rLocalDocBorderArea(mrDocumentArea);
-	//   rLocalTextBorderArea.OffsetRect(mAreaToDrawTo.left, mAreaToDrawTo.top);
+	//   rLocalTextBorderArea.Offset(mAreaToDrawTo.left, mAreaToDrawTo.top);
 
 	ZRect rLocalDocArea(mrDocumentArea);
 
@@ -412,13 +412,13 @@ bool ZWinFormattedDoc::Paint()
                         {
                             ZRect rUnderline(rText);
                             rUnderline.top = rUnderline.bottom - nShadowOffset;
-                            rUnderline.IntersectRect(&rClip);
+                            rUnderline.Intersect(&rClip);
                             mpSurface.get()->Fill(entry.style.look.colBottom, &rUnderline);
 
                             if (entry.style.look.decoration == ZGUI::ZTextLook::kShadowed)
                             {
-                                rUnderline.OffsetRect(nShadowOffset, nShadowOffset);
-                                rUnderline.IntersectRect(&rClip);
+                                rUnderline.Offset(nShadowOffset, nShadowOffset);
+                                rUnderline.Intersect(&rClip);
                                 mpSurface.get()->Fill(0xff000000, &rUnderline);
                             }
                         }

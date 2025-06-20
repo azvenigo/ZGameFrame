@@ -174,7 +174,7 @@ void ImageViewer::UpdateUI()
     if (mpFolderLabel)
     {
         ZRect rSelector(mpFolderLabel->GetArea());
-        rSelector.MoveRect(0, mpPanel->GetArea().bottom);
+        rSelector.Move(0, mpPanel->GetArea().bottom);
         mpFolderLabel->SetArea(rSelector);
     }
 
@@ -579,7 +579,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                     mpRotationMenu->mStyle.pad.v = (int32_t)gSpacer;
 
                     ZRect r = StringToRect(message.GetParam("r"));
-                    r.InflateRect(gSpacer *2, gSpacer *2);
+                    r.Inflate(gSpacer *2, gSpacer *2);
                     r.bottom = r.top + r.Height() * 4 + gM;
 
                     mpRotationMenu->SetArea(r);
@@ -604,7 +604,7 @@ bool ImageViewer::HandleMessage(const ZMessage& message)
                     mpManageMenu->mStyle.pad.v = (int32_t)gSpacer;
 
                     ZRect r = StringToRect(message.GetParam("r"));
-                    r.InflateRect(gSpacer * 2, gSpacer * 2);
+                    r.Inflate(gSpacer * 2, gSpacer * 2);
                     r.bottom = r.top + r.Height() * 4 + gM;
 
                     mpManageMenu->SetArea(r);
@@ -665,8 +665,8 @@ void ImageViewer::ShowImageSelectionPanel(ZRect rSelection)
     pWinPanel->msWinName = "image_selection_panel";
     pWinPanel->mPanelLayout = sPanelLayout;
     ZRect rPanel(gM * 6, gM * 2);
-    rPanel.OffsetRect(gInput.lastMouseMove);
-    rPanel.OffsetRect(-rPanel.Width(), 0);
+    rPanel.Offset(gInput.lastMouseMove);
+    rPanel.Offset(-rPanel.Width(), 0);
     pWinPanel->SetArea(rPanel);
 
     pTop->ChildAdd(pWinPanel);
@@ -748,7 +748,7 @@ void ImageViewer::ToggleShowHelpDialog()
 
     ZRect rCaption(r);
     rCaption.bottom = rCaption.top + gM * 3;
-    rCaption.DeflateRect(gSpacer, gSpacer);
+    rCaption.Deflate(gSpacer, gSpacer);
     ZWinLabel* pLabel = new ZWinLabel();
     pLabel->msText = "ZView Help";
     pLabel->SetArea(rCaption);
@@ -837,7 +837,7 @@ void ImageViewer::ToggleShowHelpDialog()
 
     pForm = new ZWinFormattedDoc();
 
-//    rForm.OffsetRect(rForm.Width() + gSpacer * 4, 0);
+//    rForm.Offset(rForm.Width() + gSpacer * 4, 0);
 //    rForm = ZGUI::Arrange(rForm, r, ZGUI::RT, gSpacer * 4, pLabel->mStyle.fp.Height() + gSpacer);
     rForm = ZGUI::Arrange(rForm, rCaption, ZGUI::IROB, gSpacer, gSpacer);
 
@@ -2684,7 +2684,7 @@ bool ImageViewer::Paint()
             mpTransformTexture->Fill(rThumb, ARGB(0xff, (i*13)%256, (i*17)%256, (i*29)%256));
         }
         i++;
-        rThumb.OffsetRect(0, rThumb.Height());
+        rThumb.Offset(0, rThumb.Height());
     }
 
     */
