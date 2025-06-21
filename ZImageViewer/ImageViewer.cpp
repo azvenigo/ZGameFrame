@@ -23,6 +23,7 @@
 #include "ZGraphicSystem.h"
 #include "ZScreenBuffer.h"
 #include "ZAnimator.h"
+#include "ZRandom.h"
 
 
 using namespace std;
@@ -297,6 +298,10 @@ bool ImageViewer::OnKeyDown(uint32_t key)
         {
             LaunchCR3(FindCR3());
             return true;
+        }
+        else
+        {
+            SetRandImage();
         }
         break;
     case 'c':
@@ -1171,6 +1176,46 @@ void ImageViewer::SetLastImage()
     KickCaching();
     InvalidateChildren();
 }
+
+
+
+void ImageViewer::SetRandImage()
+{
+    if (!mImageArray.empty())
+    {
+        const std::lock_guard<std::recursive_mutex> lock(mImageArrayMutex);
+        if (mFilterState == kRanked)
+        {
+            if (mRankedArray.empty())
+                return;
+
+            size_t randIndex = RANDI64(0, mRankedArray.size());
+            mViewingIndex = IndexFromPath(GetRankedFilename(randIndex));
+        }
+        else
+        {
+            size_t randIndex = RANDI64(0, mImageArray.size());
+            mViewingIndex = IndexFromPath(mImageArray[randIndex]->filename);
+
+            if (!ImageMatchesCurFilter(mViewingIndex))
+            {
+                if (!FindImageMatchingCurFilter(mViewingIndex, -1))
+                {
+                    UpdateFilteredView(mFilterState);
+                }
+            };
+        }
+    }
+    else
+        mViewingIndex = {};
+
+
+    mLastAction = kEnd;
+    FreeCacheMemory();
+    KickCaching();
+    InvalidateChildren();
+}
+
 
 void ImageViewer::SetPrevImage()
 {

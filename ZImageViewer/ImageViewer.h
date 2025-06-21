@@ -206,6 +206,7 @@ protected:
     void                    SetLastImage();
     void                    SetNextImage();
     void                    SetPrevImage();
+    void                    SetRandImage();
 
     //bool                    FindNextImageMatchingFilter(ViewingIndex& vi);
     //bool                    FindPrevImageMatchingFilter(ViewingIndex& vi);
