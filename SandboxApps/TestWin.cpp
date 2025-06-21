@@ -110,13 +110,13 @@ bool TestWin::Init()
     textBox.style.fp.nTracking = 10;
     textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
     textBox.style.wrap = false;
-    textBox.style.pos = ZGUI::RC;
+    textBox.style.pos = ZGUI::C;
     textBox.style.fp.nScalePoints = 10000;
 //    textBox.blurBackground = 2.0;
     textBox.shadow.col = 0xff000000;
-    textBox.shadow.offset   = ZPoint(0, 0);
-    textBox.shadow.radius = 5.0;
-    textBox.area.Set(0, 0, 3000, 2000);
+    textBox.shadow.offset   = ZPoint(-20, -20);
+    textBox.shadow.radius = 50.0;
+    textBox.area.Set(150, 150, 3000, 2000);
     
     ZBuffer temp;
     ZRect r(textBox.style.Font()->Arrange(textBox.area, textBox.sText, textBox.style.pos, textBox.style.pad.h, textBox.style.pad.v));

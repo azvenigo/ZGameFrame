@@ -69,10 +69,17 @@ public:
 	{ 
 		return tPoint(-x, -y); 
 	}
+
 	tPoint operator+(const tPoint& p) const 
 	{ 
 		return tPoint(x + p.x, y + p.y); 
 	};
+
+    tPoint operator-(const tPoint& p) const
+    {
+        return tPoint(x - p.x, y - p.y);
+    }
+
 
 	bool operator==(const tPoint& p) const
 	{ 
@@ -256,6 +263,7 @@ public:
 		bottom = T{};
 
 	}
+
 	tRect(T l, T t, T r, T b) 
 	{ 
 		left = l; 
@@ -263,6 +271,15 @@ public:
 		right = r; 
 		bottom = b; 
 	}
+
+    tRect(const tPoint<T>& pt)
+    {
+        left = 0;
+        top = 0;
+        right = pt.x;
+        bottom = pt.y;
+    }
+
 	tRect(T nWidth, T nHeight) 
 	{ 
 		left = 0; 
@@ -291,20 +308,23 @@ public:
 	{ 
 		return right - left; 
 	}
+
 	T	Height() const 
 	{ 
 		return bottom - top; 
 	}
 	
     // Queries
-    bool PtInRect(tPoint<T>& p) const
+    bool PtInRect(const tPoint<T>& p) const
 	{
 		return (p.x >= left && p.y >= top && p.x < right&& p.y < bottom);
 	}
+
     bool PtInRect(T x, T y) const
 	{
 		return (x >= left && y >= top && x < right&& y < bottom);
 	}
+
     bool Overlaps(const tRect& pRect) const
 	{
 		return !((left >= pRect.right) || 
@@ -328,6 +348,10 @@ public:
         return (right - left) * (bottom - top);
     }
 
+    const tPoint<T> Size() const
+    {
+        return { (right - left), (bottom - top) };
+    }
 
     // Operations
     void Set(T l, T t, T r, T b)

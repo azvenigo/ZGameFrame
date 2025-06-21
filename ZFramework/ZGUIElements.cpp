@@ -32,35 +32,24 @@ namespace ZGUI
 
 
 
-        ZRect rDstLabel = style.Font()->Arrange(rDst, sText, style.pos, style.pad.h, style.pad.v);
-        ZRect rDstShadow = shadow.Bounds(rDstLabel);
-//        ZRect rDstBounds = 
+        ZRect rDstLabel(style.Font()->Arrange(rDst, sText, style.pos, style.pad.h, style.pad.v));
+        ZRect rDstShadow(shadow.Bounds(rDstLabel));
+        ZRect rDstBounds(rDstLabel.UnionRect(rDstShadow));
 
 
+        ZRect rRendered(rDstBounds.Size());
+        ZRect rRenLabel(rDstLabel);
+        rRenLabel.Offset(-rDstBounds.TL());
 
-
-        ZRect rDstTextBox = style.Font()->Arrange(rDst, sText, style.pos, style.pad.h, style.pad.v);
-        ZRect rRenderedLabel(rDstTextBox.Width(),rDstTextBox.Height());
-        ZRect rShadowBounds(rRenderedLabel);
-
+        tRect rRenShadow(rDstShadow);
+        rRenShadow.Offset(-rDstBounds.TL());
 
         bool bDrawShadow = ARGB_A(shadow.col) > 0;
-        if (bDrawShadow)
-        {
-            rShadowBounds = shadow.Bounds(rRenderedLabel);
-            rDstTextBox.Union(rShadowBounds);
-        }
-
-        ZRect rRendered(rDstTextBox.Width(), rDstTextBox.Height());
-        rRenderedLabel = style.Font()->Arrange(rRendered, sText, style.pos, 0, 0);
-
-        if (bDrawShadow)
-            rRenderedLabel.Offset(-shadow.offset);
 
         // get the offset into the rendered buffer
         if (IsInvalid())
         {
-            bool bForceShadowRender = (renderedText != sText) || (renderedStyle != style) || (renderedBuf.GetArea().Area() != rDstTextBox.Area());;
+            bool bForceShadowRender = (renderedText != sText) || (renderedStyle != style) || (renderedBuf.GetArea().Size() != rDstBounds.Size());
 
             renderedText = sText;
             renderedStyle = style;
@@ -77,7 +66,7 @@ namespace ZGUI
             {
                 if (blurBackground > 0.0)
                 {
-                    renderedBuf.CopyPixels(pDst, rDstTextBox, renderedBuf.GetArea());
+                    renderedBuf.CopyPixels(pDst, rDstBounds, renderedBuf.GetArea());
                     uint32_t* pStart = renderedBuf.mpPixels;
                     uint32_t* pEnd = pStart + renderedBuf.GetArea().Width() * renderedBuf.GetArea().Height();
                     while (pStart < pEnd)
@@ -86,11 +75,11 @@ namespace ZGUI
                         pStart++;
                     }
 
-                    renderedBuf.FillAlpha(style.bgCol, &rRenderedLabel);
-                    renderedBuf.Blur(blurBackground, 3.0f, &rRenderedLabel);
+                    renderedBuf.FillAlpha(style.bgCol, &rRenLabel);
+                    renderedBuf.Blur(blurBackground, 3.0f, &rRenLabel);
                 }
                 else
-                    renderedBuf.Fill(style.bgCol, &rRenderedLabel);
+                    renderedBuf.Fill(style.bgCol, &rRenLabel);
             }
             else
                 renderedBuf.Fill(0);
@@ -98,33 +87,26 @@ namespace ZGUI
 
             // Draw outline in padded area if style specifies
             if (ARGB_A(style.pad.col) > 0x00)
-                renderedBuf.DrawRectAlpha(style.pad.col, rRenderedLabel);
+                renderedBuf.DrawRectAlpha(style.pad.col, rRenLabel);
 
 //            renderedStyle.pos = ZGUI::LT;   // position was already used for arranging the label above
-            style.Font()->DrawTextParagraph(&renderedBuf, sText, rRenderedLabel, &renderedStyle);
+            style.Font()->DrawTextParagraph(&renderedBuf, sText, rRenLabel, &renderedStyle);
 
             if (bDrawShadow)
             {
                 // render the shadow into internal
-                shadow.Render(&renderedBuf, rRenderedLabel, bForceShadowRender);
-                shadow.Paint(&renderedBuf, rShadowBounds.TL());
+                shadow.Render(&renderedBuf, rRenLabel, bForceShadowRender);
+                shadow.Paint(&renderedBuf, rRenShadow.TL());
 
-
-/*                // composite the 
-                ZBuffer composite;
-                composite.Init(rDraw.Width(), rDraw.Height());
-                composite.Blt(&renderedBuf, rLabel, rLabel, 0, ZBuffer::kAlphaSource);
-
-                renderedBuf.CopyPixels(&composite);*/
-                style.Font()->DrawTextParagraph(&renderedBuf, sText, rRenderedLabel, &renderedStyle);  // final text overlay after shadow compositing
+                style.Font()->DrawTextParagraph(&renderedBuf, sText, rRenLabel, &renderedStyle);  // final text overlay after shadow compositing
             }
         }
 
 
-        renderedBuf.DrawRectAlpha(0xffff0000, renderedBuf.GetArea(), ZBuffer::kAlphaSource);
+//        renderedBuf.DrawRectAlpha(0xffff0000, renderedBuf.GetArea(), ZBuffer::kAlphaSource);
 
 
-        return pDst->Blt(&renderedBuf, renderedBuf.GetArea(), rDstTextBox, nullptr, ZBuffer::kAlphaDest);
+        return pDst->Blt(&renderedBuf, renderedBuf.GetArea(), rDstBounds, nullptr, ZBuffer::kAlphaDest);
     }
 
     void TextBox::Paint(ZBuffer* pDst, tTextboxMap& textBoxMap)
@@ -185,7 +167,7 @@ namespace ZGUI
 
     ZRect Shadow::Bounds(ZRect r)
     {
-        int64_t spreadPixels = (int64_t)radius * 10; 
+        int64_t spreadPixels = (int64_t)radius * 2; 
         r.Inflate(spreadPixels, spreadPixels);
         r.Offset(offset.x, offset.y);
         return r;
@@ -333,12 +315,17 @@ namespace ZGUI
                 pStart++;
             }
 
-//            if (spread > 1.0)
-//                renderedShadow->Blur(spread, falloff);
+            if (radius > 1.0)
+            {
+                size_t startTime = gTimer.GetUSSinceEpoch();
+                renderedShadow->Blur(radius, 2.8);
+                size_t endTime = gTimer.GetUSSinceEpoch();
+                ZOUT("Blur time: ", endTime - startTime, "us\n"); 
+            }
 //            if (spread > 1.0)
 //                Compute(pSrc, rCastSrc, renderedShadow.get(), ZPoint(spread, spread), spread, falloff);
 
-            size_t startTime = gTimer.GetUSSinceEpoch();
+            /*size_t startTime = gTimer.GetUSSinceEpoch();
 
             if (radius > 1.0)
             {
@@ -348,9 +335,7 @@ namespace ZGUI
 
 
             }
-            size_t endTime = gTimer.GetUSSinceEpoch();
-          ZOUT("Blur time: ", endTime - startTime, "us\n");
-
+            */
 
 //            renderedShadow->DrawRectAlpha(0xff00ffff, renderedShadow->GetArea(), ZBuffer::kAlphaSource);
 
@@ -380,8 +365,7 @@ namespace ZGUI
         }
 
         ZRect rSrc(renderedShadow->GetArea());
-        ZRect rDst(rSrc);
-        rDst.Offset(tl+offset);
+        ZRect rDst(rSrc.OffsetRect(tl));
 
         uint32_t shadowA = ARGB_A(col);
 
