@@ -68,7 +68,7 @@ cProcessImageWin::cProcessImageWin()
 	mnProcessPixelRadius = 2;
     mnGradientLevels = 1;
     mnSubdivisionLevels = 4;
-    mrThumbnailSize.SetRect(0, 0, 32, 32);  // initial size
+    mrThumbnailSize.Set(0, 0, 32, 32);  // initial size
     mpResultWin = nullptr;
 
     mThreads = 32;
@@ -170,7 +170,7 @@ bool cProcessImageWin::LoadImages(std::list<string>& filenames)
 
     tZBufferPtr pImage = (*mChildImageWins.begin())->mpImage;
     if (pImage)
-        mrIntersectionWorkArea.SetRect(pImage->GetArea());  // set the work area to the first image to generate the result buffer
+        mrIntersectionWorkArea.Set(pImage->GetArea());  // set the work area to the first image to generate the result buffer
     ResetResultsBuffer();
     Process_SelectImage(*filenames.begin());
 
@@ -215,7 +215,7 @@ void cProcessImageWin::Process_SelectImage(string sImageName)
         {
             if (pWin->mpImage)
             {
-                mrIntersectionWorkArea.SetRect(pWin->mpImage.get()->GetArea());
+                mrIntersectionWorkArea.Set(pWin->mpImage.get()->GetArea());
 
                 ZRect r(mrIntersectionWorkArea);
                 mpResultBuffer.get()->GetMutex().lock();
@@ -512,7 +512,7 @@ bool cProcessImageWin::SpawnWork(void(*pProc)(void*), bool bBarrierSyncPoint)
         if (nBottom > mrIntersectionWorkArea.bottom - mnProcessPixelRadius)
             nBottom = mrIntersectionWorkArea.bottom - mnProcessPixelRadius;
 
-        workers[i].rArea.SetRect(mrIntersectionWorkArea.left+mnProcessPixelRadius, nTop, mrIntersectionWorkArea.right-mnProcessPixelRadius, nBottom);
+        workers[i].rArea.Set(mrIntersectionWorkArea.left+mnProcessPixelRadius, nTop, mrIntersectionWorkArea.right-mnProcessPixelRadius, nBottom);
         workers[i].nRadius = mnProcessPixelRadius;
         workers[i].pSourceImage = sourceImg;
         workers[i].pDestImage = mpResultBuffer;
@@ -928,7 +928,7 @@ bool cProcessImageWin::Init()
 
     int64_t panelW = gM * 10;
     int64_t panelH = gM * 16;
-    mrControlPanel.SetRect(grFullArea.right-panelW, grFullArea.bottom-panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
+    mrControlPanel.Set(grFullArea.right-panelW, grFullArea.bottom-panelH, grFullArea.right, grFullArea.bottom);     // upper right for now
 
     ZWinControlPanel* pCP = new ZWinControlPanel();
     pCP->SetArea(mrControlPanel);
@@ -976,8 +976,8 @@ bool cProcessImageWin::Init()
     ChildAdd(pCP);
 
 
-    mrWatchPanel.SetRect(0,0,mrControlPanel.Width()*2, mrControlPanel.Height());
-    mrWatchPanel.MoveRect(mrControlPanel.left-mrWatchPanel.Width() + gSpacer, mrControlPanel.top);
+    mrWatchPanel.Set(0,0,mrControlPanel.Width()*2, mrControlPanel.Height());
+    mrWatchPanel.Move(mrControlPanel.left-mrWatchPanel.Width() + gSpacer, mrControlPanel.top);
     ZWinWatchPanel* pWP = new ZWinWatchPanel();
     pWP->SetArea(mrWatchPanel);
     pWP->Init();
@@ -1046,11 +1046,11 @@ void cProcessImageWin::ComputeIntersectedWorkArea()
         if (bFirstRect)
         {
             bFirstRect = false;
-            mrIntersectionWorkArea.SetRect(pWin->mpImage->GetArea());
+            mrIntersectionWorkArea.Set(pWin->mpImage->GetArea());
         }
         else
         {
-            mrIntersectionWorkArea.IntersectRect(pWin->mpImage->GetArea());
+            mrIntersectionWorkArea.Intersect(pWin->mpImage->GetArea());
         }
     }
     ZASSERT(mrIntersectionWorkArea.Width() > 0 && mrIntersectionWorkArea.Height() > 0);
@@ -1084,14 +1084,14 @@ void cProcessImageWin::ResetResultsBuffer()
     }
 
 
-    mrThumbnailSize.SetRect(0, 0, nImageWidth, nImageHeight);
+    mrThumbnailSize.Set(0, 0, nImageWidth, nImageHeight);
     for (auto pWin : mChildImageWins)
     {
         pWin->SetArea(mrThumbnailSize);
-        mrThumbnailSize.OffsetRect(mrThumbnailSize.Width(), 0);
+        mrThumbnailSize.Offset(mrThumbnailSize.Width(), 0);
 
     }
-    mrResultImageDest.SetRect(0, mrThumbnailSize.bottom, mrWatchPanel.left, grFullArea.bottom);
+    mrResultImageDest.Set(0, mrThumbnailSize.bottom, mrWatchPanel.left, grFullArea.bottom);
 
 
     if (!mpResultBuffer || mpResultBuffer->GetArea().Width() != mrIntersectionWorkArea.Width() || mpResultBuffer->GetArea().Height() != mrIntersectionWorkArea.Height())

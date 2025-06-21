@@ -411,9 +411,9 @@ BOOL WinInitInstance(int argc, char* argv[])
     // Default width/height
 //    gInitWindowSize.x = GetSystemMetrics(SM_CXSCREEN) * 3 / 4;
 //    gInitWindowSize.y = GetSystemMetrics(SM_CYSCREEN) * 3 / 4;
-    grFullScreenArea.SetRect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-    grWindowedArea.SetRect(0, 0, GetSystemMetrics(SM_CXSCREEN) * 3 / 4, GetSystemMetrics(SM_CYSCREEN) * 3 / 4);
-    grWindowedArea.MoveRect((GetSystemMetrics(SM_CXSCREEN) - grWindowedArea.Width()) / 2, (GetSystemMetrics(SM_CYSCREEN) - grWindowedArea.Height()) / 2);
+    grFullScreenArea.Set(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    grWindowedArea.Set(0, 0, GetSystemMetrics(SM_CXSCREEN) * 3 / 4, GetSystemMetrics(SM_CYSCREEN) * 3 / 4);
+    grWindowedArea.Move((GetSystemMetrics(SM_CXSCREEN) - grWindowedArea.Width()) / 2, (GetSystemMetrics(SM_CYSCREEN) - grWindowedArea.Height()) / 2);
 
 
 
@@ -460,13 +460,13 @@ BOOL WinInitInstance(int argc, char* argv[])
     if (gGraphicSystem.mbFullScreen)
     {
         ghWnd = CreateWindow(szAppClass, szAppClass, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
-        grFullArea.SetRect(0, 0, grFullScreenArea.Width(), grFullScreenArea.Height());
+        grFullArea.Set(0, 0, grFullScreenArea.Width(), grFullScreenArea.Height());
         SizeWindowToClientArea(ghWnd, (int)grFullScreenArea.left, (int)grFullScreenArea.top, (int)grFullArea.Width(), (int)grFullArea.Height());
     }
     else
     {
         ghWnd = CreateWindow(szAppClass, szAppClass, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, g_hInst, NULL);
-        grFullArea.SetRect(0, 0, grWindowedArea.Width(), grWindowedArea.Height());
+        grFullArea.Set(0, 0, grWindowedArea.Width(), grWindowedArea.Height());
         SizeWindowToClientArea(ghWnd, (int)grWindowedArea.left, (int)grWindowedArea.top, (int)grWindowedArea.Width(), (int)grWindowedArea.Height());
 
     }
@@ -501,7 +501,7 @@ void SwitchFullscreen(bool bFullscreen)
 
         HMONITOR h = MonitorFromWindow(ghWnd, MONITOR_DEFAULTTONEAREST);
         GetMonitorInfo(h, &mi);
-        grFullScreenArea.SetRect(mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right, mi.rcMonitor.bottom);
+        grFullScreenArea.Set(mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right, mi.rcMonitor.bottom);
 
         DWORD nStyle = GetWindowLong(ghWnd, GWL_STYLE);
         DWORD dwRemove = WS_OVERLAPPEDWINDOW;
@@ -574,7 +574,7 @@ void HandleWindowSizeChanged()
     {
         if (grFullArea.right != rC.right || grFullArea.bottom != rC.bottom)
         {
-            grFullArea.SetRect(0, 0, rC.right, rC.bottom);
+            grFullArea.Set(0, 0, rC.right, rC.bottom);
             ZGUI::ComputeLooks();
 
             gRegistry.Set("appwin", "fullscreen", gGraphicSystem.mbFullScreen);

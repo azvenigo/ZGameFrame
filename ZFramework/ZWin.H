@@ -281,7 +281,7 @@ inline
 ZRect ZWin::LocalToAbs(const ZRect& rLocal)
 {
     ZRect rAbsolute(rLocal);
-    rAbsolute.OffsetRect(mAreaAbsolute.left, mAreaAbsolute.top);
+    rAbsolute.Offset(mAreaAbsolute.left, mAreaAbsolute.top);
     return rAbsolute;
 }
 
@@ -290,7 +290,7 @@ inline
 ZRect ZWin::AbsToLocal(const ZRect& rAbsolute)
 {
     ZRect rLocal(rAbsolute);
-    rLocal.OffsetRect(-mAreaAbsolute.left, -mAreaAbsolute.top);
+    rLocal.Offset(-mAreaAbsolute.left, -mAreaAbsolute.top);
     return rLocal;
 }
 
@@ -298,7 +298,7 @@ inline
 ZRect ZWin::ParentToLocal(const ZRect& rParent)
 {
     ZRect rLocal(rParent);
-    rLocal.OffsetRect(-mAreaInParent.left, -mAreaInParent.top);
+    rLocal.Offset(-mAreaInParent.left, -mAreaInParent.top);
     return rLocal;
 }
 
@@ -306,7 +306,7 @@ inline
 ZRect ZWin::LocalToParent(const ZRect& rLocal)
 {
     ZRect rParent(rLocal);
-    rParent.OffsetRect(mAreaInParent.left, mAreaInParent.top);
+    rParent.Offset(mAreaInParent.left, mAreaInParent.top);
     return rParent;
 }
 

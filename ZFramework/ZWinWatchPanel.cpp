@@ -13,7 +13,7 @@ ZWinWatchPanel::ZWinWatchPanel()
 
 bool ZWinWatchPanel::Init()
 {
-    mrNextControl.SetRect(gnControlPanelEdge, gnControlPanelEdge, mAreaInParent.Width() - gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);
+    mrNextControl.Set(gnControlPanelEdge, gnControlPanelEdge, mAreaInParent.Width() - gnControlPanelEdge, gnControlPanelEdge + gnControlPanelButtonHeight);
 
     return ZWin::Init();
 }
@@ -30,7 +30,7 @@ bool ZWinWatchPanel::AddItem(WatchType type, const string& sCaption, void* pWatc
     newWatch.mAreaInParent = mrNextControl;
     newWatch.mCaption = sCaption;
 
-    mrNextControl.OffsetRect(0, mrNextControl.Height());
+    mrNextControl.Offset(0, mrNextControl.Height());
 
     mWatchList.emplace_back(newWatch);
 

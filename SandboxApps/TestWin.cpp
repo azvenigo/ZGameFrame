@@ -98,11 +98,11 @@ bool TestWin::Init()
     ChildAdd(pForm);*/
 
 
-    textBox.sText = "Quite the pickles?";
+    textBox.sText = "Quite";
     textBox.style = gStyleCaption;
 
-    textBox.style.look.colTop = 0xaaffff00;
-    textBox.style.look.colBottom = 0xaaffff00;
+    textBox.style.look.colTop = 0xffffff00;
+    textBox.style.look.colBottom = 0xffffff00;
 
     textBox.style.fp.sFacename = "Arial";
     textBox.style.fp.nWeight = 100;
@@ -110,13 +110,13 @@ bool TestWin::Init()
     textBox.style.fp.nTracking = 10;
     textBox.style.look.decoration = ZGUI::ZTextLook::kNormal;
     textBox.style.wrap = false;
+    textBox.style.pos = ZGUI::C;
     textBox.style.fp.nScalePoints = 10000;
 //    textBox.blurBackground = 2.0;
     textBox.shadow.col = 0xff000000;
-    textBox.shadow.offset   = ZPoint(15, 15);
-    textBox.shadow.radius = 15.0;
-//    textBox.shadow.falloff = .5;
-    textBox.area.SetRect(0, 0, 3000, 2000);
+    textBox.shadow.offset   = ZPoint(-20, -20);
+    textBox.shadow.radius = 50.0;
+    textBox.area.Set(150, 150, 3000, 2000);
     
     ZBuffer temp;
     ZRect r(textBox.style.Font()->Arrange(textBox.area, textBox.sText, textBox.style.pos, textBox.style.pad.h, textBox.style.pad.v));
@@ -130,10 +130,10 @@ bool TestWin::Init()
 
     temp.DrawRectAlpha(0xffff0000, temp.GetArea(), ZBuffer::kAlphaSource);
 
-    shadow.radius = 150.0;
+//    shadow.radius = 150.0;
 //    shadow.falloff = 10.50;
-    shadow.Render(&temp, temp.GetArea());
-    shadow.col = 0x88004488;
+//    shadow.Render(&temp, temp.GetArea());
+//    shadow.col = 0x88004488;
 
 
 
@@ -235,7 +235,7 @@ bool TestWin::Paint()
 //    textBox.Paint(mpSurface.get());
 
     shadow.offset.Set(15, 100);
-    shadow.Paint(mpSurface.get(), ZRect(20,20,500,500));
+    shadow.Paint(mpSurface.get(), {20,20});
 
 //    textBox.style.Font()->DrawTextParagraph(mpSurface.get(), textBox.sText, mAreaLocal, &textBox.style);
 

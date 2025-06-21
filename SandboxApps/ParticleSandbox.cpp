@@ -659,7 +659,7 @@ bool Particle::Draw(ZBuffer* pDest, Z3D::Vec3f lightPos, Z3D::Vec3f viewPos, Z3D
     
 
     ZRect rDest((int64_t)pos.x, (int64_t)pos.y, (int64_t)pos.x + size, (int64_t)pos.y + size);
-    rDest.OffsetRect(-size / 2, -size / 2);
+    rDest.Offset(-size / 2, -size / 2);
 
     return pDest->Blt(rendering.get(), rendering->GetArea(), rDest);
 }

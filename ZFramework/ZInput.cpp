@@ -207,14 +207,14 @@ bool ZInput::ShowTooltip(const string& tooltip, const ZGUI::Style& style)
         mTooltip.mTextbox.style.pad.v = 8;
         mTooltip.mTextbox.style.pad.col = 0xffffffff;
         mTooltip.mTextbox.style.bgCol &= 0x88ffffff;
-        mTooltip.mTextbox.blurBackground = 2.0;
+        mTooltip.mTextbox.blurBackground = 5.0;
         mTooltip.mTextbox.shadow.col = 0x44000000;
         mTooltip.mTextbox.shadow.offset.Set(12, 12);
         mTooltip.mTextbox.shadow.radius = 4.0;
         ZRect rTooltip;
         tZFontPtr pTooltipFont = mTooltip.mTextbox.style.Font();
         rTooltip = pTooltipFont->StringRect(tooltip);
-        rTooltip.InflateRect(style.pad.h, style.pad.v);
+        rTooltip.Inflate(style.pad.h, style.pad.v);
         mTooltip.mTextbox.area = rTooltip;
         mTooltip.mTextbox.visible = true;
         toolTipAppear = lastMouseMove;
@@ -242,7 +242,7 @@ bool ZInput::UpdateTooltipLocation(ZPoint pt)
     }
     else
     {*/
-    mTooltip.mTextbox.area.MoveRect(adjustedPt);
+    mTooltip.mTextbox.area.Move(adjustedPt);
  //   }
 
     return true;

@@ -42,7 +42,7 @@ ZBuffer::ZBuffer()
 	mpPixels                = NULL;
     mRenderState            = kFreeToModify;
     mbHasAlphaPixels = false;
-	mSurfaceArea.SetRect(0,0,0,0);
+	mSurfaceArea.Set(0,0,0,0);
 }
 
 ZBuffer::ZBuffer(ZBuffer* pSrc) : ZBuffer()
@@ -72,7 +72,7 @@ bool ZBuffer::Init(int64_t nWidth, int64_t nHeight)
             mpPixels = new uint32_t[nWidth * nHeight];
         }
 
-		mSurfaceArea.SetRect(0, 0, nWidth, nHeight);
+		mSurfaceArea.Set(0, 0, nWidth, nHeight);
 //        memset(mpPixels, 0, nWidth * nHeight * sizeof(uint32_t));
         Fill(0);
         mbHasAlphaPixels = false;
@@ -835,11 +835,11 @@ bool ZBuffer::CopyPixels(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip)
 	ZRect rClip;
 	if (pClip)
 	{
-		rClip.SetRect(*pClip);
-		rClip.IntersectRect(&mSurfaceArea);
+		rClip.Set(*pClip);
+		rClip.Intersect(&mSurfaceArea);
 	}
 	else
-		rClip.SetRect(mSurfaceArea);
+		rClip.Set(mSurfaceArea);
 
 	if (Clip(rClip, rSrcClipped, rDstClipped))
 	{
@@ -878,11 +878,11 @@ bool ZBuffer::Blt(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip, eAlphaB
 	ZRect rClip;
 	if (pClip)
 	{
-		rClip.SetRect(*pClip);
-		rClip.IntersectRect(&mSurfaceArea);
+		rClip.Set(*pClip);
+		rClip.Intersect(&mSurfaceArea);
 	}
 	else
-		rClip.SetRect(mSurfaceArea);
+		rClip.Set(mSurfaceArea);
 
     if (Clip(pSrc->GetArea(), rClip, rSrcClipped, rDstClipped))
         return BltNoClip(pSrc, rSrcClipped, rDstClipped, type);
@@ -898,11 +898,11 @@ bool ZBuffer::BltAlpha(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, uint32_t nAlpha,
 	ZRect rClip;
 	if (pClip)
 	{
-		rClip.SetRect(*pClip);
-		rClip.IntersectRect(&mSurfaceArea);
+		rClip.Set(*pClip);
+		rClip.Intersect(&mSurfaceArea);
 	}
 	else
-		rClip.SetRect(mSurfaceArea);
+		rClip.Set(mSurfaceArea);
 
 	if (Clip(rClip, rSrcClipped, rDstClipped))
 		return BltAlphaNoClip(pSrc, rSrcClipped, rDstClipped, nAlpha, type);
@@ -914,13 +914,13 @@ bool ZBuffer::Fill(uint32_t nCol, ZRect* pRect)
     ZRect rDst;
     if (pRect)
     {
-        rDst.SetRect(*pRect);
+        rDst.Set(*pRect);
         if (!Clip(rDst))
             return false;
     }
     else
     {
-        rDst.SetRect(mSurfaceArea);
+        rDst.Set(mSurfaceArea);
 /*        size_t numPixels = mSurfaceArea.Area();
         __stosd((DWORD*)mpPixels, nCol, numPixels);
         return true;*/
@@ -951,12 +951,12 @@ bool ZBuffer::FillAlpha(uint32_t nCol, ZRect* pRect)
     ZRect rDst;
     if (pRect)
     {
-        rDst.SetRect(*pRect);
+        rDst.Set(*pRect);
         if (!Clip(rDst))
             return false;
     }
     else
-        rDst.SetRect(mSurfaceArea);
+        rDst.Set(mSurfaceArea);
 
 
 	int64_t nDstStride = mSurfaceArea.Width();
@@ -998,12 +998,12 @@ bool ZBuffer::FillGradient(uint32_t nCol[4], ZRect* pRect)
     ZRect rDst;
     if (pRect)
     {
-        rDst.SetRect(*pRect);
+        rDst.Set(*pRect);
         if (!Clip(rDst))
             return false;
     }
     else
-        rDst.SetRect(mSurfaceArea);
+        rDst.Set(mSurfaceArea);
 
     tColorVertexArray array;
     gRasterizer.RectToVerts(rDst, array);
@@ -1022,12 +1022,12 @@ bool ZBuffer::Colorize(uint32_t nH, uint32_t nS, ZRect* pRect)
     ZRect rDst;
     if (pRect)
     {
-        rDst.SetRect(*pRect);
+        rDst.Set(*pRect);
         if (!Clip(rDst))
             return false;
     }
     else
-        rDst.SetRect(mSurfaceArea);
+        rDst.Set(mSurfaceArea);
 
     int64_t nDstStride = mSurfaceArea.Width();
 
@@ -1391,7 +1391,7 @@ bool ZBuffer::BltTiled(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, int64_t nStartX,
 	ZRect rClip(rDst);
 	if (pClip)
 	{
-		if (!rClip.IntersectRect(pClip))
+		if (!rClip.Intersect(pClip))
 		{
 			return false;
 		}
@@ -1457,7 +1457,7 @@ bool ZBuffer::BltEdge(ZBuffer* pSrc, ZRect& rEdgeRect, ZRect& rDst, uint32_t fla
 	ZRect rClip(rDst);
 	if (pClip)
 	{
-		if (!rClip.IntersectRect(pClip))
+		if (!rClip.Intersect(pClip))
 			return false;
 	}
 
@@ -1647,7 +1647,7 @@ void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, doub
 	if (pClip)
 	{
 		rDest = *pClip;
-		rDest.IntersectRect(&mSurfaceArea);
+		rDest.Intersect(&mSurfaceArea);
 	}
 	else
 		rDest = mSurfaceArea;
@@ -1659,7 +1659,7 @@ void ZBuffer::DrawAlphaLine(const ZColorVertex& v1, const ZColorVertex& v2, doub
 	rLineRect.left = (int64_t) min(v1.x - thickness /2.0f, v2.x - thickness /2.0f);
 	rLineRect.right = (int64_t) max(v1.x + thickness /2.0f, v2.x + thickness /2.0f);
 
-	rLineRect.IntersectRect(/*&rLineRect, */&rDest);
+	rLineRect.Intersect(/*&rLineRect, */&rDest);
 
 	uint32_t* pSurface = GetPixels();
 	int64_t nStride = mSurfaceArea.right;
@@ -1748,9 +1748,9 @@ bool ZBuffer::BltRotated(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, double fAngle,
 	ZASSERT(pSrc);
 
 	rDstActual = rDst;
-	rDstActual.IntersectRect(&mSurfaceArea);
+	rDstActual.Intersect(&mSurfaceArea);
 	if(pClip)
-		rDstActual.IntersectRect(pClip);
+		rDstActual.Intersect(pClip);
 
 	numRows = rDstActual.Height();
 	if(numRows > kStackRowCount)
@@ -2012,11 +2012,41 @@ bool ZBuffer::BltScaled(ZBuffer* pSrc)
 }
 
 
+ZRect ZBuffer::FindContentBounds(const ZRect& searchArea)
+{
+    int64_t minX = searchArea.right, maxX = searchArea.left;
+    int64_t minY = searchArea.bottom, maxY = searchArea.top;
+    int64_t stride = mSurfaceArea.Width();
+
+    for (int64_t y = searchArea.top; y < searchArea.bottom; y++)
+    {
+        for (int64_t x = searchArea.left; x < searchArea.right; x++)
+        {
+            uint32_t pixel = mpPixels[y * stride + x];
+            if ((pixel >> 24) > 0) // Has alpha
+            {
+                minX = std::min<int64_t>(minX, x);
+                maxX = std::max<int64_t>(maxX, x + 1);
+                minY = std::min<int64_t>(minY, y);
+                maxY = std::max<int64_t>(maxY, y + 1);
+            }
+        }
+    }
+
+    return ZRect(minX, minY, maxX, maxY);
+}
+
 void ZBuffer::Blur(float radius, float falloff, ZRect* pRect)
 {
     ZRect rArea(mSurfaceArea);
     if (pRect)
         rArea = *pRect;
+
+    assert(rArea.left >= mSurfaceArea.left && rArea.right <= mSurfaceArea.right && rArea.top >= mSurfaceArea.top && rArea.bottom <= mSurfaceArea.bottom);
+
+    rArea = FindContentBounds(rArea);
+    rArea.Inflate(radius/2, radius/2);
+    rArea.Intersect(mSurfaceArea);
 
     int64_t srcStride = mSurfaceArea.Width();
     int64_t tempStride = rArea.Width();
@@ -2053,74 +2083,60 @@ void ZBuffer::Blur(float radius, float falloff, ZRect* pRect)
     }
 
     // Perform horizontal convolution
-    for (int64_t y = rArea.top; y < rArea.bottom; y++)
+    for (int64_t tempy = 0; tempy < rArea.Height(); tempy++)
     {
-        for (int64_t x = rArea.left; x < rArea.right; x++)
+        for (int64_t tempx = 0; tempx < rArea.Width(); tempx++)
         {
             float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
+            int64_t srcy = rArea.top + tempy;
 
             for (int64_t i = -kernelRadius; i <= kernelRadius; i++)
             {
-                int64_t newX = x + i;
-                if (newX < rArea.left)
+                int64_t srcx = rArea.left + tempx + i;  // Vary X for horizontal
+                if (srcx < rArea.left || srcx > rArea.right - 1)
                 {
                     continue;
                 }
-                else if (newX > rArea.right - 1)
-                {
-                    continue;
-                }
-
-                uint32_t pixel = mpPixels[y * srcStride + newX];
+                uint32_t pixel = mpPixels[srcy * srcStride + srcx];
                 float weight = kernel[i + kernelRadius];
-
                 r += ((pixel >> 16) & 0xFF) * weight;
                 g += ((pixel >> 8) & 0xFF) * weight;
                 b += (pixel & 0xFF) * weight;
                 a += ((pixel >> 24) & 0xFF) * weight;
             }
-
-            int64_t tempY = y - rArea.top;
-            int64_t tempX = x - rArea.left;
-            temp.mpPixels[tempY * tempStride + tempX] = ((uint32_t(a) & 0xFF) << 24) |
+            temp.mpPixels[tempy * tempStride + tempx] = ((uint32_t(a) & 0xFF) << 24) |
                 ((uint32_t(r) & 0xFF) << 16) |
                 ((uint32_t(g) & 0xFF) << 8) |
                 (uint32_t(b) & 0xFF);
         }
     }
 
-    // Perform vertical convolution and store the result in the output buffer
-    for (int64_t x = rArea.left; x < rArea.right; x++)
+    // Perform vertical convolution
+    for (int64_t tempx = 0; tempx < rArea.Width(); tempx++)
     {
-
-        for (int64_t y = rArea.top; y < rArea.bottom; y++)
+        for (int64_t tempy = 0; tempy < rArea.Height(); tempy++)
         {
             float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
 
             for (int64_t i = -kernelRadius; i <= kernelRadius; i++)
             {
-                int64_t newY = y + i;
-                if (newY < rArea.top)
+                int64_t tempSourceY = tempy + i;  // Vary Y for vertical
+                if (tempSourceY < 0 || tempSourceY >= rArea.Height())  // Bounds in temp coordinates
                 {
                     continue;
                 }
-                else if (newY > rArea.bottom - 1)
-                {
-                    continue;
-                }
-
-                int64_t tempY = newY - rArea.top;
-                int64_t tempX = x - rArea.left;
-                uint32_t pixel = temp.mpPixels[tempY * tempStride + tempX];
+                uint32_t pixel = temp.mpPixels[tempSourceY * tempStride + tempx];  // Read from offset position
                 float weight = kernel[i + kernelRadius];
-
                 r += ((pixel >> 16) & 0xFF) * weight;
                 g += ((pixel >> 8) & 0xFF) * weight;
                 b += (pixel & 0xFF) * weight;
                 a += ((pixel >> 24) & 0xFF) * weight;
             }
 
-            mpPixels[y * mSurfaceArea.Width() + x] = ((uint32_t(a) & 0xFF) << 24) |
+            int64_t dstx = tempx + rArea.left;
+            int64_t dsty = tempy + rArea.top;
+            assert(dstx >= 0 && dstx < mSurfaceArea.right && dsty >= 0 && dsty < mSurfaceArea.bottom);
+            mpPixels[dsty * srcStride + dstx] = ((uint32_t(a) & 0xFF) << 24) |
                 ((uint32_t(r) & 0xFF) << 16) |
                 ((uint32_t(g) & 0xFF) << 8) |
                 (uint32_t(b) & 0xFF);

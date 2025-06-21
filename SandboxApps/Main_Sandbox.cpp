@@ -67,7 +67,7 @@ void Sandbox::InitControlPanel()
 
     gpControlPanel = new ZWinControlPanel();
     gpControlPanel->SetArea(rControlPanel);
-    gpControlPanel->mrTrigger.SetRect(0,0,gM*2,gM*2);
+    gpControlPanel->mrTrigger.Set(0,0,gM*2,gM*2);
     gpControlPanel->mbHideOnMouseExit = true;
 
     gpControlPanel->Init();
@@ -164,7 +164,7 @@ void Sandbox::ToggleOverlay()
             titleStyle.look.colTop = 0xff000000;
             titleStyle.Font()->DrawTextParagraph(gpOverlay->mImage.get(), sCaption, r, &titleStyle);
             gpOverlay->mImage.get()->Blur(10.0);
-            r.OffsetRect(RANDI64(-20,20), RANDI64(-20, 20));
+            r.Offset(RANDI64(-20,20), RANDI64(-20, 20));
             */
 
             titleStyle.look.colTop = 0xffffffff;

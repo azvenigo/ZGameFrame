@@ -352,7 +352,7 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
 
 
 			ZRect rShadowRect(rAreaToDrawTo);
-			rShadowRect.OffsetRect(nShadowOffset, nShadowOffset);
+			rShadowRect.Offset(nShadowOffset, nShadowOffset);
 			if (pLook->colTop == pLook->colBottom)
 			{
 				DrawText_Helper(pBuffer, sText, rShadowRect, nShadowColor, pClip);
@@ -373,10 +373,10 @@ bool ZFont::DrawText( ZBuffer* pBuffer, const string& sText, const ZRect& rAreaT
             limit<int64_t>(nShadowOffset, 1, 32);
 
 			ZRect rShadowRect(rAreaToDrawTo);
-			rShadowRect.OffsetRect(-nShadowOffset, -nShadowOffset);
+			rShadowRect.Offset(-nShadowOffset, -nShadowOffset);
 	
 			ZRect rHighlightRect(rAreaToDrawTo);
-			rHighlightRect.OffsetRect(nShadowOffset, nShadowOffset);
+			rHighlightRect.Offset(nShadowOffset, nShadowOffset);
 
 			DrawText_Helper(pBuffer, sText, rShadowRect, nShadowColor, pClip);			// draw the shadow
 			DrawText_Helper(pBuffer, sText, rHighlightRect, nHighlightColor, pClip);			// draw the highlight
@@ -402,9 +402,9 @@ inline bool ZFont::DrawText_Helper(ZBuffer* pBuffer, const string& sText, const 
 
 	ZRect rClip;
 	if (pClip)
-		rClip.SetRect(*pClip);
+		rClip.Set(*pClip);
 	else
-		rClip.SetRect(pBuffer->GetArea());
+		rClip.Set(pBuffer->GetArea());
 
 	// If the output rect is anywhere outside of the rAreaToDrawTo
 	if (rOutputText.left < rClip.left || rOutputText.top < rClip.top || 
@@ -470,9 +470,9 @@ inline bool ZFont::DrawText_Gradient_Helper(ZBuffer* pBuffer, const string& sTex
 
 	ZRect rClip;
 	if (pClip)
-		rClip.SetRect(*pClip);
+		rClip.Set(*pClip);
 	else
-		rClip.SetRect(pBuffer->GetArea());
+		rClip.Set(pBuffer->GetArea());
 
 	ZRect rSrc(rAreaToDrawTo);
 	ZRect rClipDest(rOutputText);
@@ -768,7 +768,7 @@ ZRect ZFont::Arrange(ZRect rArea, const std::string& sText, ZGUI::ePosition pos,
 {
 //	ZRect rText(0,0, StringWidth(sText), mFontHeight);
     ZRect rText(StringRect(sText, rArea.Width()));
-    rText.InflateRect(h_padding, v_padding);
+    rText.Inflate(h_padding, v_padding);
 
     return ZGUI::Arrange(rText, rArea, pos, h_padding, v_padding);
 }
@@ -780,7 +780,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
         pStyle = &gStyleGeneralText;
     ZRect rTextLine(rAreaToDrawTo);
     if (pStyle->pos != ZGUI::C)
-        rTextLine.DeflateRect(pStyle->pad.h, pStyle->pad.v);
+        rTextLine.Deflate(pStyle->pad.h, pStyle->pad.v);
 
     if (rTextLine.bottom <= rTextLine.top || rTextLine.right <= rTextLine.left)
         return false;
@@ -845,7 +845,7 @@ bool ZFont::DrawTextParagraph( ZBuffer* pBuffer, const string& sText, const ZRec
 
 		nCharsDrawn += nLettersToDraw;
 
-		rTextLine.OffsetRect(0, mFontHeight);
+		rTextLine.Offset(0, mFontHeight);
 		pChars += nLettersToDraw;
         nLinesDrawn++;
 	}
@@ -1151,7 +1151,7 @@ bool ZFont::Init(const ZFontParams& params)
     mFontHeight = params.Height();
 
 #ifdef _WIN64
-    rGDIScratchArea.SetRect(0,0,mFontParams.Height() * 3, mFontHeight);
+    rGDIScratchArea.Set(0,0,mFontParams.Height() * 3, mFontHeight);
     mExtractBuffer.Init(rGDIScratchArea.right, rGDIScratchArea.bottom);
 
     if (UseDoubleSizeFont())

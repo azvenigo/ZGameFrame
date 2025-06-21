@@ -210,7 +210,7 @@ bool TextTestWin::Init()
 
 
     UpdateText();
-    mTextBox.area.SetRect(gM, gM, grFullArea.right-gM, grFullArea.bottom-gM);
+    mTextBox.area.Set(gM, gM, grFullArea.right-gM, grFullArea.bottom-gM);
 
 
     ZRect rControlPanel(rFontSelectionWin.left, rFontSelectionWin.bottom, rFontSelectionWin.right, mAreaLocal.bottom);     // upper right for now
@@ -323,13 +323,13 @@ bool TextTestWin::Paint()
     /*
 
     string sTemp;
-    rText.SetRect(32, 32+ mpFont->Height(), mAreaLocal.right * 4 / 5,mAreaLocal.bottom);
+    rText.Set(32, 32+ mpFont->Height(), mAreaLocal.right * 4 / 5,mAreaLocal.bottom);
 
     
     Sprintf(sTemp, "Font: %s Size:%d", mpFont->GetFontParams().sFacename.c_str(), mpFont->Height());
     ZGUI::Style sampleStyle(mpFont->GetFontParams(), ZGUI::ZTextLook(ZGUI::ZTextLook::kNormal, 0xFF880044, 0xFF000000), ZGUI::LT, gSpacer, 0, true);
     mpFont->DrawTextParagraph(mpSurface.get(), sTemp.c_str(), rText, &sampleStyle);
-    rText.OffsetRect(0, mpFont->Height()*2);
+    rText.Offset(0, mpFont->Height()*2);
 
     string sSampleText("The quick brown fox jumped over the lazy dog.\nA Relic is Relish of Radishes! Show me the $$$$");
     for (int i = 0; i < 2 && rText.top < mAreaLocal.bottom; i++)
@@ -348,7 +348,7 @@ bool TextTestWin::Paint()
             mpFont->DrawTextParagraph(mpSurface.get(), sSampleText, rText, &style);
 
         int64_t nLines = mpFont->CalculateNumberOfLines(rText.Width(), (uint8_t*)sSampleText.data(), sSampleText.length());
-        rText.OffsetRect(0, mpFont->Height() * nLines);
+        rText.Offset(0, mpFont->Height() * nLines);
     }
 
 
@@ -457,7 +457,7 @@ bool TextTestWin::OnMouseMove(int64_t x, int64_t y)
 {
     if (mDraggingTextbox)
     {
-        mTextBox.area.MoveRect(x-mDraggingTextboxAnchor.x, y-mDraggingTextboxAnchor.y);
+        mTextBox.area.Move(x-mDraggingTextboxAnchor.x, y-mDraggingTextboxAnchor.y);
         Invalidate();
     }
     return ZWin::OnMouseMove(x, y);

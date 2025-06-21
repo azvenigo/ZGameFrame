@@ -14,7 +14,6 @@
 #include "helpers/Registry.h"
 #include "ZWinBtn.H"
 #include "ZInput.h"
-#include "ZD3D.h"
 
 using namespace std;
 using namespace Z3D;
@@ -350,7 +349,7 @@ void render(
             options.cameraToWorld.multDirMatrix(Vec3d(x, y, -1), dir);
             dir.normalize();
 
-//            Vec3d pixel = castRay(orig, dir, objects, lights, options);
+            //            Vec3d pixel = castRay(orig, dir, objects, lights, options);
 
             pixelResults.emplace_back(pool.enqueue(&castRay, orig, dir, objects, lights, options, 0));
         }
@@ -445,7 +444,7 @@ void createPolyTeapot(Matrix44d& o2w, std::vector<Object*>& objects)
     uint32_t divs = 8;
     std::vector<Vec3d> P; P.resize((divs + 1) * (divs + 1));
     std::vector<uint32_t> nvertices; nvertices.resize(divs * divs);
-    std::vector<uint32_t> vertices;vertices.resize(divs * divs * 4);
+    std::vector<uint32_t> vertices; vertices.resize(divs * divs * 4);
     std::vector<Vec3d> N; N.resize((divs + 1) * (divs + 1));
     std::vector<Vec2f> st; st.resize((divs + 1) * (divs + 1));
 
@@ -770,12 +769,12 @@ Vec3d TraceSpheres(
     if ((sphere->mTransparency > 0 || sphere->mReflection > 0) && depthRemaining > 0) {
         double facingratio = -raydir.dotProduct(nhit);
         // change the mix value to tweak the effect
-        double fresneleffect = mix((const double) pow(1 - facingratio, 3), 1, 0.1f);
+        double fresneleffect = mix((const double)pow(1 - facingratio, 3), 1, 0.1f);
         // compute reflection direction (not need to normalize because all vectors
         // are already normalized)
         Vec3d refldir = raydir - nhit * 2 * raydir.dotProduct(nhit);
         refldir.normalize();
-        Vec3d reflection = TraceSpheres(phit + nhit * bias, refldir, depthRemaining-1, spheres);
+        Vec3d reflection = TraceSpheres(phit + nhit * bias, refldir, depthRemaining - 1, spheres);
         Vec3d refraction = 0;
         // if the sphere is also transparent compute refraction ray (transmission)
         if (sphere->mTransparency) {
@@ -825,11 +824,11 @@ void ThreadTrace(ZRect rArea, std::vector<Sphere>& spheres, ZBuffer* pDest, int6
     double invWidth = 1 / double(rFullArea.Width()), invHeight = 1 / double(rFullArea.Height());
     double /*fov = 30,*/ aspectratio = rFullArea.Width() / double(rFullArea.Height());
 
-    double angle = (double)tan( M_PI * 0.5 * fov / 180.);
+    double angle = (double)tan(M_PI * 0.5 * fov / 180.);
 
     for (int64_t y = rArea.top; y < rArea.bottom; ++y) {
         for (int64_t x = rArea.left; x < rArea.right; ++x) {
-            double xx = ( 2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
+            double xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
             double yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
             Vec3d raydir(xx, yy, -1);
             raydir.normalize();
@@ -883,24 +882,24 @@ void Z3DTestWin::RenderSpheres(tZBufferPtr pSurface)
     }
 
 
-/*
+    /*
 
-    // Trace rays
-    for (unsigned y = 0; y < height; ++y) {
-        for (unsigned x = 0; x < width; ++x) {
-            float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
-            float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
-            Vec3d raydir(xx, yy, -1);
-            raydir.normalize();
-            Vec3d pixel = TraceSpheres(Vec3d(0), raydir, 0);
+        // Trace rays
+        for (unsigned y = 0; y < height; ++y) {
+            for (unsigned x = 0; x < width; ++x) {
+                float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
+                float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
+                Vec3d raydir(xx, yy, -1);
+                raydir.normalize();
+                Vec3d pixel = TraceSpheres(Vec3d(0), raydir, 0);
 
-            char r = (char)(255 * clamp(0, 1, pixel.x));
-            char g = (char)(255 * clamp(0, 1, pixel.y));
-            char b = (char)(255 * clamp(0, 1, pixel.z));
-            mpSurface.get()->SetPixel(x, y, ARGB(0xff, r, g, b));
+                char r = (char)(255 * clamp(0, 1, pixel.x));
+                char g = (char)(255 * clamp(0, 1, pixel.y));
+                char b = (char)(255 * clamp(0, 1, pixel.z));
+                mpSurface.get()->SetPixel(x, y, ARGB(0xff, r, g, b));
 
-        }
-    }*/
+            }
+        }*/
 }
 
 
@@ -914,16 +913,11 @@ Z3DTestWin::Z3DTestWin()
 {
     mnTargetSphereCount = 15;
     mnMinSphereSizeTimes100 = kDefaultMinSphereSize;
-    mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize/2;
+    mnMaxSphereSizeTimes100 = kDefaultMaxSphereSize / 2;
     mnFOVTime100 = 30 * 100;
     mnRotateSpeed = 10;
     mnRayDepth = 3;
     mfBaseAngle = 0.0;
-
-    mnCameraX = 0;
-    mnCameraY = 200;
-    mnCameraZ = 1310;
-
 
     mbRenderCube = false;
     mbRenderSpheres = true;
@@ -931,14 +925,13 @@ Z3DTestWin::Z3DTestWin()
     mbCenterSphere = true;
     mnRenderSize = 256;
     mbControlPanelEnabled = true;
-//    pLightBuffer = nullptr;
 
     mIdleSleepMS = 16;
 
     mLastTimeStamp = gTimer.GetMSSinceEpoch();
     msWinName = "3dtestwin";
 }
-   
+
 bool Z3DTestWin::Init()
 {
     mbAcceptsCursorMessages = true;
@@ -952,80 +945,20 @@ bool Z3DTestWin::Init()
         gRegistry.SetDefault("3dtestwin", "render_size", mnRenderSize);
     }
 
-    if (!gRegistry.Get("3dtestwin", "render_cubes", mbRenderCube))
-    {
-        mbRenderCube = false;
-        gRegistry.SetDefault("3dtestwin", "render_cubes", mbRenderCube);
-    }
-
-    if (!gRegistry.Get("3dtestwin", "render_spheres", mbRenderSpheres))
-    {
-        mbRenderSpheres = true;
-        gRegistry.SetDefault("3dtestwin", "render_spheres", mbRenderSpheres);
-    }
-
-
-    if (!gRegistry.Get("3dtestwin", "outersphere", mbOuterSphere))
-    {
-        mbOuterSphere = true;
-        gRegistry.SetDefault("3dtestwin", "outersphere", mbOuterSphere);
-    }
-
-    if (!gRegistry.Get("3dtestwin", "centersphere", mbCenterSphere))
-    {
-        mbCenterSphere = true;
-        gRegistry.SetDefault("3dtestwin", "centersphere", mbCenterSphere);
-    }
-
-    if (!gRegistry.Get("3dtestwin", "rotatespeed", mnRotateSpeed))
-    {
-        mnRotateSpeed = true;
-        gRegistry.SetDefault("3dtestwin", "rotatespeed", mnRotateSpeed);
-    }
-
-    if (!gRegistry.Get("3dtestwin", "raydepth", mnRayDepth))
-    {
-        mnRayDepth = true;
-        gRegistry.SetDefault("3dtestwin", "raydepth", mnRayDepth);
-    }
-
-    
-    mLight.color = { 1.0f, 0.5f, 0.2f };
-    mLight.direction = { 1.0f, 0.0f, -1.0f };
-    mLight.intensity = 0.8;
-
-
-    D3D11_BUFFER_DESC bufferDesc = {};
-    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-    bufferDesc.ByteWidth = sizeof(mLight);
-    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    bufferDesc.MiscFlags = 0;
-    bufferDesc.StructureByteStride = 0;
-
-    HRESULT hr = ZD3D::mD3DDevice->CreateBuffer(&bufferDesc, nullptr, &ZD3D::pD3DLightBuffer);
-    if (FAILED(hr))
-    {
-        assert(false);
-    }
-//    mLight.pD3DBuffer = pLightBuffer;
-
-    
-
 
     mCubeVertices.resize(8);
 
     const float f = 1.0;
 
-    mCubeVertices[0] = Vec3d(-f,  f, -f);
-    mCubeVertices[1] = Vec3d( f,  f, -f);
-    mCubeVertices[2] = Vec3d( f, -f, -f);
+    mCubeVertices[0] = Vec3d(-f, f, -f);
+    mCubeVertices[1] = Vec3d(f, f, -f);
+    mCubeVertices[2] = Vec3d(f, -f, -f);
     mCubeVertices[3] = Vec3d(-f, -f, -f);
 
-    mCubeVertices[4] = Vec3d(-f,  f,  f);
-    mCubeVertices[5] = Vec3d( f,  f,  f);
-    mCubeVertices[6] = Vec3d( f, -f,  f);
-    mCubeVertices[7] = Vec3d(-f, -f,  f);
+    mCubeVertices[4] = Vec3d(-f, f, f);
+    mCubeVertices[5] = Vec3d(f, f, f);
+    mCubeVertices[6] = Vec3d(f, -f, f);
+    mCubeVertices[7] = Vec3d(-f, -f, f);
 
     mSides.resize(6);
 
@@ -1071,21 +1004,6 @@ bool Z3DTestWin::Init()
     mpTexture.reset(new ZBuffer());
     mpTexture.get()->LoadBuffer("res/brick-texture.jpg");
 
-    mpDynTexture.reset(new ZD3D::DynamicTexture);
-    mpDynTexture->Init(mpTexture->GetArea().BR());
-    mpDynTexture->UpdateTexture(mpTexture.get());
-
-    mpGrassTexture.reset(new ZBuffer());
-    mpGrassTexture.get()->LoadBuffer("res/grass-texture.jpg");
-    mpGrassDynTexture.reset(new ZD3D::DynamicTexture);
-    mpGrassDynTexture->Init(mpGrassTexture->GetArea().BR());
-    mpGrassDynTexture->UpdateTexture(mpGrassTexture.get());
-
-
-
-
-
-
     SetFocus();
 
 
@@ -1110,7 +1028,7 @@ bool Z3DTestWin::Init()
         ZWinControlPanel* pCP = new ZWinControlPanel();
         pCP->SetArea(rControlPanel);
 
-//        tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
+        //        tZFontPtr pBtnFont(gpFontSystem->GetFont(gDefaultButtonFont));
 
 
         pCP->Init();
@@ -1128,31 +1046,20 @@ bool Z3DTestWin::Init()
         pCP->Slider("maxspheresize", &mnMaxSphereSizeTimes100, kDefaultMinSphereSize, kDefaultMaxSphereSize, 1, 0.25, sUpdateSphereCountMsg, true, false);
 
         pCP->Caption("speed", "Speed");
-        pCP->Slider("rotatespeed", &mnRotateSpeed, 0, 500, 1, 0.25, ZMessage("updatesettings", this), true, false);
+        pCP->Slider("rotatespeed", &mnRotateSpeed, 0, 500, 1, 0.25, "", true, false);
 
         pCP->Caption("fov", "FOV");
-        pCP->Slider("fov", &mnFOVTime100, 100, 18000, 1, 0.25, ZMessage("updatesettings", this), false, false);
+        pCP->Slider("fov", &mnFOVTime100, 100, 18000, 1, 0.25, "", false, false);
 
 
         pCP->Caption("raydepth", "Ray Depth");
-        pCP->Slider("raydepth", &mnRayDepth, 0, 10, 1, 0.25, ZMessage("updatesettings", this), true, false);
+        pCP->Slider("raydepth", &mnRayDepth, 0, 10, 1, 0.25, "", true, false);
 
 
 
         pCP->AddSpace(16);
         pCP->Caption("rendersize", "Render Size");
-        pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("updatesettings", this), true);
-
-        pCP->AddSpace(16);
-        pCP->Caption("camera", "camera");
-        pCP->Slider("camerax", &mnCameraX, -1000, 1000, 10, 0.25, {}, true);
-        pCP->Slider("cameray", &mnCameraY, -1000, 1000, 10, 0.25, {}, true);
-        pCP->Slider("cameraz", &mnCameraZ, -1000, 1000, 10, 0.25, {}, true);
-
-
-
-
-
+        pCP->Slider("rendersize", &mnRenderSize, 1, 128, 16, 0.25, ZMessage("updaterendersize", this), true);
 
         ZGUI::ZTextLook toggleLook(ZGUI::ZTextLook::kEmbossed, 0xff737373, 0xff737373);
 
@@ -1160,10 +1067,10 @@ bool Z3DTestWin::Init()
 
         ZWinCheck* pToggle;
 
-        pToggle = pCP->Toggle("rendercubes", &mbRenderCube, "Render Cubes", ZMessage("updatesettings", this), ZMessage("updatesettings", this));
+        pToggle = pCP->Toggle("rendercubes", &mbRenderCube, "Render Cubes");
         pToggle->msWinGroup = "rendermode";
 
-        pToggle = pCP->Toggle("renderspheres", &mbRenderSpheres, "Render Spheres", ZMessage("updatesettings", this), ZMessage("updatesettings", this));
+        pToggle = pCP->Toggle("renderspheres", &mbRenderSpheres, "Render Spheres");
         pToggle->msWinGroup = "rendermode";
 
         pCP->Toggle("outersphere", &mbOuterSphere, "Outer Sphere", sUpdateSphereCountMsg, sUpdateSphereCountMsg);
@@ -1191,20 +1098,6 @@ bool Z3DTestWin::Init()
     return ZWin::Init();
 }
 
-
-bool Z3DTestWin::Shutdown()
-{
-    for (auto& p : mReservedPrims)
-        p->clear();
-    mReservedPrims.clear();
-
-//    if (pLightBuffer)
-//        pLightBuffer->Release();
-    //pLightBuffer = nullptr;
-
-    return ZWin::Shutdown();
-}
-
 void Z3DTestWin::UpdateSphereCount()
 {
     ZASSERT(mnTargetSphereCount > 0 && mnTargetSphereCount < 10000);
@@ -1214,7 +1107,7 @@ void Z3DTestWin::UpdateSphereCount()
     int i = 0;
     if (mbOuterSphere)
     {
-        mSpheres[i] = Sphere(Vec3d(0, 0, -50), 500, Vec3d(0, 0, 0), 0.0, 0.0, Vec3d(0,0,0));
+        mSpheres[i] = Sphere(Vec3d(0, 0, -50), 500, Vec3d(0, 0, 0), 0.0, 0.0, Vec3d(0, 0, 0));
         i++;
     }
 
@@ -1224,14 +1117,14 @@ void Z3DTestWin::UpdateSphereCount()
         i++;
     }
 
-    for (;i < mnTargetSphereCount; i++)
+    for (; i < mnTargetSphereCount; i++)
     {
         double fMaxDist = 100.0;
-        double fRadius = RANDDOUBLE( (mnMinSphereSizeTimes100 / 100.0), (mnMaxSphereSizeTimes100 / 100.0));
+        double fRadius = RANDDOUBLE((mnMinSphereSizeTimes100 / 100.0), (mnMaxSphereSizeTimes100 / 100.0));
 
         Vec3d center(fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))),
-                     fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))), 
-                     fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))));
+            fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))),
+            fMaxDist * sin(RANDDOUBLE(0.0, (2.0 * M_PI))));
 
         Vec3d color(RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0), RANDDOUBLE(0.0, 1.0));
         double fReflective(RANDDOUBLE(0.0, 1.0));
@@ -1244,7 +1137,7 @@ void Z3DTestWin::UpdateSphereCount()
         mSpheres[i] = Sphere(center, fRadius, color, fReflective, fTransparent, emmisionColor);
     }
 
-//    RenderSpheres(mpSpheresRender);
+    //    RenderSpheres(mpSpheresRender);
 }
 
 bool Z3DTestWin::OnChar(char key)
@@ -1270,8 +1163,8 @@ void multPointMatrix(const Vec3d& in, Vec3d& out, const Matrix44d& M)
     out.z = in.x * M[0][2] + in.y * M[1][2] + in.z * M[2][2] + /* in.z = 1 */ M[3][2];
     double w = in.x * M[0][3] + in.y * M[1][3] + in.z * M[2][3] + /* in.z = 1 */ M[3][3];
 
-    if (w != 0.0) 
-    {
+    // normalize if w is different than 1 (convert from homogeneous to Cartesian coordinates)
+    if (w != 1) {
         out.x /= w;
         out.y /= w;
         out.z /= w;
@@ -1294,6 +1187,7 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
 
 
 
+
     for (int i = 0; i < worldVerts.size(); i++)
     {
         Vec3d v = worldVerts[i];
@@ -1304,16 +1198,16 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
         multPointMatrix(v, vertCamera, mtxWorldToCamera);
         multPointMatrix(vertCamera, vertProjected, mtxProjection);
 
-/*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
-            continue;*/
+        /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
+                    continue;*/
 
-        screenVerts[i].x = (double)(mAreaLocal.Width()/2 + (int64_t)(vertProjected.x * mnRenderSize *10));
-        screenVerts[i].y = (double)(mAreaLocal.Height()/2 + (int64_t)(vertProjected.y * mnRenderSize *10));
+        screenVerts[i].x = (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10));
+        screenVerts[i].y = (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10));
 
         screenVerts[i].mColor = nCol;
     }
 
-    Vec3d planeX(screenVerts[1].x- screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
+    Vec3d planeX(screenVerts[1].x - screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
     Vec3d planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
     Vec3d normal = planeX.crossProduct(planeY);
     if (normal.z > 0)
@@ -1322,86 +1216,49 @@ void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection,
     gRasterizer.Rasterize(mpSurface.get(), screenVerts);
 }
 
-void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection, Matrix44d& mtxWorldToCamera, ZD3D::tDynamicTexturePtr pTexture, ZD3D::Light* pLight)
+void Z3DTestWin::RenderPoly(vector<Vec3d>& worldVerts, Matrix44d& mtxProjection, Matrix44d& mtxWorldToCamera, tZBufferPtr pTexture)
 {
-//    tUVVertexArray screenVerts;
-//    screenVerts.resize(worldVerts.size());
-
-
-    if (mReservedPrims.size() <= mFramePrimCount)
-    {
-        mReservedPrims.push_back(ZD3D::ReservePrimitive());
-    }
-
-    ZD3D::ScreenSpacePrimitive* pPrim = mReservedPrims[mFramePrimCount];
-    mFramePrimCount++;
-    
-
-//    std::vector<Vertex> verts(4);
-
-    pPrim->verts.resize(4);
-
-    int mapping[4] = { 0, 1, 3, 2 };
-    
-    Vec3d planeX(worldVerts[1].x - worldVerts[0].x, worldVerts[1].y - worldVerts[0].y, worldVerts[1].z - worldVerts[0].z);
-    Vec3d planeY(worldVerts[0].x - worldVerts[3].x, worldVerts[0].y - worldVerts[3].y, worldVerts[0].z - worldVerts[3].z);
-    Vec3d normal = planeX.crossProduct(planeY).normalize();
-    
-    DirectX::XMFLOAT3 d3dNormal;
-    d3dNormal.x = normal.x;
-    d3dNormal.y = normal.y;
-    d3dNormal.z = normal.z;
-
-/*    d3dNormal.x = (float)(rand()%1000-500);
-    d3dNormal.y = (float)(rand()%1000-500);
-    d3dNormal.z = (float)(rand()%1000-500);*/
-
-
-    float f = sqrt(d3dNormal.x * d3dNormal.x + d3dNormal.y * d3dNormal.y + d3dNormal.z * d3dNormal.z);
-
-    d3dNormal.x /= f;
-    d3dNormal.y /= f;
-    d3dNormal.z /= f;
-
-
-/*    XMVECTOR lightVec = XMLoadFloat3(&mLight.direction);
-    lightVec = XMVector3Normalize(lightVec);
-    XMStoreFloat3(&mLight.direction, lightVec);*/
-    
-
-
+    tUVVertexArray screenVerts;
+    screenVerts.resize(worldVerts.size());
 
     for (int i = 0; i < worldVerts.size(); i++)
     {
-        Vec3d v = worldVerts[mapping[i]];
+        Vec3d v = worldVerts[i];
 
         Vec3d vertCamera;
         Vec3d vertProjected;
 
         multPointMatrix(v, vertCamera, mtxWorldToCamera);
         multPointMatrix(vertCamera, vertProjected, mtxProjection);
-        pPrim->SetVertex(i, (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10)), (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10)), vertProjected.z-1.0, d3dNormal, 0.0, 0.0);
+
+        /*        if (vertProjected.x < -1 || vertProjected.x > 1 || vertProjected.y < -1 || vertProjected.y > 1)
+                    continue;*/
+
+        screenVerts[i].x = (double)(mAreaLocal.Width() / 2 + (int64_t)(vertProjected.x * mnRenderSize * 10));
+        screenVerts[i].y = (double)(mAreaLocal.Height() / 2 + (int64_t)(vertProjected.y * mnRenderSize * 10));
     }
 
+    Vec3d planeX(screenVerts[1].x - screenVerts[0].x, screenVerts[1].y - screenVerts[0].y, 1);
+    Vec3d planeY(screenVerts[0].x - screenVerts[3].x, screenVerts[0].y - screenVerts[3].y, 1);
+    Vec3d normal = planeX.crossProduct(planeY);
+    if (normal.z > 0)
+        return;
 
-    pPrim->light = pLight;
 
-    pPrim->verts[0].uv.x = 0.0;
-    pPrim->verts[0].uv.y = 0.0;
+    screenVerts[0].u = 0.0;
+    screenVerts[0].v = 0.0;
 
-    pPrim->verts[1].uv.x = 1.0;
-    pPrim->verts[1].uv.y = 0.0;
+    screenVerts[1].u = 1.0;
+    screenVerts[1].v = 0.0;
 
-    pPrim->verts[2].uv.x = 0.0;
-    pPrim->verts[2].uv.y = 1.0;
-    
-    pPrim->verts[3].uv.x = 1.0;
-    pPrim->verts[3].uv.y = 1.0;
+    screenVerts[2].u = 1.0;
+    screenVerts[2].v = 1.0;
 
-    pPrim->texture = pTexture;
-    pPrim->state = ZD3D::ScreenSpacePrimitive::eState::kVisible;
-    pPrim->ps = ZD3D::GetPixelShader("GrassShader");
-//    ZD3D::AddPrim(ZD3D::GetVertexShader("ScreenSpaceShader"), ZD3D::GetPixelShader("ScreenSpaceShader"), &mDynTexture, verts);
+    screenVerts[3].u = 0.0;
+    screenVerts[3].v = 1.0;
+
+    gRasterizer.Rasterize(mpSurface.get(), pTexture.get(), screenVerts);
+    //    gRasterizer.MultiSampleRasterizeWithAlpha(mpSurface.get(), pTexture.get(), screenVerts, nullptr, 1);
 }
 
 
@@ -1432,7 +1289,7 @@ bool Z3DTestWin::Paint()
             nStartSphere++;
         for (int i = nStartSphere; i < mSpheres.size(); i++)
         {
-            mSpheres[i].mCenter = Vec3d(5 * cos(fAngle * mSpheres[i].mSurfaceColor.length()), 5.0 * sin(fAngle * mSpheres[i].mTransparency), -50+10.0 * sin(fAngle * mSpheres[i].mReflection));
+            mSpheres[i].mCenter = Vec3d(5 * cos(fAngle * mSpheres[i].mSurfaceColor.length()), 5.0 * sin(fAngle * mSpheres[i].mTransparency), -50 + 10.0 * sin(fAngle * mSpheres[i].mReflection));
             fAngle += 1.2;
         }
 
@@ -1446,15 +1303,13 @@ bool Z3DTestWin::Paint()
     gpFontSystem->GetDefaultFont()->DrawText(mpSurface.get(), sTime, mAreaLocal);
     mLastTimeStamp = nTime;
 
-
-
     if (mbRenderCube)
     {
         Matrix44d mtxProjection;
         Matrix44d mtxWorldToCamera;
 
         Z3D::LookAt(Vec3d(0, 0, -20), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
-//        Z3D::LookAt(Vec3d(mnCameraX / 100.0, mnCameraY / 100.0, mnCameraZ/100.0), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
+        //        Z3D::LookAt(Vec3d(mnCameraX / 100.0, mnCameraY / 100.0, mnCameraZ/100.0), Vec3d(0, 0, 0), Vec3d(0, 10, 0), mtxWorldToCamera);
 
         double fFoV = 90;
         double fNear = 1.0;
@@ -1464,72 +1319,38 @@ bool Z3DTestWin::Paint()
 
         setProjectionMatrix(fFoV, fAspect, fNear, fFar, mtxProjection);
 
+
         vector<Vec3d> worldVerts;
         worldVerts.resize(4);
 
-        mFramePrimCount = 0;
-        int cubenum = 0;
-        Matrix44d mtxRotation;
-        Matrix44d mtxTranslation;
-
-        // plane
-        setOrientationMatrix(4.0, 0.0, mfBaseAngle + cubenum, mtxRotation);
-        setTranslationMatrix(mnCameraX / 10.0, mnCameraY / 10.0, mnCameraZ / 10.0, mtxTranslation);
-        mObjectToWorld = mtxRotation * mtxTranslation;
-
-        std::vector<Vec3d> verts(4);
-        verts[0] = Vec3d(-10, 10, 500);
-        verts[1] = Vec3d(-10, -10, 500);
-        verts[3] = Vec3d(10, 10, 1500);
-        verts[2] = Vec3d(10, -10, 1500);
-
-        std::vector<Vec3d> transformedVerts(4);
-        for (int i = 0; i < 4; i++)
-            multPointMatrix(verts[i], transformedVerts[i], mtxTranslation);
-
-        RenderPoly(transformedVerts, mtxProjection, mtxWorldToCamera, mpGrassDynTexture, &mLight);
-
-
-
-
-
-        for (int x = 0; x < 10; x++)
+        int i = 1;
+        //    for (; i < 100; i++)
         {
-            for (int y = 0; y < 10; y++)
+            //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
+            setOrientationMatrix(4.0, 0.0, mfBaseAngle, mObjectToWorld);
+
+            std::vector<Vec3d> cubeWorldVerts;
+            cubeWorldVerts.resize(8);
+            for (int i = 0; i < 8; i++)
+                multPointMatrix(mCubeVertices[i], cubeWorldVerts[i], mObjectToWorld);
+
+            for (int i = 0; i < 6; i++)
             {
-                int cubenum = y * 20 + x;
-                //        setOrientationMatrix((float)sin(i)*gTimer.GetElapsedTime() / 1050.0, (float)gTimer.GetElapsedTime() / 8000.0, (float)gTimer.GetElapsedTime() / 1000.0, mObjectToWorld);
-
-                setOrientationMatrix(4.0, 0.0, mfBaseAngle + cubenum, mtxRotation);
-
-
-                //            setTranslationMatrix(0, -cubenum * 2.0, 120 - cubenum * sin(mfBaseAngle), mtxTranslation);
-                setTranslationMatrix(-y * 2.0, -x * 2.0, y * 2.0, mtxTranslation);
-                mObjectToWorld = mtxRotation * mtxTranslation;
-
-
-
-                std::vector<Vec3d> cubeWorldVerts(8);
-                for (int i = 0; i < 8; i++)
-                    multPointMatrix(mCubeVertices[i], cubeWorldVerts[i], mObjectToWorld);
-
-                for (int i = 0; i < 6; i++)
-                {
-                    worldVerts[0] = cubeWorldVerts[mSides[i].mSide[0]];
-                    worldVerts[1] = cubeWorldVerts[mSides[i].mSide[1]];
-                    worldVerts[2] = cubeWorldVerts[mSides[i].mSide[2]];
-                    worldVerts[3] = cubeWorldVerts[mSides[i].mSide[3]];
+                worldVerts[0] = cubeWorldVerts[mSides[i].mSide[0]];
+                worldVerts[1] = cubeWorldVerts[mSides[i].mSide[1]];
+                worldVerts[2] = cubeWorldVerts[mSides[i].mSide[2]];
+                worldVerts[3] = cubeWorldVerts[mSides[i].mSide[3]];
 
 #define RENDER_TEXTURE
 
 #ifdef RENDER_TEXTURE
-                    RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpDynTexture, &mLight);
+                RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mpTexture);
 #else
-                    RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mSides[i].mColor);
+                RenderPoly(worldVerts, mtxProjection, mtxWorldToCamera, mSides[i].mColor);
 #endif
-                }
             }
         }
+
     }
 
 #ifdef RENDER_TEAPOT
@@ -1557,7 +1378,7 @@ bool Z3DTestWin::Paint()
     mbInvalid = true;
     return true;
 }
-   
+
 bool Z3DTestWin::HandleMessage(const ZMessage& message)
 {
     string sType = message.GetType();
@@ -1567,20 +1388,9 @@ bool Z3DTestWin::HandleMessage(const ZMessage& message)
         UpdateSphereCount();
         return true;
     }
-    else if (sType == "updatesettings")
+    else if (sType == "updaterendersize")
     {
         gRegistry["3dtestwin"]["render_size"] = mnRenderSize;
-        gRegistry["3dtestwin"]["render_cubes"] = mbRenderCube;
-        gRegistry["3dtestwin"]["render_spheres"] = mbRenderSpheres;
-
-        gRegistry["3dtestwin"]["outersphere"] = mbOuterSphere;
-        gRegistry["3dtestwin"]["centersphere"] = mbCenterSphere;
-        gRegistry["3dtestwin"]["rotatespeed"] = mnRotateSpeed;
-        gRegistry["3dtestwin"]["raydepth"] = mnRayDepth;
-
-        
-        
-
         return true;
     }
 

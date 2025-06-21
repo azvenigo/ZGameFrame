@@ -74,7 +74,7 @@ public:
                                         bool bDrawValue = false, 
                                         bool bMouseOnlyDrawValue = false);
 
-    void                    AddSpace( int64_t nSpace) { mrNextControl.OffsetRect(0,nSpace); }
+    void                    AddSpace( int64_t nSpace) { mrNextControl.Offset(0,nSpace); }
 
     bool		            OnMouseOut();
     bool                    Process();

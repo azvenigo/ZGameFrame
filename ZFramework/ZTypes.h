@@ -69,10 +69,17 @@ public:
 	{ 
 		return tPoint(-x, -y); 
 	}
+
 	tPoint operator+(const tPoint& p) const 
 	{ 
 		return tPoint(x + p.x, y + p.y); 
 	};
+
+    tPoint operator-(const tPoint& p) const
+    {
+        return tPoint(x - p.x, y - p.y);
+    }
+
 
 	bool operator==(const tPoint& p) const
 	{ 
@@ -256,6 +263,7 @@ public:
 		bottom = T{};
 
 	}
+
 	tRect(T l, T t, T r, T b) 
 	{ 
 		left = l; 
@@ -263,6 +271,15 @@ public:
 		right = r; 
 		bottom = b; 
 	}
+
+    tRect(const tPoint<T>& pt)
+    {
+        left = 0;
+        top = 0;
+        right = pt.x;
+        bottom = pt.y;
+    }
+
 	tRect(T nWidth, T nHeight) 
 	{ 
 		left = 0; 
@@ -291,20 +308,23 @@ public:
 	{ 
 		return right - left; 
 	}
+
 	T	Height() const 
 	{ 
 		return bottom - top; 
 	}
 	
     // Queries
-    bool PtInRect(tPoint<T>& p) const
+    bool PtInRect(const tPoint<T>& p) const
 	{
 		return (p.x >= left && p.y >= top && p.x < right&& p.y < bottom);
 	}
+
     bool PtInRect(T x, T y) const
 	{
 		return (x >= left && y >= top && x < right&& y < bottom);
 	}
+
     bool Overlaps(const tRect& pRect) const
 	{
 		return !((left >= pRect.right) || 
@@ -328,16 +348,21 @@ public:
         return (right - left) * (bottom - top);
     }
 
+    const tPoint<T> Size() const
+    {
+        return { (right - left), (bottom - top) };
+    }
 
     // Operations
-    void SetRect(T l, T t, T r, T b)
+    void Set(T l, T t, T r, T b)
 	{
 		left = l;
 		top = t;
 		right = r;
 		bottom = b;
 	}
-    void SetRect(const tRect& r)
+
+    void Set(const tRect& r)
 	{
 		left = r.left;
 		top = r.top;
@@ -345,14 +370,15 @@ public:
 		bottom = r.bottom;
 	}
 
-    void InflateRect(T x, T y)
+    void Inflate(T x, T y)
 	{
 		left -= x;
 		right += x;
 		top -= y;
 		bottom += y;
 	}
-    void DeflateRect(T x, T y)
+
+    void Deflate(T x, T y)
 	{
 		left += x;
 		right -= x;
@@ -360,7 +386,7 @@ public:
 		bottom -= y;
 	}
 
-    void MoveRect(T x, T y)
+    void Move(T x, T y)
 	{
 		int64_t nOffsetX = (x - left);
 		int64_t nOffsetY = (y - top);
@@ -370,7 +396,8 @@ public:
 		top += nOffsetY;
 		bottom += nOffsetY;
 	}
-    void MoveRect(ZPoint& p)
+
+    void Move(ZPoint& p)
 	{
 		int64_t nOffsetX = (p.x - left);
 		int64_t nOffsetY = (p.y - top);
@@ -380,18 +407,33 @@ public:
 		top += nOffsetY;
 		bottom += nOffsetY;
 	}
-    void OffsetRect(T x, T y)
+
+    void Offset(T x, T y)
 	{
 		left += x;
 		right += x;
 		top += y;
 		bottom += y;
 	}
-    void OffsetRect(const ZPoint& p)
+
+    tRect OffsetRect(T x, T y) const
+    {
+        return tRect(left + x, top + y, right + x, bottom + y);
+    }
+
+
+    void Offset(const ZPoint& p)
 	{
-		OffsetRect(p.x, p.y);
+		Offset(p.x, p.y);
 	}
-    void NormalizeRect()
+
+    tRect OffsetRect(const ZPoint& p) const
+    {
+        return tRect(left + p.x, top + p.y, right + p.x, bottom + p.y);
+    }
+
+
+    void Normalize()
 	{
 		int64_t nTemp;
 
@@ -411,9 +453,9 @@ public:
 	}
 
     // Operations that fill '*this' with result
-    bool IntersectRect(const tRect& rhs)
+    bool Intersect(const tRect& rhs)
 	{
-        NormalizeRect();
+        Normalize();
 
 		if (left < rhs.left)
 			left = rhs.left;
@@ -438,7 +480,17 @@ public:
 
 		return true;
 	}
-    bool UnionRect(const tRect& rhs)
+
+    tRect IntersectRect(const tRect& rhs) const
+    {
+        tRect i(left, right, top, bottom);
+        i.Intersect(rhs);
+
+        return i;
+    }
+
+
+    bool Union(const tRect& rhs)
 	{
 		if (left > rhs.left)
 			left = rhs.left;
@@ -454,6 +506,15 @@ public:
 
 		return true;
 	}
+
+    tRect UnionRect(const tRect& rhs) const
+    {
+        tRect u(left, top, right, bottom);
+        u.Union(rhs);
+
+        return u;
+    }
+
 
     tRect CenterInRect(const tRect& outerRect)
     {
@@ -508,19 +569,19 @@ public:
 
     void operator+=(tPoint<T>& p)
 	{
-		OffsetRect(p.x, p.y);
+		Offset(p.x, p.y);
 	}
     void operator-=(tPoint<T>& p)
 	{
-		OffsetRect(-p.x, -p.y);
+		Offset(-p.x, -p.y);
 	}
     void operator&=(const tRect& r)
 	{
-		IntersectRect(&r);
+		Intersect(&r);
 	}
     void operator|=(const tRect& r)
 	{
-		UnionRect(&r);
+		Union(&r);
 	}
 
 

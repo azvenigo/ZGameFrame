@@ -367,13 +367,13 @@ namespace ZGUI
         if (alignmentflags & HC)
         {
             int64_t newX = (ref.left + ref.right) / 2 - w / 2;
-            r.SetRect(newX, r.top, newX + w, r.top + h);
+            r.Set(newX, r.top, newX + w, r.top + h);
         }
 
         if (alignmentflags & VC)
         {
             int64_t newY = (ref.top + ref.bottom) / 2 - h / 2;
-            r.SetRect(r.left, newY, r.left + w, newY + h);
+            r.Set(r.left, newY, r.left + w, newY + h);
         }
 
         return r;
@@ -441,7 +441,7 @@ namespace ZGUI
                 y -= h;
         }
 
-        r.OffsetRect((int64_t)x, (int64_t)y);
+        r.Offset((int64_t)x, (int64_t)y);
 
 
         return r;

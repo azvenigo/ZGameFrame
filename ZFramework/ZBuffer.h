@@ -127,7 +127,7 @@ protected:
 
     bool                    LoadFromSVG(const std::string& sName);
     uint32_t                ComputePixelBlur(ZBuffer* pBuffer, int64_t nX, int64_t nY, int64_t nRadius);
-
+    ZRect                   FindContentBounds(const ZRect& searchArea);
 
 public:
 	uint32_t*                   mpPixels;        // The color data

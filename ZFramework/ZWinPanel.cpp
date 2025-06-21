@@ -79,9 +79,9 @@ bool ZWinPanel::Paint()
     if (mDrawBorder)
     {
         ZRect rBounds(mAreaLocal);
-     //   rBounds.DeflateRect(gSpacer, gSpacer);
+     //   rBounds.Deflate(gSpacer, gSpacer);
         mpSurface->DrawRectAlpha(0x88000000, rBounds);
-        rBounds.OffsetRect(1, 1);
+        rBounds.Offset(1, 1);
         mpSurface->DrawRectAlpha(0x88ffffff, rBounds);
     }
 
@@ -93,17 +93,17 @@ bool ZWinPanel::Paint()
         ZRect rBounds(GetBounds(group.second));
         ZRect rCaption(rBounds);
 
-        rBounds.InflateRect(gDefaultGroupingStyle.pad.h, gDefaultGroupingStyle.pad.v);
+        rBounds.Inflate(gDefaultGroupingStyle.pad.h, gDefaultGroupingStyle.pad.v);
         rBounds.right--;
         rBounds.bottom--;
 
         mpSurface->DrawRectAlpha(0x88000000, rBounds);
-        rBounds.OffsetRect(1, 1);
+        rBounds.Offset(1, 1);
         mpSurface->DrawRectAlpha(0x88ffffff, rBounds);
 
 
 
-        rCaption.OffsetRect(gDefaultGroupingStyle.pad.h, -gDefaultGroupingStyle.fp.Height());
+        rCaption.Offset(gDefaultGroupingStyle.pad.h, -gDefaultGroupingStyle.fp.Height());
         gDefaultGroupingStyle.Font()->DrawTextParagraph(mpSurface.get(), group.first, rCaption);
 
 
@@ -519,7 +519,7 @@ void ZWinPanel::UpdateUI()
         ZRect controlArea = ref;
 
 //        if (mDrawBorder)
-//            controlArea.DeflateRect(mStyle.pad.h, mStyle.pad.v);
+//            controlArea.Deflate(mStyle.pad.h, mStyle.pad.v);
 
         int64_t spaceBetweenRows = mSpacers * mStyle.pad.v;
         int64_t totalSpaceBetweenRows = (mRows - 1) * spaceBetweenRows;
@@ -532,7 +532,7 @@ void ZWinPanel::UpdateUI()
 
             if (IsSet(kDrawGroupFrames))
             {
-                rRowArea.DeflateRect(gDefaultGroupingStyle.pad.h * 2, gDefaultGroupingStyle.pad.v * 2);
+                rRowArea.Deflate(gDefaultGroupingStyle.pad.h * 2, gDefaultGroupingStyle.pad.v * 2);
             }
 
             tRowElements leftElements = GetRowElements(row, ZGUI::L);

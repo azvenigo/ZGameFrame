@@ -148,9 +148,9 @@ void ZWin::TransformIn()
 	{
         ZRect rp;
         if (mpParentWin)
-            rp.SetRect(mpParentWin->GetArea());
+            rp.Set(mpParentWin->GetArea());
         else
-            rp.SetRect(grFullArea);
+            rp.Set(grFullArea);
 
 
         ZTransformation start(ZPoint(mAreaAbsolute.left, mAreaAbsolute.top), 1.0, 0, 255);
@@ -232,9 +232,9 @@ void ZWin::TransformOut()
 
         ZRect rp;
         if (mpParentWin)
-            rp.SetRect(mpParentWin->GetArea());
+            rp.Set(mpParentWin->GetArea());
         else
-            rp.SetRect(grFullArea);
+            rp.Set(grFullArea);
 
 		switch (mTransformOut)
 		{
@@ -316,7 +316,7 @@ void ZWin::ArrangeWindows(tWinList windows, ZRect rArea, ZGUI::Style& style, int
         for (int64_t col = 0; col < nCols; col++)
         {
             ZRect r(w, h);
-            r.OffsetRect(rArea.left + style.pad.h * (col + 1) + col * w,     // offset H by number of horizontal paddings by column number
+            r.Offset(rArea.left + style.pad.h * (col + 1) + col * w,     // offset H by number of horizontal paddings by column number
                 rArea.top + style.pad.v * (row + 1) + row * h);    // same for V offset
 
             (*childIt)->SetArea(r);
@@ -553,7 +553,7 @@ ZRect ZWin::GetBounds(const tWinList& list)
     ZRect rBounds((*it)->mAreaInParent);
     while (it != list.end())
     {
-        rBounds.UnionRect((*it++)->mAreaInParent);
+        rBounds.Union((*it++)->mAreaInParent);
     }
 
     return rBounds;
@@ -695,7 +695,7 @@ void ZWin::RenderToBuffer(tZBufferPtr pDest, const ZRect& rAbsSrc, const ZRect& 
     InvalidateChildren();
 
     ZRect rAbsIntersection(rAbsSrc);
-    if (!rAbsIntersection.IntersectRect(mAreaAbsolute))
+    if (!rAbsIntersection.Intersect(mAreaAbsolute))
         return;// no intersection
 
 
@@ -798,7 +798,7 @@ void ZWin::ComputeAreas()
         ZWin* pWin = this;
         do
         {
-            mAreaAbsolute.OffsetRect(pWin->mAreaInParent.left, pWin->mAreaInParent.top);
+            mAreaAbsolute.Offset(pWin->mAreaInParent.left, pWin->mAreaInParent.top);
             pWin = pWin->mpParentWin;
         } while (pWin);
 
@@ -1054,8 +1054,8 @@ void ZWin::SetArea( const ZRect& area )
             }
         }
 
-        mAreaInParent.SetRect(area);
-        mAreaLocal.SetRect(0, 0, area.Width(), area.Height());
+        mAreaInParent.Set(area);
+        mAreaLocal.Set(0, 0, area.Width(), area.Height());
         if (mbTransformable)
             ZTransformable::Init(mAreaLocal);
         ComputeAreas();
@@ -1187,7 +1187,7 @@ bool ZWinDialog::Init()
         ChildAdd(pBtn);
         arrangeList.push_back(pBtn);
 
-//        rButton.OffsetRect(-rButton.Width() - gSpacer, 0);
+//        rButton.Offset(-rButton.Width() - gSpacer, 0);
     }
 
     if (mBehavior & eBehavior::OKButton)
