@@ -841,13 +841,14 @@ bool ZBuffer::CopyPixels(ZBuffer* pSrc, ZRect& rSrc, ZRect& rDst, ZRect* pClip)
 	else
 		rClip.Set(mSurfaceArea);
 
-	if (Clip(rClip, rSrcClipped, rDstClipped))
+    if (Clip(pSrc->GetArea(), rClip, rSrcClipped, rDstClipped))
+	//if (Clip(rClip, rSrcClipped, rDstClipped))
 	{
-		int64_t nBltWidth = rDst.Width();
-		int64_t nBltHeight = rDst.Height();
+		int64_t nBltWidth = rDstClipped.Width();
+		int64_t nBltHeight = rDstClipped.Height();
 
-		uint32_t* pSrcBits = pSrc->GetPixels() + (rSrc.top * pSrc->GetArea().Width()) + rSrc.left;
-		uint32_t* pDstBits = mpPixels + (rDst.top * mSurfaceArea.Width()) + rDst.left;
+		uint32_t* pSrcBits = pSrc->GetPixels() + (rSrcClipped.top * pSrc->GetArea().Width()) + rSrcClipped.left;
+		uint32_t* pDstBits = mpPixels + (rDstClipped.top * mSurfaceArea.Width()) + rDstClipped.left;
 
 		for (int64_t y = 0; y < nBltHeight; y++)
 		{
